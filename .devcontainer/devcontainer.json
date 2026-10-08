@@ -1,0 +1,17 @@
+{
+  "name": "OPEN-ISP",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "forwardPorts": [3001],
+  "portsAttributes": {
+    "3001": { "label": "OPEN-ISP", "onAutoForward": "openPreview" }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/start.sh",
+  "customizations": {
+    "vscode": { "extensions": ["dbaeumer.vscode-eslint"] }
+  },
+  "remoteUser": "node"
+}
