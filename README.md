@@ -11,6 +11,7 @@
   <img src="https://img.shields.io/badge/lisensi-ISC-ADFF2F" alt="Lisensi: ISC">
   <img src="https://img.shields.io/badge/versi-0.5_pickle--lime-ADFF2F" alt="Versi 0.5 (pickle-lime)">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-339933" alt="Node.js >= 20">
+  <img src="https://img.shields.io/badge/docker" alt="docker">
 </p>
 
 ---
