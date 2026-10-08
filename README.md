@@ -19,7 +19,7 @@
 
 ---
 
-**OPEN-ISP** adalah aplikasi billing dan manajemen ISP yang lengkap: tagihan otomatis, isolir otomatis, pembayaran (QRIS/webhook), perangkat MikroTik (PPPoE & hotspot), OLT PON multi-vendor, TR-069 (GenieACS/ACS), RADIUS, peta jaringan, notifikasi WhatsApp & Telegram, hingga portal self-service pelanggan dalam satu platform — semuanya berjalan mandiri (self-hosted) dengan SQLite sebagai basis data. **NOTE:** dibuat dan ditulis oleh AI ([Deepseek](https://github.com/deepseek-ai)), on opencode).
+**OPEN-ISP** adalah aplikasi billing dan manajemen ISP yang lengkap: tagihan otomatis, isolir otomatis, pembayaran (QRIS/webhook), perangkat MikroTik (PPPoE & hotspot), OLT PON multi-vendor, TR-069 (GenieACS/ACS), RADIUS, peta jaringan, notifikasi WhatsApp & Telegram, hingga portal self-service pelanggan dalam satu platform — semuanya berjalan mandiri (self-hosted) dengan SQLite sebagai basis data. **NOTE:** dibuat dan ditulis oleh AI ([Deepseek](https://github.com/deepseek-ai)), on [opencode](https://github.com/anomalyco/opencode)).
 
 ## Fitur
 
@@ -31,7 +31,7 @@
 - **RADIUS** — server PAP/CHAP untuk PPPoE/hotspot, secret per-NAS.
 - **Peta & GIS** — Leaflet + OpenStreetMap/satelit: marker pelanggan & ODP, jalur kabel, trafik PPPoE real-time; peta teknisi + rute Google Maps.
 - **Portal & peran** — admin (super admin/admin/kasir), teknisi (tiket, input pelanggan dari lapangan), kolektor (cek tagihan & pengajuan pembayaran), dan **PWA pelanggan** (tagihan, bayar, tiket, SSID/password, speed test, mode offline).
-- **Notifikasi** — WhatsApp (gateway GoWA atau bot Baileys bawaan): broadcast, pengingat otomatis, struk pembayaran; bot Telegram admin (opsional).
+- **Notifikasi** — WhatsApp (gateway [Gowa](https://github.com/aldinokemal/go-whatsapp-web-multidevice)): broadcast, pengingat otomatis, struk pembayaran; bot Telegram admin (opsional).
 - **Speed test** — server internal maupun eksternal (preset provider diatur admin), mode embed/tab, tombol Muat Ulang & Bersihkan Cache.
 - **PWA** — dapat dipasang di HP, offline, pembaruan otomatis (bar "versi baru tersedia").
 - **Bilingual** — antarmuka Indonesia / English (bisa diganti dari UI).
