@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/img/openisp-logo.svg" alt="OPEN-ISP" width="340">
+  <img src="docs/assets/banner.png" alt="OPEN-ISP" width="100%">
 </p>
 
 <p align="center">
@@ -11,12 +11,15 @@
   <img src="https://img.shields.io/badge/lisensi-ISC-ADFF2F" alt="Lisensi: ISC">
   <img src="https://img.shields.io/badge/versi-0.5_pickle--lime-ADFF2F" alt="Versi 0.5 (pickle-lime)">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-339933" alt="Node.js >= 20">
-  <img src="https://img.shields.io/badge/docker" alt="docker">
+  <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/github/stars/oxpoe/open-isp?style=flat" alt="Stars">
+  <img src="https://img.shields.io/github/forks/oxpoe/open-isp?style=flat" alt="Forks">
+  <img src="https://img.shields.io/github/issues/oxpoe/open-isp?style=flat" alt="Issues">
 </p>
 
 ---
 
-**OPEN-ISP** adalah aplikasi billing dan manajemen ISP yang lengkap: tagihan otomatis, isolir otomatis, pembayaran (QRIS/webhook), perangkat MikroTik (PPPoE & hotspot), OLT PON multi-vendor, TR-069 (GenieACS/ACS), RADIUS, peta jaringan, notifikasi WhatsApp & Telegram, hingga portal self-service pelanggan dalam satu platform — semuanya berjalan mandiri (self-hosted) dengan SQLite sebagai basis data. NOTE : **DIBUAT DAN DI TULIS OLEH AI"
+**OPEN-ISP** adalah aplikasi billing dan manajemen ISP yang lengkap: tagihan otomatis, isolir otomatis, pembayaran (QRIS/webhook), perangkat MikroTik (PPPoE & hotspot), OLT PON multi-vendor, TR-069 (GenieACS/ACS), RADIUS, peta jaringan, notifikasi WhatsApp & Telegram, hingga portal self-service pelanggan dalam satu platform — semuanya berjalan mandiri (self-hosted) dengan SQLite sebagai basis data. **NOTE:** dibuat dan ditulis oleh AI (DeepSeek V4.1 Flash — max, on opencode).
 
 ## Fitur
 
@@ -33,6 +36,25 @@
 - **PWA** — dapat dipasang di HP, offline, pembaruan otomatis (bar "versi baru tersedia").
 - **Bilingual** — antarmuka Indonesia / English (bisa diganti dari UI).
 - **Lain-lain** — inventaris gudang, tiket dukungan, laporan, monitoring sistem (CPU/RAM/disk), ODP, backup/restore database, audit log.
+
+## Tangkapan Layar
+
+<table>
+<tr>
+<td align="center"><b>Dashboard Admin</b><br><img src="docs/screenshots/admin-dashboard.jpg" width="420"></td>
+<td align="center"><b>Data Pelanggan</b><br><img src="docs/screenshots/admin-customers.jpg" width="420"></td>
+</tr>
+<tr>
+<td align="center"><b>Tagihan &amp; Pembayaran</b><br><img src="docs/screenshots/admin-billing.jpg" width="420"></td>
+<td align="center"><b>OLT (PON)</b><br><img src="docs/screenshots/admin-olts.jpg" width="420"></td>
+</tr>
+<tr>
+<td align="center"><b>Portal Pelanggan (PWA)</b><br><img src="docs/screenshots/customer-dashboard.jpg" width="250"></td>
+<td align="center"><b>Tagihan Pelanggan</b><br><img src="docs/screenshots/customer-billing.jpg" width="250"></td>
+</tr>
+</table>
+
+Selengkapnya: **[Wiki OPEN-ISP](https://github.com/oxpoe/open-isp/wiki)**.
 
 ## Mulai Cepat
 

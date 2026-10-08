@@ -1,0 +1,49 @@
+name: "\U0001F41E Laporan Bug"
+description: Laporkan bug atau perilaku tak terduga
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Terima kasih sudah melaporkan! Isi sedetail mungkin.
+        Untuk masalah **keamanan**, gunakan tab Security (lihat SECURITY.md), **jangan** issue publik.
+  - type: textarea
+    id: deskripsi
+    attributes:
+      label: Deskripsi bug
+      description: Apa yang terjadi?
+    validations:
+      required: true
+  - type: textarea
+    id: langkah
+    attributes:
+      label: Langkah reproduksi
+      placeholder: |
+        1. Buka '...'
+        2. Klik '...'
+        3. Terjadi error
+    validations:
+      required: true
+  - type: textarea
+    id: harapan
+    attributes:
+      label: Perilaku yang diharapkan
+    validations:
+      required: true
+  - type: input
+    id: versi
+    attributes:
+      label: Versi / commit
+      placeholder: "0.5.0 / SHA"
+  - type: dropdown
+    id: lingkungan
+    attributes:
+      label: Cara menjalankan
+      options: ["Docker", "Manual (Node.js)", "PM2", "Lainnya"]
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log / screenshot (opsional)

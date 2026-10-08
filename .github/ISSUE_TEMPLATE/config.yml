@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "\U0001F4DA Wiki & Dokumentasi"
+    url: https://github.com/oxpoe/open-isp/wiki
+    about: Panduan instalasi, konfigurasi, FAQ, dan troubleshooting
+  - name: "\U0001F4AC Tanya Jawab"
+    url: https://github.com/oxpoe/open-isp/issues
+    about: Ajukan pertanyaan umum seputar OPEN-ISP
