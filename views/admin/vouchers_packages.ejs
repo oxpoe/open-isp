@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Paket Voucher Hotspot | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .mtabs { display: flex; gap: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .mtab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; }
+    .mtab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .mtab.active { background: var(--primary); color: white; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+    .pill b { color: var(--text); font-weight: 700; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'voucher_packages', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-ticket-detailed"></i> Paket Voucher Hotspot (Real-Time)
+    </div>
+    <div class="tb-right" style="display:flex;align-items:center;gap:15px">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+    
+    <% if (msg) { %>
+      <div class="alert <%= msg.type === 'success' ? 's' : 'd' %>"><%= msg.text %></div>
+    <% } %>
+
+    <div class="mtabs">
+      <a href="/admin/vouchers" class="mtab"><i class="bi bi-ticket-perforated"></i> Pembuatan Voucher (Batch)</a>
+      <a href="/admin/vouchers/packages" class="mtab active"><i class="bi bi-ticket-detailed"></i> Konfigurasi Paket (Real-Time)</a>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-stars"></i> Daftar Paket Hotspot Real-Time</h6>
+        <div style="display:flex;align-items:center;gap:10px">
+          <% if (typeof routers !== 'undefined' && routers && routers.length > 0) { %>
+          <select class="fs" style="width:160px" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>> Semua Router</option>
+            <% routers.forEach(r => { %>
+              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>> <%= r.name %></option>
+            <% }) %>
+          </select>
+          <% } %>
+          <button class="btn btn-p btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> Tambah Konfigurasi Paket</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>Router</th>
+              <th>Nama Profile</th>
+              <th>Harga</th>
+              <th>Masa Aktif</th>
+              <th>Prefix</th>
+              <th>Panjang Kode</th>
+              <th>Karakter</th>
+              <th><%= t('common.status','Status') %></th>
+              <th><%= t('common.actions','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody id="packages-list">
+            <tr><td colspan="9" class="text-center text-muted">Memuat data paket...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah / Edit -->
+<div class="mo" id="packageModal">
+  <div class="mb" style="max-width: 600px;">
+    <div class="mh">
+      <span class="mt" id="modalTitle">Konfigurasi Paket</span>
+      <button class="mc" onclick="closeModal('packageModal')">&times;</button>
+    </div>
+    <form id="packageForm" onsubmit="savePackage(event)">
+      <input type="hidden" id="packageId">
+      <div class="mbody">
+        
+        <div class="fg">
+          <label class="fl">Pilih Router MikroTik <span class="text-danger">*</span></label>
+          <select class="fc" id="form_router_id" required onchange="loadMikrotikProfiles()">
+            <option value="">-- Pilih Router --</option>
+            <% routers.forEach(r => { %>
+              <option value="<%= r.id %>"><%= r.name %></option>
+            <% }) %>
+          </select>
+          <small class="text-muted d-block mt-1">Router harus dipilih untuk paket voucher</small>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Hotspot User Profile *</label>
+          <div style="display:flex;gap:8px">
+            <select class="fs" id="form_profile_select" style="max-width:220px" onchange="document.getElementById('form_profile_name').value=this.value; onProfileSelected();">
+              <option value="">-- Pilih dari MikroTik --</option>
+            </select>
+            <input class="fc" id="form_profile_name" required placeholder="Ketik nama profile manual...">
+          </div>
+          <div class="hint" id="profileHint">Pilih router & profil untuk membaca durasi bawaan atau ketik manual jika MikroTik offline.</div>
+        </div>
+
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Harga Jual (Rp) *</label>
+            <input class="fc" id="form_price" type="number" min="500" required placeholder="Contoh: 5000">
+          </div>
+          <div class="fg">
+            <label class="fl">Durasi / Masa Aktif *</label>
+            <input class="fc" id="form_validity" required placeholder="Contoh: 1d, 12h, 3h">
+            <div class="hint">Format Mikhmon (misal: 1d = 1 hari, 12h = 12 jam)</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Prefix Kode Voucher</label>
+            <input class="fc" id="form_prefix" placeholder="Opsional (misal: ALI-)">
+          </div>
+          <div class="fg">
+            <label class="fl">Panjang Kode (Jumlah Digit) *</label>
+            <input class="fc" id="form_code_length" type="number" min="4" max="16" value="6" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Tipe Karakter Kode *</label>
+            <select class="fc" id="form_charset" required>
+              <option value="numbers">Hanya Angka (0-9)</option>
+              <option value="letters">Hanya Huruf Kecil (a-z)</option>
+              <option value="mixed" selected>Kombinasi Huruf Besar & Angka (Acak)</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Status Paket *</label>
+            <select class="fc" id="form_is_active" required>
+              <option value="1">Aktif (Tampil di portal pelanggan)</option>
+              <option value="0">Nonaktif (Sembunyikan)</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('packageModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p" id="btnSave"><i class="bi bi-check-lg"></i> Simpan Paket</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  let cachedMikrotikProfiles = [];
+  let currentPackages = [];
+
+  function openModal(id){ document.getElementById(id)?.classList.add('show'); }
+  function closeModal(id){ document.getElementById(id)?.classList.remove('show'); }
+
+  // Load all configurations
+  async function loadPackages() {
+    try {
+      const res = await fetch('/admin/api/vouchers/packages');
+      const data = await res.json();
+      currentPackages = data.rows || [];
+      
+      const list = document.getElementById('packages-list');
+      if (currentPackages.length === 0) {
+        list.innerHTML = '<tr><td colspan="9" class="text-center text-muted" style="padding: 24px;">Belum ada paket voucher hotspot real-time terdaftar. Klik tombol Tambah diatas untuk memulai!</td></tr>';
+        return;
+      }
+
+      list.innerHTML = currentPackages.map((p, idx) => {
+        const routerName = p.router_name || 'Default';
+        const charsetText = p.charset === 'numbers' ? 'Angka' : (p.charset === 'letters' ? 'Huruf Kecil' : 'Campuran');
+        const statusBadge = p.is_active ? '<span class="badge bs"><%= t('common.active','Aktif') %></span>' : '<span class="badge bd"><%= t('common.inactive','Nonaktif') %></span>';
+        
+        return `
+          <tr>
+            <td>${routerName}</td>
+            <td class="fw6">${p.profile_name}</td>
+            <td class="fw6" style="color:var(--success)">Rp ${Number(p.price).toLocaleString('id-ID')}</td>
+            <td><span class="badge bp">${p.validity}</span></td>
+            <td class="mono">${p.prefix || '<span class="text-muted">—</span>'}</td>
+            <td class="text-center">${p.code_length} digit</td>
+            <td>${charsetText}</td>
+            <td>${statusBadge}</td>
+            <td style="white-space:nowrap">
+              <div class="act">
+                <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                <div class="act-menu">
+                  <button type="button" class="act-item" onclick="openEditModal(${idx})"><i class="bi bi-pencil"></i> <%= t('common.edit','Edit') %></button>
+                  <div class="act-sep"></div>
+                  <button type="button" class="act-item danger" onclick="deletePackage(${p.id})"><i class="bi bi-trash"></i> <%= t('common.delete','Hapus') %></button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+    } catch (e) {
+      alert('Gagal memuat paket voucher: ' + e.message);
+    }
+  }
+
+  // Load Mikrotik profiles real-time
+  async function loadMikrotikProfiles() {
+    const routerId = document.getElementById('form_router_id').value;
+    const url = routerId ? `/admin/api/mikrotik/hotspot-user-profiles?routerId=${routerId}` : `/admin/api/mikrotik/hotspot-user-profiles`;
+    const profileSelect = document.getElementById('form_profile_select');
+    
+    profileSelect.innerHTML = '<option value=""><%= t('common.loading_short','Memuat...') %></option>';
+    
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      cachedMikrotikProfiles = Array.isArray(data) ? data : [];
+      
+      profileSelect.innerHTML = '<option value="">-- Pilih dari MikroTik --</option>';
+      cachedMikrotikProfiles.forEach(p => {
+        profileSelect.insertAdjacentHTML('beforeend', `<option value="${p.name}">${p.name}</option>`);
+      });
+    } catch (e) {
+      profileSelect.innerHTML = `<option value="">Gagal memuat: ${e.message}</option>`;
+    }
+  }
+
+  // Parse Mikhmon onLogin metadata for auto pricing/duration
+  function parseMikhmonOnLogin(script) {
+    if (!script) return null;
+    const s = String(script).trim();
+    const putMatch = s.match(/:\s*put\s*\(\s*[",]rem[",]?\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)/i);
+    if (putMatch) {
+      const priceStr = String(putMatch[3] || '').trim();
+      const price = Number(priceStr.replace(/[^\d]/g, '')) || 0;
+      const validity = String(putMatch[2] || '').trim();
+      if (validity && price > 0) return { validity, price };
+    }
+    return null;
+  }
+
+  // Auto fill pricing and duration based on selected profile
+  function onProfileSelected() {
+    const profileName = document.getElementById('form_profile_select').value;
+    if (!profileName) return;
+    const profile = cachedMikrotikProfiles.find(p => p.name === profileName);
+    const hintEl = document.getElementById('profileHint');
+    
+    if (!profile) {
+      hintEl.innerText = '';
+      return;
+    }
+    
+    const meta = parseMikhmonOnLogin(profile.onLogin || profile['on-login']);
+    if (meta) {
+      document.getElementById('form_price').value = meta.price;
+      document.getElementById('form_validity').value = meta.validity;
+      hintEl.innerHTML = `<span style="color:var(--success)"><b>Terdeteksi:</b> Harga Rp ${meta.price.toLocaleString('id-ID')} • Durasi ${meta.validity}</span>`;
+    } else {
+      hintEl.innerHTML = '<span class="text-muted">Profil tidak memiliki metadata Mikhmon. Isi harga dan masa aktif manual.</span>';
+    }
+  }
+
+  function openAddModal() {
+    document.getElementById('modalTitle').innerText = 'Tambah Paket Voucher Hotspot';
+    document.getElementById('packageId').value = '';
+    document.getElementById('packageForm').reset();
+    document.getElementById('profileHint').innerText = '';
+    
+    openModal('packageModal');
+    loadMikrotikProfiles();
+  }
+
+  function openEditModal(idx) {
+    const p = currentPackages[idx];
+    if (!p) return;
+    
+    document.getElementById('modalTitle').innerText = 'Edit Konfigurasi Paket';
+    document.getElementById('packageId').value = p.id;
+    document.getElementById('form_router_id').value = p.router_id || '';
+    
+    // Trigger loading profiles, then set the selected profile name
+    loadMikrotikProfiles().then(() => {
+      document.getElementById('form_profile_select').value = p.profile_name;
+      document.getElementById('form_profile_name').value = p.profile_name;
+    });
+
+    document.getElementById('form_price').value = p.price;
+    document.getElementById('form_validity').value = p.validity;
+    document.getElementById('form_prefix').value = p.prefix || '';
+    document.getElementById('form_code_length').value = p.code_length;
+    document.getElementById('form_charset').value = p.charset || 'mixed';
+    document.getElementById('form_is_active').value = p.is_active ? '1' : '0';
+    document.getElementById('profileHint').innerText = '';
+
+    openModal('packageModal');
+  }
+
+  // Save via API
+  async function savePackage(e) {
+    e.preventDefault();
+    
+    const payload = {
+      router_id: document.getElementById('form_router_id').value || null,
+      profile_name: document.getElementById('form_profile_name').value,
+      price: Number(document.getElementById('form_price').value),
+      validity: document.getElementById('form_validity').value,
+      prefix: document.getElementById('form_prefix').value,
+      code_length: Number(document.getElementById('form_code_length').value),
+      charset: document.getElementById('form_charset').value,
+      is_active: document.getElementById('form_is_active').value === '1'
+    };
+
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true;
+    btn.innerText = 'Menyimpan...';
+
+    try {
+      const res = await fetch('/admin/api/vouchers/packages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan konfigurasi');
+      
+      closeModal('packageModal');
+      loadPackages();
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg"></i> Simpan Paket';
+    }
+  }
+
+  // Delete package config
+  async function deletePackage(id) {
+    if (!confirm('Apakah Anda yakin ingin menghapus konfigurasi paket ini? Pelanggan tidak akan bisa lagi membeli paket ini secara real-time.')) return;
+    
+    try {
+      const res = await fetch(`/admin/api/vouchers/packages/${id}/delete`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal menghapus');
+      loadPackages();
+    } catch (e) {
+      alert(e.message);
+    }
+  }
+
+  // Initial load
+  loadPackages();
+</script>
+</body>
+</html>

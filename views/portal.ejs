@@ -1,0 +1,2736 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0A0D14">
+  <title><%= portal.title %> | <%= portal.company %></title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&family=Space+Grotesk:wght@500..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          display: ['Space Grotesk', 'Inter', 'sans-serif'],
+        },
+        colors: {
+          lime: { DEFAULT:'#ADFF2F',50:'#F4FFD6',100:'#E8FFB0',200:'#D6FF78',300:'#ADFF2F',400:'#9AEA1A',500:'#7ECB0F',600:'#62A009',700:'#487605',800:'#304D03',900:'#182501' },
+          dark: { DEFAULT:'#0A0D14',50:'#1A1F2E',100:'#141824',200:'#0F121B',300:'#0A0D14' }
+        }
+      }}
+    }
+  </script>
+
+  <style>
+    :root {
+      --lime:#ADFF2F; --lime-dim:rgba(173,255,47,0.12); --lime-border:rgba(173,255,47,0.2);
+      --surface:#141824; --surface-2:#1A1F2E; --surface-3:#1F2538; --bg:#0A0D14;
+      --border:rgba(255,255,255,0.07); --text:#FFFFFF;
+      --muted:rgba(255,255,255,0.5); --muted-2:rgba(255,255,255,0.3);
+      --red:#EF4444; --red-dim:rgba(239,68,68,0.1); --red-border:rgba(239,68,68,0.3);
+    }
+    html.light {
+      --lime:#62A009; --lime-dim:rgba(98,160,9,0.1); --lime-border:rgba(98,160,9,0.25);
+      --surface:#FFFFFF; --surface-2:#F4F6FA; --surface-3:#EEF0F5; --bg:#F0F2F8;
+      --border:rgba(0,0,0,0.07); --text:#0A0D14;
+      --muted:rgba(10,13,20,0.5); --muted-2:rgba(10,13,20,0.3);
+    }
+
+    html.dark { color-scheme: dark; }
+    html.light { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+      background: var(--bg); color: var(--text);
+      overflow: hidden; height: 100dvh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+
+    .press {
+      transition: transform 0.15s cubic-bezier(.4,0,.2,1), opacity 0.15s ease;
+      transform-origin: center; -webkit-user-select: none; user-select: none;
+    }
+    .press:active { transform: scale(0.96); opacity: 0.75; }
+
+    .tab-content { display: none; opacity: 0; transform: translateY(14px) scale(0.98); transition: opacity 0.28s cubic-bezier(.25,1,.5,1), transform 0.28s cubic-bezier(.25,1,.5,1); }
+    .tab-content.active-tab { display: block; }
+    .tab-content.active-tab.tab-visible { opacity: 1; transform: translateY(0) scale(1); }
+
+    .btn-lime {
+      background: var(--lime); color: #0A0D14; font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif; border-radius: 14px;
+      transition: box-shadow 0.2s, transform 0.15s, filter 0.2s;
+    }
+    .btn-lime:hover { box-shadow: 0 0 14px rgba(173,255,47,0.3); filter: brightness(1.05); }
+    .btn-lime:active { transform: scale(0.94); }
+
+    .btn-ghost {
+      background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 14px; font-weight: 600;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-ghost:hover { border-color: var(--lime-border); }
+    .btn-ghost:active { transform: scale(0.94); }
+
+    .btn-danger-soft {
+      background: var(--red-dim); color: var(--red);
+      border: 1px solid var(--red-border); border-radius: 14px;
+      font-weight: 700; font-family: 'Space Grotesk', sans-serif;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .btn-danger-soft:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.5); }
+    .btn-danger-soft:active { transform: scale(0.96); }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 14px;
+      font-weight: 500; font-size: 14px;
+      color: var(--muted);
+      transition: background 0.2s, color 0.2s;
+      cursor: pointer; border: none; background: transparent; width: 100%; text-align: left;
+    }
+    .nav-item:hover { background: var(--surface-2); color: var(--text); }
+    .nav-item.active { background: var(--lime-dim); color: var(--lime); border: 1px solid var(--lime-border); }
+    .nav-item .nav-icon { font-size: 20px; transition: transform 0.2s; }
+    .nav-item.active .nav-icon { transform: scale(1.1); }
+
+    /* ── BOTTOM NAV iOS (5 tabs) ── */
+    .bottom-nav-item {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; flex: 1; height: 100%; cursor: pointer;
+      color: var(--muted); border: none; background: transparent;
+      transition: color 0.2s; position: relative; padding: 4px 0;
+      min-width: 0;
+    }
+    .bottom-nav-item .nav-ico-wrap {
+      width: 40px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 13px;
+      transition: background 0.25s;
+    }
+    .bottom-nav-item .nav-ico-wrap i { font-size: 22px; transition: transform 0.2s; }
+    .bottom-nav-item span {
+      font-size: 9.5px; font-weight: 500; letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    .bottom-nav-item.active { color: var(--lime); }
+    .bottom-nav-item.active .nav-ico-wrap { background: var(--lime-dim); }
+    .bottom-nav-item.active .nav-ico-wrap i { transform: scale(1.05); }
+    .bottom-nav-item.active span { font-weight: 600; }
+
+    .badge-online {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 100px;
+      background: rgba(173,255,47,0.12);
+      border: 1px solid rgba(173,255,47,0.25);
+      color: var(--lime); font-size: 11px; font-weight: 600;
+    }
+    .badge-online .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--lime); box-shadow: 0 0 5px rgba(173,255,47,0.6);
+      animation: pulse-dot 2s infinite;
+    }
+    .badge-offline { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
+    .badge-offline .dot { background: var(--red); box-shadow: 0 0 5px rgba(239,68,68,0.6); animation: none; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 5px rgba(173,255,47,0.6); }
+      50% { opacity: 0.65; box-shadow: 0 0 2px rgba(173,255,47,0.25); }
+    }
+
+    .speed-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+    .speed-ring svg { transform: rotate(-90deg); }
+    .speed-ring .ring-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 6; }
+    .speed-ring .ring-fill {
+      fill: none; stroke: var(--lime); stroke-width: 6;
+      stroke-linecap: round; stroke-dasharray: 339.3; stroke-dashoffset: 339.3;
+      filter: drop-shadow(0 0 3px rgba(173,255,47,0.4));
+      transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+    }
+    .speed-ring .inner { position: absolute; text-align: center; }
+
+    .swiper-pagination-bullet { background: rgba(255,255,255,0.4) !important; }
+    .swiper-pagination-bullet-active { background: var(--lime) !important; }
+
+    #topbar { transition: box-shadow 0.3s, background 0.3s; }
+    #topbar.scrolled { box-shadow: 0 1px 0 var(--border), 0 4px 20px rgba(0,0,0,0.4); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    body.preview-mobile {
+      background: #05070E;
+      display: flex; align-items: center; justify-content: center;
+      padding: 64px 16px 24px;
+    }
+    body.preview-mobile #app-wrap {
+      max-width: 390px; width: 100%;
+      height: min(844px, 100%); margin: 0 auto;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 32px 80px rgba(0,0,0,0.7);
+      border-radius: 44px; overflow: hidden;
+      flex-shrink: 0;
+    }
+    body.preview-mobile aside.desktop-only { display: none !important; }
+    body.preview-mobile .mobile-only { display: flex !important; }
+    body.preview-mobile .desktop-title { display: none !important; }
+    body.preview-mobile .md\:grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    body.preview-mobile nav.bottom-nav { display: flex !important; position: absolute !important; }
+
+    .noise::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.04; mix-blend-mode: overlay; pointer-events: none; z-index: 1;
+    }
+
+    .progress-bar { height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--lime), #9AEA1A);
+      box-shadow: 0 0 4px rgba(173,255,47,0.35);
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px; transition: border-color 0.2s;
+    }
+
+    .avatar-ring {
+      padding: 3px;
+      background: linear-gradient(135deg, var(--lime), #62A009);
+      border-radius: 50%; display: inline-block;
+    }
+    .avatar-ring img { border-radius: 50%; display: block; }
+
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #EF4444; border: 2px solid var(--bg);
+      box-shadow: 0 0 5px rgba(239,68,68,0.4);
+    }
+
+    .plan-badge {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      padding: 3px 8px; border-radius: 6px;
+      background: var(--lime-dim); color: var(--lime);
+      border: 1px solid var(--lime-border); text-transform: uppercase;
+    }
+
+    .promoSwiper .swiper-slide { border-radius: 20px; overflow: hidden; }
+
+    .list-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; transition: background 0.15s; cursor: pointer;
+    }
+    .list-row:hover { background: rgba(255,255,255,0.03); }
+
+    #scroll-area { overflow-y: auto; flex: 1; }
+    .scroll-pad { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+    @media (min-width: 768px) {
+      .scroll-pad { padding-bottom: 32px; }
+    }
+
+    /* Ambient blur glow — statis, murah di GPU */
+    .ambient-glow {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); pointer-events: none; z-index: 0;
+      opacity: 0.55;
+    }
+    .ambient-glow-1 {
+      width: 420px; height: 420px; top: -160px; right: -120px;
+      background: radial-gradient(circle, rgba(173,255,47,0.10), transparent 70%);
+    }
+    .ambient-glow-2 {
+      width: 380px; height: 380px; bottom: -140px; left: -100px;
+      background: radial-gradient(circle, rgba(96,165,250,0.08), transparent 70%);
+    }
+    html.light .ambient-glow { opacity: 0.35; }
+    body.preview-mobile .ambient-glow { opacity: 0.3; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .mobile-only { display: none !important; }
+      nav.bottom-nav { display: none !important; }
+    }
+    @media (max-width: 767px) {
+      aside.desktop-only { display: none !important; }
+    }
+
+    .alert-box {
+      border-radius: 16px; padding: 14px 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .alert-warn { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); }
+
+    #preview-bar {
+      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+      z-index: 500; background: rgba(20,24,36,0.72);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border: 1px solid var(--border); border-radius: 99px;
+      display: none; gap: 2px; padding: 4px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    }
+    @media (min-width: 768px) {
+      #preview-bar { display: flex; }
+    }
+    .preview-btn {
+      padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 600;
+      border: none; cursor: pointer; transition: background 0.2s, color 0.2s;
+      display: flex; align-items: center; gap: 6px;
+      color: var(--muted); background: transparent;
+    }
+    .preview-btn.active { background: var(--lime-dim); color: var(--lime); border: 1px solid var(--lime-border); }
+
+    /* ═══════ CREDIT CARD (glow dikurangi) ═══════ */
+    .cc {
+      position: relative; aspect-ratio: 1.586 / 1; width: 100%;
+      max-width: 600px; margin-inline: auto;
+      border-radius: 20px; overflow: hidden; isolation: isolate;
+      container-type: inline-size;
+      background:
+        radial-gradient(circle at 100% 0%, rgba(173,255,47,0.13), transparent 55%),
+        radial-gradient(circle at 0% 100%, rgba(96,165,250,0.09), transparent 55%),
+        linear-gradient(135deg, #1B2233 0%, #0F1420 45%, #0A0D14 100%);
+      border: 1px solid rgba(255,255,255,0.09);
+      box-shadow: 0 20px 50px -22px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+      transition: transform 0.4s cubic-bezier(.2,.9,.3,1), box-shadow 0.4s;
+    }
+    .cc:hover {
+      transform: translateY(-2px) rotateX(1.5deg) rotateY(-1.5deg);
+      box-shadow: 0 26px 60px -22px rgba(0,0,0,0.7), 0 0 24px -12px rgba(173,255,47,0.18);
+    }
+    .cc::before {
+      content: ''; position: absolute; inset: -50%;
+      background: linear-gradient(115deg, transparent 30%, rgba(173,255,47,0.07) 45%, rgba(255,255,255,0.13) 50%, rgba(173,255,47,0.07) 55%, transparent 70%);
+      transform: translateX(-30%); transition: transform 1.2s ease;
+      pointer-events: none; z-index: 3; mix-blend-mode: screen;
+    }
+    .cc:hover::before { transform: translateX(30%); }
+    .cc::after {
+      content: ''; position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.05; mix-blend-mode: overlay; pointer-events: none; z-index: 4;
+    }
+    .cc-arcs { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.4; }
+    .cc-arcs svg { width: 100%; height: 100%; }
+
+    .cc-content {
+      position: relative; z-index: 5; height: 100%;
+      padding: 5% 6%;
+      display: flex; flex-direction: column; justify-content: space-between;
+      gap: 2%; color: #fff;
+    }
+
+    .cc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cc-brand {
+      display: flex; align-items: center; gap: 7px;
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      letter-spacing: 0.14em; font-size: clamp(10px, 2.6cqw, 12px); color: #fff;
+    }
+    .cc-brand-mark {
+      width: 20px; height: 20px; border-radius: 6px;
+      background: linear-gradient(135deg, var(--lime) 0%, #7ECB0F 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #0A0D14; font-weight: 900; font-size: 12px;
+      box-shadow: 0 0 8px rgba(173,255,47,0.3);
+    }
+    .cc-brand span { color: var(--lime); }
+    .cc-top-badges { display: flex; align-items: center; gap: 6px; }
+
+    .cc-status {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+      color: var(--lime); text-transform: uppercase;
+      padding: 3px 8px; border-radius: 100px;
+      background: rgba(173,255,47,0.12);
+      border: 1px solid rgba(173,255,47,0.3);
+    }
+    .cc-status .dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--lime); box-shadow: 0 0 4px var(--lime);
+      animation: pulse-dot 2s infinite;
+    }
+    .cc-tier {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.18em;
+      padding: 3px 9px; border-radius: 100px;
+      background: rgba(173,255,47,0.14);
+      border: 1px solid rgba(173,255,47,0.35);
+      color: var(--lime); text-transform: uppercase;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    .cc-identity { display: flex; flex-direction: column; gap: 1px; margin: 2% 0; }
+    .cc-greet {
+      font-size: 10.5px;
+      font-weight: 500; color: rgba(255,255,255,0.55);
+      letter-spacing: 0.02em;
+    }
+    .cc-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(16px, 5cqw, 21px);
+      font-weight: 700; letter-spacing: -0.01em;
+      color: #fff; line-height: 1.1;
+    }
+
+    .cc-chip-row { display: flex; align-items: center; gap: 10px; margin: 1% 0; }
+    .cc-chip {
+      width: 36px; height: 28px; border-radius: 6px;
+      background: linear-gradient(135deg, #E8C86A 0%, #B8934A 45%, #F0DA8A 100%);
+      position: relative; flex-shrink: 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+      overflow: hidden;
+    }
+    .cc-chip::before, .cc-chip::after { content: ''; position: absolute; background: rgba(0,0,0,0.35); }
+    .cc-chip::before { left: 50%; top: 8%; bottom: 8%; width: 1px; transform: translateX(-50%); }
+    .cc-chip::after { top: 50%; left: 8%; right: 8%; height: 1px; transform: translateY(-50%); }
+    .cc-chip .chip-line-1, .cc-chip .chip-line-2 { position: absolute; background: rgba(0,0,0,0.35); }
+    .cc-chip .chip-line-1 { left: 22%; right: 22%; top: 22%; height: 1px; }
+    .cc-chip .chip-line-2 { left: 22%; right: 22%; bottom: 22%; height: 1px; }
+
+    .cc-id-wrap {
+      display: flex; align-items: center; gap: 6px;
+      min-width: 0; flex: 1;
+    }
+    .cc-id {
+      font-family: 'Space Grotesk', monospace; font-variant-numeric: tabular-nums;
+      font-size: clamp(13px, 3.8cqw, 16px); font-weight: 600;
+      letter-spacing: 0.14em; color: rgba(255,255,255,0.92);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cc-copy {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.75);
+      cursor: pointer; flex-shrink: 0;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+      font-size: 12px;
+    }
+    .cc-copy:hover { background: rgba(173,255,47,0.15); color: var(--lime); border-color: rgba(173,255,47,0.35); }
+    .cc-copy:active { transform: scale(0.9); }
+    .cc-copy.copied { background: rgba(173,255,47,0.2); color: var(--lime); border-color: rgba(173,255,47,0.5); }
+
+    .cc-footer {
+      display: flex; align-items: flex-end; gap: 14px;
+      padding-top: 4%;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .cc-foot-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .cc-label {
+      font-size: 8px; font-weight: 600;
+      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+    }
+    .cc-label-row {
+      display: flex; justify-content: space-between;
+      align-items: baseline; gap: 6px;
+    }
+    .cc-lime { color: var(--lime) !important; }
+
+    .cc-speed {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(18px, 5cqw, 22px);
+      font-weight: 800; line-height: 1;
+      color: #fff; letter-spacing: -0.02em;
+    }
+    .cc-speed small {
+      font-size: 9px; font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      margin-left: 1px;
+    }
+    .cc-progress {
+      height: 4px; border-radius: 99px;
+      background: rgba(255,255,255,0.12);
+      overflow: hidden; margin-top: 3px;
+    }
+    .cc-progress-fill {
+      height: 100%; width: 65%;
+      background: linear-gradient(90deg, var(--lime), #9AEA1A);
+      box-shadow: 0 0 4px rgba(173,255,47,0.4);
+      border-radius: 99px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    .cc-orb { position: absolute; border-radius: 50%; filter: blur(50px); pointer-events: none; z-index: 0; }
+    .cc-orb-1 { width: 130px; height: 130px; top: -50px; right: -30px; background: radial-gradient(circle, rgba(173,255,47,0.22), transparent 70%); }
+    .cc-orb-2 { width: 110px; height: 110px; bottom: -50px; left: -20px; background: radial-gradient(circle, rgba(96,165,250,0.16), transparent 70%); }
+
+    /* ═══════ iOS SETTINGS ═══════ */
+    .ios-section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 0 16px 8px;
+    }
+    .ios-group {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+    }
+    .ios-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 11px 14px; cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+    }
+    .ios-row:last-child { border-bottom: none; }
+    .ios-row:hover { background: var(--surface-2); }
+    .ios-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ios-icon i { font-size: 15px; color: #fff; }
+    .ios-label {
+      flex: 1; font-size: 14px; font-weight: 400;
+      color: var(--text); letter-spacing: -0.01em;
+    }
+    .ios-value { font-size: 13px; color: var(--muted); margin-right: 2px; }
+    .ios-chevron { color: var(--muted-2); font-size: 14px; }
+
+    /* ═══════ SPEED TEST ═══════ */
+    .st-wrap {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      margin: 6px 0 10px;
+    }
+    .st-center {
+      position: absolute; text-align: center;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 140px;
+    }
+    .st-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 44px; font-weight: 800;
+      line-height: 1; letter-spacing: -0.03em;
+      color: var(--lime);
+      transition: color 0.3s;
+    }
+    .st-unit {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .st-status {
+      font-size: 11px; margin-top: 6px;
+      color: var(--muted);
+    }
+    .st-result-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px; background: var(--border);
+      border-radius: 14px; overflow: hidden;
+      margin-top: 6px;
+    }
+    .st-result-cell {
+      background: var(--surface-2);
+      padding: 12px 8px; text-align: center;
+    }
+    .st-result-cell .st-ic { font-size: 16px; margin-bottom: 4px; }
+    .st-result-cell .st-rt {
+      font-size: 9px; letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted); font-weight: 600;
+    }
+    .st-result-cell .st-rv {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 17px; font-weight: 700;
+      color: var(--text); margin-top: 2px;
+    }
+    .st-result-cell .st-rv small {
+      font-size: 9px; font-weight: 500;
+      color: var(--muted); margin-left: 1px;
+    }
+
+    /* ═══════ MODAL ═══════ */
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(8px) saturate(1.3);
+      -webkit-backdrop-filter: blur(8px) saturate(1.3);
+      display: none; align-items: center; justify-content: center;
+      padding: 16px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-backdrop.open { display: flex; }
+    /* FIX: saat tertutup jangan menangkap klik (bug desktop: overlay transparan memblokir tombol sidebar) */
+    .modal-backdrop:not(.open) { display: none !important; pointer-events: none !important; visibility: hidden !important; }
+    body.preview-mobile .modal-backdrop { position: absolute; }
+    body.preview-mobile .modal-sheet { max-height: 88%; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-sheet {
+      width: 100%; max-width: 480px;
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      padding: 10px 20px 20px;
+      animation: slideUp 0.3s cubic-bezier(.2,.9,.3,1);
+      max-height: 86vh; overflow-y: auto;
+    }
+    @media (min-width: 768px) {
+      .modal-backdrop { align-items: center; }
+      .modal-sheet { border-radius: 24px; border-bottom: 1px solid var(--border); }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-grip {
+      width: 40px; height: 4px; border-radius: 99px;
+      background: var(--muted-2);
+      margin: 4px auto 12px;
+    }
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 17px; font-weight: 700;
+      color: var(--text); margin-bottom: 4px;
+    }
+    .modal-sub {
+      font-size: 12px; color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .field { margin-bottom: 14px; }
+    .field-label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
+      display: block;
+    }
+    .field-input-wrap {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 0 12px;
+      transition: border-color 0.2s;
+    }
+    .field-input-wrap:focus-within { border-color: var(--lime-border); }
+    .field-input {
+      flex: 1;
+      background: transparent; border: none; outline: none;
+      color: var(--text); font-size: 14px;
+      padding: 12px 0;
+      font-family: 'Space Grotesk', sans-serif;
+      letter-spacing: 0.02em;
+    }
+    .field-input[type="password"] { letter-spacing: 0.2em; font-family: 'Inter', monospace; }
+    /* Kotak input mandiri (textarea / file) agar kontras dengan background */
+    .field-box {
+      display: block; width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+      outline: none;
+      font-family: 'Inter', system-ui, sans-serif;
+      transition: border-color .2s, background .2s;
+    }
+    .field-box:focus { border-color: var(--lime-border); background: var(--surface-3); }
+    .field-box::placeholder { color: var(--muted-2); }
+    .field-box[type="file"] { padding: 11px 12px; font-size: 12px; cursor: pointer; }
+    .field-box[type="file"]::file-selector-button {
+      background: var(--lime-dim); color: var(--lime);
+      border: 1px solid var(--lime-border); border-radius: 9px;
+      padding: 7px 12px; margin-right: 10px; font-weight: 700; font-size: 12px; cursor: pointer;
+    }
+    select.field-box { appearance: none; -webkit-appearance: none; }
+    .field-box-hint { font-size: 11px; color: var(--muted-2); margin-top: 5px; }
+    .info-list { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--surface-2); margin-bottom: 14px; }
+    .info-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+    .info-row:last-child { border-bottom: none; }
+    .info-k { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    .info-v { font-size: 13px; font-weight: 600; color: var(--text); text-align: right; word-break: break-word; }
+    .ios-row .ios-icon i.bi { font-size: 16px; }
+    .field-toggle {
+      background: transparent; border: none;
+      color: var(--muted); cursor: pointer;
+      padding: 6px; border-radius: 8px;
+      display: flex; align-items: center;
+      transition: color 0.2s;
+    }
+    .field-toggle:hover { color: var(--text); }
+    .field-hint {
+      font-size: 11px; color: var(--muted);
+      margin-top: 6px; line-height: 1.4;
+    }
+    .modal-actions {
+      display: flex; gap: 10px; margin-top: 20px;
+    }
+    .modal-actions button {
+      flex: 1; padding: 13px 16px;
+      font-size: 14px; font-weight: 700;
+      border-radius: 12px; border: none;
+      cursor: pointer; transition: transform 0.15s, background 0.2s;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .modal-actions button:active { transform: scale(0.96); }
+    .btn-cancel {
+      background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--border) !important;
+    }
+    .btn-cancel:hover { background: var(--surface-3); }
+    .btn-save {
+      background: var(--lime); color: #0A0D14;
+    }
+    .btn-save:hover { filter: brightness(1.05); }
+    .btn-danger {
+      background: var(--red); color: #fff;
+    }
+    .btn-danger:hover { filter: brightness(1.08); }
+
+    /* Confirm modal centered */
+    .confirm-sheet {
+      max-width: 380px !important;
+      text-align: center;
+    }
+    .confirm-icon-wrap {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.25);
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+    .confirm-icon-wrap i {
+      font-size: 28px; color: var(--red);
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; left: 50%; bottom: 100px;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(20,24,36,0.9);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      border: 1px solid var(--lime-border);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 99px;
+      font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 400;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast i { color: var(--lime); font-size: 16px; }
+    .toast.error { border-color: var(--red-border); }
+    .toast.error i { color: var(--red); }
+
+    body.preview-mobile .toast { position: absolute; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes ptrSpin { to { transform: rotate(360deg); } }
+    .ptr-spin { animation: ptrSpin .7s linear infinite !important; }
+    @keyframes badgePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,.38); } 50% { box-shadow: 0 0 0 7px rgba(251,191,36,0); } }
+    .net-badge[data-state="maintenance"] { animation: badgePulse 2.2s ease-in-out infinite; }
+    .net-badge[data-state="outage"] { animation: badgePulse 1.6s ease-in-out infinite; }
+
+    /* ═══════ IKON — SVG inline (tanpa font/CDN) ═══════ */
+    .ph,.ph-fill,.ph-bold{display:inline-block;flex-shrink:0;width:1em;height:1em;font-style:normal;vertical-align:-0.125em;background-color:currentColor;
+      -webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+    .ph.ph-arrows-clockwise{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z'/%3E%3C/svg%3E")}
+    .ph.ph-bank{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M24,104H48v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16H208V104h24a8,8,0,0,0,4.19-14.81l-104-64a8,8,0,0,0-8.38,0l-104,64A8,8,0,0,0,24,104Zm40,0H96v64H64Zm80,0v64H112V104Zm48,64H160V104h32ZM128,41.39,203.74,88H52.26ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208Z'/%3E%3C/svg%3E")}
+    .ph.ph-caret-right{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z'/%3E%3C/svg%3E")}
+    .ph.ph-circle-notch{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M232,128a104,104,0,0,1-208,0c0-41,23.81-78.36,60.66-95.27a8,8,0,0,1,6.68,14.54C60.15,61.59,40,93.27,40,128a88,88,0,0,0,176,0c0-34.73-20.15-66.41-51.34-80.73a8,8,0,0,1,6.68-14.54C208.19,49.64,232,87,232,128Z'/%3E%3C/svg%3E")}
+    .ph.ph-device-mobile{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M176,16H80A24,24,0,0,0,56,40V216a24,24,0,0,0,24,24h96a24,24,0,0,0,24-24V40A24,24,0,0,0,176,16ZM72,64H184V192H72Zm8-32h96a8,8,0,0,1,8,8v8H72V40A8,8,0,0,1,80,32Zm96,192H80a8,8,0,0,1-8-8v-8H184v8A8,8,0,0,1,176,224Z'/%3E%3C/svg%3E")}
+    .ph.ph-eye{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.47,133.47,0,0,1,25,128,133.33,133.33,0,0,1,48.07,97.25C70.33,75.19,97.22,64,128,64s57.67,11.19,79.93,33.25A133.46,133.46,0,0,1,231.05,128C223.84,141.46,192.43,192,128,192Zm0-112a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Z'/%3E%3C/svg%3E")}
+    .ph.ph-eye-slash{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M53.92,34.62A8,8,0,1,0,42.08,45.38L61.32,66.55C25,88.84,9.38,123.2,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208a127.11,127.11,0,0,0,52.07-10.83l22,24.21a8,8,0,1,0,11.84-10.76Zm47.33,75.84,41.67,45.85a32,32,0,0,1-41.67-45.85ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.16,133.16,0,0,1,25,128c4.69-8.79,19.66-33.39,47.35-49.38l18,19.75a48,48,0,0,0,63.66,70l14.73,16.2A112,112,0,0,1,128,192Zm6-95.43a8,8,0,0,1,3-15.72,48.16,48.16,0,0,1,38.77,42.64,8,8,0,0,1-7.22,8.71,6.39,6.39,0,0,1-.75,0,8,8,0,0,1-8-7.26A32.09,32.09,0,0,0,134,96.57Zm113.28,34.69c-.42.94-10.55,23.37-33.36,43.8a8,8,0,1,1-10.67-11.92A132.77,132.77,0,0,0,231.05,128a133.15,133.15,0,0,0-23.12-30.77C185.67,75.19,158.78,64,128,64a118.37,118.37,0,0,0-19.36,1.57A8,8,0,1,1,106,49.79,134,134,0,0,1,128,48c34.88,0,66.57,13.26,91.66,38.35,18.83,18.83,27.3,37.62,27.65,38.41A8,8,0,0,1,247.31,131.26Z'/%3E%3C/svg%3E")}
+    .ph.ph-gauge{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M207.06,72.67A111.24,111.24,0,0,0,128,40h-.4C66.07,40.21,16,91,16,153.13V176a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V152A111.25,111.25,0,0,0,207.06,72.67ZM224,176H119.71l54.76-75.3a8,8,0,0,0-12.94-9.42L99.92,176H32V153.13c0-3.08.15-6.12.43-9.13H56a8,8,0,0,0,0-16H35.27c10.32-38.86,44-68.24,84.73-71.66V80a8,8,0,0,0,16,0V56.33A96.14,96.14,0,0,1,221,128H200a8,8,0,0,0,0,16h23.67c.21,2.65.33,5.31.33,8Z'/%3E%3C/svg%3E")}
+    .ph.ph-gear-six{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A112.1,112.1,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.62a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21Zm-15,34.91-28.57,16.25a8,8,0,0,0-3,3c-.58,1-1.19,2.06-1.81,3.06a7.94,7.94,0,0,0-1.22,4.21l-.15,32.25a95.89,95.89,0,0,1-25.37,14.3L134,199.13a8,8,0,0,0-3.91-1h-.19c-1.21,0-2.43,0-3.64,0a8.08,8.08,0,0,0-4.1,1l-28.84,16.1A96,96,0,0,1,67.88,201l-.11-32.2a8,8,0,0,0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09,8.09,0,0,0-3-3.06l-28.6-16.29a90.49,90.49,0,0,1,0-28.26L61.67,97.63a8,8,0,0,0,3-3c.58-1,1.19-2.06,1.81-3.06a7.94,7.94,0,0,0,1.22-4.21l.15-32.25a95.89,95.89,0,0,1,25.37-14.3L122,56.87a8,8,0,0,0,4.1,1c1.21,0,2.43,0,3.64,0a8.08,8.08,0,0,0,4.1-1l28.84-16.1A96,96,0,0,1,188.12,55l.11,32.2a8,8,0,0,0,1.22,4.22c.62,1,1.23,2,1.8,3.06a8.09,8.09,0,0,0,3,3.06l28.6,16.29A90.49,90.49,0,0,1,222.9,142.12Z'/%3E%3C/svg%3E")}
+    .ph.ph-house{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z'/%3E%3C/svg%3E")}
+    .ph.ph-monitor{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224Z'/%3E%3C/svg%3E")}
+    .ph.ph-power{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M120,128V48a8,8,0,0,1,16,0v80a8,8,0,0,1-16,0Zm60.37-78.7a8,8,0,0,0-8.74,13.4C194.74,77.77,208,101.57,208,128a80,80,0,0,1-160,0c0-26.43,13.26-50.23,36.37-65.3a8,8,0,0,0-8.74-13.4C47.9,67.38,32,96.06,32,128a96,96,0,0,0,192,0C224,96.06,208.1,67.38,180.37,49.3Z'/%3E%3C/svg%3E")}
+    .ph.ph-qr-code{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm0,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48ZM200,40H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-64,72V144a8,8,0,0,1,16,0v32a8,8,0,0,1-16,0Zm80-16a8,8,0,0,1-8,8H184v40a8,8,0,0,1-8,8H144a8,8,0,0,1,0-16h24V144a8,8,0,0,1,16,0v8h24A8,8,0,0,1,216,160Zm0,32v16a8,8,0,0,1-16,0V192a8,8,0,0,1,16,0Z'/%3E%3C/svg%3E")}
+    .ph.ph-receipt{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M72,104a8,8,0,0,1,8-8h96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,104Zm8,40h96a8,8,0,0,0,0-16H80a8,8,0,0,0,0,16ZM232,56V208a8,8,0,0,1-11.58,7.15L192,200.94l-28.42,14.21a8,8,0,0,1-7.16,0L128,200.94,99.58,215.15a8,8,0,0,1-7.16,0L64,200.94,35.58,215.15A8,8,0,0,1,24,208V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Zm-16,0H40V195.06l20.42-10.22a8,8,0,0,1,7.16,0L96,199.06l28.42-14.22a8,8,0,0,1,7.16,0L160,199.06l28.42-14.22a8,8,0,0,1,7.16,0L216,195.06Z'/%3E%3C/svg%3E")}
+    .ph.ph-user-circle{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a64,64,0,0,1,107.84,0,87.83,87.83,0,0,1-107.84,0ZM96,120a32,32,0,1,1,32,32A32,32,0,0,1,96,120Zm97.76,66.41a79.66,79.66,0,0,0-36.06-28.75,48,48,0,1,0-59.4,0,79.66,79.66,0,0,0-36.06,28.75,88,88,0,1,1,131.52,0Z'/%3E%3C/svg%3E")}
+    .ph.ph-wifi-high{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M140,204a12,12,0,1,1-12-12A12,12,0,0,1,140,204ZM237.08,87A172,172,0,0,0,18.92,87,8,8,0,0,0,29.08,99.37a156,156,0,0,1,197.84,0A8,8,0,0,0,237.08,87ZM205,122.77a124,124,0,0,0-153.94,0A8,8,0,0,0,61,135.31a108,108,0,0,1,134.06,0,8,8,0,0,0,11.24-1.3A8,8,0,0,0,205,122.77Zm-32.26,35.76a76.05,76.05,0,0,0-89.42,0,8,8,0,0,0,9.42,12.94,60,60,0,0,1,70.58,0,8,8,0,1,0,9.42-12.94Z'/%3E%3C/svg%3E")}
+    .ph-bold.ph-arrow-clockwise{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M244,56v48a12,12,0,0,1-12,12H184a12,12,0,1,1,0-24H201.1l-19-17.38c-.13-.12-.26-.24-.38-.37A76,76,0,1,0,127,204h1a75.53,75.53,0,0,0,52.15-20.72,12,12,0,0,1,16.49,17.45A99.45,99.45,0,0,1,128,228h-1.37A100,100,0,1,1,198.51,57.06L220,76.72V56a12,12,0,0,1,24,0Z'/%3E%3C/svg%3E")}
+    .ph-bold.ph-arrows-clockwise{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M228,48V96a12,12,0,0,1-12,12H168a12,12,0,0,1,0-24h19l-7.8-7.8a75.55,75.55,0,0,0-53.32-22.26h-.43A75.49,75.49,0,0,0,72.39,75.57,12,12,0,1,1,55.61,58.41a99.38,99.38,0,0,1,69.87-28.47H126A99.42,99.42,0,0,1,196.2,59.23L204,67V48a12,12,0,0,1,24,0ZM183.61,180.43a75.49,75.49,0,0,1-53.09,21.63h-.43A75.55,75.55,0,0,1,76.77,179.8L69,172H88a12,12,0,0,0,0-24H40a12,12,0,0,0-12,12v48a12,12,0,0,0,24,0V189l7.8,7.8A99.42,99.42,0,0,0,130,226.06h.56a99.38,99.38,0,0,0,69.87-28.47,12,12,0,0,0-16.78-17.16Z'/%3E%3C/svg%3E")}
+    .ph-bold.ph-caret-right{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,1,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z'/%3E%3C/svg%3E")}
+    .ph-bold.ph-check{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'/%3E%3C/svg%3E")}
+    .ph-bold.ph-copy{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M216,28H88A12,12,0,0,0,76,40V76H40A12,12,0,0,0,28,88V216a12,12,0,0,0,12,12H168a12,12,0,0,0,12-12V180h36a12,12,0,0,0,12-12V40A12,12,0,0,0,216,28ZM156,204H52V100H156Zm48-48H180V88a12,12,0,0,0-12-12H100V52H204Z'/%3E%3C/svg%3E")}
+    .ph-bold.ph-wifi-high{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M144,204a16,16,0,1,1-16-16A16,16,0,0,1,144,204ZM239.61,83.91a176,176,0,0,0-223.22,0,12,12,0,1,0,15.23,18.55,152,152,0,0,1,192.76,0,12,12,0,1,0,15.23-18.55Zm-32.16,35.73a128,128,0,0,0-158.9,0,12,12,0,0,0,14.9,18.81,104,104,0,0,1,129.1,0,12,12,0,0,0,14.9-18.81ZM175.07,155.3a80.05,80.05,0,0,0-94.14,0,12,12,0,0,0,14.14,19.4,56,56,0,0,1,65.86,0,12,12,0,1,0,14.14-19.4Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-arrow-clockwise{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1-5.66-13.66l17-17-10.55-9.65-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,1,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60l10.93,10L226.34,50.3A8,8,0,0,1,240,56Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-arrow-fat-down{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M229.66,141.66l-96,96a8,8,0,0,1-11.32,0l-96-96A8,8,0,0,1,32,128H72V48A16,16,0,0,1,88,32h80a16,16,0,0,1,16,16v80h40a8,8,0,0,1,5.66,13.66Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-arrow-fat-up{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M231.39,123.06A8,8,0,0,1,224,128H184v80a16,16,0,0,1-16,16H88a16,16,0,0,1-16-16V128H32a8,8,0,0,1-5.66-13.66l96-96a8,8,0,0,1,11.32,0l96,96A8,8,0,0,1,231.39,123.06Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-bell{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-check-circle{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-clock-countdown{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M208,96a12,12,0,1,1,12,12A12,12,0,0,1,208,96ZM196,72a12,12,0,1,0-12-12A12,12,0,0,0,196,72Zm28.66,56a8,8,0,0,0-8.63,7.31A88.12,88.12,0,1,1,120.66,40,8,8,0,0,0,119.34,24,104.12,104.12,0,1,0,232,136.66,8,8,0,0,0,224.66,128ZM128,56a72,72,0,1,1-72,72A72.08,72.08,0,0,1,128,56Zm-8,72a8,8,0,0,0,8,8h48a8,8,0,0,0,0-16H136V80a8,8,0,0,0-16,0Zm40-80a12,12,0,1,0-12-12A12,12,0,0,0,160,48Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-credit-card{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM136,176H120a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm64,0H168a8,8,0,0,1,0-16h32a8,8,0,0,1,0,16ZM32,88V64H224V88Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-device-mobile{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M176,16H80A24,24,0,0,0,56,40V216a24,24,0,0,0,24,24h96a24,24,0,0,0,24-24V40A24,24,0,0,0,176,16ZM80,32h96a8,8,0,0,1,8,8v8H72V40A8,8,0,0,1,80,32Zm96,192H80a8,8,0,0,1-8-8v-8H184v8A8,8,0,0,1,176,224Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-gauge{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M240,152v24a16,16,0,0,1-16,16H115.93a4,4,0,0,1-3.24-6.35L174.27,101a8.21,8.21,0,0,0-1.37-11.3,8,8,0,0,0-11.37,1.61l-72,99.06A4,4,0,0,1,86.25,192H32a16,16,0,0,1-16-16V153.13c0-1.79,0-3.57.13-5.33a4,4,0,0,1,4-3.8H48a8,8,0,0,0,8-8.53A8.17,8.17,0,0,0,47.73,128H23.92a4,4,0,0,1-3.87-5c12-43.84,49.66-77.13,95.52-82.28a4,4,0,0,1,4.43,4V72a8,8,0,0,0,8.53,8A8.17,8.17,0,0,0,136,71.73V44.67a4,4,0,0,1,4.43-4A112.18,112.18,0,0,1,236.23,123a4,4,0,0,1-3.88,5H208.27a8.17,8.17,0,0,0-8.25,7.47,8,8,0,0,0,8,8.53h27.92a4,4,0,0,1,4,3.86C240,149.23,240,150.61,240,152Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-headset{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M232,128v80a40,40,0,0,1-40,40H136a8,8,0,0,1,0-16h56a24,24,0,0,0,24-24H192a24,24,0,0,1-24-24V144a24,24,0,0,1,24-24h23.65A88,88,0,0,0,66,65.54,87.29,87.29,0,0,0,40.36,120H64a24,24,0,0,1,24,24v40a24,24,0,0,1-24,24H48a24,24,0,0,1-24-24V128A104.11,104.11,0,0,1,201.89,54.66,103.41,103.41,0,0,1,232,128Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-house{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M224,120v96a8,8,0,0,1-8,8H160a8,8,0,0,1-8-8V164a4,4,0,0,0-4-4H108a4,4,0,0,0-4,4v52a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V120a16,16,0,0,1,4.69-11.31l80-80a16,16,0,0,1,22.62,0l80,80A16,16,0,0,1,224,120Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-info{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-4,48a12,12,0,1,1-12,12A12,12,0,0,1,124,72Zm12,112a16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40a8,8,0,0,1,0,16Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-laptop{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M232,168h-8V72a24,24,0,0,0-24-24H56A24,24,0,0,0,32,72v96H24a8,8,0,0,0-8,8v16a24,24,0,0,0,24,24H216a24,24,0,0,0,24-24V176A8,8,0,0,0,232,168ZM112,72h32a8,8,0,0,1,0,16H112a8,8,0,0,1,0-16ZM224,192a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8v-8H224Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-link{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM115.7,192.49a43.31,43.31,0,0,1-55-66.43l25.37-25.37a43.35,43.35,0,0,1,61.25,0,42.9,42.9,0,0,1,9.95,15.43,8,8,0,1,1-15,5.6A27.33,27.33,0,0,0,97.37,112L72,137.37a27.32,27.32,0,0,0,34.68,41.91,8,8,0,1,1,9,13.21Zm79.61-62.55-25.37,25.37A43,43,0,0,1,139.32,168h0a43.35,43.35,0,0,1-40.53-28.12,8,8,0,1,1,15-5.6A27.35,27.35,0,0,0,139.28,152h0a27.14,27.14,0,0,0,19.32-8L184,118.63a27.32,27.32,0,0,0-34.68-41.91,8,8,0,1,1-9-13.21,43.32,43.32,0,0,1,55,66.43Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-lock-key{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80Zm-72,78.63V184a8,8,0,0,1-16,0V158.63a24,24,0,1,1,16,0ZM160,80H96V56a32,32,0,0,1,64,0Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-moon{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M235.54,150.21a104.84,104.84,0,0,1-37,52.91A104,104,0,0,1,32,120,103.09,103.09,0,0,1,52.88,57.48a104.84,104.84,0,0,1,52.91-37,8,8,0,0,1,10,10,88.08,88.08,0,0,0,109.8,109.8,8,8,0,0,1,10,10Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-play{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-question{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,168a12,12,0,1,1,12-12A12,12,0,0,1,128,192Zm8-48.72V144a8,8,0,0,1-16,0v-8a8,8,0,0,1,8-8c13.23,0,24-9,24-20s-10.77-20-24-20-24,9-24,20v4a8,8,0,0,1-16,0v-4c0-19.85,17.94-36,40-36s40,16.15,40,36C168,125.38,154.24,139.93,136,143.28Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-receipt{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M216,40H40A16,16,0,0,0,24,56V208a8,8,0,0,0,11.58,7.15L64,200.94l28.42,14.21a8,8,0,0,0,7.16,0L128,200.94l28.42,14.21a8,8,0,0,0,7.16,0L192,200.94l28.42,14.21A8,8,0,0,0,232,208V56A16,16,0,0,0,216,40ZM176,144H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Zm0-32H80a8,8,0,0,1,0-16h96a8,8,0,0,1,0,16Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-router{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill-rule='evenodd' d='M40 128h176a24 24 0 0 1 24 24v48a24 24 0 0 1-24 24H40a24 24 0 0 1-24-24v-48a24 24 0 0 1 24-24zM76 166a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM116 166a10 10 0 1 0 0 20a10 10 0 1 0 0-20z'/%3E%3Cpath d='M72 128V52M184 128V52' stroke='%23000' stroke-width='16' stroke-linecap='round'/%3E%3C/svg%3E")}
+    .ph-fill.ph-shield-check{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm-34.32,69.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-sun{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm8,24a64,64,0,1,0,64,64A64.07,64.07,0,0,0,128,64ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-television{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M216,64H147.31l34.35-34.34a8,8,0,1,0-11.32-11.32L128,60.69,85.66,18.34A8,8,0,0,0,74.34,29.66L108.69,64H40A16,16,0,0,0,24,80V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,136H160V80h56V200Zm-16-84a12,12,0,1,1-12-12A12,12,0,0,1,200,116Zm0,48a12,12,0,1,1-12-12A12,12,0,0,1,200,164Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-timer{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm45.66,61.66-40,40a8,8,0,0,1-11.32-11.32l40-40a8,8,0,0,1,11.32,11.32ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-translate{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M160,129.89,175.06,160H144.94l6.36-12.7v0ZM224,48V208a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM207.16,188.42l-40-80a8,8,0,0,0-14.32,0L139.66,134.8a62.31,62.31,0,0,1-23.61-10A79.61,79.61,0,0,0,135.6,80H152a8,8,0,0,0,0-16H112V56a8,8,0,0,0-16,0v8H56a8,8,0,0,0,0,16h63.48a63.73,63.73,0,0,1-15.3,34.05,65.93,65.93,0,0,1-9-13.61,8,8,0,0,0-14.32,7.12,81.75,81.75,0,0,0,11.4,17.15A63.62,63.62,0,0,1,56,136a8,8,0,0,0,0,16,79.56,79.56,0,0,0,48.11-16.13,78.33,78.33,0,0,0,28.18,13.66l-19.45,38.89a8,8,0,0,0,14.32,7.16L136.94,176h46.12l9.78,19.58a8,8,0,1,0,14.32-7.16Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-user{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-user-circle{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M172,120a44,44,0,1,1-44-44A44.05,44.05,0,0,1,172,120Zm60,8A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88.09,88.09,0,0,0-91.47-87.93C77.43,41.89,39.87,81.12,40,128.25a87.65,87.65,0,0,0,22.24,58.16A79.71,79.71,0,0,1,84,165.1a4,4,0,0,1,4.83.32,59.83,59.83,0,0,0,78.28,0,4,4,0,0,1,4.83-.32,79.71,79.71,0,0,1,21.79,21.31A87.62,87.62,0,0,0,216,128Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-warning{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-warning-circle{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-8,56a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm8,104a12,12,0,1,1,12-12A12,12,0,0,1,128,184Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-whatsapp-logo{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M152.58,145.23l23,11.48A24,24,0,0,1,152,176a72.08,72.08,0,0,1-72-72A24,24,0,0,1,99.29,80.46l11.48,23L101,118a8,8,0,0,0-.73,7.51,56.47,56.47,0,0,0,30.15,30.15A8,8,0,0,0,138,155ZM232,128A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-40,24a8,8,0,0,0-4.42-7.16l-32-16a8,8,0,0,0-8,.5l-14.69,9.8a40.55,40.55,0,0,1-16-16l9.8-14.69a8,8,0,0,0,.5-8l-16-32A8,8,0,0,0,104,64a40,40,0,0,0-40,40,88.1,88.1,0,0,0,88,88A40,40,0,0,0,192,152Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-wifi-high{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M244.35,92.8l-104,125.43A15.93,15.93,0,0,1,128,224h0a15.93,15.93,0,0,1-12.31-5.77L11.65,92.8A15.65,15.65,0,0,1,8.11,80.91,15.93,15.93,0,0,1,14.28,70.1,186.67,186.67,0,0,1,128,32,186.67,186.67,0,0,1,241.72,70.1a15.93,15.93,0,0,1,6.17,10.81A15.65,15.65,0,0,1,244.35,92.8Z'/%3E%3C/svg%3E")}
+    .ph-fill.ph-x-circle{--i:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='currentColor'%3E%3Cpath d='M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm37.66,130.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32L139.31,128Z'/%3E%3C/svg%3E")}
+
+    /* ═══════ PERBAIKAN ═══════ */
+    nav.bottom-nav > div { width:100%; }
+    .bottom-nav-item { overflow:hidden; padding:4px 2px; }
+    .bottom-nav-item span { max-width:100%; overflow:hidden; text-overflow:ellipsis; font-size:10px; line-height:1.2; }
+    body.preview-mobile nav.bottom-nav { left:0; right:0; bottom:0; width:100%; }
+    @media (max-width:359px){ .bottom-nav-item span { font-size:9px; } }
+
+    .avatar-init{display:flex;align-items:center;justify-content:center;border-radius:50%;
+      background:linear-gradient(135deg,#ADFF2F,#7ECB0F);color:#0A0D14;font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:.02em}
+
+    @media (max-width:767px){ .ambient-glow{display:none} }
+    :focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+    button:focus:not(:focus-visible){outline:none}
+    .st-center{width:160px}
+    html.light .toast{background:rgba(255,255,255,0.94)}
+    html.light .st-track,html.light .speed-ring .ring-track{stroke:rgba(0,0,0,0.08)}
+
+    .qa-tile{background:var(--lime-dim);border:1px solid var(--lime-border);transition:border-color .2s}
+    .qa-tile:hover{border-color:var(--lime)}
+    .bill-card{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:14px 14px 14px 16px;border-radius:20px;color:#0A0D14;background:linear-gradient(135deg,#C9FF6B 0%,#ADFF2F 50%,#8EDB1C 100%);
+      box-shadow:0 14px 32px -16px rgba(173,255,47,.55),inset 0 1px 0 rgba(255,255,255,.5)}
+    .bill-card::before{content:'';position:absolute;right:-40px;top:-60px;width:150px;height:150px;border-radius:50%;
+      background:radial-gradient(circle,rgba(255,255,255,.45),transparent 70%);pointer-events:none}
+    .bill-label{font-size:11px;font-weight:600;opacity:.7}
+    .bill-amount{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:26px;line-height:1.1;letter-spacing:-.02em;margin:1px 0 3px}
+    .bill-meta{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;opacity:.8;white-space:nowrap}
+    .bill-cta{position:relative;z-index:1;flex-shrink:0;display:flex;align-items:center;gap:6px;padding:11px 16px;border-radius:13px;
+      background:#0A0D14;color:#ADFF2F;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px}
+    html.light .bill-card{box-shadow:0 14px 30px -18px rgba(98,160,9,.6),inset 0 1px 0 rgba(255,255,255,.5)}
+
+    .busy-overlay{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;
+      background:rgba(5,7,14,.42);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);
+      opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,visibility .25s}
+    .busy-overlay.show{opacity:1;visibility:visible;pointer-events:none !important} /* FIX: overlay tidak boleh menelan klik */
+    body.preview-mobile .busy-overlay{position:absolute}
+    html.light .busy-overlay{background:rgba(240,242,248,.5)}
+    .busy-panel{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:210px;max-width:80%;padding:26px 28px 22px;
+      border-radius:26px;background:var(--surface);border:1px solid var(--border);box-shadow:0 24px 60px -20px rgba(0,0,0,.6);
+      transform:scale(.94);transition:transform .3s cubic-bezier(.2,.9,.3,1)}
+    .busy-overlay.show .busy-panel{transform:scale(1)}
+    .busy-ico{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      background:var(--lime-dim);border:1px solid var(--lime-border);color:var(--lime);font-size:32px;
+      transition:background .2s,border-color .2s,color .2s}
+    .busy-overlay.error .busy-ico{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+    .busy-spin{animation:spin .8s linear infinite}
+    .busy-overlay.done .busy-ico i{animation:busyPop .45s cubic-bezier(.2,1.4,.4,1)}
+    @keyframes busyPop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+    .busy-text{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;text-align:center;color:var(--text)}
+
+    .wifi-panel{background:var(--surface-2);border:1px solid var(--border);border-radius:16px;margin-bottom:16px;overflow:hidden}
+    .wifi-row{display:flex;align-items:center;gap:12px;padding:12px 14px}
+    .wifi-row + .wifi-row{border-top:1px solid var(--border)}
+    .wifi-ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      background:var(--lime-dim);border:1px solid var(--lime-border);color:var(--lime);font-size:18px}
+    .wifi-meta{flex:1;min-width:0}
+    .wifi-label{font-size:10px;font-weight:500;color:var(--muted);margin-bottom:2px}
+    .wifi-val{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .wifi-val.mask{letter-spacing:.2em}
+    .wifi-actions{display:flex;gap:6px;flex-shrink:0}
+    .wifi-btn{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;
+      background:var(--surface);border:1px solid var(--border);color:var(--muted);transition:color .2s,border-color .2s}
+    .wifi-btn:hover,.wifi-btn.copied{color:var(--lime);border-color:var(--lime-border)}
+
+    .net-badge[data-state=normal],.net-alert[data-state=normal]{--c:var(--lime);--cd:var(--lime-dim);--cb:var(--lime-border)}
+    .net-badge[data-state=maintenance],.net-alert[data-state=maintenance]{--c:#FBBF24;--cd:rgba(251,191,36,.1);--cb:rgba(251,191,36,.28)}
+    .net-badge[data-state=outage],.net-alert[data-state=outage]{--c:#F87171;--cd:rgba(239,68,68,.1);--cb:rgba(239,68,68,.32)}
+    .net-badge{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:99px;flex-shrink:0;white-space:nowrap;
+      font-size:11px;font-weight:700;color:var(--c);background:var(--cd);border:1px solid var(--cb);cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+    .net-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 5px var(--c);animation:netPulse 2s infinite}
+    .net-badge[data-state=normal] .dot{animation:none}
+    @keyframes netPulse{50%{opacity:.4}}
+    .net-alert{background:var(--cd);border:1px solid var(--cb)}
+    .net-alert[hidden]{display:none}
+    .net-alert strong{color:var(--text)}
+    .net-alert.flash{animation:alertFlash 1.4s ease 1}
+    @keyframes alertFlash{0%,50%{box-shadow:0 0 0 0 var(--cb)}25%,75%{box-shadow:0 0 0 7px var(--cd)}100%{box-shadow:0 0 0 0 transparent}}
+    #topbar{container-type:inline-size}
+    @container (max-width:399px){.brand-word{display:none}}
+  </style>
+</head>
+<body class="dark">
+
+<div id="app-wrap" class="flex h-dvh w-full relative overflow-hidden" style="background:var(--bg)">
+
+  <!-- Ambient blur glow — statis, murah di GPU -->
+  <div class="ambient-glow ambient-glow-1"></div>
+  <div class="ambient-glow ambient-glow-2"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="desktop-only hidden md:flex flex-col w-64" style="background:var(--surface);border-right:1px solid var(--border);z-index:20;flex-shrink:0;">
+    <div class="p-6 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-[11px] flex items-center justify-center" style="background:var(--lime-dim);border:1px solid var(--lime-border);overflow:hidden;">
+        <img src="<%= brandLogo %>" alt="<%= brandName %>" style="width:100%;height:100%;object-fit:contain;padding:3px;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display=''"><i class="ph-bold ph-wifi-high" style="display:none;color:var(--lime);font-size:15px;"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base tracking-tight" style="font-family:'Space Grotesk',sans-serif;color:var(--text);">
+          <% if (brandName === 'OPEN-ISP') { %>SKY<span style="color:var(--lime);">FIBER</span><% } else { %><%= brandName %><% } %>
+        </h1>
+        <p class="text-[10px]" style="color:var(--muted);margin-top:1px;"><%= t('pwa.title','Portal Pelanggan') %></p>
+      </div>
+    </div>
+    <hr class="divider mx-4 mb-3">
+    <nav class="flex-1 px-3 space-y-1 overflow-y-auto no-scrollbar">
+      <button onclick="switchTab('home')" id="nav-d-home" class="nav-item active press">
+        <i class="ph-fill ph-house nav-icon"></i><%= t('common.home','Beranda') %></button>
+      <button onclick="switchTab('billing')" id="nav-d-billing" class="nav-item press">
+        <i class="ph ph-receipt nav-icon"></i><%= t('pwa.nav.billing','Tagihan') %></button>
+      <button onclick="switchTab('speedtest')" id="nav-d-speedtest" class="nav-item press">
+        <i class="ph ph-gauge nav-icon"></i> Speed Test
+      </button>
+      <button onclick="switchTab('network')" id="nav-d-network" class="nav-item press">
+        <i class="ph ph-wifi-high nav-icon"></i><%= t('pwa.nav.network','Jaringan') %></button>
+      <button onclick="switchTab('profile')" id="nav-d-profile" class="nav-item press">
+        <i class="ph ph-user-circle nav-icon"></i><%= t('pwa.nav.account','Akun') %></button>
+    </nav>
+    <div class="p-3 mt-auto" style="border-top:1px solid var(--border);">
+      <div class="flex items-center gap-3 p-3 rounded-[14px] press cursor-pointer">
+        <div class="avatar-ring" style="width:38px;height:38px;padding:2px;">
+          <span class="avatar-init" style="width:34px;height:34px;font-size:13px;" role="img" aria-label="<%= portal.name %>"><%= portal.initials %></span>
+        </div>
+        <div style="flex:1;overflow:hidden;">
+          <p class="text-sm font-semibold truncate" style="color:var(--text);"><%= portal.name %></p>
+          <p class="text-[11px] truncate" style="color:var(--muted);"><%= portal.packageName %><%= portal.speedDown !== '-' ? ' · ' + portal.speedDown + ' Mbps' : '' %></p>
+        </div>
+        <i class="ph ph-caret-right text-sm" style="color:var(--muted-2);"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 flex flex-col h-full relative overflow-hidden" style="min-width:0;">
+
+    <header id="topbar" class="pt-safe sticky top-0 z-30" style="background:rgba(10,13,20,0.72);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);border-bottom:1px solid var(--border);">
+      <div class="flex items-center justify-between px-4 md:px-6" style="height:56px;">
+        <div class="flex mobile-only md:hidden items-center gap-2.5">
+          <div class="w-8 h-8 rounded-[9px] flex items-center justify-center" style="background:var(--lime-dim);border:1px solid var(--lime-border);overflow:hidden;">
+            <img src="<%= brandLogo %>" alt="<%= brandName %>" style="width:100%;height:100%;object-fit:contain;padding:3px;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display=''"><i class="ph-bold ph-wifi-high" style="display:none;color:var(--lime);font-size:15px;"></i>
+          </div>
+          <span class="brand-word font-bold text-base tracking-tight" style="font-family:'Space Grotesk',sans-serif;color:var(--text);">
+            <% if (brandName === 'OPEN-ISP') { %>SKY<span style="color:var(--lime);">FIBER</span><% } else { %><%= brandName %><% } %>
+          </span>
+        </div>
+        <div class="hidden md:block desktop-title">
+          <h2 id="page-title" class="font-semibold text-base" style="font-family:'Space Grotesk',sans-serif;color:var(--text);"><%= t('common.home','Beranda') %></h2>
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <button id="net-badge" class="net-badge press" data-state="<%= portal.netState %>" onclick="goToNetworkStatus()" aria-label="<%= t('pwa.net.status_aria','Status jaringan') %>">
+            <span class="dot"></span><span id="net-badge-text"><%= t('pwa.net.maintenance_short','Perawatan') %></span>
+          </button>
+          <button onclick="toggleTheme()" class="mobile-only md:hidden press w-9 h-9 rounded-full flex items-center justify-center" style="color:var(--muted);" aria-label="<%= t('common.toggle_theme','Toggle tema') %>">
+            <i class="ph-fill ph-moon text-lg" id="theme-icon-mobile"></i>
+          </button>
+          <button id="notif-bell" class="press relative w-9 h-9 rounded-full flex items-center justify-center" style="color:var(--muted);" aria-label="<%= t('pwa.notif.title','Notifikasi') %>" onclick="openNotifPanel()">
+            <i class="ph-fill ph-bell text-lg" style="color:var(--text);"></i>
+            <span class="notif-dot"<%= (portal.notifications && portal.notifications.length) ? '' : ' style="display:none"' %>></span>
+          </button>
+          <div class="mobile-only md:hidden avatar-ring" style="padding:2px;cursor:pointer;" onclick="switchTab('profile')">
+            <span class="avatar-init" style="width:32px;height:32px;font-size:12px;" role="img" aria-label="<%= portal.name %>"><%= portal.initials %></span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div id="scroll-area" class="flex-1 overflow-y-auto no-scrollbar scroll-pad">
+      <div class="max-w-2xl md:max-w-3xl mx-auto w-full">
+
+        <!-- HOME -->
+        <section id="tab-home" class="tab-content active-tab tab-visible p-4 md:p-6 space-y-5">
+
+          <!-- CREDIT CARD -->
+          <div>
+            <div class="cc">
+              <div class="cc-orb cc-orb-1"></div>
+              <div class="cc-orb cc-orb-2"></div>
+              <div class="cc-arcs">
+                <svg viewBox="0 0 400 252" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#ADFF2F" stop-opacity="0.4"/>
+                      <stop offset="100%" stop-color="#ADFF2F" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M -20 220 Q 200 60 420 180" fill="none" stroke="url(#arcGrad)" stroke-width="1"/>
+                  <path d="M -20 250 Q 200 90 420 210" fill="none" stroke="url(#arcGrad)" stroke-width="1" opacity="0.6"/>
+                  <path d="M -20 280 Q 200 120 420 240" fill="none" stroke="url(#arcGrad)" stroke-width="1" opacity="0.3"/>
+                </svg>
+              </div>
+
+              <div class="cc-content">
+                <div class="cc-top">
+                  <div class="cc-brand">
+                    <div class="cc-brand-mark" style="overflow:hidden;">
+                      <img src="<%= brandLogo %>" alt="<%= brandName %>" style="width:100%;height:100%;object-fit:contain;padding:2px;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display=''"><i class="ph-bold ph-wifi-high" style="display:none;font-size:11px;"></i>
+                    </div>
+                    <span style="color:#fff;"><% if (brandName === 'OPEN-ISP') { %>SKY<span>FIBER</span><% } else { %><%= brandName %><% } %></span>
+                  </div>
+                  <div class="cc-top-badges">
+                    <span class="cc-status"><span class="dot"></span><%= portal.statusText %></span>
+                    <span class="cc-tier"><%= portal.packageName %></span>
+                  </div>
+                </div>
+
+                <div class="cc-identity">
+                  <p class="cc-greet"><%= t('pwa.greeting','Selamat datang kembali') %></p>
+                  <p class="cc-name"><%= portal.name %></p>
+                </div>
+
+                <div class="cc-chip-row">
+                  <div class="cc-chip">
+                    <span class="chip-line-1"></span>
+                    <span class="chip-line-2"></span>
+                  </div>
+                  <div class="cc-id-wrap">
+                    <span class="cc-id" id="customer-id"><%= portal.code %></span>
+                    <button class="cc-copy" onclick="copyCustomerId(this)" title="<%= t('pwa.account.copy_id','Salin ID') %>" aria-label="<%= t('pwa.account.copy_id','Salin ID') %>">
+                      <i class="ph-bold ph-copy"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="cc-footer">
+                  <div class="cc-foot-block">
+                    <span class="cc-label"><%= t('pwa.speed','Kecepatan') %></span>
+                    <span class="cc-speed"><%= portal.speedDown %> <small>Mbps</small></span>
+                  </div>
+                  <div class="cc-foot-block" style="flex:1;">
+                    <div class="cc-label-row">
+                      <span class="cc-label"><%= t('pwa.active_period','Masa Aktif') %></span>
+                      <span class="cc-label cc-lime"><%= portal.activeDaysText %></span>
+                    </div>
+                    <div class="cc-progress"><div class="cc-progress-fill" style="width:<%= portal.activePct %>%"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAGIHAN -->
+          <div class="bill-card"<% if (portal.bill) { %> style="background:linear-gradient(135deg,#FCA5A5 0%,#EF4444 55%,#B91C1C 100%);color:#fff;box-shadow:0 14px 32px -16px rgba(239,68,68,.6),inset 0 1px 0 rgba(255,255,255,.35)"<% } %>>
+            <div class="min-w-0 relative z-10">
+              <p class="bill-label"><%= portal.bill ? portal.bill.label : t('pwa.home.no_bill','Tidak ada tagihan') %></p>
+              <p class="bill-amount"><%= portal.bill ? portal.bill.amount : 'Rp 0' %></p>
+              <p class="bill-meta"><i class="ph-fill <%= portal.bill ? 'ph-warning-circle' : 'ph-check-circle' %>"></i> <%= portal.bill ? portal.bill.metaText : t('pwa.home.paid','Lunas') %></p>
+              <p class="bill-meta" style="margin-top:3px;opacity:.92;"><i class="bi bi-calendar-x"></i> <%= t('pwa.isolir','Isolir:') %> <%= portal.isolirText %></p>
+            </div>
+            <button onclick="switchTab('billing')" class="bill-cta press"><i class="ph-fill ph-credit-card"></i> <%= t('pwa.billing.quick','Bayar') %></button>
+          </div>
+
+          <!-- Promo -->
+          <div class="swiper promoSwiper" id="promoBox" style="border-radius:20px;overflow:hidden;">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide relative aspect-[2/1] md:aspect-[21/9]" style="background:radial-gradient(ellipse at 80% 0%,rgba(173,255,47,0.14),transparent 60%),linear-gradient(135deg,#131A29 0%,#0B0F18 100%);">
+                <div class="absolute inset-0 flex flex-col justify-end p-5" style="background:linear-gradient(to top,rgba(0,0,0,0.55),transparent);">
+                  <span class="text-xs font-bold mb-1" style="color:var(--lime);letter-spacing:0.1em;"><%= t('pwa.promo.b1','PROMO OKTOBER') %></span>
+                  <h4 class="font-bold text-base text-white"><%= t('pwa.promo.s1_title','Upgrade ke 100 Mbps — diskon 30%') %></h4>
+                  <p class="text-xs text-white/60 mt-0.5"><%= t('pwa.promo.s1_text','Berlaku hingga 31 Oktober 2026') %></p>
+                </div>
+              </div>
+              <div class="swiper-slide relative aspect-[2/1] md:aspect-[21/9]" style="background:radial-gradient(ellipse at 15% 100%,rgba(173,255,47,0.12),transparent 60%),linear-gradient(135deg,#10170C 0%,#0A0E08 100%);">
+                <div class="absolute inset-0 flex flex-col justify-end p-5" style="background:linear-gradient(to top,rgba(0,0,0,0.55),transparent);">
+                  <span class="text-xs font-bold mb-1" style="color:var(--lime);letter-spacing:0.1em;"><%= t('pwa.promo.b2','REWARD PELANGGAN') %></span>
+                  <h4 class="font-bold text-base text-white"><%= t('pwa.promo.s2_title','Bayar tepat waktu, dapat cashback Rp 20.000') %></h4>
+                  <p class="text-xs text-white/60 mt-0.5"><%= t('pwa.promo.s2_text','Program loyalitas khusus pelanggan aktif') %></p>
+                </div>
+              </div>
+              <div class="swiper-slide relative aspect-[2/1] md:aspect-[21/9]" style="background:radial-gradient(ellipse at 85% 100%,rgba(96,165,250,0.14),transparent 60%),linear-gradient(135deg,#0C1322 0%,#080C16 100%);">
+                <div class="absolute inset-0 flex flex-col justify-end p-5" style="background:linear-gradient(to top,rgba(0,0,0,0.55),transparent);">
+                  <span class="text-xs font-bold mb-1" style="color:#7CB9FF;letter-spacing:0.1em;">MONITORING</span>
+                  <h4 class="font-bold text-base text-white"><%= t('pwa.promo.s3_title','Jaringan dipantau 24/7 oleh tim teknis') %></h4>
+                  <p class="text-xs text-white/60 mt-0.5"><%= t('pwa.promo.s3_text','Respon gangguan kurang dari 2 jam') %></p>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-pagination" style="bottom:10px;"></div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div>
+            <p class="text-xs font-semibold mb-3 px-1" style="color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;"><%= t('pwa.quick.title','Aksi Cepat') %></p>
+            <div class="grid grid-cols-4 gap-3">
+              <button onclick="switchTab('network')" class="press flex flex-col items-center gap-2">
+                <div class="w-14 h-14 rounded-[18px] flex items-center justify-center qa-tile">
+                  <i class="ph-fill ph-router text-2xl" style="color:var(--lime);"></i>
+                </div>
+                <span class="text-[11px] font-medium" style="color:var(--muted);"><%= t('pwa.home.modem','Modem') %></span>
+              </button>
+              <button onclick="switchTab('billing')" class="press flex flex-col items-center gap-2">
+                <div class="w-14 h-14 rounded-[18px] flex items-center justify-center qa-tile">
+                  <i class="ph-fill ph-receipt text-2xl" style="color:var(--lime);"></i>
+                </div>
+                <span class="text-[11px] font-medium" style="color:var(--muted);"><%= t('pwa.nav.billing','Tagihan') %></span>
+              </button>
+              <button onclick="switchTab('speedtest')" class="press flex flex-col items-center gap-2">
+                <div class="w-14 h-14 rounded-[18px] flex items-center justify-center qa-tile">
+                  <i class="ph-fill ph-gauge text-2xl" style="color:var(--lime);"></i>
+                </div>
+                <span class="text-[11px] font-medium" style="color:var(--muted);">Speed Test</span>
+              </button>
+              <button onclick="openBantuan()" class="press flex flex-col items-center gap-2">
+                <div class="w-14 h-14 rounded-[18px] flex items-center justify-center qa-tile">
+                  <i class="ph-fill ph-headset text-2xl" style="color:var(--lime);"></i>
+                </div>
+                <span class="text-[11px] font-medium" style="color:var(--muted);"><%= t('pwa.home.help','Bantuan') %></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Network Stats (real-time) -->
+          <div>
+            <div class="flex items-center justify-between mb-3 px-1">
+              <p class="text-xs font-semibold" style="color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;"><%= t('pwa.net.status_title','Status Jaringan') %></p>
+              <span class="text-[10px] font-semibold flex items-center gap-1.5" style="color:var(--muted);"><span id="live-dot" style="width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block"></span> Live</span>
+            </div>
+            <p class="text-[10px] mb-3 px-1" style="color:var(--muted-2);"><i class="bi bi-info-circle"></i> <%- t('pwa.net.realtime_note','Kartu di bawah menampilkan <b>kecepatan real-time</b> berdasarkan pemakaian WiFi saat ini — angka kecil atau 0 wajar bila tidak ada aktivitas.') %></p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                  <i class="ph-fill ph-arrow-fat-down text-xl" style="color:#60A5FA;"></i>
+                  <span class="text-[10px] font-medium" style="color:var(--muted);">Download</span>
+                </div>
+                <p class="text-xl font-black" style="font-family:'Space Grotesk',sans-serif;color:var(--text);"><span id="live-rx">-</span><small class="text-xs font-normal ml-0.5">Mbps</small></p>
+                <div class="progress-bar mt-2"><div id="live-rx-bar" class="progress-fill" style="width:2%;background:linear-gradient(90deg,#60A5FA,#818CF8);box-shadow:0 0 4px rgba(96,165,250,0.35);"></div></div>
+              </div>
+              <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                  <i class="ph-fill ph-arrow-fat-up text-xl" style="color:var(--lime);"></i>
+                  <span class="text-[10px] font-medium" style="color:var(--muted);">Upload</span>
+                </div>
+                <p class="text-xl font-black" style="font-family:'Space Grotesk',sans-serif;color:var(--text);"><span id="live-tx">-</span><small class="text-xs font-normal ml-0.5">Mbps</small></p>
+                <div class="progress-bar mt-2"><div id="live-tx-bar" class="progress-fill" style="width:2%;"></div></div>
+              </div>
+              <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                  <i class="bi bi-<%= portal.onuOnline ? 'router' : 'exclamation-triangle' %> text-lg" style="color:<%= portal.onuOnline ? 'var(--lime)' : (portal.onuDetected ? '#FBBF24' : '#EF4444') %>;"></i>
+                  <span class="text-[10px] font-medium" style="color:var(--muted);"><%= t('pwa.net.modem_status','Status Modem') %></span>
+                </div>
+                <p id="modem-status" class="text-sm font-black" style="font-family:'Space Grotesk',sans-serif;color:<%= portal.onuOnline ? 'var(--lime)' : (portal.onuDetected ? '#FBBF24' : '#EF4444') %>;"><%= portal.onuOnline ? 'Normal' : (portal.onuDetected ? 'Offline' : t('pwa.js.st_na','Tidak terdeteksi')) %></p>
+                <p id="modem-sub" class="text-[10px] mt-1" style="color:var(--muted);"><%= portal.onuOnline ? t('pwa.js.st_connected','ONU / Modem terkoneksi') : (portal.onuDetected ? t('pwa.js.st_detected_no_conn','ONU terdeteksi, koneksi terputus') : t('pwa.js.st_not_detected','ONU / Modem tidak terdeteksi')) %></p>
+              </div>
+              <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                  <i class="bi bi-clock-history text-lg" style="color:#A78BFA;"></i>
+                  <span class="text-[10px] font-medium" style="color:var(--muted);"><%= t('pwa.net.f_uptime','Uptime') %></span>
+                </div>
+                <p class="text-sm font-black" style="font-family:'Space Grotesk',sans-serif;color:var(--muted);"><%= t('pwa.coming_soon','Coming soon') %></p>
+                <p class="text-[10px] mt-1" style="color:var(--muted-2);"><%= t('pwa.coming_soon','Segera hadir') %></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-box net-alert" id="net-alert" data-state="maintenance" style="cursor:pointer" onclick="openGangguan()" title="<%= t('pwa.net.view_detail','Lihat detail gangguan') %>">
+            <i class="ph-fill ph-warning-circle text-xl flex-shrink-0" id="net-alert-icon" style="color:var(--c);margin-top:1px;"></i>
+            <div>
+              <p class="text-sm font-semibold" id="net-alert-title" style="color:var(--c);"><%= t('pwa.net.maintenance','Pemeliharaan Jaringan') %></p>
+              <p class="text-xs mt-0.5" id="net-alert-msg" style="color:var(--muted);"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- BILLING -->
+        <section id="tab-billing" class="tab-content p-4 md:p-6 space-y-5">
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center gap-2">
+              <button onclick="switchTab('home')" class="press w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);" aria-label="<%= t('pwa.nav.back_home','Kembali ke Beranda') %>"><i class="bi bi-chevron-left"></i></button>
+              <h2 class="text-xl font-bold" style="font-family:'Space Grotesk',sans-serif;"><%= t('pwa.nav.billing','Tagihan') %></h2>
+            </div>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="<%= portal.bill ? 'background:rgba(251,191,36,0.12);color:#FBBF24;border:1px solid rgba(251,191,36,0.2);' : 'background:rgba(173,255,47,0.12);color:var(--lime);border:1px solid var(--lime-border);' %>"><%= portal.bill ? t('pwa.status.unpaid','BELUM BAYAR') : t('pwa.status.paid','LUNAS') %></span>
+          </div>
+
+          <div class="relative rounded-[24px] overflow-hidden noise" style="background:var(--surface);border:1px solid var(--lime-border);box-shadow:0 20px 50px -26px rgba(173,255,47,.5);">
+            <div style="position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:240px;height:120px;background:radial-gradient(ellipse,rgba(173,255,47,0.08),transparent 70%);pointer-events:none;"></div>
+            <div class="relative z-10 text-center p-8">
+              <p class="text-xs font-medium mb-2" style="color:var(--muted);"><%= portal.bill ? (t('pwa.total','Total') + ' ' + portal.bill.label + ' ' + t('pwa.billing.total_unique','(termasuk kode unik)')) : t('pwa.home.no_bill','Tidak ada tagihan') %></p>
+              <h1 class="text-5xl font-black mb-2" style="font-family:'Space Grotesk',sans-serif;color:var(--text);"><%= portal.bill ? portal.bill.amountUnique : 'Rp 0' %></h1>
+              <% if (portal.bill && portal.bill.uniqueCode) { %>
+              <p class="text-[11px] mb-2" style="color:var(--muted);"><%= t('pwa.billing.nominal_note_pre','Harga paket') %> <%= portal.bill.amount %> <%= t('pwa.billing.nominal_note_mid','+ kode unik') %> <b style="color:var(--lime);"><%= portal.bill.uniqueCode %></b></p>
+              <% } %>
+              <p class="text-xs mb-6" style="color:<%= portal.bill && portal.bill.overdue ? '#EF4444' : 'var(--muted)' %>;"><%= portal.bill ? portal.bill.dueFull : t('pwa.thanks','Terima kasih') %></p>
+              <button class="btn-lime press w-full py-4 text-base flex items-center justify-center gap-2" onclick="payWith('Bayar Sekarang')">
+                <i class="ph-fill ph-credit-card text-lg"></i><%= t('pwa.billing.pay_now','Bayar Sekarang') %>
+              </button>
+              <p class="text-[11px] mt-3" style="color:var(--muted);"><%= t('pwa.billing.methods','Metode pembayaran: QRIS · Transfer Bank · E-Wallet') %></p>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-[18px]" style="background:var(--surface);border:1px solid var(--border);">
+            <p class="text-xs font-semibold mb-3" style="color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;"><%= t('pwa.billing.pkg_detail','Detail Paket') %></p>
+            <div class="space-y-2">
+              <div class="flex justify-between">
+                <span class="text-sm" style="color:var(--muted);"><%= portal.detail.name %></span>
+                <span class="text-sm font-semibold" style="color:var(--text);"><%= portal.detail.amount %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm" style="color:var(--muted);"><%= t('pwa.field.period','Periode') %></span>
+                <span class="text-sm font-semibold" style="color:var(--text);"><%= portal.detail.period %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm" style="color:var(--muted);"><%= t('common.status','Status') %></span>
+                <span class="text-sm font-semibold" style="color:<%= portal.detail.paid ? 'var(--lime)' : '#FBBF24' %>;"><%= portal.detail.status %></span>
+              </div>
+            </div>
+          </div>
+
+          <% if (portal.refInvoiceId) { %>
+          <div>
+            <p class="text-xs font-semibold mb-3 px-1" style="color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;"><%= t('pwa.billing.actions','Aksi Tagihan') %></p>
+            <div class="grid grid-cols-1 gap-3">
+              <button type="button" onclick="downloadInvoicePdf(<%= portal.refInvoiceId %>, '<%= portal.code %>')" class="btn-lime press py-3.5 text-sm flex items-center justify-center gap-2" style="border-radius:14px;"><i class="bi bi-file-earmark-pdf-fill"></i><%= t('pwa.billing.download_pdf','Download Tagihan (PDF)') %></button>
+            </div>
+          </div>
+          <% } %>
+
+          <div>
+            <p class="text-xs font-semibold mb-3 px-1" style="color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;"><%= t('pwa.billing.history','Riwayat Pembayaran') %></p>
+            <div id="historyList" class="rounded-[18px] overflow-hidden" style="background:var(--surface);border:1px solid var(--border);">
+<button class="press w-full py-4 text-sm font-semibold text-center" style="color:var(--lime);"><%= t('pwa.billing.view_history','Lihat Semua Riwayat') %><i class="ph ph-caret-right text-sm"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SPEED TEST -->
+        <section id="tab-speedtest" class="tab-content p-4 md:p-6 space-y-5">
+          <div class="flex items-center gap-2 px-1">
+            <button onclick="switchTab('home')" class="press w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);" aria-label="<%= t('pwa.nav.back_home','Kembali ke Beranda') %>"><i class="bi bi-chevron-left"></i></button>
+            <div><h2 class="text-xl font-bold" style="font-family:'Space Grotesk',sans-serif;">Speed Test</h2>
+            <p class="text-xs mt-1" style="color:var(--muted);"><%= t('pwa.speedtest.subtitle','Ukur kecepatan internet Anda') %></p></div>
+          </div>
+
+          <% if (portal.speedtestUrl) { %>
+          <% if ((portal.speedtestMode || 'iframe') === 'tab') { %>
+          <div class="p-6 rounded-[24px] text-center" style="background:var(--surface);border:1px solid var(--border);">
+            <i class="bi bi-speedometer2" style="font-size:38px;color:var(--lime);"></i>
+            <p class="text-sm font-semibold mt-2" style="color:var(--text);"><%= t('pwa.speedtest.open_title','Buka Speed Test') %></p>
+            <p class="text-xs mt-1" style="color:var(--muted);"><%= t('pwa.speedtest.open_hint','Speed test akan dibuka di jendela baru. Tuntaskan pengukuran, lalu kembali ke aplikasi.') %></p>
+            <a class="btn-lime press inline-flex items-center gap-2 mt-4" style="padding:13px 18px;border-radius:14px;font-size:14px;text-decoration:none;" href="<%= portal.speedtestUrl %>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> <%= t('pwa.speedtest.open_btn','Mulai Speed Test') %></a>
+          </div>
+          <% } else { %>
+          <div class="flex items-center justify-between gap-2 px-1">
+            <p class="text-xs font-semibold" style="color:var(--muted);"><%= t('pwa.speedtest.provider','Penyedia Speed Test') %></p>
+            <button type="button" onclick="reloadSpeedtest()" class="press inline-flex items-center gap-1.5" style="padding:8px 12px;border-radius:11px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:700;"><i class="bi bi-arrow-clockwise"></i> <%= t('common.reload','Muat Ulang') %></button>
+          </div>
+          <div class="relative rounded-[24px] overflow-hidden" style="background:var(--surface);border:1px solid var(--border);">
+            <iframe id="speedtestFrame" data-base="<%= portal.speedtestUrl %>" src="<%= portal.speedtestUrl %>" title="Speed Test" style="width:100%;height:74vh;border:0;display:block;background:var(--surface);" loading="lazy" referrerpolicy="no-referrer"></iframe>
+          </div>
+          <% } %>
+          <div class="alert-box" style="background:var(--lime-dim);border:1px solid var(--lime-border);">
+            <i class="ph-fill ph-info text-xl flex-shrink-0" style="color:var(--lime);margin-top:1px;"></i>
+            <div>
+              <p class="text-sm font-semibold" style="color:var(--lime);"><%= t('pwa.speedtest.tips','Tips Speed Test') %></p>
+              <p class="text-xs mt-0.5" style="color:var(--muted);"><%= t('pwa.speedtest.note','Untuk hasil akurat, tutup aplikasi lain yang menggunakan internet dan dekatkan perangkat ke router.') %></p>
+            </div>
+          </div>
+          <div class="flex justify-center">
+            <button type="button" onclick="clearAppCache()" class="press inline-flex items-center gap-2" style="padding:10px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:700;"><i class="bi bi-trash3"></i> <%= t('pwa.speedtest.clear_cache','Bersihkan Cache') %></button>
+          </div>
+<% } else { %>
+          <div class="p-7 rounded-[24px] text-center" style="background:var(--surface);border:1px dashed var(--border);">
+            <img src="<%= brandLogo %>" alt="<%= brandName %>" style="height:56px;max-width:70%;object-fit:contain;margin:0 auto 12px;display:block;" onerror="this.style.display='none'">
+            <p class="text-sm font-semibold" style="color:var(--text);"><%= t('pwa.speedtest.not_set','Speedtest belum di setup') %></p>
+            <p class="text-xs mt-1" style="color:var(--muted);"><%= t('pwa.speedtest.not_set_hint','Admin belum mengatur Link Speed Test. Silakan hubungi admin.') %></p>
+            <a class="btn-ghost press inline-flex items-center gap-2 mt-4" style="padding:11px 16px;border-radius:12px;font-size:13px;" href="https://wa.me/<%= portal.waPhone %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp" style="color:#22C55E;"></i><%= t('pwa.speedtest.contact_admin','Hubungi Admin') %></a>
+          </div>
+<% } %>
+        </section>
+
+        <!-- NETWORK -->
+        <section id="tab-network" class="tab-content p-4 md:p-6 space-y-5">
+          <div class="flex items-center gap-2 px-1">
+            <button onclick="switchTab('home')" class="press w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);" aria-label="<%= t('pwa.nav.back_home','Kembali ke Beranda') %>"><i class="bi bi-chevron-left"></i></button>
+            <div><h2 class="text-xl font-bold" style="font-family:'Space Grotesk',sans-serif;"><%= t('pwa.nav.network','Jaringan') %></h2>
+            <p class="text-xs mt-1" style="color:var(--muted);"><%= t('pwa.net.subtitle','Monitoring ONU & perangkat terhubung') %></p></div>
+          </div>
+
+          <!-- PPPoE CARD -->
+          <div class="relative rounded-[20px] overflow-hidden p-5" style="background:var(--surface);border:1px solid var(--border);">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-[12px] flex items-center justify-center" style="background:var(--lime-dim);border:1px solid var(--lime-border);">
+                  <i class="ph-fill ph-link text-xl" style="color:var(--lime);"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] font-semibold uppercase tracking-wider" style="color:var(--muted);"><%= t('pwa.net.f_pppoe','Koneksi PPPoE') %></p>
+                  <p id="pppoe-user" class="text-sm font-bold" style="font-family:'Space Grotesk',sans-serif;color:var(--text);"><%= portal.pppoeUser %></p>
+                </div>
+              </div>
+              <span class="badge-online<%= portal.pppoeOnline ? '' : ' badge-offline' %>" id="pppoe-badge"><span class="dot"></span><%= portal.pppoeOnline ? 'Online' : 'Offline' %></span>
+            </div>
+
+
+
+            <!-- Tombol Reconnect PPPoE — MERAH + konfirmasi -->
+            <button onclick="confirmReconnect()" class="btn-danger-soft press w-full py-3 text-sm flex items-center justify-center gap-2" id="pppoe-btn"<%= portal.pppoeOnline ? '' : ' disabled style="opacity:.45;filter:grayscale(.5);cursor:not-allowed"' %>>
+              <i class="ph-bold ph-arrow-clockwise text-base"></i> <%= portal.pppoeOnline ? 'Reconnect PPPoE' : 'PPPoE Offline' %>
+            </button>
+            <% if (!portal.pppoeOnline) { %><p class="text-[10px] mt-2 text-center" style="color:var(--muted-2);"><%= t('pwa.net.pppoe_off','Koneksi PPPoE tidak terdeteksi — tombol dinonaktifkan.') %></p><% } %>
+          </div>
+
+          <!-- ONT / MODEM CARD -->
+          <div class="relative rounded-[24px] overflow-hidden noise" style="background:var(--surface);border:1px solid var(--border);">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% -10%,rgba(173,255,47,0.05),transparent 70%);pointer-events:none;"></div>
+            <div class="relative z-10 p-5">
+              <div class="flex items-center justify-between mb-5 gap-2">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-12 h-12 rounded-[14px] flex items-center justify-center flex-shrink-0" style="background:var(--surface-2);border:1px solid var(--border);">
+                    <i class="ph-fill ph-router text-2xl" style="color:var(--text);"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <h3 id="onu-model" class="font-bold text-sm truncate" style="font-family:'Space Grotesk',sans-serif;color:var(--text);"><%= portal.onuModel %></h3>
+                    <p class="text-[11px] truncate" style="color:var(--muted);"><%= t('pwa.net.onu_primary','ONU Utama · GPON') %></p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                  <span class="badge-online<%= portal.onuOnline ? '' : ' badge-offline' %>" id="onu-badge"><span class="dot"></span><%= portal.onuOnline ? 'Online' : 'Offline' %></span>
+                </div>
+              </div>
+
+              <div class="flex justify-center my-4">
+                <div class="speed-ring">
+                  <svg width="120" height="120" viewBox="0 0 120 120">
+                    <circle class="ring-track" cx="60" cy="60" r="54"/>
+                    <circle class="ring-fill" cx="60" cy="60" r="54" id="speed-ring-circle"/>
+                  </svg>
+                  <div class="inner">
+                    <p class="text-2xl font-black" style="font-family:'Space Grotesk',sans-serif;color:var(--lime);" id="speed-display"><%= portal.speedDown %></p>
+                    <p class="text-[10px] font-medium" style="color:var(--muted);">Mbps</p>
+                  </div>
+                </div>
+              </div>
+
+              <button onclick="pollOnu(this)" class="press mx-auto flex mb-4 items-center gap-1.5 px-3 h-8 rounded-full" style="background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:600;" aria-label="<%= t('pwa.net.poll_onu','Poll ONU') %>">
+                <i class="ph-bold ph-arrows-clockwise text-sm"></i><span><%= t('pwa.net.poll_onu','Poll ONU') %></span>
+              </button>
+              <div class="grid grid-cols-2 gap-px rounded-[14px] overflow-hidden" style="background:var(--border);margin-bottom:16px;">
+                <div class="p-3" style="background:var(--surface-2);">
+                  <p class="text-[10px] font-medium mb-0.5" style="color:var(--muted);"><%= t('pwa.net.f_ip_local','IP Lokal') %></p>
+                  <p id="onu-ip" class="text-sm font-semibold" style="color:var(--text);"><%= portal.onuLocalIp %></p>
+                </div>
+                <div class="p-3" style="background:var(--surface-2);">
+                  <p class="text-[10px] font-medium mb-0.5" style="color:var(--muted);"><%= t('pwa.net.f_uptime','Uptime') %></p>
+                  <p id="onu-uptime" class="text-sm font-semibold" style="color:var(--text);"><%= portal.onuUptime %></p>
+                </div>
+                <div class="p-3" style="background:var(--surface-2);">
+                  <p class="text-[10px] font-medium mb-0.5" style="color:var(--muted);"><%= t('pwa.net.f_serial_no','Serial Number') %></p>
+                  <p id="onu-serial" class="text-sm font-semibold" style="color:var(--text);word-break:break-all;"><%= portal.serialNumber %></p>
+                </div>
+                <div class="p-3" style="background:var(--surface-2);">
+                  <p class="text-[10px] font-medium mb-0.5" style="color:var(--muted);"><%= t('pwa.net.f_rx','Redaman (Rx)') %></p>
+                  <p id="onu-rx" class="text-sm font-semibold" style="color:var(--lime);"><%= portal.rxPower %></p>
+                </div>
+              </div>
+
+              <!-- WiFi panel: tombol salin SSID & password dihapus -->
+              <div class="wifi-panel">
+                <div class="wifi-row">
+                  <div class="wifi-ico"><i class="ph-bold ph-wifi-high"></i></div>
+                  <div class="wifi-meta">
+                    <p class="wifi-label"><%= t('pwa.net.ssid','Nama WiFi (SSID)') %></p>
+                    <p class="wifi-val" id="wifi-ssid"><%= portal.ssid %></p>
+                  </div>
+                </div>
+                <div class="wifi-row">
+                  <div class="wifi-ico"><i class="ph-fill ph-lock-key"></i></div>
+                  <div class="wifi-meta">
+                    <p class="wifi-label"><%= t('pwa.net.f_password','Password') %></p>
+                    <p class="wifi-val" id="wifi-pwd">********</p>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="flex gap-3">
+                <button onclick="confirmRestartModem()" class="btn-ghost press flex-1 py-3 text-sm flex items-center justify-center gap-2">
+                  <i class="ph ph-power"></i><%= t('pwa.net.restart_modem','Restart Modem') %></button>
+                <button onclick="openSettingModal()" class="btn-lime press flex-1 py-3 text-sm flex items-center justify-center gap-2">
+                  <i class="ph ph-gear-six"></i><%= t('pwa.account.settings','Setting') %></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Connected Devices -->
+          <div>
+            <div class="flex items-center justify-between mb-3 px-1">
+              <p class="text-xs font-semibold" id="devicesCount" style="color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;"><%= t('pwa.net.devices_connected','Perangkat Terhubung (') %><%= portal.deviceCount %>)</p>
+              <button onclick="refreshDevices()" class="press text-xs font-semibold" style="color:var(--lime);">
+                <i class="ph ph-arrows-clockwise text-sm"></i><%= t('common.refresh','Refresh') %></button>
+            </div>
+            <div id="devicesList" class="rounded-[18px] overflow-hidden" style="background:var(--surface);border:1px solid var(--border);">
+
+            </div>
+          </div>
+
+          </section>
+
+        <!-- PROFILE -->
+        <section id="tab-profile" class="tab-content p-4 md:p-6 space-y-5">
+          <div class="flex items-center gap-2 px-1">
+            <button onclick="switchTab('home')" class="press w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface-2);border:1px solid var(--border);color:var(--text);" aria-label="<%= t('pwa.nav.back_home','Kembali ke Beranda') %>"><i class="bi bi-chevron-left"></i></button>
+            <h2 class="text-xl font-bold" style="font-family:'Space Grotesk',sans-serif;"><%= t('pwa.nav.account','Akun') %></h2>
+          </div>
+          <div class="flex flex-col items-center pt-2 pb-4">
+            <div class="avatar-ring" style="padding:3px;">
+              <span class="avatar-init" style="width:76px;height:76px;font-size:29px;" role="img" aria-label="<%= portal.name %>"><%= portal.initials %></span>
+            </div>
+            <h2 class="text-lg font-semibold mt-3" style="font-family:'Space Grotesk',sans-serif;color:var(--text);"><%= portal.name %></h2>
+            <p class="text-xs mt-0.5" style="color:var(--muted);"><%= t('pwa.field.customer_id','ID Pelanggan') %> · <%= portal.code %></p>
+            <div class="flex items-center gap-2 mt-2.5">
+              <span class="plan-badge"><%= portal.packageName %></span>
+              <span class="badge-online"><span class="dot"></span><%= portal.statusText %></span>
+            </div>
+            <button onclick="copyText('<%= portal.code %>', this)" class="press mt-3 flex items-center gap-2" style="background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:600;padding:7px 12px;border-radius:99px;">
+              <i class="bi bi-clipboard"></i><%= t('pwa.account.copy_id','Salin ID Pelanggan') %></button>
+          </div>
+
+          <div>
+            <p class="ios-section-label"><%= t('pwa.nav.account','Akun') %></p>
+            <div class="ios-group">
+              <a href="#" class="ios-row" onclick="openInfoPribadi();return false;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#ADFF2F,#62A009);">
+                  <i class="ph-fill ph-user"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.account.personal_info','Informasi Pribadi') %></span>
+                <i class="ph-bold ph-caret-right ios-chevron"></i>
+              </a>
+              <a href="#" class="ios-row" onclick="openLayanan();return false;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#60A5FA,#3B82F6);">
+                  <i class="bi bi-router" style="color:#fff;"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.account.service_data','Data Layanan') %></span>
+                <i class="ph-bold ph-caret-right ios-chevron"></i>
+              </a>
+              <a href="#" class="ios-row" onclick="openRiwayat();return false;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#F59E0B,#D97706);">
+                  <i class="ph-fill ph-receipt"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.billing.history','Riwayat Pembayaran') %></span>
+                <i class="ph-bold ph-caret-right ios-chevron"></i>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <p class="ios-section-label"><%= t('pwa.account.preferences','Preferensi') %></p>
+            <div class="ios-group">
+              <a href="#" class="ios-row" onclick="togglePromo(event);return false;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#A78BFA,#7C3AED);">
+                  <i class="ph-fill ph-image"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.promo.show','Tampilkan Promo') %></span>
+                <span class="ios-value" id="promoVal"><%= t('pwa.promo.show_short','Tampil') %></span>
+                <i class="ph-bold ph-caret-right ios-chevron"></i>
+              </a>
+              <a href="#" class="ios-row" onclick="return false;" style="cursor:default;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#34D399,#059669);">
+                  <i class="bi bi-clock-history" style="color:#fff;"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.account.billing_reminder','Pengingat Tagihan') %></span>
+                <span class="ios-value" style="color:var(--lime);"><%= t('pwa.account.always_on','Selalu Aktif') %></span>
+              </a>
+              <div class="ios-row" onclick="clearAppCache()" style="cursor:pointer;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#F87171,#DC2626);">
+                  <i class="bi bi-trash3" style="color:#fff;"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.account.clear_cache','Bersihkan Cache Aplikasi') %></span>
+                <i class="ph-bold ph-caret-right ios-chevron"></i>
+              </div>
+              <div class="ios-row" style="cursor:default;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#22D3EE,#0891B2);">
+                  <i class="bi bi-translate" style="color:#fff;"></i>
+                </div>
+                <span class="ios-label"><%= t('common.language','Bahasa') %></span>
+                <span style="display:flex;gap:6px;">
+                  <a href="/lang/id" class="press" style="padding:5px 10px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;<%= lang === 'id' ? 'background:var(--lime);color:#0A0D14;' : 'background:var(--surface-2);color:var(--muted);' %>">ID</a>
+                  <a href="/lang/en" class="press" style="padding:5px 10px;border-radius:9px;font-size:12px;font-weight:700;text-decoration:none;<%= lang === 'en' ? 'background:var(--lime);color:#0A0D14;' : 'background:var(--surface-2);color:var(--muted);' %>">EN</a>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p class="ios-section-label"><%= t('pwa.account.help_info','Bantuan & Informasi') %></p>
+            <div class="ios-group">
+              <a href="#" class="ios-row" onclick="openBantuan();return false;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#FBBF24,#F59E0B);">
+                  <i class="ph-fill ph-question"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.help.center','Pusat Bantuan') %></span>
+                <i class="ph-bold ph-caret-right ios-chevron"></i>
+              </a>
+              <a href="https://wa.me/<%= portal.waPhone %>" target="_blank" class="ios-row">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#22C55E,#16A34A);">
+                  <i class="ph-fill ph-whatsapp-logo"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.help.chat_wa','Chat WhatsApp') %></span>
+                <i class="ph-bold ph-caret-right ios-chevron"></i>
+              </a>
+              <a href="#" class="ios-row" onclick="openTentang();return false;">
+                <div class="ios-icon" style="background:linear-gradient(135deg,#94A3B8,#64748B);">
+                  <i class="bi bi-info-circle" style="color:#fff;"></i>
+                </div>
+                <span class="ios-label"><%= t('pwa.account.about','Tentang Aplikasi') %></span>
+                <i class="ph-bold ph-caret-right ios-chevron"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="ios-group">
+            <a href="#" class="ios-row" style="justify-content:center;" onclick="confirmLogout(event)">
+              <span class="ios-label" style="text-align:center;color:#EF4444;font-weight:500;"><%= t('pwa.account.logout','Keluar dari Akun') %></span>
+            </a>
+          </div>
+
+          <p class="text-center text-[10px]" style="color:var(--muted-2);padding-bottom:8px;">
+            <%= portal.company %> PWA v<%= pwaVersion %> (<%= appVersionName %>) · Billing v<%= appVersion %> · <span style="color:var(--lime);">Internet Freedom</span>
+          </p>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════ BOTTOM NAV (5 tabs) ═══════════════ -->
+    <nav class="bottom-nav pb-safe fixed bottom-0 left-0 right-0 z-50 md:hidden" style="background:rgba(10,13,20,0.82);backdrop-filter:blur(24px) saturate(1.8);-webkit-backdrop-filter:blur(24px) saturate(1.8);border-top:1px solid var(--border);">
+      <div class="flex justify-around items-stretch" style="height:62px;max-width:500px;width:100%;margin:0 auto;padding:0 6px;">
+        <button onclick="switchTab('home')" id="nav-m-home" class="bottom-nav-item active press">
+          <div class="nav-ico-wrap"><i class="ph-fill ph-house"></i></div>
+          <span><%= t('common.home','Beranda') %></span>
+        </button>
+        <button onclick="switchTab('billing')" id="nav-m-billing" class="bottom-nav-item press">
+          <div class="nav-ico-wrap"><i class="ph ph-receipt"></i></div>
+          <span><%= t('pwa.nav.billing','Tagihan') %></span>
+        </button>
+        <button onclick="switchTab('speedtest')" id="nav-m-speedtest" class="bottom-nav-item press">
+          <div class="nav-ico-wrap"><i class="ph ph-gauge"></i></div>
+          <span>Speed Test</span>
+        </button>
+        <button onclick="switchTab('network')" id="nav-m-network" class="bottom-nav-item press">
+          <div class="nav-ico-wrap"><i class="ph ph-wifi-high"></i></div>
+          <span><%= t('pwa.nav.network','Jaringan') %></span>
+        </button>
+        <button onclick="switchTab('profile')" id="nav-m-profile" class="bottom-nav-item press">
+          <div class="nav-ico-wrap"><i class="ph ph-user-circle"></i></div>
+          <span><%= t('pwa.nav.account','Akun') %></span>
+        </button>
+      </div>
+    </nav>
+
+  </main>
+
+  <!-- ═══════════════ MODAL: Setting WiFi ═══════════════ -->
+  <div class="modal-backdrop" id="setting-modal" onclick="if(event.target===this)closeSettingModal()">
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="setting-title">
+      <div class="modal-grip"></div>
+      <h3 class="modal-title" id="setting-title"><%= t('pwa.wifi.title','Pengaturan WiFi') %></h3>
+      <p class="modal-sub"><%= t('pwa.wifi.subtitle','Ubah SSID dan password jaringan WiFi Anda') %></p>
+
+      <div class="field">
+        <label class="field-label" for="ssid-input"><%= t('pwa.net.ssid','Nama WiFi (SSID)') %></label>
+        <div class="field-input-wrap">
+          <i class="ph-fill ph-wifi-high" style="color:var(--lime);font-size:16px;"></i>
+          <input class="field-input" type="text" id="ssid-input" value="OPEN-ISP-AD" placeholder="<%= t('pwa.wifi.name_ph','Nama WiFi') %>" maxlength="32" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="pwd-input"><%= t('pwa.net.f_password','Password') %></label>
+        <div class="field-input-wrap">
+          <i class="ph-fill ph-lock-key" style="color:var(--lime);font-size:16px;"></i>
+          <input class="field-input" type="password" id="pwd-input" value="" placeholder="<%= t('pwa.wifi.pwd_ph','Password baru (min. 8 karakter)') %>" minlength="8" maxlength="63" autocomplete="new-password">
+        </div>
+        <p class="field-hint"><%= t('pwa.wifi.password_hint','Minimal 8 karakter. Gunakan kombinasi huruf, angka, dan simbol.') %></p>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeSettingModal()"><%= t('common.cancel','Batal') %></button>
+        <button type="button" class="btn-save" onclick="saveWifiSetting()"><%= t('common.save','Simpan') %></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: Informasi Pribadi ═══════════════ -->
+  <div class="modal-backdrop" id="info-modal" onclick="if(event.target===this)closeInfoPribadi()">
+    <div class="modal-sheet" role="dialog" aria-modal="true">
+      <div class="modal-grip"></div>
+      <h3 class="modal-title"><%= t('pwa.account.personal_info','Informasi Pribadi') %></h3>
+      <p class="modal-sub"><%= t('pwa.account.data_note','Data akun Anda. Untuk mengubah data, ajukan ke admin.') %></p>
+      <div class="info-list">
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.name','Nama') %></span><span class="info-v"><%= portal.profileInfo.name %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.customer_id','ID Pelanggan') %></span><span class="info-v"><%= portal.profileInfo.code %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.phone','No. HP / WA') %></span><span class="info-v"><%= portal.profileInfo.phone %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.address','Alamat') %></span><span class="info-v"><%= portal.profileInfo.address %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.area','Area') %></span><span class="info-v"><%= portal.profileInfo.area %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.package','Paket') %></span><span class="info-v"><%= portal.profileInfo.packageName %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('common.status','Status') %></span><span class="info-v" style="color:var(--lime);"><%= portal.profileInfo.status %></span></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeInfoPribadi()"><%= t('common.close','Tutup') %></button>
+        <a href="https://wa.me/<%= portal.waPhone %>?text=<%= encodeURIComponent(t('pwa.wa_edit_prefix','Halo Admin, saya ingin mengubah data pelanggan saya. ID: ') + portal.profileInfo.code + ' (' + portal.profileInfo.name + '). Data yang ingin diubah: ') %>" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;padding:14px 16px;border-radius:14px;background:var(--lime);color:#0A0D14;font-weight:700;font-family:'Space Grotesk',sans-serif;text-decoration:none;font-size:14px;"><%= t('pwa.wifi.apply','Ajukan Perubahan') %></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: Data Layanan ═══════════════ -->
+  <div class="modal-backdrop" id="layanan-modal" onclick="if(event.target===this)closeLayanan()">
+    <div class="modal-sheet" role="dialog" aria-modal="true">
+      <div class="modal-grip"></div>
+      <h3 class="modal-title"><%= t('pwa.account.service_data','Data Layanan') %></h3>
+      <p class="modal-sub"><%= t('pwa.account.tech_info_note','Informasi teknis untuk keperluan bantuan/teknisi.') %></p>
+      <div class="info-list">
+        <div class="info-row"><span class="info-k"><%= t('pwa.net.f_pppoe_short','PPPoE') %></span><span class="info-v"><%= portal.pppoeUser %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.net.f_ip_public','IP Publik') %></span><span class="info-v"><%= portal.pppoeIp %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.net.f_serial','Serial ONU') %></span><span class="info-v"><%= portal.serialNumber %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.net.f_model','Model ONU') %></span><span class="info-v"><%= portal.onuModel %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.net.ssid_short','SSID WiFi') %></span><span class="info-v"><%= portal.ssid %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.net.f_rx','Redaman (Rx)') %></span><span class="info-v"><%= portal.rxPower %></span></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeLayanan()"><%= t('common.close','Tutup') %></button>
+        <button type="button" class="btn-save" onclick="copyLayanan()"><%= t('pwa.account.copy_all','Salin Semua') %></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: Riwayat Pembayaran ═══════════════ -->
+  <div class="modal-backdrop" id="riwayat-modal" onclick="if(event.target===this)closeRiwayat()">
+    <div class="modal-sheet" role="dialog" aria-modal="true">
+      <div class="modal-grip"></div>
+      <h3 class="modal-title"><%= t('pwa.billing.history','Riwayat Pembayaran') %></h3>
+      <p class="modal-sub"><%= t('pwa.billing.paid_note','Tagihan yang sudah lunas.') %></p>
+      <div id="riwayatList" style="max-height:50vh;overflow-y:auto;">
+        <% if (!portal.history || !portal.history.length) { %>
+          <p class="text-sm" style="color:var(--muted);text-align:center;padding:16px 0;"><%= t('pwa.billing.no_history','Belum ada riwayat pembayaran.') %></p>
+        <% } %>
+        <div class="info-list" style="margin-bottom:0;<%= (portal.history && portal.history.length) ? '' : 'display:none' %>">
+          <% (portal.history || []).forEach(function(h){ %>
+          <div class="info-row"><span class="info-k"><%= h.month %><br><span style="font-size:10px;color:var(--muted-2);"><%= h.paidText %></span></span><span class="info-v"><%= h.amount %><br><span style="font-size:10px;color:var(--lime);"><%= h.statusText %></span></span></div>
+          <% }); %>
+        </div>
+      </div>
+      <div class="modal-actions"><button type="button" class="btn-save" style="width:100%" onclick="closeRiwayat()"><%= t('common.close','Tutup') %></button></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: Tentang Aplikasi ═══════════════ -->
+  <div class="modal-backdrop" id="tentang-modal" onclick="if(event.target===this)closeTentang()">
+    <div class="modal-sheet" role="dialog" aria-modal="true">
+      <div class="modal-grip"></div>
+      <h3 class="modal-title"><%= t('pwa.account.about','Tentang Aplikasi') %></h3>
+      <p class="modal-sub"><%= t('pwa.title','Portal Pelanggan') %><%= portal.companyInfo.name %></p>
+      <div class="info-list">
+        <div class="info-row"><span class="info-k"><%= t('pwa.account.apps','Aplikasi') %></span><span class="info-v"><%= portal.companyInfo.name %> PWA v<%= pwaVersion %> (<%= appVersionName %>) · Billing v<%= appVersion %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.company','Perusahaan') %></span><span class="info-v"><%= portal.companyInfo.name %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.address','Alamat') %></span><span class="info-v"><%= portal.companyInfo.address %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.phone_plain','Telepon') %></span><span class="info-v"><%= portal.companyInfo.phone %></span></div>
+        <div class="info-row"><span class="info-k"><%= t('pwa.field.email','Email') %></span><span class="info-v"><%= portal.companyInfo.email %></span></div>
+      </div>
+      <p class="text-[10px]" style="color:var(--muted-2);margin-bottom:12px;"><i class="bi bi-shield-check"></i><%= t('pwa.help.official_note','Hanya percaya kontak resmi di atas. Admin tidak pernah meminta password.') %></p>
+      <div class="modal-actions"><button type="button" class="btn-save" style="width:100%" onclick="closeTentang()"><%= t('common.close','Tutup') %></button></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: Bantuan ═══════════════ -->
+  <div class="modal-backdrop" id="bantuan-modal" onclick="if(event.target===this)closeBantuan()">
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="bantuan-title">
+      <div class="modal-grip"></div>
+      <h3 class="modal-title" id="bantuan-title"><%= t('pwa.help.needed','Butuh Bantuan?') %></h3>
+      <p class="modal-sub"><%= t('pwa.help.subtitle','Kirim laporan gangguan ke admin (foto opsional), atau chat langsung via WhatsApp.') %></p>
+      <form id="bantuan-form" action="/customer/tickets/create" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="customerId" value="<%= portal.customerId || '' %>">
+        <input type="hidden" name="gps_lat" id="bt-lat" value="">
+        <input type="hidden" name="gps_lng" id="bt-lng" value="">
+        <div class="field">
+          <label class="field-label" for="bt-subject"><%= t('pwa.help.issue_type','Jenis Kendala') %></label>
+          <select class="field-box" id="bt-subject" name="subject" required>
+            <option value="" disabled selected><%= t('pwa.help.pick_issue','-- Pilih jenis kendala --') %></option>
+            <option><%= t('pwa.help.i_disconnected','Koneksi Terputus / Tidak Bisa Konek') %></option>
+            <option><%= t('pwa.help.i_slow','Koneksi Lambat / Lemot') %></option>
+            <option><%= t('pwa.help.i_pon','Lampu PON Merah / Los Sinyal') %></option>
+            <option><%= t('pwa.help.i_pwd','Kendala Lupa Password WiFi') %></option>
+            <option><%= t('pwa.help.topic_billing','Pertanyaan Tagihan &amp; Pembayaran') %></option>
+            <option><%= t('pwa.help.i_other','Lainnya') %></option>
+          </select>
+          <p class="field-box-hint"><i class="bi bi-chevron-down"></i><%= t('pwa.help.pick_hint','Ketuk untuk memilih jenis kendala') %></p>
+        </div>
+        <div class="field">
+          <label class="field-label" for="bt-msg"><%= t('pwa.help.message','Detail Pesan') %></label>
+          <textarea class="field-box" id="bt-msg" name="message" rows="3" placeholder="<%= t('pwa.help.message_ph','Jelaskan kendala Anda…') %>" required style="min-height:92px;resize:vertical;"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label" for="bt-photo"><%= t('pwa.help.photo','Foto Lampiran (opsional)') %></label>
+          <input class="field-box" type="file" id="bt-photo" name="photos" accept="image/*" multiple>
+          <p class="field-box-hint"><%= t('pwa.help.photo_note','Opsional — boleh dikosongkan jika tidak ada foto.') %></p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" onclick="closeBantuan()"><%= t('common.cancel','Batal') %></button>
+          <button type="submit" class="btn-save"><%= t('pwa.help.submit','Kirim Gangguan') %></button>
+        </div>
+      </form>
+      <button type="button" onclick="openWaHelp()" class="btn-ghost press" style="width:100%;margin-top:10px;padding:13px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;">
+        <i class="bi bi-whatsapp" style="color:#22C55E;"></i><%= t('pwa.help.chat_wa_alt','Chat via WhatsApp') %></button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: Info Gangguan ═══════════════ -->
+  <div class="modal-backdrop" id="gangguan-modal" onclick="if(event.target===this)closeGangguan()">
+    <div class="modal-sheet confirm-sheet" role="dialog" aria-modal="true">
+      <div class="modal-grip"></div>
+      <div class="confirm-icon-wrap" id="gangguan-ico"><i class="ph-fill ph-warning-circle"></i></div>
+      <h3 class="modal-title" id="gangguan-title"><%= t('pwa.help.info','Info Gangguan') %></h3>
+      <p class="modal-sub" id="gangguan-msg" style="margin-bottom:0"></p>
+      <p class="modal-sub" id="gangguan-eta" style="margin-bottom:0"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeGangguan()"><%= t('common.close','Tutup') %></button>
+        <a href="https://wa.me/<%= portal.waPhone %>" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;padding:14px 16px;border-radius:14px;background:var(--lime);color:#0A0D14;font-weight:700;font-family:'Space Grotesk',sans-serif;text-decoration:none;font-size:14px;"><%= t('pwa.speedtest.contact_admin','Hubungi Admin') %></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: ONU tidak terdeteksi ═══════════════ -->
+  <div class="modal-backdrop" id="onu-modal" onclick="if(event.target===this)closeOnuModal()">
+    <div class="modal-sheet confirm-sheet" role="dialog" aria-modal="true">
+      <div class="modal-grip"></div>
+      <div class="confirm-icon-wrap"><i class="ph-fill ph-warning-circle"></i></div>
+      <h3 class="modal-title"><%= t('pwa.net.onu_missing','ONU Tidak Terdeteksi') %></h3>
+      <p class="modal-sub" style="margin-bottom:0;"><%= t('pwa.net.onu_missing_note','Perangkat ONU/modem Anda belum terdeteksi di sistem. Pastikan modem menyala dan kabel fiber terpasang dengan benar. Bila tetap tidak terdeteksi, hubungi admin.') %></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeOnuModal()"><%= t('common.close','Tutup') %></button>
+        <a href="https://wa.me/<%= portal.waPhone %>" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;padding:14px 16px;border-radius:14px;background:var(--lime);color:#0A0D14;font-weight:700;font-family:'Space Grotesk',sans-serif;text-decoration:none;font-size:14px;"><%= t('pwa.speedtest.contact_admin','Hubungi Admin') %></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: Notifikasi ═══════════════ -->
+  <div class="modal-backdrop" id="notif-modal" onclick="if(event.target===this)closeNotifPanel()">
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="notif-title">
+      <div class="modal-grip"></div>
+      <h3 class="modal-title" id="notif-title"><%= t('pwa.notif.title','Notifikasi') %></h3>
+      <p class="modal-sub"><%= t('pwa.notif.subtitle','Pemberitahuan terbaru untuk akun Anda') %></p>
+      <div id="notifList" style="max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:10px;"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-save" style="width:100%" onclick="closeNotifPanel()"><%= t('common.close','Tutup') %></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MODAL: Confirm (generic) ═══════════════ -->
+  <div class="modal-backdrop" id="confirm-modal" onclick="if(event.target===this)closeConfirm()">
+    <div class="modal-sheet confirm-sheet" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <div class="modal-grip"></div>
+      <div class="confirm-icon-wrap">
+        <i class="ph-fill ph-warning-circle" id="confirm-icon"></i>
+      </div>
+      <h3 class="modal-title" id="confirm-title"><%= t('pwa.confirm.title','Konfirmasi') %></h3>
+      <p class="modal-sub" id="confirm-message" style="margin-bottom:0;"><%= t('pwa.confirm.sure','Apakah Anda yakin?') %></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeConfirm()"><%= t('common.cancel','Batal') %></button>
+        <button type="button" class="btn-danger" id="confirm-action-btn" onclick="runConfirm()"><%= t('pwa.confirm.yes','Ya, Lanjutkan') %></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="busy-overlay" id="busy" role="status" aria-live="polite">
+    <div class="busy-panel">
+      <div class="busy-ico" id="busy-ico"><i class="ph ph-circle-notch busy-spin"></i></div>
+      <p class="busy-text" id="busy-text"><%= t('common.processing','Memproses...') %></p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <i class="ph-fill ph-check-circle" id="toast-icon"></i>
+    <span id="toast-text"><%= t('common.success','Berhasil') %></span>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+  let swiper = null;
+  const tabs = ['home', 'billing', 'speedtest', 'network', 'profile'];
+  const pageTitles = { home: '<%= t('common.home','Beranda') %>', billing: '<%= t('pwa.nav.billing','Tagihan') %>', speedtest: 'Speed Test', network: '<%= t('pwa.nav.network','Jaringan') %>', profile: '<%= t('pwa.nav.account','Akun') %>' };
+  let activeTab = 'home';
+
+  function switchTab(id) {
+    if (id === activeTab) return;
+    activeTab = id;
+    tabs.forEach(t => {
+      const el = document.getElementById(`tab-${t}`);
+      if (t === id) {
+        el.classList.add('active-tab');
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('tab-visible')));
+      } else {
+        el.classList.remove('tab-visible', 'active-tab');
+      }
+    });
+    document.getElementById('page-title').innerText = pageTitles[id];
+    document.getElementById('scroll-area').scrollTo({ top: 0, behavior: 'smooth' });
+    updateNav(id);
+    if (id === 'network') animateSpeedRing();
+  }
+
+  function updateNav(active) {
+    const mItems = {
+      home: 'nav-m-home', billing: 'nav-m-billing', speedtest: 'nav-m-speedtest',
+      network: 'nav-m-network', profile: 'nav-m-profile',
+    };
+    const mIcons = {
+      home: ['ph-fill ph-house','ph ph-house'],
+      billing: ['ph-fill ph-receipt','ph ph-receipt'],
+      speedtest: ['ph-fill ph-gauge','ph ph-gauge'],
+      network: ['ph-bold ph-wifi-high','ph ph-wifi-high'],
+      profile: ['ph-fill ph-user-circle','ph ph-user-circle'],
+    };
+
+    // Mobile bottom nav
+    tabs.forEach(t => {
+      const btn = document.getElementById(mItems[t]); if (!btn) return;
+      const iconEl = btn.querySelector('.nav-ico-wrap i');
+      const [fillCls, outlineCls] = mIcons[t];
+      if (t === active) { btn.classList.add('active'); if (iconEl) iconEl.className = fillCls; }
+      else { btn.classList.remove('active'); if (iconEl) iconEl.className = outlineCls; }
+    });
+
+    // Desktop sidebar
+    const dNavMap = {
+      home: 'nav-d-home', billing: 'nav-d-billing', speedtest: 'nav-d-speedtest',
+      network: 'nav-d-network', profile: 'nav-d-profile',
+    };
+    tabs.forEach(t => {
+      const btn = document.getElementById(dNavMap[t]); if (!btn) return;
+      const iconEl = btn.querySelector('i');
+      const [fillCls, outlineCls] = mIcons[t];
+      if (t === active) { btn.classList.add('active'); if (iconEl) iconEl.className = `${fillCls} nav-icon`; }
+      else { btn.classList.remove('active'); if (iconEl) iconEl.className = `${outlineCls} nav-icon`; }
+    });
+  }
+
+  function animateSpeedRing() {
+    const circle = document.getElementById('speed-ring-circle'); if (!circle) return;
+    const circ = 2 * Math.PI * 54;
+    circle.style.strokeDashoffset = circ * (1 - 0.5);
+  }
+
+  /* ═══════ Copy Customer ID ═══════ */
+  function copyCustomerId(btn) {
+    const id = document.getElementById('customer-id').textContent.trim();
+    const doSuccess = () => {
+      btn.classList.add('copied');
+      const icon = btn.querySelector('i');
+      if (icon) icon.className = 'ph-bold ph-check';
+      showToast(`ID ${id} disalin`);
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        if (icon) icon.className = 'ph-bold ph-copy';
+      }, 1600);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(id).then(doSuccess).catch(() => fallbackCopy(id, doSuccess));
+    } else {
+      fallbackCopy(id, doSuccess);
+    }
+  }
+  function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); cb(); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+
+  /* ═══════ WiFi (SSID & password) ═══════ */
+  const wifi = { ssid: <%- JSON.stringify(portal.ssid).split('<').join('\\u003c') %>, pwd: '', show: false };
+  function renderWifi() {
+    const s = document.getElementById('wifi-ssid'); if (s) s.textContent = wifi.ssid;
+    const p = document.getElementById('wifi-pwd'); if (p) p.textContent = '********';
+  }
+
+  /* ═══════ Status jaringan (situasional) ═══════ */
+  const NET = {
+    normal: { label: 'Normal' },
+    maintenance: { label: 'Perbaikan', icon: 'ph-fill ph-warning-circle', title: <%- JSON.stringify((portal.notice && portal.notice.label) || 'Perbaikan Sistem').split('<').join('\\u003c') %>, msg: <%- JSON.stringify((portal.notice && portal.notice.text) || 'Sedang ada perbaikan sistem.').split('<').join('\\u003c') %><% if (portal.notice && portal.notice.estimateText) { %> + ' <strong><%= t('pwa.estimate_prefix','Estimasi:') %> <%= portal.notice.estimateText %></strong>'<% } %> },
+    outage: { label: 'Gangguan', icon: 'ph-fill ph-x-circle', title: <%- JSON.stringify((portal.notice && portal.notice.label) || 'Gangguan Masal').split('<').join('\\u003c') %>, msg: <%- JSON.stringify((portal.notice && portal.notice.text) || 'Sedang terjadi gangguan jaringan.').split('<').join('\\u003c') %><% if (portal.notice && portal.notice.estimateText) { %> + ' <strong><%= t('pwa.estimate_prefix','Estimasi:') %> <%= portal.notice.estimateText %></strong>'<% } %> }
+  };
+  let netState = '<%= portal.netState %>';
+  function setNetworkStatus(s) {
+    const c = NET[s]; if (!c) return; netState = s;
+    const badge = document.getElementById('net-badge'), al = document.getElementById('net-alert');
+    badge.dataset.state = s;
+    document.getElementById('net-badge-text').textContent = c.label;
+    badge.setAttribute('aria-label', '<%= t('pwa.net.status_prefix','Status jaringan: ') %>' + c.label);
+    if (s === 'normal') { al.hidden = true; return; }
+    al.hidden = false; al.dataset.state = s;
+    document.getElementById('net-alert-icon').className = c.icon + ' text-xl flex-shrink-0';
+    document.getElementById('net-alert-title').textContent = c.title;
+    document.getElementById('net-alert-msg').innerHTML = c.msg;
+  }
+  function cycleNetworkStatus() {
+    const o = ['normal', 'maintenance', 'outage'];
+    setNetworkStatus(o[(o.indexOf(netState) + 1) % o.length]);
+  }
+  function goToNetworkStatus() {
+    if (netState === 'normal') { switchTab('network'); return; }
+    const go = () => {
+      const el = document.getElementById('net-alert'), sa = document.getElementById('scroll-area');
+      const r = el.getBoundingClientRect(), s = sa.getBoundingClientRect();
+      sa.scrollTo({ top: sa.scrollTop + (r.top - s.top) - (sa.clientHeight - r.height) / 2, behavior: 'smooth' });
+      el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+    };
+    if (activeTab !== 'home') { switchTab('home'); setTimeout(go, 240); } else go();
+  }
+
+  /* ═══════ Aksi dengan loading: blur → spinner → ikon sukses → toast ═══════ */
+  let busy = false;
+  function runAction(o = {}) {
+    if (busy) return; busy = true;
+    const ov = document.getElementById('busy'), ico = document.getElementById('busy-ico'), txt = document.getElementById('busy-text');
+    const icon = o.icon || 'ph-fill ph-check-circle';
+    ov.classList.remove('done');
+    ico.innerHTML = '<i class="ph ph-circle-notch busy-spin"></i>';
+    txt.textContent = o.loading || '<%= t('common.processing','Memproses...') %>';
+    ov.classList.add('show');
+    setTimeout(() => {
+      ov.classList.add('done');
+      ico.innerHTML = `<i class="${icon}"></i>`;
+      txt.textContent = o.success || '<%= t('common.success','Berhasil') %>';
+      setTimeout(() => {
+        if (o.onDone) o.onDone();
+        ov.classList.remove('show'); busy = false;
+        showToast(o.toast || o.success || '<%= t('common.success','Berhasil') %>', false, icon);
+      }, 900);
+    }, o.duration || 1400);
+  }
+  function payWith(m) {
+    const t = { 'Bayar Sekarang': ['Menyiapkan pembayaran...', 'Instruksi pembayaran dikirim'], QRIS: ['Membuat kode QRIS...', 'Kode QRIS siap dipakai'], Transfer: ['Mengambil detail rekening...', 'Detail transfer siap'] }[m];
+    runAction({ loading: t[0], success: t[1], icon: 'ph-fill ph-credit-card', duration: 1600 });
+  }
+  function refreshDevices() { runAction({ loading: '<%= t('pwa.js.loading_devices','Memuat perangkat...') %>', success: '<%= t('pwa.js.devices_updated','Daftar perangkat diperbarui') %>', duration: 1200 }); }
+  function confirmLogout(e) {
+    e.preventDefault();
+    openConfirm({ title: '<%= t('pwa.js.logout_title','Keluar dari akun?') %>', message: '<%= t('pwa.js.logout_msg','Anda perlu masuk lagi untuk mengakses portal.') %>', actionText: '<%= t('pwa.js.logout_yes','Ya, Keluar') %>',
+      onConfirm: () => runAction({ loading: '<%= t('pwa.js.logging_out','Mengeluarkan akun...') %>', success: '<%= t('pwa.js.logged_out','Berhasil keluar') %>', duration: 1300 }) });
+  }
+
+  /* ═══════ Toast ═══════ */
+  let toastTimer = null;
+  function showToast(msg, isError = false, iconCls) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-text').textContent = msg;
+    toast.classList.toggle('error', isError);
+    document.getElementById('toast-icon').className = iconCls || (isError ? 'ph-fill ph-x-circle' : 'ph-fill ph-check-circle');
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+  }
+
+  /* ═══════ Confirm modal (generic) ═══════ */
+  let confirmCallback = null;
+  function openConfirm(opts) {
+    document.getElementById('confirm-title').textContent = opts.title || 'Konfirmasi';
+    document.getElementById('confirm-message').textContent = opts.message || '';
+    document.getElementById('confirm-action-btn').textContent = opts.actionText || 'Ya, Lanjutkan';
+    confirmCallback = opts.onConfirm || null;
+    document.getElementById('confirm-modal').classList.add('open');
+  }
+  function closeConfirm() {
+    document.getElementById('confirm-modal').classList.remove('open');
+    confirmCallback = null;
+  }
+  function runConfirm() {
+    const cb = confirmCallback;
+    closeConfirm();
+    if (cb) cb();
+  }
+
+  /* ═══════ PPPoE Reconnect (dengan konfirmasi) ═══════ */
+  function confirmReconnect() {
+    openConfirm({
+      title: '<%= t('pwa.js.reconnect_title','Reconnect PPPoE?') %>',
+      message: '<%= t('pwa.js.reconnect_msg','Koneksi internet akan terputus sementara selama proses reconnect. Lanjutkan?') %>',
+      actionText: '<%= t('pwa.js.reconnect_yes','Ya, Reconnect') %>',
+      onConfirm: () => doReconnect()
+    });
+  }
+  function doReconnect() {
+    runAction({ loading: '<%= t('pwa.js.reconnecting','Menyambung ulang PPPoE...') %>', success: '<%= t('pwa.js.reconnected','PPPoE tersambung') %>', duration: 2000 });
+  }
+
+  /* ═══════ Restart Modem (dengan konfirmasi) ═══════ */
+  function confirmRestartModem() {
+    openConfirm({
+      title: '<%= t('pwa.js.restart_title','Restart Modem?') %>',
+      message: '<%= t('pwa.js.restart_msg_old','Modem ZTE F609 akan direstart. Koneksi internet akan terputus sekitar 1-2 menit.') %>',
+      actionText: '<%= t('pwa.js.restart_yes','Ya, Restart') %>',
+      onConfirm: () => {
+        runAction({ loading: '<%= t('pwa.js.restarting','Mengirim perintah restart...') %>', success: '<%= t('pwa.js.restarted','Modem sedang restart') %>', toast: '<%= t('pwa.js.restart_sent','Perintah restart dikirim ke modem') %>', duration: 1800 });
+      }
+    });
+  }
+
+  /* ═══════ Poll ONU ═══════ */
+  function pollOnu() {
+    runAction({ loading: '<%= t('pwa.js.polling','Memperbarui status ONU...') %>', success: '<%= t('pwa.js.polled','Status ONU diperbarui') %>', duration: 1200 });
+  }
+
+  /* ═══════ Setting Modal ═══════ */
+  function openSettingModal() {
+    if ((window.__PORTAL__ || {}).onuDetected === false) { showToast('<%= t('pwa.js.onu_missing_wifi2','ONU tidak terdeteksi — pengaturan WiFi tidak tersedia.') %>', true); setTimeout(window.openOnuModal, 900); return; }
+    document.getElementById('ssid-input').value = wifi.ssid;
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('setting-modal').classList.add('open');
+  }
+  function closeSettingModal() {
+    document.getElementById('setting-modal').classList.remove('open');
+  }
+  function togglePwdVisibility(btn) {
+    const input = document.getElementById('pwd-input');
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'ph ph-eye-slash text-lg';
+    } else {
+      input.type = 'password';
+      icon.className = 'ph ph-eye text-lg';
+    }
+  }
+  function saveWifiSetting() {
+    const ssid = document.getElementById('ssid-input').value.trim();
+    const pwd = document.getElementById('pwd-input').value;
+    if (!ssid) { showToast('<%= t('pwa.js.ssid_empty','SSID tidak boleh kosong') %>', true); return; }
+    if (pwd.length < 8) { showToast('Password minimal 8 karakter', true); return; }
+    runAction({ loading: '<%= t('pwa.js.saving_wifi','Menyimpan pengaturan WiFi...') %>', success: '<%= t('pwa.js.wifi_saved','Pengaturan WiFi tersimpan') %>', icon: 'ph-bold ph-wifi-high', duration: 1600, onDone: () => { wifi.ssid = ssid; wifi.pwd = pwd; renderWifi(); closeSettingModal(); } });
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !busy) { closeSettingModal(); closeConfirm(); }
+  });
+
+  /* ═══════ Speed Test ═══════ */
+  let stTesting = false;
+  function _stGauge(mbps, maxMbps) {
+    const fill = document.getElementById('st-gauge-fill'); if (!fill) return;
+    const pct = Math.min(Math.max(mbps / (maxMbps || 100), 0), 1);
+    fill.style.strokeDashoffset = 424.1 * (1 - pct);
+  }
+  function renderSpeedHistory() {
+    const box = document.getElementById('stHistory'); if (!box) return;
+    let h = [];
+    try { h = JSON.parse(localStorage.getItem('sf-speed-history') || '[]'); } catch (e) { h = []; }
+    if (!h.length) { box.innerHTML = '<div class="list-row"><p class="text-sm" style="color:var(--muted)"><%= t('pwa.speedtest.no_history','Belum ada riwayat tes.') %></p></div>'; return; }
+    box.innerHTML = h.map(function (r, i) {
+      const d = new Date(r.t || Date.now());
+      const when = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const val = Number(r.d) || 0;
+      const label = val >= 40 ? 'SANGAT BAIK' : val >= 15 ? 'BAIK' : 'CUKUP';
+      return '<div class="list-row"' + (i < h.length - 1 ? ' style="border-bottom:1px solid var(--border);"' : '') + '>'
+        + '<div class="flex items-center gap-3"><div class="w-9 h-9 rounded-[11px] flex items-center justify-center" style="background:var(--surface-2);"><i class="ph-fill ph-gauge" style="color:var(--lime);font-size:16px;"></i></div>'
+        + '<div><p class="text-sm font-semibold" style="color:var(--text);">' + val.toFixed(1) + ' Mbps</p><p class="text-[11px]" style="color:var(--muted);">' + when + ' · ↓' + val.toFixed(1) + ' ↑' + (Number(r.u) || 0).toFixed(1) + ' · ' + (r.p || '-') + 'ms</p></div></div>'
+        + '<span class="text-[10px] font-semibold" style="color:var(--lime);">' + label + '</span></div>';
+    }).join('');
+  }
+  window.startSpeedTest = async function () {
+    if (stTesting) return; stTesting = true;
+    const btn = document.getElementById('st-start-btn');
+    const valueEl = document.getElementById('st-value');
+    const statusEl = document.getElementById('st-status');
+    const t0El = document.getElementById('st-download');
+    const origHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin 1s linear infinite;"></i> Mengukur...';
+    valueEl.textContent = '0'; _stGauge(0);
+    try {
+      // 1) PING
+      statusEl.textContent = 'Mengukur latensi...';
+      const pings = [];
+      for (let i = 0; i < 5; i++) {
+        const s0 = performance.now();
+        await fetch('/customer/speedtest/ping?_=' + Date.now(), { cache: 'no-store', credentials: 'same-origin' });
+        pings.push(performance.now() - s0);
+      }
+      pings.sort(function (a, b) { return a - b; });
+      const pingMs = Math.round(pings[1] != null ? pings[1] : pings[0]);
+      document.getElementById('st-ping').innerHTML = pingMs + '<small>ms</small>';
+
+      // 2) DOWNLOAD (ukur selama ~8 detik)
+      statusEl.textContent = '<%= t('pwa.js.speed_down','Mengukur kecepatan unduh...') %>';
+      const ctrl = new AbortController();
+      const d0 = performance.now();
+      let dbytes = 0;
+      const anim = setInterval(function () {
+        const secs = (performance.now() - d0) / 1000;
+        if (secs > 0.4) { const m = (dbytes * 8 / 1e6) / secs; valueEl.textContent = m.toFixed(1); _stGauge(m); }
+      }, 250);
+      try {
+        const resp = await fetch('/customer/speedtest/download?ms=8000&_=' + Date.now(), { cache: 'no-store', credentials: 'same-origin', signal: ctrl.signal });
+        if (!resp.ok || !resp.body) throw new Error('HTTP ' + resp.status);
+        const reader = resp.body.getReader();
+        while (true) {
+          const r = await reader.read();
+          if (r.done) break;
+          dbytes += r.value.length;
+          if ((performance.now() - d0) / 1000 >= 8) { try { ctrl.abort(); } catch (e) {} break; }
+        }
+      } catch (e) { if (!dbytes) throw e; }
+      clearInterval(anim);
+      const dsecs = Math.max((performance.now() - d0) / 1000, 0.7);
+      const downMbps = (dbytes * 8 / 1e6) / dsecs;
+      valueEl.textContent = downMbps.toFixed(1); _stGauge(downMbps);
+      t0El.innerHTML = downMbps.toFixed(1) + '<small>Mbps</small>';
+
+      // 3) UPLOAD (ukur selama ~8 detik)
+      statusEl.textContent = '<%= t('pwa.js.speed_up','Mengukur kecepatan unggah...') %>';
+      const upChunk = new Uint8Array(1024 * 1024);
+      for (let i = 0; i < upChunk.length; i += 65536) upChunk.set(ST_RAND.subarray(0, Math.min(65536, upChunk.length - i)), i);
+      const u0 = performance.now();
+      let ubytes = 0;
+      while ((performance.now() - u0) < 8000) {
+        const r = await fetch('/customer/speedtest/upload?_=' + Date.now(), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: upChunk, cache: 'no-store', credentials: 'same-origin' });
+        if (!r.ok) break;
+        ubytes += upChunk.length;
+      }
+      const usecs = Math.max((performance.now() - u0) / 1000, 0.7);
+      const upMbps = (ubytes * 8 / 1e6) / usecs;
+      document.getElementById('st-upload').innerHTML = upMbps.toFixed(1) + '<small>Mbps</small>';
+
+      statusEl.textContent = '<%= t('pwa.js.speed_done','Tes selesai') %>';
+      try {
+        const h = JSON.parse(localStorage.getItem('sf-speed-history') || '[]');
+        h.unshift({ d: +downMbps.toFixed(1), u: +upMbps.toFixed(1), p: pingMs, t: Date.now() });
+        localStorage.setItem('sf-speed-history', JSON.stringify(h.slice(0, 5)));
+      } catch (e) {}
+      renderSpeedHistory();
+      window.showToast('Tes selesai — ↓' + downMbps.toFixed(1) + ' Mbps · ↑' + upMbps.toFixed(1) + ' Mbps · ' + pingMs + ' ms');
+    } catch (e) {
+      statusEl.textContent = '<%= t('pwa.js.speed_done_fail','Tes gagal') %>';
+      window.showToast('<%= t('pwa.js.speed_failed','Tes kecepatan gagal:') %>' + (e && e.message ? e.message : 'error'), true);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph-bold ph-arrows-clockwise text-lg"></i> Tes Ulang';
+    stTesting = false;
+  };
+  var ST_RAND = (function () { var b = new Uint8Array(65536); if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(b); return b; })();
+  renderSpeedHistory();
+  function startSpeedTest_DISABLED() {
+    if (stTesting) return;
+    stTesting = true;
+    const btn = document.getElementById('st-start-btn');
+    const valueEl = document.getElementById('st-value');
+    const statusEl = document.getElementById('st-status');
+    const fill = document.getElementById('st-gauge-fill');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin 1s linear infinite;"></i> Mengukur...';
+    statusEl.textContent = 'Mengukur ping...';
+    valueEl.textContent = '0';
+    fill.style.strokeDashoffset = 424.1;
+
+    const maxMbps = 100;
+    const targetMbps = 47 + Math.random() * 4;
+
+    setTimeout(() => {
+      statusEl.textContent = '<%= t('pwa.js.speed_measuring','Mengukur kecepatan...') %>';
+      let current = 0;
+      const step = () => {
+        current += (targetMbps - current) * 0.12 + 0.4;
+        if (current > targetMbps) current = targetMbps;
+        const pct = Math.min(current / maxMbps, 1);
+        fill.style.strokeDashoffset = 424.1 * (1 - pct);
+        valueEl.textContent = current.toFixed(1);
+        if (current < targetMbps - 0.3) {
+          requestAnimationFrame(step);
+        } else {
+          valueEl.textContent = targetMbps.toFixed(1);
+          statusEl.textContent = '<%= t('pwa.js.speed_done','Tes selesai') %>';
+          document.getElementById('st-download').innerHTML = targetMbps.toFixed(1) + '<small>Mbps</small>';
+          document.getElementById('st-upload').innerHTML = (targetMbps - 1.5).toFixed(1) + '<small>Mbps</small>';
+          document.getElementById('st-ping').innerHTML = (7 + Math.floor(Math.random()*3)) + '<small>ms</small>';
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ph-fill ph-arrow-clockwise text-lg"></i> Tes Ulang';
+          stTesting = false;
+          showToast('Tes kecepatan selesai');
+        }
+      };
+      requestAnimationFrame(step);
+    }, 700);
+  }
+
+  /* ═══════ Theme ═══════ */
+  function applyTheme(isDark) {
+    const html = document.documentElement;
+    if (isDark) { html.classList.add('dark'); html.classList.remove('light'); }
+    else { html.classList.remove('dark'); html.classList.add('light'); }
+    const barIcon = document.getElementById('theme-icon-bar');
+    const mobIcon = document.getElementById('theme-icon-mobile');
+    const iconCls = isDark ? 'ph-fill ph-moon' : 'ph-fill ph-sun';
+    if (barIcon) barIcon.className = `${iconCls} text-base`;
+    if (mobIcon) mobIcon.className = `${iconCls} text-lg`;
+    const topbar = document.getElementById('topbar');
+    if (topbar) topbar.style.background = isDark ? 'rgba(10,13,20,0.72)' : 'rgba(240,242,248,0.72)';
+    const appWrap = document.getElementById('app-wrap');
+    if (appWrap) appWrap.style.background = 'var(--bg)';
+    const bottomNav = document.querySelector('nav.bottom-nav');
+    if (bottomNav) bottomNav.style.background = isDark ? 'rgba(10,13,20,0.82)' : 'rgba(240,242,248,0.82)';
+    const previewBar = document.getElementById('preview-bar');
+    if (previewBar) previewBar.style.background = isDark ? 'rgba(20,24,36,0.72)' : 'rgba(255,255,255,0.72)';
+  }
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    applyTheme(!isDark);
+    localStorage.setItem('sf-theme', !isDark ? 'dark' : 'light');
+  }
+
+  /* ═══════ Preview Switcher ═══════ */
+  function setPreview(mode) {
+    const body = document.body;
+    const dBtn = document.getElementById('btn-desktop');
+    const mBtn = document.getElementById('btn-mobile');
+    if (mode === 'mobile') {
+      body.classList.add('preview-mobile');
+      dBtn.classList.remove('active'); mBtn.classList.add('active');
+    } else {
+      body.classList.remove('preview-mobile');
+      mBtn.classList.remove('active'); dBtn.classList.add('active');
+    }
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+      if (swiper) swiper.update();
+    }, 300);
+  }
+
+  /* ═══════ Topbar shadow ═══════ */
+  const scrollArea = document.getElementById('scroll-area');
+  const topbar = document.getElementById('topbar');
+  if (scrollArea && topbar) {
+    scrollArea.addEventListener('scroll', () => {
+      topbar.classList.toggle('scrolled', scrollArea.scrollTop > 4);
+    }, { passive: true });
+  }
+
+  /* ═══════ Init ═══════ */
+  function initSwiper() {
+    if (swiper || typeof Swiper === 'undefined') return;
+    swiper = new Swiper('.promoSwiper', {
+      loop: true,
+      autoplay: { delay: 4000, disableOnInteraction: false, pauseOnMouseEnter: true },
+      pagination: { el: '.swiper-pagination', dynamicBullets: true },
+      effect: 'slide', speed: 600,
+      observer: true,
+      observeParents: true,
+    });
+  }
+  window.addEventListener('load', () => {
+    initSwiper();
+    setTimeout(() => { if (swiper) swiper.update(); }, 500);
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    initSwiper();
+    const saved = localStorage.getItem('sf-theme') || 'dark';
+    applyTheme(saved === 'dark');
+    animateSpeedRing();
+    renderWifi();
+    setNetworkStatus(netState);
+  });
+</script>
+<script>
+window.__PORTAL__ = <%- portalJson %>;
+(function(){
+  var P = window.__PORTAL__ || {};
+  function esc(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function realAction(url, o){
+    o = o || {};
+    if (typeof busy !== 'undefined' && busy) return; if (typeof busy !== 'undefined') busy = true;
+    var ov=document.getElementById('busy'), ico=document.getElementById('busy-ico'), txt=document.getElementById('busy-text');
+    ov.classList.remove('done', 'error');
+    var _om0 = document.getElementById('onu-modal'); if (_om0) _om0.classList.remove('open'); ico.innerHTML='<i class="ph ph-circle-notch busy-spin"></i>'; txt.textContent=o.loading||'<%= t('common.processing','Memproses...') %>'; ov.classList.add('show');
+    var body = new URLSearchParams(o.body||{}).toString();
+    fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-Requested-With':'fetch','Accept':'application/json'},body:body,credentials:'same-origin'})
+    .then(function(r){ return r.json().catch(function(){ return { success: true }; }); })
+    .then(function(res){
+      var ok = !(res && res.success === false);
+      ov.classList.toggle('error', !ok);
+      var _om = document.getElementById('onu-modal'); if (_om) _om.classList.remove('open');
+      ov.classList.add('done'); ico.innerHTML='<i class="'+(ok?'ph-fill ph-check-circle':'ph-fill ph-x-circle')+'"></i>';
+      txt.textContent=(res && res.message) || (ok?o.success:'<%= t('common.failed','Gagal') %>') || 'Selesai';
+      setTimeout(function(){
+        ov.classList.remove('show'); if (typeof busy !== 'undefined') busy=false;
+        if (o.onDone) { try { o.onDone(); } catch(e) {} }
+        if (o.redirect) { window.location.href=o.redirect; return; }
+        if (ok && o.reload) setTimeout(function(){ location.reload(); }, 350);
+      }, 1400);
+    })
+    .catch(function(){ ov.classList.remove('show'); if (typeof busy !== 'undefined') busy=false; showToast('<%= t('pwa.js.conn_failed','Koneksi gagal') %>', true); });
+  }
+  window.realAction = realAction;
+
+  // Semua notifikasi ditampilkan sebagai overlay (bukan toast kecil di bawah)
+  window.showToast = function(msg, isError, iconCls){
+    var ov = document.getElementById('busy'), ico = document.getElementById('busy-ico'), txt = document.getElementById('busy-text');
+    if (!ov) return;
+    ov.classList.remove('done');
+    ov.classList.toggle('error', !!isError);
+    var _om1 = document.getElementById('onu-modal'); if (_om1) _om1.classList.remove('open');
+    ico.innerHTML = '<i class="ph ph-circle-notch busy-spin"></i>';
+    txt.textContent = '<%= t('common.processing','Memproses...') %>';
+    ov.classList.add('show');
+    setTimeout(function(){
+      ov.classList.add('done');
+      ico.innerHTML = '<i class="' + (iconCls || (isError ? 'ph-fill ph-x-circle' : 'ph-fill ph-check-circle')) + '"></i>';
+      txt.textContent = msg || (isError ? '<%= t('common.failed','Gagal') %>' : '<%= t('common.success','Berhasil') %>');
+      setTimeout(function(){ ov.classList.remove('show'); }, 1250);
+    }, 450);
+  };
+
+  // Riwayat pembayaran
+  var hl = document.getElementById('historyList');
+  if (hl) {
+    if (!P.history || !P.history.length) { hl.innerHTML='<div class="list-row"><p class="text-sm" style="color:var(--muted)"><%= t('pwa.billing.no_history','Belum ada riwayat pembayaran.') %></p></div>'; }
+    else hl.innerHTML = P.history.map(function(h){
+      return '<div class="list-row press" style="border-bottom:1px solid var(--border);">'
+        + '<div class="flex items-center gap-3"><div class="w-9 h-9 rounded-[11px] flex items-center justify-center" style="background:rgba(173,255,47,0.1);"><i class="ph-fill ph-check-circle" style="color:var(--lime);font-size:18px;"></i></div>'
+        + '<div><p class="text-sm font-semibold" style="color:var(--text);">'+esc(h.month)+'</p><p class="text-[11px]" style="color:var(--muted);">'+esc(h.paidText)+'</p></div></div>'
+        + '<div class="text-right"><p class="text-sm font-bold" style="color:var(--text);">'+esc(h.amount)+'</p><span class="text-[10px] font-semibold" style="color:var(--lime);">'+esc(h.statusText||'<%= t('pwa.status.paid','LUNAS') %>')+'</span></div></div>';
+    }).join('');
+  }
+  // Perangkat terhubung
+  var dl = document.getElementById('devicesList');
+  if (dl) {
+    if (!P.devices || !P.devices.length) { dl.innerHTML='<div class="list-row"><p class="text-sm" style="color:var(--muted)"><%= t('pwa.net.no_devices','Tidak ada perangkat terdeteksi.') %></p></div>'; }
+    else dl.innerHTML = P.devices.map(function(d,i){
+      return '<div class="list-row press"'+(i<P.devices.length-1?' style="border-bottom:1px solid var(--border);"':'')+'>'
+        + '<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-[12px] flex items-center justify-center" style="background:var(--surface-2);"><i class="ph-fill '+esc(d.icon||'ph-device-mobile')+' text-xl" style="color:var(--lime);"></i></div>'
+        + '<div><p class="text-sm font-semibold" style="color:var(--text);">'+esc(d.name)+'</p><p class="text-[10px]" style="color:var(--muted);">'+esc(d.mac)+'</p></div></div>'
+        + '<div class="text-right">'+(d.band?'<span class="text-xs font-bold px-2 py-0.5 rounded-full" style="background:rgba(173,255,47,0.1);color:var(--lime);">'+esc(d.band)+'</span>':'')+(d.rssi?'<p class="text-[10px] mt-0.5" style="color:var(--muted);">'+esc(d.rssi)+'</p>':'')+'</div></div>';
+    }).join('');
+    var cnt = document.getElementById('devicesCount'); if (cnt) cnt.textContent = '<%= t('pwa.net.devices_connected','Perangkat Terhubung (') %>' + (P.devices||[]).length + ')';
+  }
+  // Promo slides
+  var promo = document.querySelector('.promoSwiper .swiper-wrapper');
+  if (promo) {
+    fetch('/customer/api/promo-slides', {cache:'no-store'}).then(function(r){return r.json();}).then(function(sl){
+      if (!sl || !sl.length) { var _pb = document.getElementById('promoBox'); if (_pb) _pb.style.display = 'none'; return; }
+      promo.innerHTML = sl.map(function(x){
+        var img = '<img src="'+esc(x.image_path)+'" alt="'+esc(x.title||'Promo')+'" style="width:100%;height:100%;object-fit:cover;">';
+        var inner = x.url ? '<a href="'+esc(x.url)+'" target="_blank" rel="noopener external">'+img+'</a>' : img;
+        return '<div class="swiper-slide relative aspect-[2/1] md:aspect-[21/9]">'+inner+'</div>';
+      }).join('');
+      if (typeof swiper !== 'undefined' && swiper) { try { swiper.update(); } catch(e){} }
+    }).catch(function(){});
+  }
+  // Override aksi -> endpoint nyata
+  window.payWith = function(m){
+    if (P.bill && P.bill.id) { window.location.href = '/customer/payment/create/' + P.bill.id + '?method=' + encodeURIComponent(m || 'BayarSekarang'); }
+    else showToast('Tidak ada tagihan aktif', true);
+  };
+  /* ═══ Speed Test: muat ulang & bersihkan cache ═══ */
+  window.reloadSpeedtest = function () {
+    var f = document.getElementById('speedtestFrame');
+    if (!f) return;
+    var base = f.getAttribute('data-base');
+    if (!base) { base = String(f.getAttribute('src') || ''); f.setAttribute('data-base', base); }
+    f.src = base + (base.indexOf('?') === -1 ? '?' : '&') + '_ts=' + Date.now();
+    if (typeof window.showToast === 'function') window.showToast('<%= t("pwa.speedtest.reloading","Memuat ulang Speed Test...") %>', false, 'bi bi-arrow-clockwise');
+  };
+  window.clearAppCache = function () {
+    var doIt = function () {
+      var jobs = [];
+      try { if ('serviceWorker' in navigator) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister().catch(function () {}); })); })); } catch (e) {}
+      try { if (window.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k).catch(function () {}); })); })); } catch (e) {}
+      Promise.all(jobs).catch(function () {}).then(function () {
+        try { sessionStorage.clear(); } catch (e) {}
+        location.reload();
+      });
+    };
+    try {
+      if (typeof openConfirm === 'function') {
+        openConfirm({ title: '<%= t("pwa.cache.confirm_title","Bersihkan Cache?") %>', message: '<%= t("pwa.cache.confirm_msg","Cache aplikasi akan dihapus lalu halaman dimuat ulang.") %>', actionText: '<%= t("pwa.cache.confirm_yes","Ya, Bersihkan") %>', onConfirm: doIt });
+      } else { doIt(); }
+    } catch (e) { doIt(); }
+  };
+
+  window.doReconnect = function(){ realAction('/customer/customer/reconnect', {loading:'<%= t('pwa.js.reconnecting','Menyambung ulang PPPoE...') %>', success:'<%= t('pwa.js.reconnected','PPPoE tersambung') %>', reload:true}); };
+  window.confirmLogout = function(e){ if(e && e.preventDefault) e.preventDefault();
+    openConfirm({ title:'<%= t('pwa.js.logout_title','Keluar dari akun?') %>', message:'<%= t('pwa.js.logout_msg','Anda perlu masuk lagi untuk mengakses portal.') %>', actionText:'<%= t('pwa.js.logout_yes','Ya, Keluar') %>',
+      onConfirm:function(){ realAction('/customer/logout', {loading:'<%= t('pwa.js.logging_out','Mengeluarkan akun...') %>', success:'<%= t('pwa.js.logged_out','Berhasil keluar') %>', redirect:'/customer/login'}); } }); };
+  window.confirmRestartModem = function(){
+    if (P.onuDetected === false) { showToast('<%= t('pwa.js.onu_missing_restart','ONU tidak terdeteksi — restart modem tidak dapat dilakukan.') %>', true); setTimeout(window.openOnuModal, 900); return; }
+    openConfirm({ title:'<%= t('pwa.js.restart_title','Restart Modem?') %>', message:'Modem '+(P.onuModel||'')+'<%= t('pwa.js.restart_msg',' akan direstart. Koneksi terputus sekitar 1-2 menit.') %>', actionText:'<%= t('pwa.js.restart_yes','Ya, Restart') %>',
+      onConfirm:function(){ realAction('/customer/reboot', {loading:'<%= t('pwa.js.restarting','Mengirim perintah restart...') %>', success:'<%= t('pwa.js.restarted','Modem sedang restart') %>', toast:'<%= t('pwa.js.restart_sent_short','Perintah restart dikirim') %>'}); } }); };
+  function _setTxt(id, val){ var el=document.getElementById(id); if (el && val != null) el.textContent = val; }
+  function _applySummary(s){
+    if (!s || s.ok === false) return;
+    _setTxt('onu-model', s.model); _setTxt('onu-ip', s.ip); _setTxt('onu-uptime', s.uptime);
+    _setTxt('onu-serial', s.serial); _setTxt('onu-rx', s.rx); _setTxt('pppoe-user', s.pppoeUser);
+    var ms = document.getElementById('modem-status');
+    if (ms) {
+      ms.textContent = s.onuOnline ? 'Normal' : (s.onuDetected ? 'Offline' : '<%= t('pwa.js.st_na','Tidak terdeteksi') %>');
+      ms.style.color = s.onuOnline ? 'var(--lime)' : (s.onuDetected ? '#FBBF24' : '#EF4444');
+    }
+    _setTxt('modem-sub', s.onuOnline ? '<%= t('pwa.js.st_connected','ONU / Modem terkoneksi') %>' : (s.onuDetected ? '<%= t('pwa.js.st_detected_no_conn','ONU terdeteksi, koneksi terputus') %>' : '<%= t('pwa.js.st_not_detected','ONU / Modem tidak terdeteksi') %>'));
+    var ob = document.getElementById('onu-badge');
+    if (ob) { ob.innerHTML = '<span class="dot"></span>' + (s.onuOnline ? 'Online' : 'Offline'); ob.classList.toggle('badge-offline', !s.onuOnline); }
+    var pb = document.getElementById('pppoe-badge');
+    if (pb) { pb.innerHTML = '<span class="dot"></span>' + (s.pppoeOnline ? 'Online' : 'Offline'); pb.classList.toggle('badge-offline', !s.pppoeOnline); }
+    var btn = document.getElementById('pppoe-btn');
+    if (btn) {
+      if (s.pppoeOnline) { btn.disabled = false; btn.style.opacity=''; btn.style.filter=''; btn.style.cursor=''; btn.innerHTML = '<i class="ph-bold ph-arrow-clockwise text-base"></i> Reconnect PPPoE'; }
+      else { btn.disabled = true; btn.style.opacity='.45'; btn.style.filter='grayscale(.5)'; btn.style.cursor='not-allowed'; btn.innerHTML = '<i class="ph-bold ph-arrow-clockwise text-base"></i> PPPoE Offline'; }
+    }
+    var w = document.getElementById('wifi-ssid'); if (w) w.textContent = s.ssid;
+  }
+  function _refreshSummary(){
+    return fetch('/customer/api/device-summary', { cache:'no-store', credentials:'same-origin' })
+      .then(function(r){ return r.json(); }).then(_applySummary).catch(function(){});
+  }
+  window.pollOnu = function(){ realAction('/customer/api/device/refresh', {loading:'<%= t('pwa.js.polling','Memperbarui status ONU...') %>', success:'<%= t('pwa.js.polled','Status ONU diperbarui') %>', onDone:_refreshSummary}); };
+  window.refreshDevices = function(){ realAction('/customer/api/device/refresh', {loading:'<%= t('pwa.js.loading_devices','Memuat perangkat...') %>', success:'<%= t('pwa.js.devices_updated','Daftar perangkat diperbarui') %>', onDone:_refreshSummary}); };
+  window.saveWifiSetting = function(){
+    if ((window.__PORTAL__ || {}).onuDetected === false) { showToast('<%= t('pwa.js.onu_missing_wifi','ONU tidak terdeteksi — ubah sandi tidak dapat dilakukan.') %>', true); setTimeout(window.openOnuModal, 900); return; }
+    var ssid = document.getElementById('ssid-input').value.trim();
+    var pwd  = document.getElementById('pwd-input').value;
+    if (!ssid) { showToast('<%= t('pwa.js.ssid_empty','SSID tidak boleh kosong') %>', true); return; }
+    if (pwd && pwd.length < 8) { showToast('Password minimal 8 karakter', true); return; }
+    var chain = Promise.resolve();
+    if (pwd) chain = chain.then(function(){ return doPost('/customer/change-password', {password:pwd}); });
+    chain = chain.then(function(){ return doPost('/customer/change-ssid', {ssid:ssid}); });
+    chain.then(function(){ wifi.ssid = ssid; wifi.pwd = pwd; renderWifi(); closeSettingModal(); showToast('<%= t('pwa.js.wifi_saved','Pengaturan WiFi tersimpan') %>'); })
+         .catch(function(err){ showToast(err||'<%= t('pwa.js.save_failed','Gagal menyimpan') %>', true); });
+  };
+  function doPost(url, body){
+    return fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-Requested-With':'fetch','Accept':'application/json'},body:new URLSearchParams(body).toString(),credentials:'same-origin'})
+      .then(function(r){ return r.json().catch(function(){ return {ok:true}; }); })
+      .then(function(res){ if (res && (res.ok===false || res.success===false)) throw (res.message||'<%= t('common.failed','Gagal') %>'); return res; });
+  }
+  // ── Panel notifikasi ──
+  window.openNotifPanel = function(){
+    var box = document.getElementById('notifList');
+    var list = P.notifications || [];
+    if (box) {
+      if (!list.length) box.innerHTML = '<p class="text-sm" style="color:var(--muted);text-align:center;padding:18px 0;"><%= t('pwa.notif.empty','Belum ada notifikasi.') %></p>';
+      else box.innerHTML = list.map(function(n){
+        var color = n.type === 'payment' ? 'var(--lime)' : (n.type === 'warning' ? '#FBBF24' : 'var(--text)');
+        var icon = n.type === 'payment' ? 'ph-fill ph-check-circle' : (n.type === 'warning' ? 'ph-fill ph-warning-circle' : 'ph-fill ph-info');
+        return '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:12px 14px;">'
+          + '<div style="display:flex;gap:8px;align-items:flex-start;">'
+          + '<i class="'+icon+'" style="color:'+color+';font-size:18px;margin-top:1px;flex-shrink:0;"></i>'
+          + '<div style="min-width:0;"><p style="font-weight:700;font-size:13px;color:var(--text);margin:0 0 3px;">'+esc(n.title)+'</p>'
+          + '<p style="font-size:12px;color:var(--muted);margin:0 0 4px;line-height:1.45;">'+esc(n.message)+'</p>'
+          + '<p style="font-size:10px;color:var(--muted-2);margin:0;">'+esc(n.time||'')+'</p></div></div></div>';
+      }).join('');
+    }
+    document.getElementById('notif-modal').classList.add('open');
+  };
+  window.closeNotifPanel = function(){ document.getElementById('notif-modal').classList.remove('open'); };
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') window.closeNotifPanel(); });
+  // ── Unduh PDF tagihan + notifikasi (proses -> berhasil/gagal) ──
+  window.downloadInvoicePdf = function(id, code){
+    if (typeof busy !== 'undefined' && busy) return;
+    if (typeof busy !== 'undefined') busy = true;
+    var ov = document.getElementById('busy'), ico = document.getElementById('busy-ico'), txt = document.getElementById('busy-text');
+    ov.classList.remove('done', 'error');
+    var _om = document.getElementById('onu-modal'); if (_om) _om.classList.remove('open');
+    ico.innerHTML = '<i class="ph ph-circle-notch busy-spin"></i>';
+    txt.textContent = 'Menyiapkan PDF...';
+    ov.classList.add('show');
+    fetch('/customer/invoice/' + id + '/pdf?dl=1', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+      .then(function(blob){
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = '<%= t('pwa.js.bill_prefix','Tagihan-') %>' + (code || '') + '.pdf';
+        document.body.appendChild(a); a.click();
+        setTimeout(function(){ try { URL.revokeObjectURL(url); a.remove(); } catch(e) {} }, 5000);
+        ov.classList.add('done'); ov.classList.remove('error');
+        ico.innerHTML = '<i class="ph-fill ph-check-circle"></i>';
+        txt.textContent = '<%= t('pwa.js.pdf_ok','PDF berhasil diunduh (') %>' + (blob.size > 1024 ? Math.round(blob.size / 1024) + ' KB' : blob.size + ' B') + ')';
+        setTimeout(function(){ ov.classList.remove('show'); if (typeof busy !== 'undefined') busy = false; }, 1500);
+      })
+      .catch(function(){
+        ov.classList.add('done'); ov.classList.add('error');
+        ico.innerHTML = '<i class="ph-fill ph-x-circle"></i>';
+        txt.textContent = '<%= t('pwa.js.pdf_fail','Gagal mengunduh PDF. Coba lagi ya.') %>';
+        setTimeout(function(){ ov.classList.remove('show'); if (typeof busy !== 'undefined') busy = false; }, 1700);
+      });
+  };
+
+  // ── Profil: modal info/layanan/riwayat/tentang + salin + toggle promo ──
+  window.copyText = function(txt, btn){
+    var done = function(){
+      if (btn) { var i = btn.querySelector('i'); if (i) { var old = i.className; i.className = 'bi bi-check-lg'; setTimeout(function(){ i.className = old; }, 1400); } }
+      window.showToast('Disalin: ' + txt);
+    };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done).catch(function(){ fallbackCopy(txt, done); });
+    else fallbackCopy(txt, done);
+  };
+  window.copyLayanan = function(){
+    var t = 'PPPoE: ' + (P.pppoeUser || '-') + '\nIP: ' + (P.pppoeIp || '-') + '\nSerial ONU: ' + (P.serialNumber || '-') + '\nModel: ' + (P.onuModel || '-') + '\nSSID: ' + (P.ssid || '-');
+    window.copyText(t, null);
+  };
+  window.openInfoPribadi = function(){ document.getElementById('info-modal').classList.add('open'); };
+  window.closeInfoPribadi = function(){ document.getElementById('info-modal').classList.remove('open'); };
+  window.openLayanan = function(){ document.getElementById('layanan-modal').classList.add('open'); };
+  window.closeLayanan = function(){ document.getElementById('layanan-modal').classList.remove('open'); };
+  window.openRiwayat = function(){ document.getElementById('riwayat-modal').classList.add('open'); };
+  window.closeRiwayat = function(){ document.getElementById('riwayat-modal').classList.remove('open'); };
+  window.openTentang = function(){ document.getElementById('tentang-modal').classList.add('open'); };
+  window.closeTentang = function(){ document.getElementById('tentang-modal').classList.remove('open'); };
+  function _promoOn(){ try { return localStorage.getItem('sf-promo-show') !== 'off'; } catch(e) { return true; } }
+  function _applyPromo(){
+    var on = _promoOn();
+    var el = document.getElementById('promoBox');
+    if (el) el.style.display = on ? '' : 'none';
+    var v = document.getElementById('promoVal'); if (v) v.textContent = on ? '<%= t('pwa.promo.show_short','Tampil') %>' : '<%= t('pwa.promo.hidden','Disembunyikan') %>';
+    if (on && typeof swiper !== 'undefined' && swiper) { try { swiper.update(); } catch(e) {} }
+  }
+  window.togglePromo = function(e){
+    if (e && e.preventDefault) e.preventDefault();
+    try { localStorage.setItem('sf-promo-show', _promoOn() ? 'off' : 'on'); } catch(_) {}
+    _applyPromo();
+    window.showToast(_promoOn() ? 'Promo ditampilkan' : 'Promo disembunyikan');
+  };
+  _applyPromo();
+
+  // ── Bantuan: kirim gangguan (foto opsional) / chat WA ──
+  window.openBantuan = function(){
+    var m = document.getElementById('bantuan-modal'); if (m) m.classList.add('open');
+    try {
+      if (navigator.geolocation) navigator.geolocation.getCurrentPosition(function(p){
+        var la=document.getElementById('bt-lat'), lo=document.getElementById('bt-lng');
+        if (la) la.value = p.coords.latitude; if (lo) lo.value = p.coords.longitude;
+      }, function(){}, { enableHighAccuracy:false, timeout:4000, maximumAge:600000 });
+    } catch(e) {}
+  };
+  window.closeBantuan = function(){ var m = document.getElementById('bantuan-modal'); if (m) m.classList.remove('open'); };
+  window.openWaHelp = function(){ window.open('https://wa.me/' + (P.waPhone || ''), '_blank'); };
+  // Flash message (mis. hasil kirim gangguan) tampil sebagai overlay
+  if (P.notif && P.notif.text) {
+    setTimeout(function(){ window.showToast(P.notif.text, P.notif.type === 'danger' || P.notif.type === 'warning'); }, 700);
+  }
+
+  // ── Tombol gangguan: buka modal detail ──
+  window.openGangguan = function(){
+    var n = P.notice || {};
+    var t = document.getElementById('gangguan-title');
+    var m = document.getElementById('gangguan-msg');
+    var e = document.getElementById('gangguan-eta');
+    var _act = n.active !== false;
+    if (t) t.textContent = _act ? (n.label || 'Info Jaringan') : '<%= t('pwa.js.net_ok','Jaringan Normal') %>';
+    if (m) m.textContent = _act ? (n.text || '<%= t('pwa.js.net_issue','Sedang terjadi gangguan pada jaringan.') %>') : '<%= t('pwa.js.net_fine','Tidak ada gangguan pada jaringan saat ini. Layanan berjalan normal.') %>';
+    if (e) e.textContent = (_act && n.estimateText) ? ('<%= t('pwa.js.estimate','Estimasi selesai:') %>' + n.estimateText) : '';
+    document.getElementById('gangguan-modal').classList.add('open');
+  };
+  window.closeGangguan = function(){ document.getElementById('gangguan-modal').classList.remove('open'); };
+  window.goToNetworkStatus = function(){
+    if (netState === 'normal') { switchTab('network'); return; }
+    window.openGangguan();
+  };
+
+  // ── ONU tidak terdeteksi: popup saat halaman dibuka ──
+  window.openOnuModal = function(){
+    var ov = document.getElementById('busy');
+    if (ov && ov.classList.contains('show')) { setTimeout(window.openOnuModal, 1200); return; }
+    if (document.querySelector('.modal-backdrop.open')) return; // hindari tumpuk modal
+    var m = document.getElementById('onu-modal'); if (m) m.classList.add('open');
+  };
+  window.closeOnuModal = function(){ var m=document.getElementById('onu-modal'); if (m) m.classList.remove('open'); };
+  // FIX (2026-10-09): JANGAN auto-buka modal ONU saat load — overlay modal menelan klik
+  // (bug: tombol tab Akun di sidebar desktop tidak bisa diklik utk pelanggan tanpa ONU).
+  // Cukup tampilkan toast non-blocking.
+  if (P.onuDetected === false) {
+    setTimeout(function () {
+      try { if (typeof window.showToast === 'function') window.showToast('<%= t('pwa.js.onu_missing_wifi2','ONU tidak terdeteksi — pengaturan WiFi tidak tersedia.') %>', true); } catch (e) {}
+    }, 900);
+  }
+  // ── Persist tab: reload tidak balik ke Beranda, tombol back antar-tab ──
+  var _origSwitch = window.switchTab;
+  function _setHash(id){ try { history.replaceState(history.state, '', '#' + id); } catch(e) { try { location.hash = id; } catch(_){} } }
+  function _pushGuard(){ try { history.pushState({ sfGuard: 1 }, '', location.hash || '#home'); } catch(e) {} }
+  window.switchTab = function(id, fromState){
+    _origSwitch(id);
+    if (!fromState) _setHash(id);
+  };
+  function _closeAnyModal(){
+    var m = document.querySelector('.modal-backdrop.open');
+    if (m) { m.classList.remove('open'); return true; }
+    return false;
+  }
+  function _hashTab(){ var h = (location.hash || '').replace('#',''); return tabs.indexOf(h) !== -1 ? h : 'home'; }
+  // Tombol back HARDWARE: 1x = kembali (tutup modal / ke Beranda),
+  // dan TIDAK PERNAH keluar ke halaman login — selalu ditahan di dalam aplikasi.
+  window.addEventListener('popstate', function(){
+    if (_closeAnyModal()) { _pushGuard(); return; }
+    if (activeTab !== 'home') { _origSwitch('home'); _setHash('home'); _pushGuard(); return; }
+    _pushGuard(); // di Beranda: tahan (jangan sampai logout karena back)
+  });
+  window.addEventListener('DOMContentLoaded', function(){
+    var t = _hashTab(); if (t && t !== 'home') _origSwitch(t);
+    _pushGuard();
+  });
+
+  // Pull-to-refresh dengan animasi (spinner mengikuti tarikan)
+  (function(){
+    var sa = document.getElementById('scroll-area'); if (!sa) return;
+    var startY = null, active = false, TH = 70;
+    var ind = document.createElement('div');
+    ind.style.cssText = 'position:fixed;left:50%;top:10px;transform:translate(-50%,-14px);z-index:250;pointer-events:none;opacity:0;transition:opacity .18s,transform .18s;display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);box-shadow:0 10px 24px -10px rgba(0,0,0,.65)';
+    ind.innerHTML = '<i class="ph-bold ph-arrow-clockwise" style="color:var(--lime);font-size:20px;display:block"></i>';
+    document.body.appendChild(ind);
+    var ico = ind.firstChild;
+    function pull(d){
+      var p = Math.min(1, d / TH);
+      ind.style.opacity = String(0.25 + p * 0.75);
+      ind.style.transform = 'translate(-50%,' + (-14 + p * 20) + 'px)';
+      ico.style.transform = 'rotate(' + Math.round(d * 3.2) + 'deg)';
+    }
+    document.addEventListener('touchstart', function(e){
+      if (e.touches.length === 1 && sa.scrollTop <= 0) { startY = e.touches[0].clientY; active = true; }
+      else { active = false; startY = null; }
+    }, { passive: true });
+    document.addEventListener('touchmove', function(e){
+      if (!active || startY == null) return;
+      var d = e.touches[0].clientY - startY;
+      if (d > 6) { if (e.cancelable) { try { e.preventDefault(); } catch(_) {} } pull(d); }
+    }, { passive: false });
+    function end(e){
+      if (!active) return;
+      var d = (e.changedTouches && e.changedTouches[0]) ? (e.changedTouches[0].clientY - startY) : 0;
+      active = false; startY = null;
+      if (d > TH) {
+        ind.style.opacity = '1';
+        ind.style.transform = 'translate(-50%,6px)';
+        ico.classList.add('ptr-spin');
+        if (navigator.vibrate) { try { navigator.vibrate(15); } catch(_){} }
+        setTimeout(function(){ location.reload(); }, 400);
+      } else {
+        ind.style.opacity = '0';
+        ind.style.transform = 'translate(-50%,-14px)';
+      }
+    }
+    document.addEventListener('touchend', end, { passive: true });
+    document.addEventListener('touchcancel', end, { passive: true });
+  })();
+
+  // ── Monitor lalu lintas real-time (rx/tx) ──
+  function _fmtMbps(v){ v = Number(v) || 0; return v >= 100 ? v.toFixed(0) : v.toFixed(1); }
+  function pollTraffic(){
+    fetch('/customer/api/pppoe-traffic', { cache:'no-store', credentials:'same-origin' })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (!d || d.ok === false) return;
+        var online = d.online !== false;
+        var rx = online ? (Number(d.rxMbps) || 0) : 0;
+        var tx = online ? (Number(d.txMbps) || 0) : 0;
+        var rxEl = document.getElementById('live-rx'), txEl = document.getElementById('live-tx');
+        if (rxEl) rxEl.textContent = _fmtMbps(rx);
+        if (txEl) txEl.textContent = _fmtMbps(tx);
+        var maxD = (P.speedDown && P.speedDown !== '-') ? Number(P.speedDown) : 100;
+        var maxU = (P.speedUp && P.speedUp !== '-') ? Number(P.speedUp) : 100;
+        var rb = document.getElementById('live-rx-bar'); if (rb) rb.style.width = Math.max(2, Math.min(100, (rx / (maxD || 100)) * 100)) + '%';
+        var tb = document.getElementById('live-tx-bar'); if (tb) tb.style.width = Math.max(2, Math.min(100, (tx / (maxU || 100)) * 100)) + '%';
+        if (d.uptime) { var u = document.getElementById('live-uptime'); if (u) u.textContent = d.uptime; }
+        var dot = document.getElementById('live-dot'); if (dot) dot.style.background = online ? 'var(--lime)' : '#EF4444';
+      }).catch(function(){});
+  }
+  if (document.getElementById('live-rx')) { pollTraffic(); setInterval(pollTraffic, 5000); }
+
+  // ── Kirim invoice ke WA ──
+  window.sendInvoiceWa = function(id){
+    showToast('<%= t('pwa.js.sending_wa','Mengirim tagihan ke WhatsApp...') %>');
+    fetch('/customer/invoice/' + id + '/send-pdf-wa', { method:'POST', headers:{ 'Content-Type':'application/json','X-Requested-With':'fetch','Accept':'application/json' }, credentials:'same-origin' })
+      .then(function(r){ return r.json().catch(function(){ return { success:r.ok }; }); })
+      .then(function(res){ var ok = !(res && res.success === false); showToast((res && res.message) || (ok ? '<%= t('pwa.js.sent_wa','Tagihan terkirim ke WhatsApp') %>' : '<%= t('pwa.js.send_failed','Gagal mengirim') %>'), !ok); })
+      .catch(function(){ showToast('<%= t('pwa.js.send_failed_wa','Gagal mengirim ke WhatsApp') %>', true); });
+  };
+})();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).then(function(r){ try{r.update();}catch(e){} }).catch(function(){}); });
+  }
+</script>
+
+<script>
+  /* ═══ PWA: registrasi Service Worker + deteksi versi baru (version.txt) ═══ */
+  (function () {
+    function showUpdateBar() {
+      if (document.getElementById('pwa-update-bar')) return;
+      var bar = document.createElement('div');
+      bar.id = 'pwa-update-bar';
+      bar.style.cssText = 'position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--lime-border);box-shadow:0 12px 32px -12px rgba(0,0,0,.7);font-size:12px;color:var(--text);white-space:nowrap';
+      bar.innerHTML = '<i class="bi bi-arrow-repeat" style="color:var(--lime)"></i> <span><%= t('pwa.update.available','Versi baru tersedia') %></span> <button type="button" class="press" style="padding:6px 10px;border-radius:9px;background:var(--lime);color:#0A0D14;font-weight:700;border:0"><%= t('common.reload','Muat Ulang') %></button>';
+      bar.querySelector('button').onclick = function () { try { sessionStorage.removeItem('pwa_seen_ver'); } catch (e) {} location.reload(); };
+      document.body.appendChild(bar);
+    }
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).then(function (reg) {
+        try { reg.update(); } catch (e) {}
+        var check = function () {
+          fetch('/version.txt?ts=' + Date.now(), { cache: 'no-store' })
+            .then(function (r) { return r.text(); })
+            .then(function (txt) {
+              var v = String(txt || '').trim();
+              if (!v) return;
+              var seen = null; try { seen = sessionStorage.getItem('pwa_seen_ver'); } catch (e) {}
+              if (seen && seen !== v) showUpdateBar();
+              try { sessionStorage.setItem('pwa_seen_ver', v); } catch (e) {}
+            }).catch(function () {});
+        };
+        setInterval(check, 30 * 60 * 1000);
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
+      }).catch(function () {});
+    }
+  })();
+</script>
+</body>
+</html>

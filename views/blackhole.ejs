@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/theme-toggle.css">
+  <style>
+    .bh-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .bh-card{width:min(560px,100%);background:var(--glass-2,rgba(17,22,34,.85));border:1px solid var(--border);border-radius:var(--radius,16px);padding:28px;box-shadow:var(--shadow-2,0 10px 30px rgba(0,0,0,.4))}
+    .bh-title{font-family:var(--font-display,'Space Grotesk');font-size:24px;font-weight:700;display:flex;align-items:center;gap:10px;letter-spacing:-.02em}
+    .bh-sub{color:var(--muted,#8A96A6);font-size:13px;margin-top:8px}
+    .bh-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+    .bh-item{display:flex;align-items:center;gap:12px;padding:16px;border-radius:14px;background:var(--ghost,rgba(242,245,241,.06));border:1px solid var(--border);color:var(--text);text-decoration:none;transition:.2s var(--ease,cubic-bezier(.4,0,.2,1))}
+    .bh-item:hover{border-color:var(--primary-glow);background:var(--pdim);transform:translateY(-2px)}
+    .bh-item .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--pdim);color:var(--primary,#ADFF2F);flex:0 0 auto}
+    .bh-item .tx b{display:block;font-size:14px;font-weight:800}
+    .bh-item .tx span{display:block;font-size:11.5px;color:var(--muted,#8A96A6)}
+    .bh-back{display:inline-flex;align-items:center;gap:6px;margin-top:22px;color:var(--muted,#8A96A6);font-size:12.5px;text-decoration:none}
+    .bh-back:hover{color:var(--text)}
+    @media(max-width:520px){.bh-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="bh-wrap">
+    <div class="bh-card">
+      <div class="bh-title"><i class="bi bi-router-fill" style="color:var(--primary,#ADFF2F)"></i> Blackhole</div>
+      <div class="bh-sub"><%= t('portal.staff_login','Pintu masuk staf') %> <%= company %>. <%= t('portal.choose','Pilih portal untuk masuk.') %></div>
+      <div class="bh-grid">
+        <a class="bh-item" href="/admin/login"><span class="ic"><i class="bi bi-shield-lock-fill"></i></span><span class="tx"><b><%= t('portal.admin','Admin') %></b><span><%= t('portal.admin_desc','Panel administrator') %></span></span></a>
+        <a class="bh-item" href="/agent/login"><span class="ic"><i class="bi bi-person-badge-fill"></i></span><span class="tx"><b><%= t('portal.agent','Agen') %></b><span><%= t('portal.agent_desc','Portal agen / reseller') %></span></span></a>
+        <a class="bh-item" href="/collector/login"><span class="ic"><i class="bi bi-cash-coin"></i></span><span class="tx"><b><%= t('portal.collector','Kolektor') %></b><span><%= t('portal.collector_desc','Penagihan lapangan') %></span></span></a>
+        <a class="bh-item" href="/tech/login"><span class="ic"><i class="bi bi-tools"></i></span><span class="tx"><b><%= t('portal.tech','Teknisi') %></b><span><%= t('portal.tech_desc','Portal teknisi') %></span></span></a>
+      </div>
+      <a class="bh-back" href="/customer/login"><i class="bi bi-arrow-left"></i> <%= t('portal.back_customer','Kembali ke Portal Pelanggan') %></a>
+    </div>
+  </div>
+  <script src="/js/theme-toggle.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Voucher Diskon | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'vouchers_discounts', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-ticket-perforated"></i> Voucher Diskon &amp; Biaya Pasang</div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? 'Kasir' : 'Admin' %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- Biaya pasang global -->
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-tools"></i> Biaya Pasang (Global)</h6></div>
+      <div class="card-bd">
+        <form method="POST" action="/admin/vouchers-discounts/settings" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <div class="fg" style="flex:1;min-width:220px">
+            <label class="fl"><%= t('admin.vd.install_fee','Biaya Pasang Awal (Rp)') %></label>
+            <input class="fc" type="number" min="0" step="1000" name="registration_install_fee" value="<%= installFee %>">
+            <div class="hint">Dipakai sebagai komponen "biaya pasang" pada estimasi pendaftaran. Boleh 0.</div>
+          </div>
+          <div class="fg" style="min-width:160px"><label class="fl"><%= t('admin.vd.pppoe_domain','Domain PPPoE') %></label><input class="fc" name="pppoe_domain" value="<%= pppoeDomain %>" placeholder="sky.id"></div>
+          <div class="fg" style="min-width:180px"><label class="fl"><%= t('admin.vd.default_pppoe_pass','Password PPPoE Default') %></label><input class="fc" name="pppoe_default_password" value="<%= pppoeDefaultPassword %>"></div>
+          <button class="btn btn-p" type="submit"><i class="bi bi-save"></i> <%= t('common.save','Simpan') %></button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Form voucher -->
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-plus-circle"></i> <%= editVoucher ? ('Edit Voucher: ' + editVoucher.code) : 'Tambah Voucher Diskon' %></h6></div>
+      <div class="card-bd">
+        <form method="POST" action="/admin/vouchers-discounts/save">
+          <% if (editVoucher) { %><input type="hidden" name="id" value="<%= editVoucher.id %>"><% } %>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Kode Voucher *</label>
+              <input class="fc mono" name="code" value="<%= editVoucher ? editVoucher.code : '' %>" placeholder="mis. HEMAT50" style="text-transform:uppercase" required>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.vd.type','Tipe') %></label>
+              <select class="fs" name="type">
+                <option value="nominal" <%= (editVoucher && editVoucher.type==='nominal') || !editVoucher ? 'selected' : '' %>><%= t('admin.vd.nominal','Nominal (Rp)') %></option>
+                <option value="percent" <%= editVoucher && editVoucher.type==='percent' ? 'selected' : '' %>><%= t('admin.vd.percent','Persen (%)') %></option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.vd.value_rp_pct','Nilai (Rp / %)') %></label>
+              <input class="fc" type="number" min="0" step="1000" name="value" value="<%= editVoucher ? editVoucher.value : '' %>" required>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.vd.max_discount','Maks. Diskon (Rp)') %></label>
+              <input class="fc" type="number" min="0" step="1000" name="max_discount" value="<%= editVoucher ? editVoucher.max_discount : 0 %>">
+              <div class="hint">Untuk tipe persen (0 = tanpa batas).</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('admin.vd.min_billing','Min. Tagihan (Rp)') %></label>
+              <input class="fc" type="number" min="0" step="1000" name="min_purchase" value="<%= editVoucher ? editVoucher.min_purchase : 0 %>">
+              <div class="hint">0 = tanpa minimal.</div>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.vd.usage_limit','Batas Pemakaian') %></label>
+              <input class="fc" type="number" min="0" name="max_uses" value="<%= editVoucher ? editVoucher.max_uses : 0 %>">
+              <div class="hint">0 = tanpa batas (berlaku selamanya).</div>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.vd.status','Status') %></label>
+              <select class="fs" name="active">
+                <option value="1" <%= !editVoucher || editVoucher.active ? 'selected' : '' %>><%= t('admin.vd.active','Aktif') %></option>
+                <option value="0" <%= editVoucher && !editVoucher.active ? 'selected' : '' %>><%= t('admin.vd.inactive','Nonaktif') %></option>
+              </select>
+            </div>
+            <div class="fg" style="flex:2;min-width:200px">
+              <label class="fl"><%= t('admin.vd.note','Catatan') %></label>
+              <input class="fc" name="note" value="<%= editVoucher ? (editVoucher.note||'') : '' %>" placeholder="opsional">
+            </div>
+          </div>
+          <div style="text-align:right;margin-top:6px">
+            <% if (editVoucher) { %><a href="/admin/vouchers-discounts" class="btn btn-g"><%= t('admin.vd.cancel','Batal') %></a><% } %>
+            <button class="btn btn-p" type="submit"><i class="bi bi-save"></i> <%= editVoucher ? 'Simpan Perubahan' : 'Tambah Voucher' %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Daftar voucher -->
+    <div class="card">
+      <div class="card-hd"><h6><i class="bi bi-list-ul"></i> Daftar Voucher (<%= vouchers.length %>)</h6></div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th style="width:130px"><%= t('admin.vd.code','Kode') %></th>
+              <th style="width:90px"><%= t('admin.vd.type','Tipe') %></th>
+              <th class="num" style="width:120px"><%= t('admin.vd.value','Nilai') %></th>
+              <th class="num" style="width:120px">Maks Diskon</th>
+              <th class="num" style="width:120px">Min Tagihan</th>
+              <th class="num" style="width:90px"><%= t('admin.vd.used','Dipakai') %></th>
+              <th style="width:90px"><%= t('admin.vd.status','Status') %></th>
+              <th><%= t('admin.vd.note','Catatan') %></th>
+              <th style="width:120px"><%= t('admin.vd.action','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!vouchers.length) { %>
+              <tr><td colspan="9" class="text-center text-muted" style="padding:24px"><%= t('admin.vd.empty','Belum ada voucher.') %></td></tr>
+            <% } %>
+            <% vouchers.forEach(function(v){ %>
+              <tr>
+                <td class="mono fw6"><%= v.code %></td>
+                <td><%= v.type === 'percent' ? 'Persen' : 'Nominal' %></td>
+                <td class="num"><%= v.type === 'percent' ? (v.value + ' %') : ('Rp ' + Number(v.value).toLocaleString('id-ID')) %></td>
+                <td class="num"><%= Number(v.max_discount) > 0 ? ('Rp ' + Number(v.max_discount).toLocaleString('id-ID')) : '-' %></td>
+                <td class="num"><%= Number(v.min_purchase) > 0 ? ('Rp ' + Number(v.min_purchase).toLocaleString('id-ID')) : '-' %></td>
+                <td class="num"><%= v.used_count %><%= Number(v.max_uses) > 0 ? (' / ' + v.max_uses) : '' %></td>
+                <td><span class="badge <%= v.active ? 'bs' : 'bd' %>"><%= v.active ? 'Aktif' : 'Nonaktif' %></span></td>
+                <td style="font-size:12px;color:var(--muted)"><%= v.note || '' %></td>
+                <td style="white-space:nowrap">
+                  <form id="vtg-<%= v.id %>" method="POST" action="/admin/vouchers-discounts/<%= v.id %>/toggle" style="display:none"></form>
+                  <form id="vdl-<%= v.id %>" method="POST" action="/admin/vouchers-discounts/<%= v.id %>/delete" style="display:none" onsubmit="return confirm('Hapus voucher <%= v.code %>?')"></form>
+                  <div class="act">
+                    <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="act-menu">
+                      <a class="act-item" href="/admin/vouchers-discounts?edit=<%= v.id %>"><i class="bi bi-pencil"></i> Edit Voucher</a>
+                      <button type="submit" form="vtg-<%= v.id %>" class="act-item warn"><i class="bi bi-power"></i> Aktif/Nonaktif</button>
+                      <div class="act-sep"></div>
+                      <button type="submit" form="vdl-<%= v.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus Voucher</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<header class="bg-slate-900/85 backdrop-blur-xl border-b border-[color:var(--border)] px-3 sm:px-6 min-h-[64px] sm:min-h-[72px] sticky top-0 z-40 flex items-center justify-between gap-3 transition-all duration-300">
+  <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+    <!-- Unified Sidebar Toggle -->
+    <button class="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent hover:border-slate-700/60 transition shadow-sm shrink-0" onclick="window.innerWidth < 1024 ? toggleSidebar() : toggleSidebarMin()" title="Toggle Sidebar">
+      <i class="bi bi-list text-xl lg:hidden"></i>
+      <i class="bi bi-layout-sidebar-inset text-lg hidden lg:block" id="desktop-toggle-icon"></i>
+    </button>
+    
+    <!-- Breadcrumb / Title -->
+    <div class="flex items-center gap-2 sm:gap-2.5 ml-1 min-w-0">
+      <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-primary-500 to-fun-purple flex items-center justify-center shadow-lg shadow-primary-500/20 shrink-0">
+        <i class="<%= locals.pageIcon || 'ti-layout-dashboard' %> text-white text-base sm:text-lg"></i>
+      </div>
+      <div class="min-w-0">
+        <div class="font-black text-white text-sm sm:text-base leading-tight truncate" id="page-title"><%- locals.pageTitle || 'Dashboard' %></div>
+        <div class="text-[10px] sm:text-[11px] text-slate-400 font-semibold leading-none mt-0.5 truncate"><%- locals.pageDesc || 'Control Panel' %></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side Actions -->
+  <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+    <% if (locals.showRouterSelector && locals.routers) { %>
+    <div class="uiverse-select-wrapper relative z-50 max-w-[150px] sm:max-w-[220px]" id="wrapper-topbar-router">
+      <input type="hidden" id="global-router-id" value="<%= locals.selectedRouterId || locals.activeRouterId || '' %>">
+      <div class="uiverse-select-trigger" style="padding: 6px 10px; font-size: 11.5px;" onclick="toggleUiverseDropdown('wrapper-topbar-router')">
+        <span class="flex items-center gap-1.5 truncate pointer-events-none">
+          <i class="bi bi-router text-primary-400 shrink-0 text-xs"></i>
+          <span id="selected-topbar-router-label" class="truncate font-bold text-slate-200">
+            <% 
+              const curRouter = routers.find(r => String(locals.selectedRouterId || locals.activeRouterId || "") === String(r.id));
+            %>
+            <%= curRouter ? curRouter.name : t("admin.mikrotik.default_router", "-- Default / Semua Router --") %>
+          </span>
+        </span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="uiverse-arrow pointer-events-none shrink-0" style="width:10px;height:10px;margin-left:4px;">
+          <path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"></path>
+        </svg>
+      </div>
+      <div class="uiverse-options topbar-dropdown-menu">
+        <div class="uiverse-option <%= (!locals.selectedRouterId && !locals.activeRouterId) ? 'active' : '' %>" onclick="selectTopbarRouter('', '<%= t("admin.mikrotik.default_router", "-- Default / Semua Router --") %>')">
+          <span class="flex items-center gap-2 pointer-events-none truncate">
+            <i class="bi bi-layers text-slate-400 shrink-0"></i>
+            <span class="truncate"><%= t("admin.mikrotik.default_router", "-- Default / Semua Router --") %></span>
+          </span>
+          <i class="bi bi-check-lg uiverse-opt-check pointer-events-none"></i>
+        </div>
+        <% routers.forEach(r => { %>
+          <div class="uiverse-option <%= (String(locals.selectedRouterId || locals.activeRouterId || "") === String(r.id)) ? 'active' : '' %>" onclick="selectTopbarRouter('<%= r.id %>', '<%= r.name %>')">
+            <span class="flex items-center gap-2 pointer-events-none truncate">
+              <i class="bi bi-router text-primary-400 shrink-0"></i>
+              <span class="truncate"><%= r.name %></span>
+            </span>
+            <i class="bi bi-check-lg uiverse-opt-check pointer-events-none"></i>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <script>
+    function selectTopbarRouter(val, label) {
+      const inp = document.getElementById('global-router-id');
+      if (inp) inp.value = val;
+      const lbl = document.getElementById('selected-topbar-router-label');
+      if (lbl) lbl.textContent = label;
+      const wrap = document.getElementById('wrapper-topbar-router');
+      if (wrap) {
+        wrap.querySelectorAll('.uiverse-option').forEach(opt => opt.classList.remove('active'));
+        wrap.classList.remove('open');
+      }
+      if (typeof changeRouter === 'function') {
+        changeRouter();
+      } else {
+        window.location.href = '/admin/set-active-router?router_id=' + (val || 'all');
+      }
+    }
+    </script>
+    <% } else { %>
+      <input type="hidden" id="global-router-id" value="">
+    <% } %>
+
+    <% if (locals.showLiveUpdate) { %>
+    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-500/10 border border-accent-500/30 text-accent-400 text-xs font-semibold shadow-sm">
+      <span class="w-2 h-2 rounded-full bg-accent-500 pulse-dot"></span>
+      <span><%= t('admin.dashboard.live_update', 'Live Update') %></span>
+    </div>
+    <% } %>
+
+    <span class="px-2.5 sm:px-3.5 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/30 text-primary-400 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+      <i class="bi bi-person text-sm"></i>
+      <span class="hidden sm:inline"><%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+    </span>
+  </div>
+</header>

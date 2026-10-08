@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= t('admin.reportprint.title', 'Laporan Keuangan') %> <%= filterYear %> — <%= company %></title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <!-- no-admin-theme -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+    @page {
+      size: A4 portrait;
+      margin: 12mm 15mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 11px;
+      color: #0f172a;
+      background-color: #f8fafc;
+      line-height: 1.4;
+      padding: 20px;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .report-wrapper {
+      max-width: 820px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 28px 32px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Letterhead / Header */
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+
+    .company-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+    }
+
+    .company-sub {
+      font-size: 11px;
+      color: #475569;
+      margin-top: 2px;
+      max-width: 420px;
+    }
+
+    .report-title-box {
+      text-align: right;
+    }
+
+    .report-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1e3a8a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .report-period {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* KPI Summary Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px 14px;
+      background: #f8fafc;
+      text-align: center;
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .kpi-val {
+      font-size: 16px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #0f172a;
+    }
+
+    .kpi-val.income { color: #0284c7; }
+    .kpi-val.expense { color: #dc2626; }
+    .kpi-val.profit { color: #16a34a; }
+
+    /* Section Headings */
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #0f172a;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1.5px solid #cbd5e1;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+      font-size: 10.5px;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      text-align: left;
+    }
+
+    td {
+      padding: 6px 10px;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    tfoot th {
+      background: #e2e8f0;
+      font-weight: 800;
+      font-size: 10.5px;
+      padding: 8px 10px;
+      border-top: 2px solid #0f172a;
+    }
+
+    /* Signatures */
+    .signature-grid {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 36px;
+      page-break-inside: avoid;
+    }
+
+    .sig-box {
+      width: 220px;
+      text-align: center;
+    }
+
+    .sig-role {
+      font-size: 11px;
+      color: #475569;
+      margin-bottom: 60px;
+    }
+
+    .sig-name {
+      font-weight: 700;
+      font-size: 12px;
+      border-top: 1px solid #0f172a;
+      padding-top: 4px;
+    }
+
+    /* Controls (Screen Only) */
+    .print-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .btn-action {
+      background: #1e3a8a;
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-close {
+      background: #475569;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+      }
+      .report-wrapper {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .print-controls {
+        display: none !important;
+      }
+    }
+  /* HARDEN print-scroll: hanya layar, cetak tidak berubah */
+  @media screen {
+    .report-wrapper { overflow-x: auto; max-width: 100%; }
+    .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  }
+  </style>
+  <!-- MWRAP (admin.css dipindah ke atas agar style halaman tidak ketimpa) -->
+  <style>
+    @media screen { body { padding: 0 !important; } .print-controls { display: none !important; } .tb-title, .tb-title i { color: var(--text) !important; } .sidebar { color: var(--text); } }
+    @media print {
+      .topbar, .sidebar, .bottom-nav, .hb-menu { display: none !important; }
+      .page { padding: 0 !important; margin: 0 !important; }
+      .mw { display: block !important; height: auto !important; overflow: visible !important; }
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'reports', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-printer"></i> <%= t('admin.reportprint.title', 'Laporan Keuangan') %> &middot; <%= filterYear %><% if (filterMonth) { %> &middot; <%= String(filterMonth).padStart(2, '0') %><% } %></div>
+    <div class="tb-right">
+      <button type="button" class="btn btn-p btn-sm" onclick="window.print()"><i class="bi bi-printer-fill"></i> <%= t('admin.common.print_pdf', 'Cetak / PDF') %></button>
+      <a href="/admin/reports" class="btn btn-g btn-sm"><i class="bi bi-arrow-left"></i> <%= t('common.back', 'Kembali') %></a>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+
+<div class="report-wrapper">
+  
+  <!-- Header -->
+  <div class="report-header">
+    <div>
+      <div class="company-name"><%= company %></div>
+      <div class="company-sub"><%= settings?.company_address || t('admin.reportprint.company_sub', 'Pusat Layanan Internet Broadband & RT/RW Net') %></div>
+      <% if (settings?.company_phone) { %>
+      <div class="company-sub"><%= t('admin.reportprint.telp', 'Telp/WA') %>: <%= settings.company_phone %> | <%= t('admin.reportprint.email', 'Email') %>: <%= settings?.company_email || '-' %></div>
+      <% } %>
+    </div>
+    <div class="report-title-box">
+      <div class="report-title"><%= t('admin.reportprint.title_box', 'LAPORAN LABA / RUGI') %></div>
+      <div class="report-period"><%= t('admin.reportprint.period', 'Periode Tahun') %>: <strong><%= filterYear %><% if (filterMonth) { %> &middot; <%= String(filterMonth).padStart(2, '0') %><% } %></strong></div>
+      <div style="font-size: 9.5px; color: #64748b; margin-top: 4px;"><%= t('admin.reportprint.printed', 'Dicetak') %>: <%= getNowLocal() %></div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label"><%= t('admin.reportprint.kpi_income', 'Total Pemasukan (Gross)') %></div>
+      <div class="kpi-val income">Rp <%= Number(cashInYear || 0).toLocaleString('id-ID') %></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label"><%= t('admin.reportprint.kpi_expense', 'Total Pengeluaran &amp; Modal') %></div>
+      <div class="kpi-val expense">-Rp <%= Number(expensesYear || 0).toLocaleString('id-ID') %></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label"><%= t('admin.reportprint.kpi_profit', 'Laba Bersih (Net Profit)') %></div>
+      <div class="kpi-val profit">Rp <%= Number(netProfitYear || 0).toLocaleString('id-ID') %></div>
+    </div>
+  </div>
+
+  <!-- Pajak & Retribusi -->
+  <div class="section-title">Pajak &amp; Retribusi<% if (filterMonth) { %> — Bulan <%= String(filterMonth).padStart(2, '0') %><% } %></div>
+  <table>
+    <tbody>
+      <tr><td><%= t('admin.fin.gross','Pemasukan (Bruto)') %></td><td class="text-right">Rp <%= Math.round(LR.bruto).toLocaleString('id-ID') %></td></tr>
+      <tr><td>DPP — Dasar Pengenaan Pajak</td><td class="text-right">Rp <%= Math.round(LR.dpp).toLocaleString('id-ID') %></td></tr>
+      <tr><td>PPN Keluaran (<%= fin.ppn %>%) — disetor, bukan pendapatan</td><td class="text-right">Rp <%= Math.round(LR.ppn).toLocaleString('id-ID') %></td></tr>
+      <tr><td>Pengeluaran</td><td class="text-right">- Rp <%= Math.round(LR.keluar).toLocaleString('id-ID') %></td></tr>
+      <tr><td>USO (<%= fin.uso %>%)</td><td class="text-right">- Rp <%= Math.round(LR.uso).toLocaleString('id-ID') %></td></tr>
+      <tr><td>BHP (<%= fin.bhp %>%)</td><td class="text-right">- Rp <%= Math.round(LR.bhp).toLocaleString('id-ID') %></td></tr>
+      <tr><td><b>Laba Sebelum PPh</b></td><td class="text-right"><b>Rp <%= Math.round(LR.sebelumPph).toLocaleString('id-ID') %></b></td></tr>
+      <tr><td>PPh Badan (<%= fin.pph %>%)</td><td class="text-right">- Rp <%= Math.round(LR.pph).toLocaleString('id-ID') %></td></tr>
+      <tr style="background:#f0fdf4"><td><b><%= t('admin.fin.net','Laba Bersih') %></b></td><td class="text-right"><b>Rp <%= Math.round(LR.bersih).toLocaleString('id-ID') %></b></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Monthly Breakdown Table -->
+  <div class="section-title"><%= t('admin.reportprint.sec1', '1. Rincian Pemasukan &amp; Pengeluaran Bulanan') %> (<%= filterYear %>)</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 40px;" class="text-center"><%= t('admin.reportprint.th_no', 'No') %></th>
+        <th><%= t('admin.reportprint.th_month', 'Bulan') %></th>
+        <th class="text-right" style="width: 140px;"><%= t('admin.reportprint.th_income', 'Pemasukan (Rp)') %></th>
+        <th class="text-right" style="width: 140px;"><%= t('admin.reportprint.th_expense', 'Pengeluaran (Rp)') %></th>
+        <th class="text-right" style="width: 140px;"><%= t('admin.reportprint.th_net', 'Laba Bersih (Rp)') %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% 
+        const monthNames = (typeof lang !== 'undefined' && lang === 'en') ? ['January','February','March','April','May','June','July','August','September','October','November','December'] : ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        const _repLang = (typeof lang !== 'undefined' && lang === 'en') ? 'en-US' : 'id-ID';
+        if (typeof monthlyData !== 'undefined' && Array.isArray(monthlyData) && monthlyData.length > 0) {
+          monthlyData.forEach((m, idx) => {
+            const inc = Number(m.revenue || m.total || m.income || 0);
+            const exp = Number(m.expense || 0);
+            const net = inc - exp;
+      %>
+      <tr>
+        <td class="text-center"><%= idx + 1 %></td>
+        <td style="font-weight: 600;"><%= monthNames[idx] || m.month %></td>
+        <td class="text-right mono"><%= inc.toLocaleString('id-ID') %></td>
+        <td class="text-right mono" style="color: #dc2626;"><%= exp > 0 ? '-' + exp.toLocaleString('id-ID') : '0' %></td>
+        <td class="text-right mono" style="font-weight: 700; color: <%= net >= 0 ? '#16a34a' : '#dc2626' %>;">
+          <%= net.toLocaleString('id-ID') %>
+        </td>
+      </tr>
+      <% }); } else { %>
+      <tr>
+        <td colspan="5" class="text-center" style="color: #64748b; padding: 14px;"><%= t('admin.reportprint.no_monthly', 'Data rekap bulanan belum tersedia.') %></td>
+      </tr>
+      <% } %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="2" class="text-right"><%= t('admin.reportprint.total_year', 'TOTAL TAHUN') %> <%= filterYear %>:</th>
+        <th class="text-right mono">Rp <%= Number(cashInYear || 0).toLocaleString('id-ID') %></th>
+        <th class="text-right mono" style="color: #dc2626;">-Rp <%= Number(expensesYear || 0).toLocaleString('id-ID') %></th>
+        <th class="text-right mono" style="color: #16a34a; font-size: 11.5px;">Rp <%= Number(netProfitYear || 0).toLocaleString('id-ID') %></th>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Expense Categories Breakdown -->
+  <div class="section-title"><%= t('admin.reportprint.sec2', '2. Rincian Pos Pengeluaran Terbesar') %> (<%= filterYear %>)</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 40px;" class="text-center">No</th>
+        <th><%= t('admin.reportprint.th_pos', 'Kategori / Pos Pengeluaran') %></th>
+        <th class="text-right" style="width: 140px;"><%= t('admin.reportprint.th_total', 'Total Biaya (Rp)') %></th>
+        <th class="text-right" style="width: 90px;"><%= t('admin.reportprint.th_share', 'Porsi (%)') %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (!expensesByCategory || expensesByCategory.length === 0) { %>
+      <tr>
+        <td colspan="4" class="text-center" style="color: #64748b;"><%= t('admin.reportprint.no_expenses', 'Tidak ada catatan pengeluaran di tahun ini.') %></td>
+      </tr>
+      <% } else { 
+        let totalExpSum = 0;
+        expensesByCategory.forEach(e => { totalExpSum += Number(e.total || 0); });
+        expensesByCategory.forEach((c, idx) => {
+          const itemTotal = Number(c.total || 0);
+          const percent = totalExpSum > 0 ? ((itemTotal / totalExpSum) * 100).toFixed(1) : '0';
+      %>
+      <tr>
+        <td class="text-center"><%= idx + 1 %></td>
+        <td style="font-weight: 600;"><%= c.category %></td>
+        <td class="text-right mono"><%= itemTotal.toLocaleString('id-ID') %></td>
+        <td class="text-right mono"><%= percent %>%</td>
+      </tr>
+      <% }); } %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="2" class="text-right"><%= t('admin.reportprint.total_expense', 'TOTAL PENGELUARAN:') %></th>
+        <th class="text-right mono">Rp <%= Number(expensesYear || 0).toLocaleString('id-ID') %></th>
+        <th class="text-right mono">100%</th>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Signatures -->
+  <div class="signature-grid">
+    <div class="sig-box">
+      <div class="sig-role"><%= t('admin.reportprint.sig1', 'Dibuat Oleh,') %><br><strong><%= t('admin.reportprint.sig1_role', 'Bagian Keuangan / Admin') %></strong></div>
+      <div class="sig-name"><%= settings?.company_cashier || t('admin.reportprint.sig1_name', 'Staf Administrasi') %></div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-role"><%= t('admin.reportprint.sig2', 'Mengetahui &amp; Menyetujui,') %><br><strong><%= t('admin.reportprint.sig2_role', 'Pimpinan / Direktur') %></strong></div>
+      <div class="sig-name"><%= settings?.company_manager || t('admin.reportprint.sig2_name', 'Direktur Utama') %></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Floating Controls -->
+<div class="print-controls">
+  <button class="btn-action" onclick="window.print()"><i class="bi bi-printer-fill"></i> <%= t('admin.reportprint.print_btn', 'Cetak Dokumen') %></button>
+  <button class="btn-action btn-close" onclick="window.close()"><i class="bi bi-x-lg"></i> <%= t('common.close', 'Tutup') %></button>
+</div>
+
+<script>
+  window.onload = function() {
+    setTimeout(function() {
+      if (!window.location.search.includes('noprint')) {
+        window.print();
+      }
+    }, 400);
+  };
+</script>
+
+</div>
+</div>
+</body>
+</html>

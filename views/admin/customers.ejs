@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.customers.title', 'Pelanggan') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .usage-bar { height: 4px; background: var(--bg3); border-radius: 2px; margin: 4px 0; overflow: hidden; width: 100px; }
+    .usage-fill { height: 100%; width: var(--p, 0%); background: var(--b, var(--primary)); transition: width 0.3s; }
+    #picker-map { height: 400px; width: 100%; border-radius: 8px; margin-bottom: 15px; }
+    .picker-icon { color: #3b82f6; font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); display: block; width: 32px; height: 32px; text-align: center; line-height: 32px; text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff; }
+    
+    /* Responsive Mobile CSS */
+    @media (max-width: 768px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+      .card-hd { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+      .card-hd > div { flex-wrap: wrap !important; justify-content: stretch !important; }
+      .card-hd .btn { flex: 1 1 auto; justify-content: center; }
+      .srow { flex-direction: column !important; gap: 10px !important; }
+      .sinput, .srow select { width: 100% !important; max-width: 100% !important; }
+      /* modal mengikuti style global (bottom-sheet + footer sticky) */
+      .form-row { flex-direction: column !important; gap: 8px !important; }
+      .form-row > .fg { width: 100% !important; max-width: 100% !important; margin-bottom: 6px !important; }
+      .mf { flex-wrap: wrap !important; gap: 8px !important; }
+      .mf button, .mf a { flex: 1 1 100% !important; text-align: center !important; justify-content: center !important; }
+    }
+
+    /* ── Modal Detail Pelanggan (mandiri, responsif) ── */
+    .vd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px}
+    .vd-head>div{min-width:0}
+    .vd-name{font-size:17px;font-weight:800;color:var(--text);line-height:1.25;word-break:break-word}
+    .vd-sub{font-size:12px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .vd-sub strong{color:var(--primary)}
+    .vd-sec{margin-bottom:16px}
+    .vd-sec-title{font-size:12px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .vd-panel{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:2px 14px}
+    .vd-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:center}
+    .vd-row:last-child{border-bottom:none}
+    .vd-row .k{flex:0 0 42%;color:var(--muted);font-size:12.5px;line-height:1.3}
+    .vd-row .v{flex:1;min-width:0;font-size:12.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;word-break:break-word;color:var(--text)}
+    .vd-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:12.5px;word-break:break-all}
+    .vd-copy{flex:0 0 auto;padding:2px 8px;font-size:11px;line-height:1.7}
+    .vd-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .vd-stat{border:1px solid rgba(56,189,248,.25);border-radius:10px;padding:12px 8px;text-align:center;min-width:0}
+    .vd-stat-num{font-size:17px;font-weight:900;color:var(--text);margin:3px 0;word-break:break-all}
+    .vd-fup{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .vd-foot{justify-content:space-between}
+    .vd-danger{background:#ef4444;color:#fff;border:none;padding:8px 16px;font-weight:700}
+    .vd-danger:hover{filter:brightness(1.08)}
+    @media(max-width:560px){
+      .vd-head{padding:12px}
+      .vd-name{font-size:15.5px}
+      .vd-row{flex-direction:column;align-items:flex-start;gap:4px}
+      .vd-row .k{flex:0 0 auto;font-size:11.5px}
+      .vd-row .v{width:100%}
+      .vd-copy{padding:2px 10px}
+      .vd-grid2{grid-template-columns:1fr 1fr;gap:8px}
+      .vd-stat-num{font-size:15px}
+      .vd-foot{flex-direction:column;align-items:stretch;gap:8px}
+      .vd-foot form{display:block;width:100%}
+      .vd-foot .btn{width:100%;display:flex;justify-content:center}
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'customers', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-people"></i> <%= t('admin.customers.manage_title', 'Manajemen Pelanggan') %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type === 'success' ? 's' : 'd' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- Stats (Clickable Filter Cards) -->
+    <style>
+      .sc-clickable { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+      .sc-clickable:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+      .stat-card-active { border: 2px solid var(--primary) !important; box-shadow: 0 0 12px var(--pdim); }
+      .sc.s.stat-card-active { border-color: var(--success) !important; box-shadow: 0 0 12px var(--sdim); }
+      .sc.w.stat-card-active { border-color: var(--warning) !important; box-shadow: 0 0 12px var(--wdim); }
+      .sc.d.stat-card-active { border-color: var(--danger) !important; box-shadow: 0 0 12px var(--ddim); }
+    </style>
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="sc p sc-clickable <%= (!filterStatus) ? 'stat-card-active' : '' %>" onclick="filterByStatus('')" title="<%= t('admin.cust.tt_all','Klik untuk tampilkan semua pelanggan') %>">
+        <i class="bi bi-people sc-icon"></i>
+        <div class="sc-label"><%= t('admin.customers.stats.total', 'Total') %></div>
+        <div class="sc-val"><%= stats.total %></div>
+        <% if (!filterStatus) { %>
+          <div style="font-size:10px;font-weight:800;color:var(--primary);margin-top:4px"><i class="bi bi-funnel-fill"></i> <%= t('admin.cust.filter_active','Filter Aktif') %></div>
+        <% } %>
+      </div>
+      <div class="sc s sc-clickable <%= (filterStatus === 'active') ? 'stat-card-active' : '' %>" onclick="filterByStatus('active')" title="<%= t('admin.cust.tt_f_active','Klik untuk filter pelanggan Aktif') %>">
+        <i class="bi bi-check-circle sc-icon"></i>
+        <div class="sc-label"><%= t('admin.customers.stats.active', 'Aktif') %></div>
+        <div class="sc-val"><%= stats.active %></div>
+        <% if (filterStatus === 'active') { %>
+          <div style="font-size:10px;font-weight:800;color:var(--success);margin-top:4px"><i class="bi bi-funnel-fill"></i> <%= t('admin.cust.filter_active','Filter Aktif') %></div>
+        <% } %>
+      </div>
+      <div class="sc w sc-clickable <%= (filterStatus === 'suspended') ? 'stat-card-active' : '' %>" onclick="filterByStatus('suspended')" title="<%= t('admin.cust.tt_f_susp','Klik untuk filter pelanggan Disuspend') %>">
+        <i class="bi bi-pause-circle sc-icon"></i>
+        <div class="sc-label"><%= t('admin.customers.stats.suspended', 'Disuspend') %></div>
+        <div class="sc-val"><%= stats.suspended %></div>
+        <% if (filterStatus === 'suspended') { %>
+          <div style="font-size:10px;font-weight:800;color:var(--warning);margin-top:4px"><i class="bi bi-funnel-fill"></i> <%= t('admin.cust.filter_active','Filter Aktif') %></div>
+        <% } %>
+      </div>
+      <div class="sc d sc-clickable <%= (filterStatus === 'inactive') ? 'stat-card-active' : '' %>" onclick="filterByStatus('inactive')" title="<%= t('admin.cust.tt_f_new','Klik untuk filter Pendaftar Baru / Nonaktif') %>">
+        <i class="bi bi-person-plus sc-icon"></i>
+        <div class="sc-label"><%= t('admin.customers.stats.inactive', 'Pendaftar Baru (Nonaktif)') %></div>
+        <div class="sc-val"><%= stats.inactive %></div>
+        <% if (filterStatus === 'inactive') { %>
+          <div style="font-size:10px;font-weight:800;color:var(--danger);margin-top:4px"><i class="bi bi-funnel-fill"></i> <%= t('admin.cust.filter_active','Filter Aktif') %></div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Print Header (Only visible on paper print) -->
+    <div class="print-only" style="margin-bottom:14px;border-bottom:2px solid #0f172a;padding-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h2 style="font-size:16pt;font-weight:800;text-transform:uppercase;margin:0"><%= company %></h2>
+          <div style="font-size:10pt;color:#334155"><%= t('admin.customers.manage_title', 'Daftar Data Pelanggan') %> &bull; Status: <%= filterStatus ? filterStatus.toUpperCase() : 'SEMUA' %></div>
+        </div>
+        <div style="text-align:right;font-size:8.5pt;color:#475569">
+          <div><%= t('admin.cust.printed_at','Dicetak:') %> <%= getNowLocal() %></div>
+          <div>Total Pelanggan: <strong><%= customers.length %> Orang</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Add -->
+    <div class="card">
+      <div class="card-hd">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h6 style="margin:0;"><i class="bi bi-people"></i> <%= t('admin.customers.list', 'Daftar Pelanggan') %> (<%= customers.length %>)</h6>
+          <span id="bulkCustCount" class="badge" style="display:none;background:rgba(59,130,246,0.15);color:#3b82f6;border:1px solid rgba(59,130,246,0.3);font-size:11px;padding:4px 8px;"></span>
+          <button type="button" class="btn btn-d btn-sm" id="bulkCustDeleteBtn" style="display:none;"><i class="bi bi-trash"></i> <%= t('admin.cust.bulk_delete','Hapus Terpilih') %></button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-g btn-sm" onclick="window.print()" title="<%= t('admin.cust.tt_print_data','Cetak Data Pelanggan') %>"><i class="bi bi-printer"></i> <%= t('admin.cust.btn_print','Cetak') %></button>
+          <a href="/admin/onu-stickers" class="btn btn-g btn-sm" title="<%= t('admin.cust.tt_print_sticker','Cetak Stiker Modem / ONU') %>"><i class="bi bi-qr-code-scan"></i> Stiker ONU</a>
+          <a href="/admin/customers/export" class="btn btn-g btn-sm"><i class="bi bi-file-earmark-excel"></i> <%= t('admin.customers.export_excel', 'Export Excel') %></a>
+          <button class="btn btn-g btn-sm" onclick="openModal('importModal')"><i class="bi bi-file-earmark-arrow-up"></i> <%= t('admin.customers.import_excel', 'Import Excel') %></button>
+          <button type="button" class="btn btn-g btn-sm" onclick="syncAllCust()"><i class="bi bi-arrow-repeat"></i> Terapkan ke Jaringan</button>
+          <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.customers.add', 'Tambah Pelanggan') %></button>
+        </div>
+      </div>
+      <div class="card-bd" style="padding-bottom:0">
+        <form method="GET" action="/admin/customers" class="srow">
+          <div class="sinput" style="max-width:340px">
+            <i class="bi bi-search"></i>
+            <input class="fc" name="search" placeholder="<%= t('admin.customers.search_placeholder', 'Cari nama, telepon, tag...') %>" value="<%= search %>">
+          </div>
+          <select class="fs" name="status" style="width:140px" onchange="this.form.submit()">
+            <option value=""><%= t('admin.customers.filter.all_status', 'Semua Status') %></option>
+            <option value="active" <%= filterStatus==='active' ? 'selected':'' %>><%= t('admin.customers.filter.active', 'Aktif') %></option>
+            <option value="suspended" <%= filterStatus==='suspended' ? 'selected':'' %>><%= t('admin.customers.filter.suspended', 'Suspend') %></option>
+            <option value="inactive" <%= filterStatus==='inactive' ? 'selected':'' %>><%= t('admin.customers.filter.inactive', 'Pendaftar Baru / Nonaktif') %></option>
+            <option value="ditangguhkan" <%= filterStatus==='ditangguhkan' ? 'selected':'' %>><%= t('admin.cust.st_suspended','Ditangguhkan') %></option>
+          </select>
+          <select class="fs" name="area" style="width:160px" onchange="this.form.submit()">
+            <option value="">Semua Area</option>
+            <% if (typeof areas !== 'undefined' && areas && areas.length > 0) { %>
+              <% areas.forEach(a => { %>
+                <option value="<%= a %>" <%= (typeof filterArea !== 'undefined' && filterArea === a) ? 'selected' : '' %>><%= a %></option>
+              <% }) %>
+            <% } %>
+          </select>
+          <% if (typeof routers !== 'undefined' && routers && routers.length > 0) { %>
+          <select class="fs" style="width:160px;" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>> Semua Router</option>
+            <% routers.forEach(r => { %>
+              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>> <%= r.name %></option>
+            <% }) %>
+          </select>
+          <% } %>
+          <select class="fs" name="package_id" style="width:180px" onchange="this.form.submit()">
+            <option value="">Semua Paket</option>
+            <% (typeof packages !== 'undefined' ? packages : []).forEach(p => { %><option value="<%= p.id %>" <%= String(filterPackage)===String(p.id)?'selected':'' %>><%= p.name %></option><% }) %>
+          </select>
+          <select class="fs" name="collector_id" style="width:170px" onchange="this.form.submit()">
+            <option value="">Semua Kolektor</option>
+            <% (typeof collectors !== 'undefined' ? collectors : []).forEach(k => { %><option value="<%= k.id %>" <%= String(filterCollector)===String(k.id)?'selected':'' %>><%= k.name %></option><% }) %>
+          </select>
+          <select class="fs" name="olt_id" style="width:150px" onchange="this.form.submit()">
+            <option value="">Semua OLT</option>
+            <% (typeof olts !== 'undefined' ? olts : []).forEach(o => { %><option value="<%= o.id %>" <%= String(filterOlt)===String(o.id)?'selected':'' %>><%= o.name %></option><% }) %>
+          </select>
+          <select class="fs" name="connection_type" style="width:150px" onchange="this.form.submit()">
+            <option value="">Semua Koneksi</option>
+            <option value="pppoe" <%= filterConn==='pppoe'?'selected':'' %>>PPPoE</option>
+            <option value="hotspot" <%= filterConn==='hotspot'?'selected':'' %>>Hotspot</option>
+            <option value="static" <%= filterConn==='static'?'selected':'' %>>Static IP</option>
+          </select>
+          <select class="fs" name="billing" style="width:160px" onchange="this.form.submit()">
+            <option value="">Semua Tagihan</option>
+            <option value="unpaid" <%= filterBilling==='unpaid'?'selected':'' %>><%= t('collector.filter_belum','Belum Bayar') %></option>
+            <option value="paid" <%= filterBilling==='paid'?'selected':'' %>>Lunas</option>
+          </select>
+          <select class="fs" name="auto_isolate" style="width:170px" onchange="this.form.submit()">
+            <option value=""><%= t('admin.cust.f_auto_all','Auto-Isolir: Semua') %></option>
+            <option value="on" <%= filterAuto==='on'?'selected':'' %>><%= t('admin.cust.f_auto_on','Auto-Isolir ON') %></option>
+            <option value="off" <%= filterAuto==='off'?'selected':'' %>><%= t('admin.cust.f_auto_off','Auto-Isolir OFF') %></option>
+          </select>
+          <button class="btn btn-g btn-sm" type="submit"><i class="bi bi-search"></i> <%= t('common.search', 'Cari') %></button>
+          <% if (search || filterStatus || selectedRouterId || filterPackage || filterCollector || filterOlt || filterConn || filterBilling || filterAuto) { %><a href="/admin/set-active-router?router_id=all" class="btn btn-g btn-sm"><i class="bi bi-x"></i> <%= t('common.reset', 'Reset') %></a><% } %>
+        </form>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl stick-name-mobile">
+          <thead>
+            <tr>
+              <th style="width:36px;text-align:center;"><input type="checkbox" id="cust_all" style="width:16px;height:16px;cursor:pointer;"></th>
+              <th>#</th>
+              <th><%= t('admin.customers.table.name', 'Nama') %></th>
+              <th><%= t('admin.customers.table.phone_tag', 'Telepon / Tag ONU') %></th>
+              <th><%= t('admin.customers.table.package', 'Paket') %></th>
+              <th><%= t('admin.cust.f_mikrotik_conn','Koneksi MikroTik') %></th>
+              <th><%= t('admin.customers.table.address', 'Alamat') %></th>
+              <th><%= t('admin.customers.table.status', 'Status') %></th>
+              <th><%= t('admin.customers.table.unpaid', 'Tagihan Belum Bayar') %></th>
+              <th><%= t('admin.customers.table.actions', 'Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+          <% if (customers.length === 0) { %>
+            <tr><td colspan="10" class="text-center text-muted" style="padding:32px"><%= t('admin.customers.empty', 'Belum ada pelanggan') %></td></tr>
+          <% } %>
+          <% customers.forEach((c, i) => { %>
+            <tr>
+              <td style="text-align:center;">
+                <input type="checkbox" class="cust_sel" value="<%= c.id %>" data-name="<%= c.name %>" style="width:16px;height:16px;cursor:pointer;">
+              </td>
+              <td class="text-muted"><%= i+1 %></td>
+              <td class="fw6">
+                <a href="javascript:void(0)" onclick="viewCustDetail(<%= i %>)" style="color:var(--primary);text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;" title="<%= t('admin.cust.tt_detail','Klik untuk lihat detail pelanggan & MikroTik') %>">
+                  <%= c.name %>
+                  <i class="bi bi-info-circle-fill" style="font-size:12px;opacity:0.75;"></i>
+                </a>
+                <% if (c.customer_code) { %><div style="font-size:11px;font-weight:700;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:4px;" title="ID Pelanggan"><i class="bi bi-person-badge"></i> <%= c.customer_code %></div><% } %>
+              </td>
+              <td>
+                <div><%= c.phone || '-' %></div>
+                <% if (c.genieacs_tag) { %><div style="font-size:11px;color:var(--primary)"><i class="bi bi-wifi"></i> <%= c.genieacs_tag %></div><% } %>
+              </td>
+              <td>
+                <% if (c.package_name) { %>
+                  <div style="font-weight:600;"><%= c.package_name %></div>
+                  <div style="font-size:11px;color:var(--muted)"><%= (c.speed_down/1000).toFixed(0) %>/<%= (c.speed_up/1000).toFixed(0) %> Mbps &bull; Rp <%= c.package_price ? c.package_price.toLocaleString('id-ID') : '-' %></div>
+                  <% if (c.package_billing_type === 'prepaid' || c.expired_at) { %>
+                    <% 
+                      const expDateStr = c.expired_at ? String(c.expired_at).slice(0, 10) : '-';
+                      const isExpired = c.expired_at ? (new Date(c.expired_at) < new Date()) : false;
+                    %>
+                    <div style="margin-top:2px;">
+                      <span class="badge <%= isExpired ? 'bd' : 'bs' %>" style="font-size:9px;padding:2px 5px;" title="<%= t('admin.cust.tt_prepaid','Masa Aktif Paket Prabayar') %>">
+                        <i class="bi bi-hourglass-split"></i> Exp: <%= expDateStr %>
+                      </span>
+                    </div>
+                  <% } %>
+                <% } else { %><span class="text-muted">-</span><% } %>
+              </td>
+              <td class="cust-conn-cell" data-username="<%= String(c.pppoe_username || c.hotspot_username || '').trim().toLowerCase() %>">
+                <% 
+                  const username = String(c.pppoe_username || c.hotspot_username || '').trim().toLowerCase();
+                  const session = username && typeof activeSessionsMap !== 'undefined' && activeSessionsMap && activeSessionsMap.get ? activeSessionsMap.get(username) : null;
+                  const isOnline = !!session;
+                  
+                  const rxBytes = session && session.bytesIn ? session.bytesIn : (c.bytes_in || 0);
+                  const txBytes = session && session.bytesOut ? session.bytesOut : (c.bytes_out || 0);
+                  
+                  function fmtB(b) {
+                    const num = Number(b) || 0;
+                    if (num <= 0) return '0 B';
+                    const k = 1024;
+                    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                    const i = Math.floor(Math.log(num) / Math.log(k));
+                    return (num / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+                  }
+                %>
+                <% if (isOnline) { %>
+                  <span class="badge" style="background:rgba(16,185,129,0.18);color:#10b981;border:1px solid rgba(16,185,129,0.35);font-weight:700">
+                    <i class="bi bi-circle-fill" style="font-size:7px;margin-right:4px"></i>ONLINE
+                  </span>
+                  <div style="font-size:12px;font-weight:800;color:var(--text);margin-top:3px">
+                    <i class="bi bi-clock-history text-success me-1"></i><span class="conn-uptime"><%= session.uptime %></span>
+                  </div>
+                  <div style="font-size:10px;color:var(--muted)">
+                    <span class="conn-ip"><%= session.ip %></span><% if (session.type) { %> (<%= session.type.toUpperCase() %>)<% } %>
+                  </div>
+                <% } else { %>
+                  <span class="badge" style="background:rgba(148,163,184,0.12);color:#94a3b8;border:1px solid rgba(148,163,184,0.25)">
+                    <i class="bi bi-circle-fill" style="font-size:7px;margin-right:4px"></i>OFFLINE
+                  </span>
+                  <div style="font-size:10px;color:var(--muted);margin-top:3px">Tidak Terhubung</div>
+                <% } %>
+                <div style="font-size:11px;margin-top:4px;display:flex;gap:6px;font-family:monospace;flex-wrap:wrap">
+                  <span style="color:#38bdf8" title="Download (Receive)"><i class="bi bi-arrow-down"></i>RX: <strong class="conn-rx"><%= fmtB(rxBytes) %></strong></span>
+                  <span style="color:#f472b6" title="Upload (Transmit)"><i class="bi bi-arrow-up"></i>TX: <strong class="conn-tx"><%= fmtB(txBytes) %></strong></span>
+                </div>
+              </td>
+              <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                <div><%= c.address || '-' %></div>
+                <% if (c.area) { %><div style="font-size:11px;color:#818cf8"><i class="bi bi-geo-alt"></i> <%= c.area %></div><% } %>
+              </td>
+              <td>
+                <% if (c.status==='active') { %><span class="badge bs"><i class="bi bi-circle-fill" style="font-size:7px"></i><%= t('admin.customers.filter.active', 'Aktif') %></span>
+                <% } else if (c.status==='suspended') { %><% if (c.deactivate_cause==='auto_unpaid') { %><span class="badge bd" title="Nonaktif otomatis: menunggak <%= c.unpaid_streak %> bulan"><i class="bi bi-person-x"></i> Nonaktif (auto)</span><% } else { %><span class="badge bw"><%= t('admin.customers.filter.suspended', 'Suspend') %></span><% } %>
+                <% } else { %><span class="badge bm"><%= t('admin.customers.filter.inactive', 'Nonaktif') %></span><% } %>
+                <% if (c.status === 'inactive' && (c.reg_total || c.reg_due_date || c.reg_voucher_code)) { %>
+                  <div style="font-size:10px;margin-top:4px;color:var(--muted)">
+                    <i class="bi bi-calculator"></i> Est: <b style="color:var(--primary)">Rp <%= Number(c.reg_total||0).toLocaleString('id-ID') %></b>
+                    <% if (c.reg_due_date) { %> • JT <%= c.reg_due_date %><% } %>
+                    <% if (c.reg_voucher_code) { %> • <i class="bi bi-ticket-perforated"></i> <%= c.reg_voucher_code %><% } %>
+                  </div>
+                <% } %>
+                <div style="font-size:10px;margin-top:4px">
+                  <i class="bi bi-clock-history"></i> <%= t('admin.customers.auto_isolate.label', 'Auto Isolir') %>:
+                  <span class="<%= c.auto_isolate === 0 ? 'text-danger' : 'text-success' %>">
+                    <%= c.auto_isolate === 0 ? t('admin.customers.auto_isolate.off', 'OFF') : t('admin.customers.auto_isolate.date_prefix', 'Tgl ') + (c.isolate_day || 10) %>
+                  </span>
+                </div>
+              </td>
+              <td class="text-center">
+                <% if (c.unpaid_count > 0) { %>
+                  <span class="badge bd"><%= c.unpaid_count %> <%= t('admin.customers.unpaid_suffix', 'tagihan') %></span>
+                <% } else { %><span class="text-muted" style="font-size:12px"><%= t('admin.customers.paid_label', 'Lunas') %></span><% } %>
+              </td>
+              <td style="white-space:nowrap">
+                <% if (c.status === 'inactive') { %>
+                <form id="rej-<%= c.id %>" method="POST" action="/admin/registrations/<%= c.id %>/reject" style="display:none" onsubmit="return confirm('Tolak pendaftar ini?')"></form>
+                <% } %>
+                <% if (typeof session !== 'undefined' && session && !session.isCashier) { %>
+                <% if (c.package_id && (c.package_promo_cycles || 0) > 0) { %>
+                <form id="rpc-<%= c.id %>" method="POST" action="/admin/customers/<%= c.id %>/billing/reset-promo-cycles" style="display:none" onsubmit="return confirm('Reset counter siklus promo untuk pelanggan ini? Tagihan berikutnya akan memakai harga promo lagi sesuai pengaturan paket.')"></form>
+                <% } %>
+                <% if (c.package_id && c.install_date && c.package_prorate_first_invoice) { %>
+                <form id="ipr-<%= c.id %>" method="POST" action="/admin/customers/<%= c.id %>/billing/install-prorata" style="display:none" onsubmit="return confirm('Buat tagihan SUSULAN prorata untuk bulan tanggal pasang? Hanya jika belum ada tagihan periode itu. Dasar harga: reguler (bukan promo).')"></form>
+                <% } %>
+                <% } %>
+                <% if (!c.pppoe_username) { %>
+                <form id="gpp-<%= c.id %>" method="POST" action="/admin/customers/<%= c.id %>/generate-pppoe" style="display:none" onsubmit="return confirm('Generate akun PPPoE untuk pelanggan ini?')"></form>
+                <% } %>
+                <form id="del-<%= c.id %>" method="POST" action="/admin/customers/<%= c.id %>/delete" style="display:none" data-confirm-msg=<%- JSON.stringify(t('admin.customers.confirm_delete', 'Hapus pelanggan ini?')).split('<').join('\\u003c') %> onsubmit="return confirm(this.dataset.confirmMsg)"></form>
+                <div class="act">
+                  <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                  <div class="act-menu">
+                    <% if (c.status === 'inactive') { %>
+                      <button type="button" class="act-item success" data-idx="<%= i %>" onclick="openRegCalc(+this.dataset.idx)"><i class="bi bi-calculator"></i> Kalkulator &amp; Setujui</button>
+                      <button type="submit" form="rej-<%= c.id %>" class="act-item danger"><i class="bi bi-x-lg"></i> Tolak Pendaftar</button>
+                      <div class="act-sep"></div>
+                    <% } %>
+                    <button type="button" class="act-item" onclick="viewCustDetail(<%= i %>)"><i class="bi bi-eye"></i> Lihat Detail &amp; MikroTik</button>
+                    <div class="act-sep"></div>
+                    <button type="button" class="act-item" onclick="copyCustId(<%= i %>)"><i class="bi bi-person-badge"></i> Salin ID Pelanggan</button>
+                    <button type="button" class="act-item" onclick="copyCustIp(<%= i %>)"><i class="bi bi-hdd-network"></i> Salin IP Pelanggan</button>
+                    <button type="button" class="act-item success" onclick="openCustIp(<%= i %>)"><i class="bi bi-box-arrow-up-right"></i> Masuk ke IP Pelanggan</button>
+                    <a class="act-item" href="/admin/customers/<%= c.id %>/sticker-onu" target="_blank"><i class="bi bi-qr-code"></i> Cetak Stiker ONU</a>
+                    <button type="button" class="act-item success" data-idx="<%= i %>" onclick="openGenInvoice(+this.dataset.idx)"><i class="bi bi-lightning-charge"></i> Generate Tagihan</button>
+                    <button type="button" class="act-item primary" data-idx="<%= i %>" onclick="openPayInvoice(+this.dataset.idx)"><i class="bi bi-cash-coin"></i> Bayar Tagihan</button>
+                    <% if (typeof session !== 'undefined' && session && !session.isCashier) { %>
+                      <% if (c.package_id && (c.package_promo_cycles || 0) > 0) { %>
+                      <button type="submit" form="rpc-<%= c.id %>" class="act-item"><i class="bi bi-arrow-counterclockwise"></i> Reset Siklus Promo</button>
+                      <% } %>
+                      <% if (c.package_id && c.install_date && c.package_prorate_first_invoice) { %>
+                      <button type="submit" form="ipr-<%= c.id %>" class="act-item"><i class="bi bi-calendar2-check"></i> Tagihan Susulan Prorata</button>
+                      <% } %>
+                    <% } %>
+                    <% if (!c.pppoe_username) { %>
+                      <button type="submit" form="gpp-<%= c.id %>" class="act-item primary"><i class="bi bi-key"></i> Generate Akun PPPoE</button>
+                    <% } %>
+                    <button type="button" class="act-item" data-id="<%= c.id %>" onclick="syncCust(this)"><i class="bi bi-arrow-repeat"></i> Sync ke Jaringan</button>
+                    <div class="act-sep"></div>
+                    <button type="button" class="act-item" data-idx="<%= i %>" onclick="editCust(+this.dataset.idx)"><i class="bi bi-pencil"></i> <%= t('admin.cust.btn_edit','Edit Pelanggan') %></button>
+                    <button type="submit" form="del-<%= c.id %>" class="act-item danger"><i class="bi bi-trash"></i> <%= t('admin.cust.btn_delete','Hapus Pelanggan') %></button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <form id="bulkDeleteCustForm" method="POST" action="/admin/customers/delete-bulk" style="display:none"></form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah -->
+<div class="mo" id="addModal">
+  <div class="mb" style="max-width:720px;">
+    <div class="mh"><span class="mt"><i class="bi bi-person-plus"></i> Tambah Pelanggan Baru</span><button class="mc" onclick="closeModal('addModal')">&times;</button></div>
+    <form method="POST" action="/admin/customers">
+      <div class="mbody" style="max-height:75vh; overflow-y:auto; padding-right:6px;">
+        
+        <% const isRadiusActive = (typeof settings !== 'undefined' && settings && String(settings.radius_enabled) === '1'); %>
+        <% if (isRadiusActive) { %>
+        <!-- SECTION 1: MODE AUTENTIKASI KONEKSI (UTAMA) -->
+        <div style="background: rgba(99, 102, 241, 0.08); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.25); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="color:var(--primary); font-size:13px; display:flex; align-items:center; justify-content:space-between;">
+            <span><i class="bi bi-cpu text-primary me-1"></i> Mode Autentikasi Pelanggan (Utama)</span>
+            <span class="badge bp" style="font-size:10px; padding:3px 8px;"><%= t('admin.cust.f_mikrotik_api','Diutamakan MikroTik API') %></span>
+          </div>
+          <div class="form-row" style="margin-bottom:0;" id="add_radius_select_fg">
+            <div class="fg" style="margin-bottom:0;">
+              <select class="fs" name="is_radius" id="add_is_radius" style="font-weight:700; height:42px;" onchange="handleAuthModeChange('add', this.value)">
+                <option value="0" selected> MikroTik API (Lokal /ppp secret - Utama & Default)</option>
+                <option value="1"> RADIUS Server (Billing Database Only)</option>
+              </select>
+              <small class="text-muted" style="font-size:11px; display:block; margin-top:4px;">
+                Mode MikroTik API mengelola kredensial PPP langsung di menu /ppp secret RouterOS MikroTik.
+              </small>
+            </div>
+          </div>
+        </div>
+        <% } else { %>
+          <input type="hidden" name="is_radius" id="add_is_radius" value="0">
+        <% } %>
+
+        <!-- SECTION 2: INFORMASI PELANGGAN -->
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="font-size:13px; color:var(--text);"><i class="bi bi-person-vcard text-info me-1"></i> <%= t('admin.cust.sec_personal','Informasi Pribadi Pelanggan') %></div>
+          <div class="form-row">
+            <div class="fg"><label class="fl">Nama Lengkap *</label><input class="fc" name="name" required placeholder="<%= t('admin.cust.ph_name','Contoh: John Doe') %>"></div>
+            <div class="fg"><label class="fl">No. Telepon / WA *</label><input class="fc" name="phone" placeholder="<%= t('admin.cust.ph_phone','Contoh: 08123456789') %>" required></div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><i class="bi bi-card-text"></i> No. Identitas (KTP/SIM/Paspor) (Opsional)</label>
+              <input class="fc" name="nik" placeholder="<%= t('admin.cust.ph_nik','Contoh: 3201xxxxxxxxxxxx') %>">
+            </div>
+            <div class="fg"><label class="fl"><%= t('admin.cust.f_email','Email (Notifikasi Billing)') %></label><input class="fc" name="email" type="email" placeholder="customer@example.com"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><i class="bi bi-geo-alt"></i> <%= t('collector.col_area','Area / Wilayah') %></label>
+              <select class="fs" name="area" id="add_area">
+                <option value=""><%= t('admin.cust.opt_area','-- Pilih Area --') %></option>
+                <% if (typeof masterAreas !== 'undefined' && masterAreas && masterAreas.length > 0) { %>
+                  <% masterAreas.forEach(a => { %>
+                    <option value="<%= a.name %>"><%= a.name %></option>
+                  <% }) %>
+                <% } else if (typeof areas !== 'undefined') { %>
+                  <% areas.forEach(a => { %>
+                    <option value="<%= a %>"><%= a %></option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label class="fl"><%= t('admin.cust.f_address_full','Alamat Lengkap') %></label><textarea class="fc" name="address" placeholder="<%= t('admin.cust.ph_addr','Jl. Raya No. 123...') %>"></textarea></div>
+        </div>
+
+        <!-- SECTION 3: PAKET & PENGATURAN KONEKSI -->
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="font-size:13px; color:var(--text);"><i class="bi bi-router text-warning me-1"></i> Paket & Akses Jaringan (MikroTik / RADIUS)</div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Paket Internet *</label>
+              <select class="fs" name="package_id" required>
+                <option value=""><%= t('tech.cc.ph_pkg','-- Pilih Paket --') %></option>
+                <% packages.forEach(p => { %>
+                <option value="<%= p.id %>"><%= p.name %> — Rp <%= p.price.toLocaleString('id-ID') %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Router MikroTik</label>
+              <select class="fs" name="router_id" id="add_router_select" onchange="loadRouterLists('add', this.value)">
+                <option value=""><%= t('admin.cust.opt_default','-- Default (Pengaturan) --') %></option>
+                <% if (typeof routers !== 'undefined') { %>
+                  <% routers.forEach(r => { %>
+                    <option value="<%= r.id %>"><%= r.name %> (<%= r.host %>)</option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Metode Koneksi</label>
+              <select class="fs" name="connection_type" id="add_connection_type" onchange="toggleConnectionFields('add')">
+                <option value="pppoe" selected><%= isRadiusActive ? 'PPPoE (RADIUS / MikroTik)' : 'PPPoE (MikroTik API)' %></option>
+                <option value="static">Static IP (MikroTik)</option>
+                <option value="hotspot">Hotspot (MikroTik)</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Tag ONU (GenieACS)</label>
+              <input class="fc" name="genieacs_tag" placeholder="<%= t('admin.cust.ph_same_cust','Sama dengan ID/User Pelanggan') %>">
+            </div>
+          </div>
+
+          <!-- KREDENSIAL PPPoE / RADIUS -->
+          <div id="add_pppoe_field">
+            <div class="form-row" style="background:rgba(59,130,246,0.04); padding:12px 14px; border-radius:10px; border:1px solid rgba(59,130,246,0.15);">
+              <div class="fg">
+                <label class="fl" style="font-weight:700; color:var(--primary);"><i class="bi bi-person-fill"></i> PPPoE Username *</label>
+                <% if (isRadiusActive) { %>
+                <div style="display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                  <label style="margin:0;display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-weight:600;">
+                    <input type="radio" name="pppoe_input_mode" value="mikrotik" checked onchange="togglePppoeInputMode('add')">
+                    <span>Pilih dari MikroTik (API)</span>
+                  </label>
+                  <label style="margin:0;display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-weight:600;">
+                    <input type="radio" name="pppoe_input_mode" value="manual" onchange="togglePppoeInputMode('add')">
+                    <span><%= t('admin.cust.f_manual_radius','Input Manual (RADIUS)') %></span>
+                  </label>
+                </div>
+                <% } else { %>
+                  <input type="hidden" name="pppoe_input_mode" value="mikrotik">
+                <% } %>
+                <div id="add_pppoe_mikrotik_input">
+                  <input class="fc" name="pppoe_username" list="add_pppoe_list" placeholder="<%= t('admin.cust.ph_pick_pppoe','Pilih / cari username PPPoE MikroTik') %>">
+                  <datalist id="add_pppoe_list"></datalist>
+                  <div class="hint" id="add_pppoe_hint"></div>
+                </div>
+                <div id="add_pppoe_manual_input" style="display:none">
+                  <input class="fc" id="add_pppoe_username_manual" placeholder="<%= t('admin.cust.ph_new_pppoe','Ketik username PPPoE baru...') %>">
+                </div>
+              </div>
+              <div class="fg">
+                <label class="fl" style="font-weight:700; color:var(--warning);"><i class="bi bi-key-fill"></i> <%= isRadiusActive ? 'Password PPPoE / RADIUS *' : 'Password PPPoE *' %></label>
+                <input class="fc" name="pppoe_password" id="add_pppoe_password" placeholder="<%= t('admin.cust.ph_pppoe_pass','Masukkan password PPPoE') %>" required>
+                <small class="text-muted" style="font-size:10px;display:block;margin-top:4px"><%= isRadiusActive ? 'Kredensial login modem pelanggan untuk RADIUS & PPPoE.' : 'Kredensial login modem pelanggan untuk PPPoE MikroTik API.' %></small>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATIC IP -->
+          <div class="form-row" id="add_static_field" style="display:none">
+            <div class="fg">
+              <label class="fl">IP Address Pelanggan</label>
+              <input class="fc" name="static_ip" placeholder="<%= t('admin.cust.ph_ip','Contoh: 192.168.10.10') %>">
+            </div>
+          </div>
+
+          <!-- HOTSPOT -->
+          <div id="add_hotspot_field" style="display:none">
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl">Hotspot Username</label>
+                <input class="fc" name="hotspot_username" placeholder="<%= t('admin.cust.ph_user','Contoh: user01') %>">
+              </div>
+              <div class="fg">
+                <label class="fl">Hotspot Password</label>
+                <input class="fc" name="hotspot_password" placeholder="<%= t('admin.cust.ph_same_user','Kosong = sama dengan username') %>">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl">Hotspot User Profile</label>
+                <input class="fc" name="hotspot_profile" list="add_hotspot_profile_list" placeholder="<%= t('admin.cust.ph_hotspot_profile','Pilih profile hotspot') %>">
+                <datalist id="add_hotspot_profile_list"></datalist>
+                <div class="hint" id="add_hotspot_profile_hint"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: BILLING & OTOMASI -->
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="font-size:13px; color:var(--text);"><i class="bi bi-cash-stack text-success me-1"></i> Penagihan, Kolektor, & Status Akun</div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Status Akun</label>
+              <select class="fs" name="status">
+                <option value="active" selected><%= t('common.active','Aktif') %></option>
+                <option value="suspended">Suspend / Isolir</option>
+                <option value="inactive">Nonaktif</option>
+              </select>
+            </div>
+            <div class="fg"><label class="fl">Tanggal Pasang</label><input class="fc" type="date" name="install_date"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('tech.cc.auto_isolate','Isolir Otomatis') %></label>
+              <select class="fs" name="auto_isolate">
+                <option value="1" selected><%= t('admin.cust.st_active_auto','Aktif (Auto-Isolir Jatuh Tempo)') %></option>
+                <option value="0"><%= t('admin.cust.opt_free_isolir','Bebas Isolir (Tidak Pernah Isolir)') %></option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Tanggal Isolir (1-31)</label>
+              <input class="fc" type="number" name="isolate_day" value="10" min="1" max="31">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><i class="bi bi-person-badge"></i> <%= t('admin.cust.f_collector','Kolektor Penagihan') %></label>
+              <select class="fs" name="collector_id" id="add_collector_id">
+                <option value=""><%= t('admin.cust.opt_no_collector','-- Tanpa Kolektor --') %></option>
+                <% if (typeof collectors !== 'undefined') { %>
+                  <% collectors.forEach(col => { %>
+                    <option value="<%= col.id %>" data-area="<%= col.area || '' %>"><%= col.name %> (<%= col.username %>)<%= col.area ? ' [Area: ' + col.area + ']' : '' %></option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Profile Isolir / Address List</label>
+              <select class="fs" name="isolir_profile" id="add_isolir_select">
+                <option value="isolir">isolir</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: OPSEK & INFRASTRUKTUR (OLT, ODP, KOORDINAT) -->
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="font-size:13px; color:var(--text);"><i class="bi bi-diagram-3 text-secondary me-1"></i> Infrastruktur (OLT, ODP, & Peta)</div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Perangkat OLT</label>
+              <select class="fs" name="olt_id">
+                <option value=""><%= t('tech.cc.ph_olt','-- Tanpa OLT --') %></option>
+                <% if (typeof olts !== 'undefined') { %>
+                  <% olts.forEach(o => { %>
+                    <option value="<%= o.id %>"><%= o.name %> (<%= o.brand %>)</option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">ODP</label>
+              <select class="fs" name="odp_id" id="add_odp_id" onchange="loadOdpPorts('add')">
+                <option value=""><%= t('admin.cust.opt_no_odp','-- Tanpa ODP --') %></option>
+                <% if (typeof odps !== 'undefined') { %>
+                  <% odps.forEach(o => { %>
+                    <option value="<%= o.id %>"><%= o.name %></option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label class="fl">Port ODP</label>
+              <select class="fs" name="pon_port" id="add_pon_port"><option value=""><%= t('admin.cust.opt_no_port','-- Tanpa Port --') %></option></select>
+            </div>
+            <div class="fg" id="add_mac_field" style="display:none">
+              <label class="fl">MAC Address (Opsional)</label>
+              <input class="fc" name="mac_address" placeholder="<%= t('admin.cust.ph_mac','Contoh: AA:BB:CC:DD:EE:FF') %>">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label class="fl">Latitude</label><input class="fc" name="lat" id="add_lat" placeholder="-6.xxx"></div>
+            <div class="fg">
+              <label class="fl">Longitude</label>
+              <div style="display:flex;gap:4px">
+                <input class="fc" name="lng" id="add_lng" placeholder="106.xxx">
+                <button type="button" class="btn btn-g btn-sm" onclick="openPicker('add')" title="<%= t('admin.cust.tt_pick_map','Pilih di Peta') %>"><i class="bi bi-geo-alt"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="fg" style="margin-top:10px;"><label class="fl"><%= t('tech.cc.note','Catatan') %></label><textarea class="fc" name="notes" placeholder="<%= t('admin.cust.ph_note','Catatan internal opsional...') %>"></textarea></div>
+        </div>
+
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> Simpan Pelanggan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Import -->
+<div class="mo" id="importModal">
+  <div class="mb" style="max-width:400px">
+    <div class="mh"><span class="mt"><i class="bi bi-file-earmark-arrow-up"></i> <%= t('admin.cust.btn_import','Import Pelanggan') %></span><button class="mc" onclick="closeModal('importModal')">&times;</button></div>
+    <form method="POST" action="/admin/customers/import" enctype="multipart/form-data">
+      <div class="mbody">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+          Unggah file Excel (.xlsx). Pastikan format kolom sesuai dengan hasil Export.
+          <br><br>
+          <a href="/admin/customers/export" style="color:var(--primary);text-decoration:none"><i class="bi bi-download"></i> Unduh format excel</a>
+        </p>
+        <div class="fg">
+          <label class="fl">Pilih File Excel</label>
+          <input type="file" name="file" class="fc" accept=".xlsx" required>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('importModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-upload"></i> Mulai Impor</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit -->
+<div class="mo" id="editModal">
+  <div class="mb" style="max-width:720px;">
+    <div class="mh"><span class="mt"><i class="bi bi-pencil"></i> <%= t('admin.cust.btn_edit','Edit Pelanggan') %></span><button class="mc" onclick="closeModal('editModal')">&times;</button></div>
+    <form method="POST" id="editForm">
+      <div class="mbody" style="max-height:75vh; overflow-y:auto; padding-right:6px;">
+        
+        <% if (isRadiusActive) { %>
+        <!-- SECTION 1: MODE AUTENTIKASI KONEKSI (UTAMA) -->
+        <div style="background: rgba(99, 102, 241, 0.08); padding: 14px 16px; border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.25); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="color:var(--primary); font-size:13px; display:flex; align-items:center; justify-content:space-between;">
+            <span><i class="bi bi-cpu text-primary me-1"></i> Mode Autentikasi Pelanggan (Utama)</span>
+            <span class="badge bp" style="font-size:10px; padding:3px 8px;"><%= t('admin.cust.f_mikrotik_api','Diutamakan MikroTik API') %></span>
+          </div>
+          <div class="form-row" style="margin-bottom:0;" id="e_radius_select_fg">
+            <div class="fg" style="margin-bottom:0;">
+              <select class="fs" name="is_radius" id="e_is_radius" style="font-weight:700; height:42px;" onchange="handleAuthModeChange('edit', this.value)">
+                <option value="0"> MikroTik API (Lokal /ppp secret - Utama & Default)</option>
+                <option value="1"> RADIUS Server (Billing Database Only)</option>
+              </select>
+              <small class="text-muted" style="font-size:11px; display:block; margin-top:4px;">
+                Mode MikroTik API mengelola kredensial PPP langsung di menu /ppp secret RouterOS MikroTik.
+              </small>
+            </div>
+          </div>
+        </div>
+        <% } else { %>
+          <input type="hidden" name="is_radius" id="e_is_radius" value="0">
+        <% } %>
+
+        <!-- SECTION 2: INFORMASI PELANGGAN -->
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="font-size:13px; color:var(--text);"><i class="bi bi-person-vcard text-info me-1"></i> <%= t('admin.cust.sec_personal','Informasi Pribadi Pelanggan') %></div>
+          <div class="form-row">
+            <div class="fg"><label class="fl">Nama Lengkap *</label><input class="fc" name="name" id="e_name" required></div>
+            <div class="fg"><label class="fl">No. Telepon / WA *</label><input class="fc" name="phone" id="e_phone" required></div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><i class="bi bi-card-text"></i> No. Identitas (KTP/SIM/Paspor) (Opsional)</label>
+              <input class="fc" name="nik" id="e_nik" placeholder="<%= t('admin.cust.ph_nik','Contoh: 3201xxxxxxxxxxxx') %>">
+            </div>
+            <div class="fg"><label class="fl"><%= t('admin.cust.f_email','Email (Notifikasi Billing)') %></label><input class="fc" name="email" id="e_email" type="email"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><i class="bi bi-geo-alt"></i> <%= t('collector.col_area','Area / Wilayah') %></label>
+              <select class="fs" name="area" id="e_area">
+                <option value=""><%= t('admin.cust.opt_area','-- Pilih Area --') %></option>
+                <% if (typeof masterAreas !== 'undefined' && masterAreas && masterAreas.length > 0) { %>
+                  <% masterAreas.forEach(a => { %>
+                    <option value="<%= a.name %>"><%= a.name %></option>
+                  <% }) %>
+                <% } else if (typeof areas !== 'undefined') { %>
+                  <% areas.forEach(a => { %>
+                    <option value="<%= a %>"><%= a %></option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label class="fl"><%= t('admin.cust.f_address_full','Alamat Lengkap') %></label><textarea class="fc" name="address" id="e_address"></textarea></div>
+        </div>
+
+        <!-- SECTION 3: PAKET & PENGATURAN KONEKSI -->
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="font-size:13px; color:var(--text);"><i class="bi bi-router text-warning me-1"></i> Paket & Akses Jaringan (MikroTik / RADIUS)</div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Paket Internet *</label>
+              <select class="fs" name="package_id" id="e_package" required>
+                <option value=""><%= t('tech.cc.ph_pkg','-- Pilih Paket --') %></option>
+                <% packages.forEach(p => { %>
+                <option value="<%= p.id %>"><%= p.name %> — Rp <%= p.price.toLocaleString('id-ID') %></option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Router MikroTik</label>
+              <select class="fs" name="router_id" id="e_router_id" onchange="loadRouterLists('edit', this.value)">
+                <option value=""><%= t('admin.cust.opt_default','-- Default (Pengaturan) --') %></option>
+                <% if (typeof routers !== 'undefined') { %>
+                  <% routers.forEach(r => { %>
+                    <option value="<%= r.id %>"><%= r.name %> (<%= r.host %>)</option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Metode Koneksi</label>
+              <select class="fs" name="connection_type" id="e_connection_type" onchange="toggleConnectionFields('edit')">
+                <option value="pppoe"><%= isRadiusActive ? 'PPPoE (RADIUS / MikroTik)' : 'PPPoE (MikroTik API)' %></option>
+                <option value="static">Static IP (MikroTik)</option>
+                <option value="hotspot">Hotspot (MikroTik)</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Tag ONU (GenieACS)</label>
+              <input class="fc" name="genieacs_tag" id="e_tag">
+            </div>
+          </div>
+
+          <!-- KREDENSIAL PPPoE / RADIUS -->
+          <div id="e_pppoe_field">
+            <div class="form-row" style="background:rgba(59,130,246,0.04); padding:12px 14px; border-radius:10px; border:1px solid rgba(59,130,246,0.15);">
+              <div class="fg">
+                <label class="fl" style="font-weight:700; color:var(--primary);"><i class="bi bi-person-fill"></i> PPPoE Username *</label>
+                <input class="fc" name="pppoe_username" id="e_pppoe" list="e_pppoe_list" placeholder="PPPoE Username" required>
+                <datalist id="e_pppoe_list"></datalist>
+                <div class="hint" id="e_pppoe_hint"></div>
+              </div>
+              <div class="fg">
+                <label class="fl" style="font-weight:700; color:var(--warning);"><i class="bi bi-key-fill"></i> Password PPPoE / RADIUS *</label>
+                <input class="fc" name="pppoe_password" id="e_pppoe_password" placeholder="<%= t('admin.cust.ph_pppoe_pass','Masukkan password PPPoE') %>" required>
+                <small class="text-muted" style="font-size:10px;display:block;margin-top:4px">Kredensial login modem pelanggan untuk RADIUS & PPPoE.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATIC IP -->
+          <div class="form-row" id="e_static_field" style="display:none">
+            <div class="fg">
+              <label class="fl">IP Address Pelanggan</label>
+              <input class="fc" name="static_ip" id="e_static_ip" placeholder="<%= t('admin.cust.ph_ip','Contoh: 192.168.10.10') %>">
+            </div>
+          </div>
+
+          <!-- HOTSPOT -->
+          <div id="e_hotspot_field" style="display:none">
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl">Hotspot Username</label>
+                <input class="fc" name="hotspot_username" id="e_hotspot_username" placeholder="<%= t('admin.cust.ph_user','Contoh: user01') %>">
+              </div>
+              <div class="fg">
+                <label class="fl">Hotspot Password</label>
+                <input class="fc" name="hotspot_password" id="e_hotspot_password" placeholder="<%= t('admin.cust.ph_same_user','Kosong = sama dengan username') %>">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl">Hotspot User Profile</label>
+                <input class="fc" name="hotspot_profile" id="e_hotspot_profile" list="e_hotspot_profile_list" placeholder="<%= t('admin.cust.ph_hotspot_profile','Pilih profile hotspot') %>">
+                <datalist id="e_hotspot_profile_list"></datalist>
+                <div class="hint" id="e_hotspot_profile_hint"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: BILLING & OTOMASI -->
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="font-size:13px; color:var(--text);"><i class="bi bi-cash-stack text-success me-1"></i> Penagihan, Kolektor, & Status Akun</div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Status Akun</label>
+              <select class="fs" name="status" id="e_status">
+                <option value="active"><%= t('common.active','Aktif') %></option>
+                <option value="suspended">Suspend / Isolir</option>
+                <option value="inactive">Nonaktif</option>
+              </select>
+            </div>
+            <div class="fg"><label class="fl">Tanggal Pasang</label><input class="fc" type="date" name="install_date" id="e_install"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('tech.cc.auto_isolate','Isolir Otomatis') %></label>
+              <select class="fs" name="auto_isolate" id="e_auto_isolate">
+                <option value="1"><%= t('admin.cust.st_active_auto','Aktif (Auto-Isolir Jatuh Tempo)') %></option>
+                <option value="0"><%= t('admin.cust.opt_free_isolir','Bebas Isolir (Tidak Pernah Isolir)') %></option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Tanggal Isolir (Pascabayar)</label>
+              <input class="fc" type="number" name="isolate_day" id="e_isolate_day" min="1" max="31">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><i class="bi bi-hourglass-split text-warning me-1"></i> Masa Aktif / Expired Date (Khusus Prabayar)</label>
+              <input class="fc" type="date" name="expired_at" id="e_expired_at">
+              <small class="text-muted" style="font-size:10px;display:block;margin-top:2px;">Otomatis dihitung saat pasang/bayar. Bisa disesuaikan manual jika perlu.</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><i class="bi bi-person-badge"></i> <%= t('admin.cust.f_collector','Kolektor Penagihan') %></label>
+              <select class="fs" name="collector_id" id="e_collector_id">
+                <option value=""><%= t('admin.cust.opt_no_collector','-- Tanpa Kolektor --') %></option>
+                <% if (typeof collectors !== 'undefined') { %>
+                  <% collectors.forEach(col => { %>
+                    <option value="<%= col.id %>" data-area="<%= col.area || '' %>"><%= col.name %> (<%= col.username %>)<%= col.area ? ' [Area: ' + col.area + ']' : '' %></option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Profile Isolir / Address List</label>
+              <select class="fs" name="isolir_profile" id="e_isolir_profile">
+                <option value="isolir">isolir</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: OPSEK & INFRASTRUKTUR (OLT, ODP, KOORDINAT) -->
+        <div style="background: rgba(255, 255, 255, 0.02); padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px;">
+          <div class="fw6 mb-2" style="font-size:13px; color:var(--text);"><i class="bi bi-diagram-3 text-secondary me-1"></i> Infrastruktur (OLT, ODP, & Peta)</div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Perangkat OLT</label>
+              <select class="fs" name="olt_id" id="e_olt_id">
+                <option value=""><%= t('tech.cc.ph_olt','-- Tanpa OLT --') %></option>
+                <% if (typeof olts !== 'undefined') { %>
+                  <% olts.forEach(o => { %>
+                    <option value="<%= o.id %>"><%= o.name %> (<%= o.brand %>)</option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">ODP</label>
+              <select class="fs" name="odp_id" id="e_odp_id" onchange="loadOdpPorts('edit')">
+                <option value=""><%= t('admin.cust.opt_no_odp','-- Tanpa ODP --') %></option>
+                <% if (typeof odps !== 'undefined') { %>
+                  <% odps.forEach(o => { %>
+                    <option value="<%= o.id %>"><%= o.name %></option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label class="fl">Port ODP</label>
+              <select class="fs" name="pon_port" id="e_pon_port"><option value=""><%= t('admin.cust.opt_no_port','-- Tanpa Port --') %></option></select>
+            </div>
+            <div class="fg" id="e_mac_field" style="display:none">
+              <label class="fl">MAC Address (Opsional)</label>
+              <input class="fc" name="mac_address" id="e_mac_address" placeholder="<%= t('admin.cust.ph_mac','Contoh: AA:BB:CC:DD:EE:FF') %>">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg"><label class="fl">Latitude</label><input class="fc" name="lat" id="e_lat" placeholder="-6.xxx"></div>
+            <div class="fg">
+              <label class="fl">Longitude</label>
+              <div style="display:flex;gap:4px">
+                <input class="fc" name="lng" id="e_lng" placeholder="106.xxx">
+                <button type="button" class="btn btn-g btn-sm" onclick="openPicker('edit')" title="<%= t('admin.cust.tt_pick_map','Pilih di Peta') %>"><i class="bi bi-geo-alt"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="fg" style="margin-top:10px;"><label class="fl"><%= t('tech.cc.note','Catatan') %></label><textarea class="fc" name="notes" id="e_notes" placeholder="<%= t('admin.cust.ph_note','Catatan internal opsional...') %>"></textarea></div>
+        </div>
+
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="syncCustFromModal()"><i class="bi bi-arrow-repeat"></i> Terapkan ke Jaringan</button>
+        <button type="button" class="btn btn-g" onclick="closeModal('editModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> Update Pelanggan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Generate Tagihan (Per Pelanggan) -->
+<div class="mo" id="genInvoiceModal">
+  <div class="mb" style="max-width:520px">
+    <div class="mh"><span class="mt"><i class="bi bi-lightning-charge"></i> <%= t('admin.customers.generate_invoice_title', 'Generate Tagihan (Pelanggan)') %></span><button class="mc" onclick="closeModal('genInvoiceModal')">&times;</button></div>
+    <form method="POST" id="genInvoiceForm">
+      <div class="mbody">
+        <div class="alert alert-i"><i class="bi bi-info-circle"></i> <%= t('admin.customers.generate_invoice_hint', 'Tagihan hanya dibuat untuk pelanggan yang dipilih. Jika sudah ada, tidak akan dibuat ulang.') %></div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.customers.generate_invoice_customer', 'Pelanggan') %></label>
+          <input class="fc" id="genInvoiceCustomer" readonly>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl"><%= t('admin.billing.month', 'Bulan') %></label>
+            <select class="fs" name="month" required>
+              <% const genMns = (lang === 'en')
+                ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+                : ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                 for(let m=1;m<=12;m++){%>
+              <option value="<%= m %>" <%= m===new Date().getMonth()+1?'selected':'' %>><%= genMns[m-1] %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.billing.year', 'Tahun') %></label>
+            <select class="fs" name="year" required>
+              <% for(let y=new Date().getFullYear()+1; y>=2023; y--){ %>
+              <option value="<%= y %>" <%= y===new Date().getFullYear() ? 'selected' : '' %>><%= y %></option>
+              <% } %>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('genInvoiceModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-lightning-charge"></i> <%= t('admin.customers.generate_invoice_btn', 'Generate') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Bayar Tagihan (Per Pelanggan) -->
+<div class="mo" id="payInvoiceModal">
+  <div class="mb" style="max-width:560px">
+    <div class="mh"><span class="mt"><i class="bi bi-cash-coin"></i> <%= t('admin.customers.pay_invoice_title', 'Bayar Tagihan (Pelanggan)') %></span><button class="mc" onclick="closeModal('payInvoiceModal')">&times;</button></div>
+    <form method="POST" id="payInvoiceForm">
+      <div class="mbody">
+        <div class="alert alert-i"><i class="bi bi-info-circle"></i> <%= t('admin.customers.pay_invoice_hint', 'Untuk pembayaran di muka: pilih periode. Jika tagihan belum ada, sistem akan membuat tagihan lalu langsung menandai Lunas.') %></div>
+        <div id="payInvoicePaidSummary" style="margin:-2px 0 12px 0;color:rgba(148,163,184,1);font-size:12px"></div>
+        <div id="payInvoiceTotal" style="margin:-2px 0 14px 0;padding:10px 12px;border:1px solid rgba(148,163,184,.25);border-radius:12px;background:rgba(15,23,42,0.28);font-weight:700"></div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.customers.pay_invoice_customer', 'Pelanggan') %></label>
+          <input class="fc" id="payInvoiceCustomer" readonly>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl"><%= t('admin.billing.month', 'Bulan') %></label>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+              <% const payMns = (lang === 'en')
+                ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+                : ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                 for(let m=1;m<=12;m++){%>
+              <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(148,163,184,.25);border-radius:12px;cursor:pointer">
+                <input type="checkbox" class="pay-month" name="months" value="<%= m %>" <%= m===new Date().getMonth()+1?'checked':'' %> style="width:16px;height:16px">
+                <span style="font-size:13px"><%= payMns[m-1] %></span>
+                <span class="pay-month-badge" style="margin-left:auto;font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(34,197,94,.12);color:rgba(34,197,94,1);display:none"><%= t('admin.customers.paid_badge', 'Lunas') %></span>
+              </label>
+              <% } %>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.billing.year', 'Tahun') %></label>
+            <select class="fs" name="year" id="payInvoiceYear" required>
+              <% for(let y=new Date().getFullYear()+1; y>=2023; y--){ %>
+              <option value="<%= y %>" <%= y===new Date().getFullYear() ? 'selected' : '' %>><%= y %></option>
+              <% } %>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Metode Bayar</label>
+            <select class="fs" name="payment_method"><option value="Tunai">Tunai (Cash)</option><option value="Transfer Bank">Transfer Bank</option><option value="QRIS">QRIS</option><option value="E-Wallet">E-Wallet</option><option value="Lainnya">Lainnya</option></select>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.billing.received_by', 'Diterima Oleh') %></label>
+            <% const payByDefault = (typeof session !== 'undefined' && session && session.isCashier)
+              ? (`Kasir ${(session.cashierName || '').trim()}` + ((session.cashierUsername || '').trim() ? ` (@${String(session.cashierUsername).trim()})` : '')).trim()
+              : 'Admin'; %>
+            <input class="fc" name="paid_by_name" value="<%= payByDefault || 'Admin' %>" placeholder="<%= t('admin.billing.received_by_placeholder', 'Nama petugas / teknisi') %>">
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.billing.notes_optional', 'Catatan (opsional)') %></label>
+          <textarea class="fc" name="notes" placeholder="<%= t('admin.customers.pay_invoice_notes_placeholder', 'Contoh: Bayar di muka') %>"></textarea>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('payInvoiceModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> <%= t('admin.customers.pay_invoice_btn', 'Bayar') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Map Picker -->
+<div class="mo" id="mapPickerModal">
+  <div class="mb" style="max-width:800px">
+    <div class="mh"><span class="mt"><i class="bi bi-geo-alt"></i> Pilih Lokasi Pelanggan</span><button class="mc" onclick="closeModal('mapPickerModal')">&times;</button></div>
+    <div class="mbody">
+      <div id="picker-map"></div>
+      <div class="alert alert-i" style="margin-bottom:0">
+        <i class="bi bi-info-circle"></i> <%= t('admin.cust.map_hint','Geser penanda (marker) atau klik pada peta untuk menentukan lokasi yang akurat.') %>
+      </div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-p" onclick="closeModal('mapPickerModal')">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detail & Koneksi Pelanggan -->
+<div class="mo" id="viewDetailModal">
+  <div class="mb" style="max-width:700px">
+    <div class="mh">
+      <span class="mt" id="v_title"><i class="bi bi-eye-fill"></i> <%= t('admin.cust.modal_title','Detail & Informasi Koneksi Pelanggan') %></span>
+      <button type="button" class="mc" onclick="closeModal('viewDetailModal')">&times;</button>
+    </div>
+    <div class="mbody" style="padding:14px 16px">
+      <!-- Quick info -->
+      <div class="vd-head">
+        <div>
+          <div class="vd-name" id="v_cust_name">-</div>
+          <div class="vd-sub">
+            <span><%= t('admin.cust.lbl_cust_id','ID Pelanggan:') %> <strong id="v_cust_id">-</strong></span>
+            <button type="button" class="btn btn-g btn-sm vd-copy" onclick="copyCustCode()" title="Salin ID Pelanggan"><i class="bi bi-clipboard"></i> Salin</button>
+          </div>
+        </div>
+        <div id="v_online_badge"></div>
+      </div>
+
+      <!-- Koneksi MikroTik -->
+      <div class="vd-sec">
+        <div class="vd-sec-title"><i class="bi bi-router"></i> <%= t('admin.cust.sec_mikrotik','Informasi Koneksi MikroTik') %></div>
+        <div class="vd-panel">
+          <div class="vd-row"><span class="k">Username PPPoE / Hotspot</span><span class="v"><code id="v_username" class="vd-code" style="color:#38bdf8">-</code><button class="btn btn-g btn-sm vd-copy" onclick="copyToClipboard('v_username','Username')"><i class="bi bi-copy"></i></button></span></div>
+          <div class="vd-row"><span class="k">Password PPPoE / Hotspot</span><span class="v"><code id="v_password" class="vd-code" style="color:#f472b6">-</code><button class="btn btn-g btn-sm vd-copy" onclick="copyToClipboard('v_password','Password')"><i class="bi bi-copy"></i></button></span></div>
+          <div class="vd-row"><span class="k">IP Address (Sesi / Static)</span><span class="v"><code id="v_ip" class="vd-code" style="color:#4ade80">-</code><button class="btn btn-g btn-sm vd-copy" onclick="copyToClipboard('v_ip','IP Address')"><i class="bi bi-copy"></i></button></span></div>
+          <div class="vd-row"><span class="k">MAC Address / Caller-ID</span><span class="v"><code id="v_mac" class="vd-code" style="color:#fbbf24">-</code><button class="btn btn-g btn-sm vd-copy" onclick="copyToClipboard('v_mac','MAC Address')"><i class="bi bi-copy"></i></button></span></div>
+          <div class="vd-row"><span class="k">Router Target</span><span class="v" id="v_router_name">-</span></div>
+          <div class="vd-row"><span class="k">Tipe Koneksi</span><span class="v" id="v_conn_type">-</span></div>
+          <div class="vd-row"><span class="k">Uptime Sesi Active</span><span class="v"><strong id="v_uptime">-</strong></span></div>
+        </div>
+      </div>
+
+      <!-- Trafik -->
+      <div class="vd-sec">
+        <div class="vd-sec-title"><i class="bi bi-arrow-down-up"></i> Statistik Trafik Data</div>
+        <div class="vd-panel" style="padding:12px">
+          <div class="vd-grid2">
+            <div class="vd-stat" style="background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.25)">
+              <div style="font-size:11px;color:#38bdf8;font-weight:700"><i class="bi bi-arrow-down-circle"></i> RX (Download)</div>
+              <div id="v_rx_fmt" class="vd-stat-num">-</div>
+              <div id="v_rx_bytes" style="font-size:11px;color:var(--muted)">0 Bytes</div>
+            </div>
+            <div class="vd-stat" style="background:rgba(244,114,182,.1);border-color:rgba(244,114,182,.25)">
+              <div style="font-size:11px;color:#f472b6;font-weight:700"><i class="bi bi-arrow-up-circle"></i> TX (Upload)</div>
+              <div id="v_tx_fmt" class="vd-stat-num">-</div>
+              <div id="v_tx_bytes" style="font-size:11px;color:var(--muted)">0 Bytes</div>
+            </div>
+          </div>
+          <div class="vd-fup"><span class="text-muted">Total Kuota Terpakai (FUP):</span> <strong id="v_total_fup">0 GB</strong></div>
+        </div>
+      </div>
+
+      <!-- Info Pelanggan -->
+      <div class="vd-sec" style="margin-bottom:0">
+        <div class="vd-sec-title"><i class="bi bi-person-vcard"></i> <%= t('admin.cust.sec_info','Informasi Pelanggan') %></div>
+        <div class="vd-panel">
+          <div class="vd-row"><span class="k">No. Identitas (KTP/SIM/Paspor)</span><span class="v"><code id="v_nik" class="vd-code">-</code><button class="btn btn-g btn-sm vd-copy" onclick="copyToClipboard('v_nik','NIK')"><i class="bi bi-copy"></i></button></span></div>
+          <div class="vd-row"><span class="k">No. Telepon / WhatsApp</span><span class="v"><code id="v_phone" class="vd-code">-</code><button class="btn btn-g btn-sm vd-copy" onclick="copyToClipboard('v_phone','No HP')"><i class="bi bi-copy"></i></button></span></div>
+          <div class="vd-row"><span class="k"><%= t('admin.cust.sec_addr_area','Alamat & Area') %></span><span class="v" id="v_address_area">-</span></div>
+          <div class="vd-row"><span class="k">Paket Internet</span><span class="v" id="v_package">-</span></div>
+          <div class="vd-row"><span class="k">Masa Aktif (Prabayar)</span><span class="v" id="v_expired_at">-</span></div>
+          <div class="vd-row"><span class="k">Tag ONU (GenieACS)</span><span class="v"><code id="v_genieacs" class="vd-code">-</code><button class="btn btn-g btn-sm vd-copy" onclick="copyToClipboard('v_genieacs','GenieACS Tag')"><i class="bi bi-copy"></i></button></span></div>
+          <div class="vd-row"><span class="k">Status Akun &amp; Auto-Isolir</span><span class="v" id="v_status_account">-</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf vd-foot">
+      <button type="button" class="btn btn-g" onclick="closeModal('viewDetailModal')">Tutup</button>
+      <form id="v_disconnect_form" method="POST" action="" style="display:inline" onsubmit="return confirm('Apakah Anda yakin ingin MEMUTUS koneksi aktif pelanggan ini dari MikroTik?')">
+        <button type="submit" class="btn vd-danger"><i class="bi bi-power"></i> Putus Sesi MikroTik</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Kalkulator Prorata (Setujui Pendaftar) -->
+<div class="mo" id="regCalcModal">
+  <div class="mb" style="max-width:540px">
+    <div class="mh"><span class="mt"><i class="bi bi-calculator"></i> Kalkulator Prorata &mdash; Setujui Pendaftar</span><button class="mc" onclick="closeModal('regCalcModal')">&times;</button></div>
+    <form method="POST" id="regCalcForm">
+      <div class="mbody">
+        <div id="regCalcWho" style="font-size:13px;color:var(--muted);margin-bottom:12px"></div>
+        <div class="form-row">
+          <div class="fg"><label class="fl"><%= t('admin.cust.f_monthly_fee','Biaya Langganan Bulanan (Rp)') %></label><input class="fc" type="number" min="0" step="1000" id="rc_fee"></div>
+          <div class="fg"><label class="fl"><%= t('admin.cust.f_install_fee_rp','Biaya Pasang (Rp)') %></label><input class="fc" type="number" min="0" step="1000" id="rc_install"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Mulai Pakai</label><input class="fc" type="date" id="rc_start"></div>
+          <div class="fg"><label class="fl"><%= t('admin.cust.f_due','Jatuh Tempo (acuan tgl 5)') %></label><input class="fc" type="date" id="rc_due"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl"><%= t('admin.cust.f_voucher_disc_rp','Diskon Voucher (Rp)') %></label><input class="fc" type="number" min="0" step="1000" id="rc_discount"></div>
+          <div class="fg"><label class="fl"><%= t('admin.cust.f_days','Jumlah Hari') %></label><input class="fc" id="rc_days" readonly></div>
+        </div>
+        <div style="background:rgba(173,255,47,.08);border:1px solid var(--primary-glow);border-radius:12px;padding:12px;margin-top:6px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0"><span>Prorata Paket</span><span id="rc_prorata">Rp 0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0"><span><%= t('admin.cust.f_install_fee','Biaya Pasang') %></span><span id="rc_install_out">Rp 0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;color:var(--danger)"><span><%= t('admin.cust.f_voucher_disc','Diskon Voucher') %></span><span id="rc_disc_out">- Rp 0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;padding:8px 0 2px;border-top:1px solid var(--border);margin-top:6px"><span>Total Bayar Awal</span><span id="rc_total" style="color:var(--primary)">Rp 0</span></div>
+        </div>
+        <div class="hint" id="rc_hint" style="margin-top:8px"></div>
+        <input type="hidden" name="final_total" id="rc_final">
+        <input type="hidden" name="reg_install_fee" id="rc_h_install">
+        <input type="hidden" name="reg_prorata" id="rc_h_prorata">
+        <input type="hidden" name="reg_discount" id="rc_h_disc">
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('regCalcModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-s"><i class="bi bi-check-lg"></i> Setujui &amp; Buat Tagihan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script id="customers-data" type="application/json"><%- JSON.stringify(customers).split('<').join('\\u003c') %></script>
+<script id="sessions-data" type="application/json"><%- JSON.stringify(Array.from(typeof activeSessionsMap !== 'undefined' && activeSessionsMap && activeSessionsMap.entries ? activeSessionsMap.entries() : [])).split('<').join('\\u003c') %></script>
+<script id="settings-data" type="application/json"><%- JSON.stringify(settings).split('<').join('\\u003c') %></script>
+<script id="routers-data" type="application/json"><%- JSON.stringify(routers || []).split('<').join('\\u003c') %></script>
+<script id="pay-months-data" type="application/json"><%- JSON.stringify((lang === 'en')
+  ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+  : ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']).split('<').join('\\u003c') %></script>
+<script id="pay-i18n-data" type="application/json"><%- JSON.stringify({
+  paidMonthsLabel: t('admin.customers.paid_months_label', 'Sudah lunas:'),
+  nonePaid: t('admin.customers.none_paid', 'Belum ada yang lunas'),
+  totalSelectedLabel: t('admin.customers.total_selected_label', 'Total dipilih:'),
+  monthsSuffix: t('admin.customers.months_suffix', 'bulan')
+}).split('<').join('\\u003c') %></script>
+<script>
+function openModal(id){
+  const el = document.getElementById(id);
+  if (el) el.classList.add('show');
+}
+function closeModal(id){
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('show');
+}
+
+function safeParseJSON(elementId, fallback = []) {
+  try {
+    const el = document.getElementById(elementId);
+    if (!el || !el.textContent || !el.textContent.trim()) return fallback;
+    return JSON.parse(el.textContent);
+  } catch (e) {
+    console.warn('Failed to parse JSON for ' + elementId, e);
+    return fallback;
+  }
+}
+
+const customersData = safeParseJSON('customers-data', []);
+const activeSessionsArray = safeParseJSON('sessions-data', []);
+const activeSessionsMapObj = new Map(Array.isArray(activeSessionsArray) ? activeSessionsArray : []);
+const routersData = safeParseJSON('routers-data', []);
+const appSettings = safeParseJSON('settings-data', {});
+let pickerMap, pickerMarker, activePickerType;
+let payCustomerId = null;
+let payBillingMeta = null;
+
+function formatBytesVal(b) {
+  const num = Number(b) || 0;
+  if (num <= 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(num) / Math.log(k));
+  return (num / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+}
+
+function copyToClipboard(elementId, label) {
+  const el = document.getElementById(elementId);
+  const text = el ? (el.innerText || el.textContent || '').trim() : '';
+  if (!text || text === '-') {
+    alert('Tidak ada data ' + label + ' untuk disalin.');
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    alert(' ' + label + ' berhasil disalin: ' + text);
+  }).catch(() => {
+    const input = document.createElement('textarea');
+    input.value = text;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    alert(' ' + label + ' berhasil disalin: ' + text);
+  });
+}
+
+function copyCustCode(){
+  var el = document.getElementById('v_cust_id'); if(!el) return;
+  var val = (el.textContent || '').trim();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(val).then(function(){ alert('ID Pelanggan disalin: ' + val); }).catch(function(){ prompt('Salin ID Pelanggan:', val); });
+  } else { prompt('Salin ID Pelanggan:', val); }
+}
+
+// ── Aksi cepat per-pelanggan (dropdown): salin ID, salin IP, masuk ke IP ──
+function _custSessionIp(idx) {
+  var c = (typeof customersData !== 'undefined' && customersData[idx]) ? customersData[idx] : {};
+  var username = String(c.pppoe_username || c.hotspot_username || c.name || '').trim().toLowerCase();
+  var s = (typeof activeSessionsMapObj !== 'undefined' && activeSessionsMapObj && activeSessionsMapObj.get) ? activeSessionsMapObj.get(username) : null;
+  return (s && s.ip) ? String(s.ip) : String(c.static_ip || '');
+}
+function _custToast(ok, msg) { if (window.toast) { toast(ok ? 'success' : 'warning', null, msg); } else { alert(msg); } }
+function copyCustId(idx) {
+  var c = (typeof customersData !== 'undefined' && customersData[idx]) ? customersData[idx] : {};
+  var code = c.customer_code || (c.id ? String(c.id) : '');
+  if (!code) { _custToast(false, 'ID Pelanggan tidak tersedia.'); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(function () { _custToast(true, 'ID Pelanggan disalin: ' + code); }).catch(function () { prompt('Salin ID Pelanggan:', code); });
+  } else { prompt('Salin ID Pelanggan:', code); }
+}
+function copyCustIp(idx) {
+  var ip = _custSessionIp(idx);
+  if (!ip) { _custToast(false, 'IP pelanggan tidak tersedia (offline / belum ada IP).'); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ip).then(function () { _custToast(true, 'IP pelanggan disalin: ' + ip); }).catch(function () { prompt('Salin IP Pelanggan:', ip); });
+  } else { prompt('Salin IP Pelanggan:', ip); }
+}
+function openCustIp(idx) {
+  var ip = _custSessionIp(idx);
+  if (!ip) { _custToast(false, 'IP pelanggan tidak tersedia (offline / belum ada IP).'); return; }
+  window.open('http://' + ip, '_blank', 'noopener');
+}
+
+function viewCustDetail(idx) {
+  try {
+    const c = customersData[idx];
+    if (!c) {
+      alert('Data pelanggan tidak ditemukan.');
+      return;
+    }
+
+    const username = String(c.pppoe_username || c.hotspot_username || c.name || '').trim().toLowerCase();
+    const session = activeSessionsMapObj && activeSessionsMapObj.get ? activeSessionsMapObj.get(username) : null;
+    const isOnline = !!session;
+
+    if (document.getElementById('v_cust_name')) document.getElementById('v_cust_name').textContent = c.name || '-';
+    window.__viewCustId = c.id;
+    if (document.getElementById('v_cust_id')) document.getElementById('v_cust_id').textContent = c.customer_code || c.id || '-';
+
+    if (document.getElementById('v_online_badge')) {
+      if (isOnline) {
+        document.getElementById('v_online_badge').innerHTML = `
+          <span class="badge" style="background:rgba(16,185,129,0.18);color:#10b981;border:1px solid rgba(16,185,129,0.35);font-size:12px;padding:6px 12px;font-weight:800">
+            <i class="bi bi-circle-fill" style="font-size:8px;margin-right:6px"></i>ONLINE
+          </span>
+        `;
+      } else {
+        document.getElementById('v_online_badge').innerHTML = `
+          <span class="badge" style="background:rgba(148,163,184,0.12);color:#94a3b8;border:1px solid rgba(148,163,184,0.25);font-size:12px;padding:6px 12px">
+            <i class="bi bi-circle-fill" style="font-size:8px;margin-right:6px"></i>OFFLINE
+          </span>
+        `;
+      }
+    }
+
+    if (document.getElementById('v_username')) document.getElementById('v_username').textContent = c.pppoe_username || c.hotspot_username || '-';
+    if (document.getElementById('v_password')) document.getElementById('v_password').textContent = c.pppoe_password || c.hotspot_password || '-';
+    if (document.getElementById('v_ip')) document.getElementById('v_ip').textContent = (session && session.ip) ? session.ip : (c.static_ip || '-');
+    if (document.getElementById('v_mac')) document.getElementById('v_mac').textContent = (session && session.callerId) ? session.callerId : (c.mac_address || '-');
+    
+    const routerObj = (routersData || []).find(r => Number(r.id) === Number(c.router_id));
+    if (document.getElementById('v_router_name')) document.getElementById('v_router_name').textContent = routerObj ? routerObj.name : (c.router_id ? ('Router #' + c.router_id) : '-');
+    if (document.getElementById('v_conn_type')) document.getElementById('v_conn_type').textContent = (c.connection_type || 'pppoe').toUpperCase();
+    if (document.getElementById('v_uptime')) document.getElementById('v_uptime').textContent = session ? (session.uptime || 'Active') : 'Tidak Terhubung (Offline)';
+
+    const rxBytes = session && session.bytesIn ? session.bytesIn : (c.bytes_in || 0);
+    const txBytes = session && session.bytesOut ? session.bytesOut : (c.bytes_out || 0);
+    const totalBytes = rxBytes + txBytes;
+
+    if (document.getElementById('v_rx_fmt')) document.getElementById('v_rx_fmt').textContent = formatBytesVal(rxBytes);
+    if (document.getElementById('v_rx_bytes')) document.getElementById('v_rx_bytes').textContent = Number(rxBytes).toLocaleString('id-ID') + ' Bytes';
+    if (document.getElementById('v_tx_fmt')) document.getElementById('v_tx_fmt').textContent = formatBytesVal(txBytes);
+    if (document.getElementById('v_tx_bytes')) document.getElementById('v_tx_bytes').textContent = Number(txBytes).toLocaleString('id-ID') + ' Bytes';
+    
+    const limitGB = c.fup_limit_gb || 0;
+    const useFup = c.use_fup === 1;
+    const fupText = formatBytesVal(totalBytes) + (useFup && limitGB > 0 ? ` (Limit FUP: ${limitGB} GB)` : ' (Unlimited)');
+    if (document.getElementById('v_total_fup')) document.getElementById('v_total_fup').textContent = fupText;
+
+    if (document.getElementById('v_nik')) document.getElementById('v_nik').textContent = c.nik || '-';
+    if (document.getElementById('v_phone')) document.getElementById('v_phone').textContent = c.phone || '-';
+    if (document.getElementById('v_address_area')) document.getElementById('v_address_area').textContent = (c.address || '-') + (c.area ? ` [Area: ${c.area}]` : '');
+    if (document.getElementById('v_package')) document.getElementById('v_package').textContent = c.package_name ? `${c.package_name} (Rp ${Number(c.package_price||0).toLocaleString('id-ID')})` : '-';
+    if (document.getElementById('v_expired_at')) {
+      if (c.package_billing_type === 'prepaid' || c.expired_at) {
+        const expStr = c.expired_at ? String(c.expired_at).slice(0, 10) : '-';
+        const isExp = c.expired_at ? (new Date(c.expired_at) < new Date()) : false;
+        document.getElementById('v_expired_at').innerHTML = `
+          <span class="badge ${isExp ? 'bd' : 'bs'}" style="font-weight:700;">
+            <i class="bi bi-clock-history"></i> ${expStr} ${isExp ? '(Expired / Terisolir)' : '(Aktif)'}
+          </span>
+        `;
+      } else {
+        document.getElementById('v_expired_at').textContent = 'Pascabayar (Bulanan Kalender)';
+      }
+    }
+    if (document.getElementById('v_genieacs')) document.getElementById('v_genieacs').textContent = c.genieacs_tag || '-';
+    if (document.getElementById('v_status_account')) document.getElementById('v_status_account').textContent = `Status: ${c.status || 'active'} | Auto Isolir: ${c.auto_isolate === 0 ? 'Nonaktif' : 'Aktif (Tgl ' + (c.isolate_day || '-') + ')'}`;
+
+    if (document.getElementById('v_disconnect_form')) {
+      document.getElementById('v_disconnect_form').action = '/admin/customers/' + c.id + '/disconnect';
+    }
+
+    currentDetailIdx = idx;
+    openModal('viewDetailModal');
+    fetchLiveSessions();
+  } catch (err) {
+    console.error('Error in viewCustDetail:', err);
+    alert('Terjadi kesalahan saat memuat detail pelanggan: ' + err.message);
+  }
+}
+
+let currentDetailIdx = null;
+
+async function fetchLiveSessions() {
+  try {
+    const res = await fetch('/admin/api/customers/live-sessions');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.ok || !data.sessions) return;
+
+    for (const [uname, session] of Object.entries(data.sessions)) {
+      activeSessionsMapObj.set(uname.toLowerCase(), session);
+    }
+
+    document.querySelectorAll('.cust-conn-cell').forEach(cell => {
+      const username = cell.dataset.username;
+      if (!username) return;
+      const s = data.sessions[username];
+      const rxEl = cell.querySelector('.conn-rx');
+      const txEl = cell.querySelector('.conn-tx');
+      const uptimeEl = cell.querySelector('.conn-uptime');
+      const ipEl = cell.querySelector('.conn-ip');
+
+      if (s) {
+        if (rxEl) rxEl.textContent = formatBytesVal(s.bytesIn);
+        if (txEl) txEl.textContent = formatBytesVal(s.bytesOut);
+        if (uptimeEl) uptimeEl.textContent = s.uptime || '-';
+        if (ipEl) ipEl.textContent = s.ip || '-';
+      }
+    });
+
+    if (currentDetailIdx !== null) {
+      updateDetailModalLive(currentDetailIdx);
+    }
+  } catch (err) {
+    console.warn('Live sessions fetch error:', err);
+  }
+}
+
+function updateDetailModalLive(idx) {
+  const c = customersData[idx];
+  if (!c) return;
+  const username = String(c.pppoe_username || c.hotspot_username || c.name || '').trim().toLowerCase();
+  const session = activeSessionsMapObj.get(username);
+  if (session) {
+    const rxBytes = session.bytesIn || 0;
+    const txBytes = session.bytesOut || 0;
+    const totalBytes = rxBytes + txBytes;
+
+    if (document.getElementById('v_rx_fmt')) document.getElementById('v_rx_fmt').textContent = formatBytesVal(rxBytes);
+    if (document.getElementById('v_rx_bytes')) document.getElementById('v_rx_bytes').textContent = Number(rxBytes).toLocaleString('id-ID') + ' Bytes';
+    if (document.getElementById('v_tx_fmt')) document.getElementById('v_tx_fmt').textContent = formatBytesVal(txBytes);
+    if (document.getElementById('v_tx_bytes')) document.getElementById('v_tx_bytes').textContent = Number(txBytes).toLocaleString('id-ID') + ' Bytes';
+    if (document.getElementById('v_uptime')) document.getElementById('v_uptime').textContent = session.uptime || 'Active';
+    if (document.getElementById('v_ip')) document.getElementById('v_ip').textContent = session.ip || (c.static_ip || '-');
+    if (document.getElementById('v_mac')) document.getElementById('v_mac').textContent = session.callerId || (c.mac_address || '-');
+
+    const limitGB = c.fup_limit_gb || 0;
+    const useFup = c.use_fup === 1;
+    const fupText = formatBytesVal(totalBytes) + (useFup && limitGB > 0 ? ` (Limit FUP: ${limitGB} GB)` : ' (Unlimited)');
+    if (document.getElementById('v_total_fup')) document.getElementById('v_total_fup').textContent = fupText;
+  }
+}
+
+setInterval(fetchLiveSessions, 5000);
+
+function filterByStatus(statusVal) {
+  const url = new URL(window.location.href);
+  if (statusVal) {
+    url.searchParams.set('status', statusVal);
+  } else {
+    url.searchParams.delete('status');
+  }
+  window.location.href = url.toString();
+}
+
+window.filterByStatus = filterByStatus;
+window.viewCustDetail = viewCustDetail;
+window.copyToClipboard = copyToClipboard;
+
+const PAY_MNS = JSON.parse(document.getElementById('pay-months-data').textContent);
+const PAY_I18N = JSON.parse(document.getElementById('pay-i18n-data').textContent);
+
+const officeCoords = {
+  lat: parseFloat(appSettings.office_lat) || -6.200000,
+  lng: parseFloat(appSettings.office_lng) || 106.816666
+};
+
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+
+function openPicker(type) {
+  activePickerType = type;
+  openModal('mapPickerModal');
+  
+  let currentLat = document.getElementById(type === 'add' ? 'add_lat' : 'e_lat').value;
+  let currentLng = document.getElementById(type === 'add' ? 'add_lng' : 'e_lng').value;
+  
+  let startLat = parseFloat(currentLat) || officeCoords.lat;
+  let startLng = parseFloat(currentLng) || officeCoords.lng;
+
+  setTimeout(() => {
+    if (!pickerMap) {
+      pickerMap = L.map('picker-map').setView([startLat, startLng], 16);
+      L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+      }).addTo(pickerMap);
+      
+      const customIcon = L.divIcon({
+        html: '<i class="bi bi-geo-alt-fill picker-icon"></i>',
+        className: 'custom-div-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+      });
+
+      pickerMarker = L.marker([startLat, startLng], { 
+        draggable: true,
+        icon: customIcon
+      }).addTo(pickerMap);
+      
+      pickerMarker.on('dragend', function() {
+        const pos = pickerMarker.getLatLng();
+        updateInputs(pos.lat, pos.lng);
+      });
+
+      pickerMap.on('click', function(e) {
+        pickerMarker.setLatLng(e.latlng);
+        updateInputs(e.latlng.lat, e.latlng.lng);
+      });
+    } else {
+      pickerMap.setView([startLat, startLng], 16);
+      pickerMarker.setLatLng([startLat, startLng]);
+      pickerMap.invalidateSize();
+    }
+  }, 300);
+}
+
+function updateInputs(lat, lng) {
+  const prefix = activePickerType === 'add' ? 'add_' : 'e_';
+  document.getElementById(prefix + 'lat').value = lat.toFixed(8);
+  document.getElementById(prefix + 'lng').value = lng.toFixed(8);
+}
+
+function handleAuthModeChange(type, val) {
+  const isRadius = String(val) === '1';
+  if (type === 'add') {
+    const radioMikrotik = document.querySelector('#addModal input[name="pppoe_input_mode"][value="mikrotik"]');
+    const radioManual = document.querySelector('#addModal input[name="pppoe_input_mode"][value="manual"]');
+    if (isRadius) {
+      if (radioManual) radioManual.checked = true;
+    } else {
+      if (radioMikrotik) radioMikrotik.checked = true;
+    }
+    togglePppoeInputMode('add');
+  }
+}
+
+function togglePppoeInputMode(type) {
+  const mode = document.querySelector(`input[name="pppoe_input_mode"]:checked`)?.value || 'mikrotik';
+  const mikrotikInput = document.getElementById(type + '_pppoe_mikrotik_input');
+  const manualInput = document.getElementById(type + '_pppoe_manual_input');
+  const usernameField = document.querySelector(`input[name="pppoe_username"]`);
+  const manualUsernameField = document.getElementById(type + '_pppoe_username_manual');
+  
+  if (mode === 'manual') {
+    if (mikrotikInput) mikrotikInput.style.display = 'none';
+    if (manualInput) manualInput.style.display = 'block';
+    if (usernameField) usernameField.removeAttribute('name');
+    if (manualUsernameField) manualUsernameField.setAttribute('name', 'pppoe_username');
+  } else {
+    if (mikrotikInput) mikrotikInput.style.display = 'block';
+    if (manualInput) manualInput.style.display = 'none';
+    if (usernameField) usernameField.setAttribute('name', 'pppoe_username');
+    if (manualUsernameField) manualUsernameField.removeAttribute('name');
+  }
+}
+
+function toggleConnectionFields(type) {
+  const connType = document.getElementById(type === 'add' ? 'add_connection_type' : 'e_connection_type').value;
+  const pppoeField = document.getElementById(type === 'add' ? 'add_pppoe_field' : 'e_pppoe_field');
+  const staticField = document.getElementById(type === 'add' ? 'add_static_field' : 'e_static_field');
+  const hotspotField = document.getElementById(type === 'add' ? 'add_hotspot_field' : 'e_hotspot_field');
+  const macField = document.getElementById(type === 'add' ? 'add_mac_field' : 'e_mac_field');
+  const radiusFg = document.getElementById(type === 'add' ? 'add_radius_select_fg' : 'e_radius_select_fg');
+
+  if (radiusFg) radiusFg.style.display = connType === 'pppoe' ? 'block' : 'none';
+
+  if (connType === 'pppoe') {
+    pppoeField.style.display = 'block';
+    staticField.style.display = 'none';
+    hotspotField.style.display = 'none';
+    macField.style.display = 'none';
+  } else if (connType === 'static') {
+    pppoeField.style.display = 'none';
+    staticField.style.display = 'block';
+    hotspotField.style.display = 'none';
+    macField.style.display = 'block';
+  } else {
+    pppoeField.style.display = 'none';
+    staticField.style.display = 'none';
+    hotspotField.style.display = 'block';
+    macField.style.display = 'block';
+  }
+
+  // Toggle required attribute on PPPoE fields to prevent HTML5 validation blocking
+  // when connection type is hotspot or static (hidden required fields block form submit)
+  const pppoePasswordEl = document.getElementById(type === 'add' ? 'add_pppoe_password' : 'e_pppoe_password');
+  const pppoeUsernameEl = type === 'add' ? null : document.getElementById('e_pppoe');
+  if (pppoePasswordEl) {
+    if (connType === 'pppoe') {
+      pppoePasswordEl.setAttribute('required', '');
+    } else {
+      pppoePasswordEl.removeAttribute('required');
+      pppoePasswordEl.value = '';
+    }
+  }
+  if (pppoeUsernameEl) {
+    if (connType === 'pppoe') {
+      pppoeUsernameEl.setAttribute('required', '');
+    } else {
+      pppoeUsernameEl.removeAttribute('required');
+    }
+  }
+
+  if (connType === 'hotspot') {
+    const routerId = (type === 'add' ? document.getElementById('add_router_select') : document.getElementById('e_router_id'))?.value || '';
+    loadHotspotProfiles(type, routerId);
+  }
+}
+
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+let currentEditCustomerId = '';
+function editCust(idx) {
+  const c = customersData[idx];
+  if (!c) return;
+  currentEditCustomerId = c.id || '';
+  document.getElementById('editForm').action='/admin/customers/'+c.id+'/update';
+  document.getElementById('e_name').value=c.name||'';
+  if (document.getElementById('e_nik')) document.getElementById('e_nik').value=c.nik||'';
+  document.getElementById('e_phone').value=c.phone||'';
+  document.getElementById('e_email').value=c.email||'';
+  document.getElementById('e_address').value=c.address||'';
+  document.getElementById('e_package').value=c.package_id||'';
+  document.getElementById('e_router_id').value=c.router_id||'';
+  document.getElementById('e_connection_type').value=c.connection_type||'pppoe';
+  document.getElementById('e_pppoe').value=c.pppoe_username||'';
+  if (document.getElementById('e_pppoe_password')) document.getElementById('e_pppoe_password').value=c.pppoe_password||'';
+  if (document.getElementById('e_is_radius')) document.getElementById('e_is_radius').value=(c.is_radius !== 0 ? '1' : '0');
+  document.getElementById('e_static_ip').value=c.static_ip||'';
+  document.getElementById('e_mac_address').value=c.mac_address||'';
+  document.getElementById('e_hotspot_username').value=c.hotspot_username||'';
+  document.getElementById('e_hotspot_password').value=c.hotspot_password||'';
+  document.getElementById('e_hotspot_profile').value=c.hotspot_profile||'';
+  document.getElementById('e_area').value=c.area||'';
+  document.getElementById('e_tag').value=c.genieacs_tag||'';
+  document.getElementById('e_collector_id').value=c.collector_id||'';
+  document.getElementById('e_olt_id').value=c.olt_id||'';
+  document.getElementById('e_odp_id').value=c.odp_id||'';
+  loadOdpPorts('edit').then(function(){
+    var ps=document.getElementById('e_pon_port');
+    var v=c.pon_port||'';
+    if(v){ var found=Array.prototype.some.call(ps.options,function(o){return o.value===String(v);}); if(!found){ var o=document.createElement('option'); o.value=v; o.textContent=v+' (lama)'; ps.appendChild(o);} ps.value=String(v); }
+  });
+  document.getElementById('e_lat').value=c.lat||'';
+  document.getElementById('e_lng').value=c.lng||'';
+  document.getElementById('e_isolir_profile').value=c.isolir_profile||'isolir';
+  document.getElementById('e_status').value=c.status||'active';
+  document.getElementById('e_install').value=c.install_date||'';
+  if (document.getElementById('e_expired_at')) {
+    document.getElementById('e_expired_at').value = c.expired_at ? String(c.expired_at).slice(0, 10) : '';
+  }
+  document.getElementById('e_notes').value=c.notes||'';
+  document.getElementById('e_auto_isolate').value=(c.auto_isolate !== undefined ? c.auto_isolate : 1);
+  document.getElementById('e_isolate_day').value=(c.isolate_day || 10);
+  toggleConnectionFields('edit');
+  openModal('editModal');
+  loadRouterLists('edit', c.router_id || '', c.id || '');
+}
+
+function rcFmt(n){ return 'Rp ' + Math.round(Number(n)||0).toLocaleString('id-ID'); }
+function rcCompute(){
+  var fee = parseFloat(document.getElementById('rc_fee').value)||0;
+  var install = parseFloat(document.getElementById('rc_install').value)||0;
+  var disc = parseFloat(document.getElementById('rc_discount').value)||0;
+  var s = document.getElementById('rc_start').value;
+  var d = document.getElementById('rc_due').value;
+  var hint = document.getElementById('rc_hint');
+  if(!s || !d){ hint.textContent='Isi tanggal mulai & jatuh tempo.'; return; }
+  var sd = new Date(s), dd = new Date(d);
+  if(dd <= sd){ hint.textContent='Jatuh tempo harus setelah tanggal mulai.'; return; }
+  var diffDays = Math.max(1, Math.round((dd - sd)/86400000));
+  var daysInMonth = new Date(dd.getFullYear(), dd.getMonth()+1, 0).getDate();
+  var perDay = fee / daysInMonth;
+  var prorata = Math.round(diffDays * perDay);
+  var gross = prorata + install;
+  var dcap = Math.min(disc, gross);
+  var total = Math.max(0, gross - dcap);
+  document.getElementById('rc_days').value = diffDays + ' hari';
+  document.getElementById('rc_prorata').textContent = rcFmt(prorata);
+  document.getElementById('rc_install_out').textContent = rcFmt(install);
+  document.getElementById('rc_disc_out').textContent = '- ' + rcFmt(dcap);
+  document.getElementById('rc_total').textContent = rcFmt(total);
+  hint.textContent = 'Rumus: (' + rcFmt(fee) + ' / ' + daysInMonth + ' hari) × ' + diffDays + ' hari = ' + rcFmt(prorata);
+  document.getElementById('rc_final').value = total;
+  document.getElementById('rc_h_prorata').value = prorata;
+  document.getElementById('rc_h_install').value = install;
+  document.getElementById('rc_h_disc').value = dcap;
+}
+function openRegCalc(idx){
+  var c = customersData[idx]; if(!c) return;
+  var price = Number(c.package_price || 0) || 0;
+  document.getElementById('rc_fee').value = price;
+  document.getElementById('rc_install').value = Number(c.reg_install_fee||0);
+  document.getElementById('rc_discount').value = Number(c.reg_discount||0);
+  document.getElementById('rc_start').value = String(c.created_at||'').slice(0,10) || new Date().toISOString().slice(0,10);
+  document.getElementById('rc_due').value = c.reg_due_date || '';
+  document.getElementById('regCalcForm').action = '/admin/registrations/' + c.id + '/approve';
+  document.getElementById('regCalcWho').innerHTML = 'Pelanggan: <b>' + (c.name||'') + '</b> &bull; ' + (c.phone||'-') + (c.reg_voucher_code? (' &bull; Voucher <b>'+c.reg_voucher_code+'</b>'):'');
+  rcCompute();
+  openModal('regCalcModal');
+}
+['rc_fee','rc_install','rc_discount','rc_start','rc_due'].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('input', rcCompute); });
+
+function openGenInvoice(idx) {
+  const c = customersData[idx];
+  if (!c) return;
+  document.getElementById('genInvoiceForm').action = '/admin/customers/' + c.id + '/billing/generate';
+  document.getElementById('genInvoiceCustomer').value = (c.name || '-') + (c.phone ? (' (' + c.phone + ')') : '');
+  openModal('genInvoiceModal');
+}
+
+function openPayInvoice(idx) {
+  const c = customersData[idx];
+  if (!c) return;
+  document.getElementById('payInvoiceForm').action = '/admin/customers/' + c.id + '/billing/pay';
+  document.getElementById('payInvoiceCustomer').value = (c.name || '-') + (c.phone ? (' (' + c.phone + ')') : '');
+  payCustomerId = c.id;
+  payBillingMeta = { packagePrice: 0, invoices: {} };
+  const currentMonth = new Date().getMonth() + 1;
+  Array.from(document.querySelectorAll('#payInvoiceModal .pay-month')).forEach(cb => { cb.checked = parseInt(cb.value) === currentMonth; });
+  openModal('payInvoiceModal');
+  loadBillingYear();
+}
+
+function toRupiah(n) {
+  const v = Number(n) || 0;
+  return 'Rp ' + v.toLocaleString('id-ID');
+}
+
+function monthsRangesText(months) {
+  const list = (Array.isArray(months) ? months : []).map(m => parseInt(m)).filter(m => m >= 1 && m <= 12).sort((a, b) => a - b);
+  if (list.length === 0) return '';
+  const ranges = [];
+  let s = list[0];
+  let p = list[0];
+  for (let i = 1; i < list.length; i++) {
+    const m = list[i];
+    if (m === p + 1) { p = m; continue; }
+    ranges.push([s, p]);
+    s = m; p = m;
+  }
+  ranges.push([s, p]);
+  return ranges.map(([a, b]) => (a === b ? PAY_MNS[a - 1] : (PAY_MNS[a - 1] + '–' + PAY_MNS[b - 1]))).join(', ');
+}
+
+function updatePayTotal() {
+  const totalEl = document.getElementById('payInvoiceTotal');
+  const btn = document.querySelector('#payInvoiceForm button[type="submit"]');
+  const checks = Array.from(document.querySelectorAll('#payInvoiceModal .pay-month'));
+  const selected = checks.filter(cb => cb.checked && !cb.disabled).map(cb => parseInt(cb.value));
+  const meta = payBillingMeta || { packagePrice: 0, invoices: {} };
+  let total = 0;
+  for (const m of selected) {
+    const inv = meta.invoices && meta.invoices[m];
+    const amount = inv && typeof inv.amount !== 'undefined' ? Number(inv.amount) : Number(meta.packagePrice || 0);
+    total += Number.isFinite(amount) ? amount : 0;
+  }
+  const txt = `${PAY_I18N.totalSelectedLabel} ${toRupiah(total)} (${selected.length} ${PAY_I18N.monthsSuffix})`;
+  if (totalEl) totalEl.textContent = txt;
+  if (btn) btn.disabled = selected.length === 0;
+}
+
+async function loadBillingYear() {
+  if (!payCustomerId) return;
+  const yearEl = document.getElementById('payInvoiceYear');
+  const year = yearEl ? yearEl.value : new Date().getFullYear();
+  const paidSummaryEl = document.getElementById('payInvoicePaidSummary');
+  const checks = Array.from(document.querySelectorAll('#payInvoiceModal .pay-month'));
+  checks.forEach(cb => {
+    cb.disabled = false;
+    const label = cb.closest('label');
+    if (label) label.style.opacity = '';
+    const badge = label ? label.querySelector('.pay-month-badge') : null;
+    if (badge) badge.style.display = 'none';
+  });
+  try {
+    const r = await fetch('/admin/api/customers/' + payCustomerId + '/billing-year?year=' + encodeURIComponent(year));
+    const data = await r.json();
+    const invoices = (data && Array.isArray(data.invoices)) ? data.invoices : [];
+    const invMap = {};
+    for (const it of invoices) {
+      const m = parseInt(it.month);
+      if (m >= 1 && m <= 12) invMap[m] = { status: it.status, amount: it.amount };
+    }
+    payBillingMeta = { packagePrice: Number(data && data.packagePrice) || (payBillingMeta ? payBillingMeta.packagePrice : 0), invoices: invMap };
+    const paidMonths = Object.keys(invMap).map(n => parseInt(n)).filter(m => invMap[m] && invMap[m].status === 'paid').sort((a, b) => a - b);
+    const ranges = monthsRangesText(paidMonths);
+    if (paidSummaryEl) {
+      paidSummaryEl.textContent = paidMonths.length ? (PAY_I18N.paidMonthsLabel + ' ' + ranges) : PAY_I18N.nonePaid;
+    }
+    checks.forEach(cb => {
+      const m = parseInt(cb.value);
+      const inv = invMap[m];
+      if (inv && inv.status === 'paid') {
+        cb.checked = true;
+        cb.disabled = true;
+        const label = cb.closest('label');
+        if (label) label.style.opacity = '0.7';
+        const badge = label ? label.querySelector('.pay-month-badge') : null;
+        if (badge) badge.style.display = 'inline-block';
+      }
+    });
+  } catch (e) {}
+  updatePayTotal();
+}
+
+document.getElementById('payInvoiceYear')?.addEventListener('change', () => loadBillingYear());
+document.getElementById('payInvoiceModal')?.addEventListener('change', (e) => {
+  if (e.target && e.target.classList && e.target.classList.contains('pay-month')) updatePayTotal();
+});
+
+function buildPppoeList(datalistEl, users) {
+  if (!datalistEl) return;
+  datalistEl.innerHTML = '';
+  for (const u of users) {
+    if (!u || !u.name) continue;
+    datalistEl.insertAdjacentHTML('beforeend', `<option value="${String(u.name).replace(/"/g, '&quot;')}"></option>`);
+  }
+}
+
+async function loadPppoeAdd(routerId = '') {
+  try {
+    const url = routerId
+      ? `/admin/api/mikrotik/users?routerId=${encodeURIComponent(routerId)}&onlyUnused=1`
+      : '/admin/api/mikrotik/users?onlyUnused=1';
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const users = await res.json();
+    buildPppoeList(document.getElementById('add_pppoe_list'), Array.isArray(users) ? users : []);
+    const hint = document.getElementById('add_pppoe_hint');
+    if (hint) hint.innerText = Array.isArray(users) && users.length ? `Tersedia ${users.length} user PPPoE (yang belum dipakai).` : 'Tidak ada user PPPoE yang tersedia.';
+  } catch (e) {
+    console.error('Failed to load MikroTik users', e);
+  }
+}
+
+async function loadPppoeEdit(routerId = '', excludeCustomerId = '') {
+  try {
+    const qs = new URLSearchParams();
+    if (routerId) qs.set('routerId', String(routerId));
+    qs.set('onlyUnused', '1');
+    if (excludeCustomerId) qs.set('excludeCustomerId', String(excludeCustomerId));
+    const url = `/admin/api/mikrotik/users?${qs.toString()}`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const users = await res.json();
+    buildPppoeList(document.getElementById('e_pppoe_list'), Array.isArray(users) ? users : []);
+    const hint = document.getElementById('e_pppoe_hint');
+    if (hint) hint.innerText = Array.isArray(users) && users.length ? `Tersedia ${users.length} user PPPoE (yang belum dipakai).` : 'Tidak ada user PPPoE yang tersedia.';
+  } catch (e) {
+    console.error('Failed to load MikroTik users', e);
+  }
+}
+
+function buildHotspotProfileList(datalistEl, profiles) {
+  if (!datalistEl) return;
+  datalistEl.innerHTML = '';
+  for (const p of profiles) {
+    const name = p && p.name ? String(p.name).trim() : '';
+    if (!name) continue;
+    datalistEl.insertAdjacentHTML('beforeend', `<option value="${name.replace(/"/g, '&quot;')}"></option>`);
+  }
+}
+
+async function loadHotspotProfiles(type, routerId = '') {
+  try {
+    const url = routerId
+      ? `/admin/api/mikrotik/hotspot-user-profiles?routerId=${encodeURIComponent(routerId)}`
+      : '/admin/api/mikrotik/hotspot-user-profiles';
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const rows = await res.json();
+    const list = Array.isArray(rows) ? rows : [];
+    if (type === 'add') {
+      buildHotspotProfileList(document.getElementById('add_hotspot_profile_list'), list);
+      const hint = document.getElementById('add_hotspot_profile_hint');
+      if (hint) hint.innerText = list.length ? `Tersedia ${list.length} profile hotspot.` : 'Tidak ada profile hotspot.';
+    } else {
+      buildHotspotProfileList(document.getElementById('e_hotspot_profile_list'), list);
+      const hint = document.getElementById('e_hotspot_profile_hint');
+      if (hint) hint.innerText = list.length ? `Tersedia ${list.length} profile hotspot.` : 'Tidak ada profile hotspot.';
+    }
+  } catch (e) {
+    console.error('Failed to load MikroTik hotspot user profiles', e);
+  }
+}
+
+function loadRouterLists(type, routerId = '', excludeCustomerId = '') {
+  if (type === 'add') {
+    loadPppoeAdd(routerId);
+    loadMikrotikProfiles(routerId);
+    loadHotspotProfiles('add', routerId);
+  } else {
+    loadPppoeEdit(routerId, excludeCustomerId || currentEditCustomerId || '');
+    loadMikrotikProfiles(routerId);
+    loadHotspotProfiles('edit', routerId);
+  }
+}
+
+async function loadMikrotikProfiles(routerId = '') {
+  try {
+    const url = routerId ? `/admin/api/mikrotik/profiles/${routerId}` : '/admin/api/mikrotik/profiles';
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const profiles = await res.json();
+    const selAdd = document.getElementById('add_isolir_select');
+    const selEdit = document.getElementById('e_isolir_profile');
+    
+    const defaultOpt = '<option value="isolir">isolir</option>';
+    selAdd.innerHTML = defaultOpt;
+    selEdit.innerHTML = defaultOpt;
+
+    profiles.forEach(p => {
+      if(p.name === 'isolir') return;
+      const opt = `<option value="${p.name}">${p.name}</option>`;
+      selAdd.innerHTML += opt;
+      selEdit.innerHTML += opt;
+    });
+  } catch (e) {
+    console.error('Failed to load MikroTik profiles', e);
+  }
+}
+loadRouterLists('add');
+loadRouterLists('edit');
+
+function syncCust(btn) {
+  var id = btn.getAttribute('data-id');
+  if (!id) return;
+  var old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+  fetch('/admin/customers/' + id + '/sync-mikrotik', { method: 'POST' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { alert(d.message || (d.ok ? 'Sinkron berhasil' : 'Sinkron gagal')); })
+    .catch(function (e) { alert('Gagal sync: ' + e.message); })
+    .then(function () { btn.disabled = false; btn.innerHTML = old; });
+}
+function syncCustFromModal() {
+  var f = document.getElementById('editForm');
+  if (!f) return;
+  var m = /\/customers\/(\d+)\//.exec(f.action || '');
+  if (!m) { alert('ID pelanggan tidak ditemukan'); return; }
+  fetch('/admin/customers/' + m[1] + '/sync-mikrotik', { method: 'POST' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { alert(d.message || (d.ok ? 'Sinkron berhasil' : 'Sinkron gagal')); })
+    .catch(function (e) { alert('Gagal sync: ' + e.message); });
+}
+function syncAllCust() {
+  if (!confirm('Terapkan perubahan ke SEMUA pelanggan sekarang?\n\n• Mode MikroTik: push secret/profil ke router.\n• Mode RADIUS: kick sesi agar redial & muat perubahan.\n\nProses berjalan di latar belakang.')) return;
+  fetch('/admin/customers/sync-all-mikrotik', { method: 'POST' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { alert(d.message || 'Dimulai'); })
+    .catch(function (e) { alert('Gagal: ' + e.message); });
+}
+
+function loadOdpPorts(scope){
+  var isEdit = scope === 'edit';
+  var odpSel = document.getElementById(isEdit ? 'e_odp_id' : 'add_odp_id');
+  var portSel = document.getElementById(isEdit ? 'e_pon_port' : 'add_pon_port');
+  if(!odpSel || !portSel) return Promise.resolve();
+  var current = portSel.value;
+  var odpId = odpSel.value;
+  portSel.innerHTML = '<option value=""><%= t('admin.cust.opt_no_port','-- Tanpa Port --') %></option>';
+  if(!odpId) return Promise.resolve();
+  return fetch('/admin/api/odps/' + encodeURIComponent(odpId) + '/ports', { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(u){
+      var cap = Number(u.capacity || 0);
+      var used = {};
+      (u.usedPorts || []).forEach(function(p){ used[String(p)] = true; });
+      for(var i=1;i<=cap;i++){
+        var opt=document.createElement('option');
+        opt.value=String(i);
+        var isUsed = !!used[String(i)];
+        opt.textContent = 'Port ' + i + (isUsed ? ' (terpakai)' : '');
+        if(isUsed && String(i)!==String(current)) opt.disabled = true;
+        portSel.appendChild(opt);
+      }
+      if(current) portSel.value = current;
+    })
+    .catch(function(){});
+}
+
+// ─── BULK DELETE CUSTOMERS ──────────────────────────────────────────────
+function getSelectedCustomers() {
+  return Array.from(document.querySelectorAll('.cust_sel:checked')).map(cb => ({ id: cb.value, name: cb.dataset.name || '' }));
+}
+function updateBulkCustUi() {
+  const selected = getSelectedCustomers();
+  const badge = document.getElementById('bulkCustCount');
+  const btn = document.getElementById('bulkCustDeleteBtn');
+  if (badge) {
+    if (selected.length > 0) { badge.style.display = 'inline-block'; badge.textContent = selected.length + ' <%= t("admin.cust.bulk_selected","dipilih") %>'; }
+    else badge.style.display = 'none';
+  }
+  if (btn) btn.style.display = selected.length > 0 ? 'inline-flex' : 'none';
+  const all = document.getElementById('cust_all');
+  if (all) {
+    const boxes = document.querySelectorAll('.cust_sel');
+    all.checked = boxes.length > 0 && selected.length === boxes.length;
+    all.indeterminate = selected.length > 0 && selected.length < boxes.length;
+  }
+}
+document.getElementById('cust_all')?.addEventListener('change', function (e) {
+  document.querySelectorAll('.cust_sel').forEach(cb => { cb.checked = e.target.checked; });
+  updateBulkCustUi();
+});
+document.addEventListener('change', function (e) {
+  if (e.target && e.target.classList && e.target.classList.contains('cust_sel')) updateBulkCustUi();
+});
+document.getElementById('bulkCustDeleteBtn')?.addEventListener('click', function () {
+  const selected = getSelectedCustomers();
+  if (selected.length === 0) return alert('<%= t("admin.cust.bulk_pick_one","Pilih minimal 1 pelanggan untuk dihapus.") %>');
+  const confirmMsg = '<%= t("admin.cust.bulk_confirm","Yakin ingin menghapus") %> ' + selected.length + ' <%= t("admin.cust.bulk_confirm2","data pelanggan terpilih?") %>\n\n<%= t("admin.cust.bulk_confirm3","CATATAN: Data user / secret PPPoE di MikroTik TIDAK akan dihapus (tetap aman).") %>';
+  if (!confirm(confirmMsg)) return;
+  const form = document.getElementById('bulkDeleteCustForm');
+  if (!form) return;
+  form.innerHTML = '';
+  selected.forEach(cust => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'customer_ids';
+    input.value = cust.id;
+    form.appendChild(input);
+  });
+  form.submit();
+});
+
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),4000);
+</script>
+</body>
+</html>

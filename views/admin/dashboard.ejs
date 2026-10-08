@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    /* ── ONU STATUS DOT ── */
+    .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+    .dot-on{background:var(--success);box-shadow:0 0 6px var(--success)}
+    .dot-off{background:var(--danger)}
+
+    /* ── PULSE ANIMATION (online) ── */
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .pulse{animation:pulse 2s infinite}
+
+    /* ── MONITORING SECTION ── */
+    #monitoring-section{display:none}
+    #dashboard-section{display:block}
+
+    /* ── NAV TABS ── */
+    .tab-bar{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:10px;margin-bottom:20px;width:fit-content}
+    .tab-btn{padding:8px 20px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .2s}
+    .tab-btn.active{background:var(--bg2);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+    .tab-btn i{margin-right:6px}
+
+    /* ── DEVICE STATUS BADGE ── */
+    .ds-on{background:rgba(63,185,80,.15);color:#3fb950;border:1px solid rgba(63,185,80,.3)}
+    .ds-off{background:rgba(248,81,73,.15);color:#f85149;border:1px solid rgba(248,81,73,.3)}
+
+    /* ── LIVE INDICATOR ── */
+    .live-dot{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;animation:pulse 1.5s infinite}
+    .realtime-bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+
+    /* ── CHART WRAPPER ── */
+    #donut-wrap{position:relative;width:160px;height:160px;margin:0 auto}
+    .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .donut-num{font-size:28px;font-weight:700;line-height:1}
+    .donut-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+    .dash-sec-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 0 10px;display:flex;align-items:center;gap:6px}
+    .dash-sec-title i{color:var(--primary)}
+    .dash-2col{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:18px}
+    @media(max-width:900px){.dash-2col{grid-template-columns:1fr}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: activePage || 'dashboard', company }) %>
+
+<div class="mw">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-speedometer2"></i>
+      <span id="page-title"><%= t('admin.nav.dashboard', 'Dashboard') %></span>
+    </div>
+    <div class="tb-right">
+      <div class="realtime-bar"><span class="live-dot"></span> <%= t('admin.dashboard.live_update', 'Live Update') %></div>
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i> 
+        <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
+      </span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <!-- TAB NAVIGATION -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-dash" onclick="showTab('dashboard')">
+        <i class="bi bi-speedometer2"></i><%= t('admin.nav.dashboard', 'Dashboard') %>
+      </button>
+      <button class="tab-btn" id="tab-mon" onclick="showTab('monitoring')">
+        <i class="bi bi-router"></i><%= t('admin.dashboard.monitoring_onu', 'Monitoring ONU') %>
+      </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- DASHBOARD SECTION                                       -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="dashboard-section">
+
+      <!-- RINGKASAN PELANGGAN -->
+      <div class="dash-sec-title"><i class="bi bi-people-fill"></i> <%= t('admin.dashboard.customer_summary','Ringkasan Pelanggan') %></div>
+      <div class="stat-grid">
+        <div class="sc p" style="cursor:pointer" onclick="location.href='/admin/customers'">
+          <i class="bi bi-people-fill sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.total_customers','Total Pelanggan') %></div>
+          <div class="sc-val"><%= custStats ? custStats.total : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.registered','Terdaftar') %></div>
+        </div>
+        <div class="sc s" style="cursor:pointer" onclick="location.href='/admin/customers?status=active'">
+          <i class="bi bi-check-circle-fill sc-icon"></i>
+          <div class="sc-label"><%= t('admin.customers.filter.active','Aktif') %></div>
+          <div class="sc-val"><%= custStats ? custStats.active : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.service_running','Layanan berjalan') %></div>
+        </div>
+        <div class="sc w" style="cursor:pointer" onclick="location.href='/admin/customers?status=suspended'">
+          <i class="bi bi-slash-circle-fill sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.isolated','Isolir / Suspend') %></div>
+          <div class="sc-val"><%= custStats ? (custStats.suspended + custStats.ditangguhkan) : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.needs_followup','Perlu tindak lanjut') %></div>
+        </div>
+        <div class="sc d" style="cursor:pointer" onclick="location.href='/admin/customers?status=inactive'">
+          <i class="bi bi-person-dash-fill sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.inactive','Nonaktif / Pendaftar') %></div>
+          <div class="sc-val"><%= custStats ? custStats.inactive : 0 %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.not_active_yet','Belum aktif') %></div>
+        </div>
+      </div>
+
+      <!-- RINGKASAN BILLING -->
+      <div class="dash-sec-title"><i class="bi bi-receipt"></i> <%= t('admin.dashboard.billing_summary','Ringkasan Billing') %></div>
+      <% if (typeof billing !== 'undefined' && billing) { %>
+      <div class="stat-grid">
+        <div class="sc s" style="cursor:pointer" onclick="location.href='/admin/billing'">
+          <i class="bi bi-cash-stack sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.revenue_month','Pendapatan Bulan Ini') %></div>
+          <div class="sc-val" style="font-size:20px">Rp <%= billing.thisMonth.toLocaleString('id-ID') %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.collected','Sudah terkumpul') %></div>
+        </div>
+        <div class="sc i" style="cursor:pointer" onclick="location.href='/admin/billing'">
+          <i class="bi bi-graph-up-arrow sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.revenue_today','Pendapatan Hari Ini') %></div>
+          <div class="sc-val" style="font-size:20px">Rp <%= ((typeof todayRevenue!=='undefined' && todayRevenue && todayRevenue.total) || 0).toLocaleString('id-ID') %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.transactions','Transaksi') %>: <%= (typeof todayRevenue!=='undefined' && todayRevenue && todayRevenue.count) || 0 %></div>
+        </div>
+        <div class="sc d" style="cursor:pointer" onclick="location.href='/admin/billing?status=unpaid'">
+          <i class="bi bi-hourglass-split sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.unpaid_invoices','Tagihan Belum Bayar') %></div>
+          <div class="sc-val"><%= billing.unpaidCount %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.awaiting_payment','Menunggu pembayaran') %></div>
+        </div>
+        <div class="sc w" style="cursor:pointer" onclick="location.href='/admin/reports'">
+          <i class="bi bi-wallet2 sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.total_receivable','Total Piutang') %></div>
+          <div class="sc-val" style="font-size:20px">Rp <%= billing.pendingAmount.toLocaleString('id-ID') %></div>
+          <div class="sc-sub"><%= t('admin.dashboard.not_collected','Belum tertagih') %></div>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- GRAFIK PENDAPATAN + AKSI CEPAT -->
+      <div class="dash-2col">
+        <div class="card" style="margin:0">
+          <div class="card-hd"><h6><i class="bi bi-bar-chart-line"></i> <%= t('admin.dashboard.revenue_chart','Pendapatan per Bulan') %> <span style="color:var(--muted);font-weight:500"><%= (typeof chartYear!=='undefined' ? chartYear : new Date().getFullYear()) %></span></h6></div>
+          <div class="card-bd" style="height:260px"><canvas id="revenueChart"></canvas></div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="card-hd"><h6><i class="bi bi-lightning-charge"></i> <%= t('admin.dashboard.quick_actions','Aksi Cepat') %></h6></div>
+          <div class="card-bd quick-actions-grid">
+            <a href="/admin/customers" class="btn btn-g" style="flex-direction:column;gap:5px;padding:14px 8px;text-align:center"><i class="bi bi-person-plus" style="font-size:20px;color:var(--primary)"></i><span style="font-size:11.5px"><%= t('admin.dashboard.qa_add_customer','Tambah Pelanggan') %></span></a>
+            <a href="/admin/billing" class="btn btn-g" style="flex-direction:column;gap:5px;padding:14px 8px;text-align:center"><i class="bi bi-receipt" style="font-size:20px;color:var(--warning)"></i><span style="font-size:11.5px"><%= t('admin.dashboard.qa_create_invoice','Buat Tagihan') %></span></a>
+            <a href="/admin/packages" class="btn btn-g" style="flex-direction:column;gap:5px;padding:14px 8px;text-align:center"><i class="bi bi-box-seam" style="font-size:20px;color:var(--success)"></i><span style="font-size:11.5px"><%= t('admin.dashboard.qa_manage_packages','Kelola Paket') %></span></a>
+            <a href="/admin/whatsapp/broadcast" class="btn btn-g" style="flex-direction:column;gap:5px;padding:14px 8px;text-align:center"><i class="bi bi-megaphone" style="font-size:20px;color:var(--info)"></i><span style="font-size:11.5px"><%= t('admin.dashboard.qa_broadcast','Broadcast WA') %></span></a>
+            <a href="/admin/reports" class="btn btn-g" style="flex-direction:column;gap:5px;padding:14px 8px;text-align:center"><i class="bi bi-bar-chart-line" style="font-size:20px;color:var(--primary)"></i><span style="font-size:11.5px"><%= t('admin.dashboard.qa_reports','Laporan') %></span></a>
+            <button class="btn btn-g" onclick="showTab('monitoring')" style="flex-direction:column;gap:5px;padding:14px 8px;text-align:center"><i class="bi bi-router" style="font-size:20px;color:var(--danger)"></i><span style="font-size:11.5px"><%= t('admin.dashboard.qa_monitor_onu','Monitor ONU') %></span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS JARINGAN (ONU) -->
+      <div class="dash-sec-title"><i class="bi bi-router"></i> <%= t('admin.dashboard.network_status','Status Jaringan (ONU)') %></div>
+      <div class="stat-grid">
+        <div class="sc p">
+          <i class="bi bi-router sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.total_onu','Total ONU') %></div>
+          <div class="sc-val" id="stat-total"><span class="text-muted" style="font-size:16px">...</span></div>
+          <div class="sc-sub"><%= t('admin.dashboard.onu_registered','Perangkat terdaftar') %></div>
+        </div>
+        <div class="sc s">
+          <i class="bi bi-wifi sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.online','Online') %></div>
+          <div class="sc-val" id="stat-online"><span class="text-muted" style="font-size:16px">...</span></div>
+          <div class="sc-sub"><%= t('admin.dashboard.active_now','Aktif saat ini') %></div>
+        </div>
+        <div class="sc d">
+          <i class="bi bi-wifi-off sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.offline','Offline') %></div>
+          <div class="sc-val" id="stat-offline"><span class="text-muted" style="font-size:16px">...</span></div>
+          <div class="sc-sub"><%= t('admin.dashboard.no_response','Tidak merespons') %></div>
+        </div>
+        <div class="sc w">
+          <i class="bi bi-exclamation-triangle sc-icon"></i>
+          <div class="sc-label"><%= t('admin.dashboard.warning','Warning') %></div>
+          <div class="sc-val" id="stat-warning"><span class="text-muted" style="font-size:16px">...</span></div>
+          <div class="sc-sub"><%= t('admin.dashboard.needs_attention','Perlu perhatian') %></div>
+        </div>
+      </div>
+      <div class="dash-main-grid">
+        <div class="card" style="margin:0">
+          <div class="card-hd"><h6><i class="bi bi-pie-chart"></i> <%= t('admin.dashboard.onu_status_title','Status ONU') %></h6></div>
+          <div class="card-bd" style="display:flex;flex-direction:column;align-items:center;gap:16px">
+            <div id="donut-wrap">
+              <canvas id="donutChart"></canvas>
+              <div class="donut-center">
+                <div class="donut-num" id="donut-pct">-</div>
+                <div class="donut-lbl"><%= t('admin.dashboard.online','Online') %></div>
+              </div>
+            </div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;font-size:12px">
+                <span><span class="dot dot-on"></span><%= t('admin.dashboard.online','Online') %></span>
+                <span id="leg-online" class="fw6" style="color:var(--success)">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:12px">
+                <span><span class="dot dot-off"></span><%= t('admin.dashboard.offline','Offline') %></span>
+                <span id="leg-offline" class="fw6" style="color:var(--danger)">-</span>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);text-align:center" id="last-update-time">—</div>
+          </div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="card-hd">
+            <h6><i class="bi bi-exclamation-circle"></i> <%= t('admin.dashboard.latest_offline','ONU Offline Terbaru') %></h6>
+            <button class="btn btn-g btn-sm" onclick="showTab('monitoring')"><i class="bi bi-arrow-right"></i> <%= t('common.view_all','Lihat Semua') %></button>
+          </div>
+          <div id="offline-list" style="padding:0">
+            <div class="text-center text-muted" style="padding:24px;font-size:13px"><%= t('common.loading','Memuat data...') %></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONITORING ONU SECTION                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div id="monitoring-section" style="display:none">
+
+      <!-- Stats mini -->
+      <div class="stat-grid" style="margin-bottom:18px">
+        <div class="sc p"><i class="bi bi-router sc-icon"></i><div class="sc-label"><%= t('admin.dashboard.total_onu', 'Total ONU') %></div><div class="sc-val" id="m-total">-</div></div>
+        <div class="sc s"><i class="bi bi-wifi sc-icon"></i><div class="sc-label"><%= t('admin.dashboard.online', 'Online') %></div><div class="sc-val" id="m-online">-</div></div>
+        <div class="sc d"><i class="bi bi-wifi-off sc-icon"></i><div class="sc-label"><%= t('admin.dashboard.offline', 'Offline') %></div><div class="sc-val" id="m-offline">-</div></div>
+        <div class="sc i"><i class="bi bi-percent sc-icon"></i><div class="sc-label"><%= t('admin.dashboard.uptime', 'Uptime') %></div><div class="sc-val" id="m-pct">-%</div></div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="srow" style="margin-bottom:16px">
+        <div class="sinput" style="max-width:320px">
+          <i class="bi bi-search"></i>
+          <input class="fc" id="search-device" placeholder="<%= t('admin.dashboard.search_placeholder', 'Cari tag, SN, atau username pppoe...') %>">
+        </div>
+        <select class="fs" id="filter-status" style="width:150px" onchange="loadDevices()">
+          <option value="all"><%= t('common.all_status', 'Semua Status') %></option>
+          <option value="online"><%= t('admin.dashboard.online', 'Online') %></option>
+          <option value="offline"><%= t('admin.dashboard.offline', 'Offline') %></option>
+        </select>
+        <button class="btn btn-g btn-sm" onclick="openGenieACSSettings()" title="Pengaturan GenieACS">
+          <i class="bi bi-gear"></i> GenieACS
+        </button>
+        <button class="btn btn-p btn-sm" id="btn-refresh" onclick="refreshAll()">
+          <i class="bi bi-arrow-clockwise"></i> <%= t('common.refresh', 'Refresh') %>
+        </button>
+        <div class="realtime-bar" style="margin-left:auto">
+          <span class="live-dot"></span> <%= t('admin.dashboard.realtime', 'Realtime Monitoring') %>
+        </div>
+        <div class="realtime-bar">
+          <i class="bi bi-arrow-repeat"></i> <%= t('admin.dash.last_tr069','TR-069 terakhir:') %> <strong id="monitor-sync-time">-</strong>
+        </div>
+      </div>
+
+      <!-- Bulk Actions Panel -->
+      <div id="monBulkActionsPanel" style="display: none; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); padding: 12px 20px; border-radius: 12px; margin-bottom: 16px; align-items: center; justify-content: space-between;">
+          <div style="font-size: 13px; font-weight: 600; color: var(--text);">
+              <span id="monSelectedCount">0</span> perangkat terpilih
+          </div>
+          <div style="display: flex; gap: 8px;">
+              <button class="btn btn-p btn-sm" onclick="bulkMonSummon()" style="background: var(--primary);"><i class="bi bi-lightning-charge"></i> <%= t('admin.dash.summon_selected','Summon Terpilih') %></button>
+              <button class="btn btn-d btn-sm" onclick="bulkMonDelete()" style="background: var(--danger);"><i class="bi bi-trash"></i> <%= t('admin.dash.del_selected','Hapus Terpilih') %></button>
+          </div>
+      </div>
+
+      <!-- Device Table -->
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-list-ul"></i> <%= t('admin.dashboard.onu_device_list', 'Daftar Perangkat ONU') %></h6>
+          <span id="device-count" class="badge bm"><%= t('common.loading_short', 'memuat...') %></span>
+        </div>
+        <div id="loading-devices" style="text-align:center;padding:32px;display:none">
+          <div style="display:inline-block;width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite"></div>
+          <div class="text-muted" style="margin-top:10px;font-size:13px"><%= t('admin.dashboard.loading_onu', 'Memuat data ONU...') %></div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="dtbl">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllMonDevices" onchange="toggleSelectAllMon(this)"></th>
+                <th>#</th>
+                <th><%= t('admin.dashboard.table.tag_customer', 'Tag / Pelanggan') %></th>
+                <th><%= t('admin.dashboard.table.device', 'Perangkat') %></th>
+                <th><%= t('admin.dashboard.table.network', 'Jaringan') %></th>
+                <th><%= t('admin.dashboard.table.status_info', 'Status / Info') %></th>
+                <th><%= t('admin.dashboard.table.actions', 'Aksi') %></th>
+              </tr>
+            </thead>
+            <tbody id="devices-tbody">
+              <tr><td colspan="7" class="text-center text-muted" style="padding:32px"><%= t('admin.dashboard.loading_devices', 'Memuat perangkat...') %></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL DETAIL DEVICE ── -->
+<div class="mo" id="deviceModal">
+  <div class="mb" style="max-width:920px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-router"></i> <%= t('admin.dashboard.device_detail', 'Detail Perangkat') %></span>
+      <button class="mc" onclick="closeModal('deviceModal')">&times;</button>
+    </div>
+    <div class="mbody" id="device-detail" style="max-height:72vh;overflow:auto"><div class="text-muted text-center" style="padding:20px"><%= t('common.loading_short', 'Memuat...') %></div></div>
+    <div class="mf"><button class="btn btn-g" onclick="closeModal('deviceModal')"><%= t('common.close', 'Tutup') %></button></div>
+  </div>
+</div>
+
+<!-- ── MODAL EDIT SSID ── -->
+<div class="mo" id="ssidModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-wifi"></i> <%= t('admin.dashboard.edit_ssid', 'Ubah SSID') %></span><button class="mc" onclick="closeModal('ssidModal')">&times;</button></div>
+    <div class="mbody">
+      <input type="hidden" id="edit-tag">
+      <div class="fg"><label class="fl"><%= t('admin.dashboard.new_ssid', 'SSID Baru') %></label><input class="fc" id="new-ssid" placeholder="<%= t('admin.dashboard.new_ssid_placeholder', 'Nama WiFi baru') %>"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeModal('ssidModal')"><%= t('common.cancel', 'Batal') %></button>
+      <button class="btn btn-p" id="btn-save-ssid">
+        <span class="btn-text"><i class="bi bi-check-lg"></i> <%= t('common.save', 'Simpan') %></span>
+        <span class="btn-loader" style="display:none"><i class="bi bi-arrow-clockwise spin"></i> <%= t('common.processing', 'Memproses...') %></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL EDIT PASSWORD ── -->
+<div class="mo" id="passwordModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-key"></i> <%= t('admin.dashboard.edit_wifi_password', 'Ubah Password WiFi') %></span><button class="mc" onclick="closeModal('passwordModal')">&times;</button></div>
+    <div class="mbody">
+      <input type="hidden" id="edit-pass-tag">
+      <div class="fg"><label class="fl"><%= t('admin.dashboard.new_password', 'Password Baru') %></label><input class="fc" id="new-password" type="text" placeholder="<%= t('admin.dashboard.new_password_placeholder', 'Minimal 8 karakter') %>"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeModal('passwordModal')"><%= t('common.cancel', 'Batal') %></button>
+      <button class="btn btn-s" id="btn-save-password">
+        <span class="btn-text"><i class="bi bi-check-lg"></i> <%= t('common.save', 'Simpan') %></span>
+        <span class="btn-loader" style="display:none"><i class="bi bi-arrow-clockwise spin"></i> <%= t('common.processing', 'Memproses...') %></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL GENIEACS SETTINGS ── -->
+<div class="mo" id="genieacsModal">
+  <div class="mb" style="max-width:600px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-gear"></i> <%= t('admin.dash.acs_settings','Pengaturan GenieACS') %></span>
+      <button class="mc" onclick="closeModal('genieacsModal')">&times;</button>
+    </div>
+    <div class="mbody">
+      <form id="genieacsSettingsForm">
+        <div class="fg">
+          <label class="fl">Timeout (ms)</label>
+          <input type="number" class="fc" id="genieacs_timeout" name="genieacs_timeout" 
+                 value="<%= typeof settings !== 'undefined' && settings.genieacs_timeout ? settings.genieacs_timeout : 30000 %>" 
+                 min="5000" max="120000" step="1000">
+          <small class="text-muted" style="font-size:11px;display:block;margin-top:4px"><%= t('admin.dash.timeout_hint','Timeout untuk request ke GenieACS (5000-120000 ms)') %></small>
+        </div>
+        
+        <div class="fg">
+          <label class="fl">RX Power Threshold (dBm)</label>
+          <input type="number" class="fc" id="genieacs_rxpower_threshold" name="genieacs_rxpower_threshold" 
+                 value="<%= typeof settings !== 'undefined' && settings.genieacs_rxpower_threshold ? settings.genieacs_rxpower_threshold : -27 %>" 
+                 min="-40" max="-15" step="0.5">
+          <small class="text-muted" style="font-size:11px;display:block;margin-top:4px"><%= t('admin.dash.threshold_hint','Threshold untuk warning RX Power (-40 sampai -15 dBm)') %></small>
+        </div>
+
+        <div class="fg">
+          <label class="fl"><%= t('admin.dash.interval_hours','Monitoring Interval (jam)') %></label>
+          <input type="number" class="fc" id="genieacs_monitoring_interval" name="genieacs_monitoring_interval" 
+                 value="<%= typeof settings !== 'undefined' && settings.genieacs_monitoring_interval ? settings.genieacs_monitoring_interval : 6 %>" 
+                 min="1" max="24" step="1">
+          <small class="text-muted" style="font-size:11px;display:block;margin-top:4px"><%= t('admin.dash.interval_label','Interval monitoring otomatis (1-24 jam)') %></small>
+        </div>
+        
+        <div class="fg">
+          <label class="fl">Monitoring Enabled</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+            <input type="checkbox" id="genieacs_monitoring_enabled" name="genieacs_monitoring_enabled" 
+                   style="width:40px;height:20px;cursor:pointer"
+                   <%= typeof settings !== 'undefined' && settings.genieacs_monitoring_enabled !== false ? 'checked' : '' %>>
+            <label for="genieacs_monitoring_enabled" style="cursor:pointer;font-size:13px;margin:0">
+              <%= t('admin.dash.enable_auto','Aktifkan monitoring otomatis RX Power & Offline Devices') %>
+            </label>
+          </div>
+        </div>
+
+        <div id="genieacsMessage" style="display:none;margin-top:16px;padding:12px;border-radius:6px;font-size:13px"></div>
+      </form>
+    </div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="testGenieACSConnection()">
+        <i class="bi bi-wifi"></i> <%= t('admin.dash.test_conn','Test Koneksi') %>
+      </button>
+      <button class="btn btn-p" onclick="saveGenieACSSettings()">
+        <i class="bi bi-save"></i> Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<script>
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * DASHBOARD ONU MONITORING - AUTO-REFRESH DISABLED
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * AUTO-REFRESH INTENTIONALLY DISABLED TO PREVENT CONTINUOUS POLLING
+ * 
+ * Previously, this dashboard would refresh automatically:
+ * - Every 30 seconds (setInterval at the bottom)
+ * - Every 5 seconds during sync operations (scheduleFastRefreshIfNeeded)
+ * 
+ * All auto-refresh mechanisms have been disabled. The dashboard will:
+ * - Load data once when the page is first opened
+ * - Only refresh when the user manually clicks the "Refresh" button
+ * - NOT refresh automatically during operations
+ * 
+ * If you need to update the data, click the "Refresh" button in the UI.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+// ── STATE ──────────────────────────────────────────────────────
+let devicesData = [];
+let donutChart = null;
+let fastRefreshTimer = null;
+let autoRefreshDisabled = true;  // Disable all auto-refresh mechanisms
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+const I18N = {
+  pageDashboard: "<%= t('admin.nav.dashboard', 'Dashboard') %>",
+  pageMonitoring: "<%= t('admin.dashboard.monitoring_onu', 'Monitoring ONU') %>",
+  online: "<%= t('admin.dashboard.online', 'Online') %>",
+  offline: "<%= t('admin.dashboard.offline', 'Offline') %>",
+  allStatus: "<%= t('common.all_status', 'Semua Status') %>",
+  refresh: "<%= t('common.refresh', 'Refresh') %>",
+  devicesSuffix: " <%= t('admin.dashboard.devices_suffix', 'perangkat') %>",
+  loading: "<%= t('common.loading_short', 'Memuat...') %>",
+  loadingData: "<%= t('common.loading', 'Memuat data...') %>",
+  loadingOnu: "<%= t('admin.dashboard.loading_onu', 'Memuat data ONU...') %>",
+  loadingDevices: "<%= t('admin.dashboard.loading_devices', 'Memuat perangkat...') %>",
+  updatePrefix: "<%= t('admin.dashboard.update_prefix', 'Update:') %>",
+  allOnuOnline: "<%= t('admin.dashboard.all_onu_online', 'Semua ONU online!') %>",
+  never: "<%= t('admin.dashboard.never', 'Tidak pernah') %>",
+  secondsAgo: "<%= t('admin.dashboard.seconds_ago', 'detik lalu') %>",
+  minutesAgo: "<%= t('admin.dashboard.minutes_ago', 'menit lalu') %>",
+  hoursAgo: "<%= t('admin.dashboard.hours_ago', 'jam lalu') %>",
+  daysAgo: "<%= t('admin.dashboard.days_ago', 'hari lalu') %>",
+  rebootConfirmPrefix: "<%= t('admin.dashboard.reboot_confirm_prefix', 'Yakin reboot ONU:') %>",
+  rebootSent: "<%= t('admin.dashboard.reboot_sent', 'Reboot terkirim') %>",
+  failed: "<%= t('common.failed', 'Gagal') %>",
+  success: "<%= t('common.success', 'Berhasil') %>",
+  errorLoadData: "<%= t('admin.dashboard.load_failed', 'Gagal memuat data') %>",
+  noDevicesFound: "<%= t('admin.dashboard.no_devices_found', 'Tidak ada perangkat ditemukan') %>",
+  onuDevice: "<%= t('admin.dashboard.onu_device_fallback', 'ONU Device') %>",
+  noIp: "<%= t('admin.dashboard.no_ip', 'No IP') %>",
+  connectedSuffix: "<%= t('admin.dashboard.connected_suffix', 'dev tersambung') %>",
+  titleDetail: "<%= t('common.details', 'Detail') %>",
+  titleEditSsid: "<%= t('admin.dashboard.edit_ssid', 'Ubah SSID') %>",
+  titleEditPassword: "<%= t('admin.dashboard.edit_password', 'Ubah Password') %>",
+  titleReboot: "<%= t('admin.dashboard.reboot', 'Reboot') %>",
+  ssidRequired: "<%= t('admin.dashboard.ssid_required', 'SSID tidak boleh kosong') %>",
+  ssidSent: "<%= t('admin.dashboard.ssid_sent', 'Perubahan SSID telah dikirim ke perangkat.') %>",
+  ssidFailed: "<%= t('admin.dashboard.ssid_failed', 'Gagal mengubah SSID.') %>",
+  passwordMin: "<%= t('admin.dashboard.password_min', 'Password minimal 8 karakter') %>",
+  passwordSent: "<%= t('admin.dashboard.password_sent', 'Perubahan Password telah dikirim ke perangkat.') %>",
+  passwordFailed: "<%= t('admin.dashboard.password_failed', 'Gagal mengubah password.') %>",
+  connectionError: "<%= t('admin.dashboard.connection_error', 'Terjadi kesalahan koneksi.') %>",
+  connectedDevicesTitlePrefix: "<%= t('admin.dashboard.connected_devices', 'Perangkat Terhubung') %>",
+  noConnectedDevices: "<%= t('admin.dashboard.no_connected_devices', 'Tidak ada perangkat terhubung') %>",
+  detailLoadFailed: "<%= t('admin.dashboard.detail_load_failed', 'Gagal memuat detail') %>",
+  offlineBadge: "<%= t('admin.dashboard.offline', 'Offline') %>",
+  lastInform: "Last Inform",
+  lastSync: "Last Sync",
+  syncNow: "Poll TR-069 Sekarang",
+  syncRunning: "Sinkronisasi berjalan"
+};
+
+// ── TABS ───────────────────────────────────────────────────────
+function showTab(tab) {
+  const isDash = tab === 'dashboard';
+  document.getElementById('dashboard-section').style.display = isDash ? 'block' : 'none';
+  document.getElementById('monitoring-section').style.display = isDash ? 'none' : 'block';
+  document.getElementById('tab-dash').classList.toggle('active', isDash);
+  document.getElementById('tab-mon').classList.toggle('active', !isDash);
+  document.getElementById('page-title').textContent = isDash ? I18N.pageDashboard : I18N.pageMonitoring;
+  if (!isDash) loadDevices();
+}
+
+// ── MODAL HELPERS ──────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); }));
+
+// ── LOAD STATS ─────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch('/admin/api/stats');
+    const d   = await res.json();
+    const total   = d.total   || 0;
+    const online  = d.online  || 0;
+    const offline = d.offline || 0;
+    const pct     = total > 0 ? Math.round(online / total * 100) : 0;
+
+    // Dashboard stats
+    document.getElementById('stat-total').textContent   = total;
+    document.getElementById('stat-online').textContent  = online;
+    document.getElementById('stat-offline').textContent = offline;
+    document.getElementById('stat-warning').textContent = d.warning || 0;
+
+    // Monitoring mini stats
+    document.getElementById('m-total').textContent  = total;
+    document.getElementById('m-online').textContent = online;
+    document.getElementById('m-offline').textContent= offline;
+    document.getElementById('m-pct').textContent    = pct + '%';
+
+    // Donut
+    document.getElementById('donut-pct').textContent  = pct + '%';
+    document.getElementById('leg-online').textContent  = online;
+    document.getElementById('leg-offline').textContent = offline;
+    document.getElementById('last-update-time').textContent = I18N.updatePrefix + ' ' + new Date().toLocaleTimeString('id-ID', { timeZone: '<%= settings.timezone %>' });
+
+    updateDonut(online, offline);
+  } catch(e) { console.error('Stats error:', e); }
+}
+
+// ── DONUT CHART ────────────────────────────────────────────────
+function updateDonut(online, offline) {
+  const ctx = document.getElementById('donutChart');
+  if (donutChart) { donutChart.data.datasets[0].data = [online, offline]; donutChart.update(); return; }
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [online, offline],
+        backgroundColor: ['#3fb950', '#f85149'],
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.raw } } },
+      animation: { animateRotate: true, duration: 600 }
+    }
+  });
+}
+
+// ── LOAD DEVICES ───────────────────────────────────────────────
+async function loadDevices() {
+  const tbody   = document.getElementById('devices-tbody');
+  const loading = document.getElementById('loading-devices');
+  loading.style.display = 'block';
+  tbody.innerHTML = '';
+
+  try {
+    const search = document.getElementById('search-device')?.value || '';
+    const status = document.getElementById('filter-status')?.value || 'all';
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (status && status !== 'all') params.set('status', status);
+    let url = '/admin/api/devices';
+    const qs = params.toString();
+    if (qs) url += '?' + qs;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data && data.error) throw new Error(data.error);
+    devicesData = data.devices || [];
+
+    if (!search && status === 'all') {
+      const tot = data.total || devicesData.length;
+      let on = 0, off = 0;
+      devicesData.forEach(d => {
+        if (d.status === 'online') on++;
+        else off++;
+      });
+      const totalEl = document.getElementById('stat-total');
+      const onlineEl = document.getElementById('stat-online');
+      const offlineEl = document.getElementById('stat-offline');
+      if (totalEl) totalEl.textContent = tot;
+      if (onlineEl) onlineEl.textContent = on;
+      if (offlineEl) offlineEl.textContent = off;
+
+      const mTot = document.getElementById('m-total');
+      const mOn = document.getElementById('m-online');
+      const mOff = document.getElementById('m-offline');
+      const mPct = document.getElementById('m-pct');
+      if (mTot) mTot.textContent = tot;
+      if (mOn) mOn.textContent = on;
+      if (mOff) mOff.textContent = off;
+      if (mPct) mPct.textContent = (tot > 0 ? Math.round(on / tot * 100) : 0) + '%';
+
+      const legOn = document.getElementById('leg-online');
+      const legOff = document.getElementById('leg-offline');
+      const donutPct = document.getElementById('donut-pct');
+      if (legOn) legOn.textContent = on;
+      if (legOff) legOff.textContent = off;
+      if (donutPct) donutPct.textContent = (tot > 0 ? Math.round(on / tot * 100) : 0) + '%';
+      updateDonut(on, off);
+    }
+
+    document.getElementById('device-count').textContent = devicesData.length + I18N.devicesSuffix;
+
+    if (devicesData.length === 0) {
+      const monitorSyncEl = document.getElementById('monitor-sync-time');
+      if (monitorSyncEl) monitorSyncEl.textContent = '-';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:32px">' + I18N.noDevicesFound + '</td></tr>';
+    } else {
+      const latestSyncRaw = devicesData
+        .map(d => d.lastSync || d.lastInform || '')
+        .filter(Boolean)
+        .sort()
+        .reverse()[0];
+      const monitorSyncEl = document.getElementById('monitor-sync-time');
+      if (monitorSyncEl) {
+        monitorSyncEl.textContent = latestSyncRaw
+          ? new Date(latestSyncRaw).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
+          : '-';
+      }
+      const lastUpdateEl = document.getElementById('last-update-time');
+      if (lastUpdateEl) {
+        const uiTime = new Date().toLocaleTimeString('id-ID', { timeZone: '<%= settings.timezone %>' });
+        lastUpdateEl.textContent = latestSyncRaw
+          ? `TR-069: ${new Date(latestSyncRaw).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })} | UI: ${uiTime}`
+          : `${I18N.updatePrefix} ${uiTime}`;
+      }
+      tbody.innerHTML = devicesData.map((d, i) => {
+        const isOn = d.status === 'online';
+        const tagStr = (d.pppoeUsername && d.pppoeUsername !== 'N/A' && d.pppoeUsername !== '-') ? d.pppoeUsername : (d.tags.join(', ') || '-');
+        const lastInformStr = d.lastInform ? new Date(d.lastInform).toLocaleString('id-ID', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '-';
+        const lastSyncStr = d.lastSync ? new Date(d.lastSync).toLocaleString('id-ID', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : (d.lastSyncLabel || '-');
+        const syncBadge = d.syncInProgress
+          ? `<div style="font-size:11px;color:var(--warning);margin-top:4px"><i class="bi bi-arrow-repeat"></i> ${I18N.syncRunning} (${d.syncPendingCount || 0})</div>`
+          : `<div style="font-size:11px;color:var(--muted);margin-top:4px"><i class="bi bi-check2-circle"></i> ${d.syncStatusLabel || '-'}</div>`;
+        return `<tr>
+          <td style="text-align: center;">
+            <input type="checkbox" class="mon-device-checkbox" data-id="${d.id}" data-acs="${d.acs_server_id || 'legacy'}" onchange="updateMonBulkPanel()">
+          </td>
+          <td class="text-muted">${i + 1}</td>
+          <td>
+            <span class="badge bm">${tagStr}</span>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px" title="${I18N.lastInform}"><i class="bi bi-clock"></i> ${lastInformStr}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px" title="${I18N.lastSync}"><i class="bi bi-arrow-repeat"></i> ${lastSyncStr}</div>
+          </td>
+          <td>
+            <div class="fw6" style="font-size:13px">${d.model !== '-' ? d.model : I18N.onuDevice}</div>
+            <div style="font-size:11px;color:var(--muted)">SN: <code style="color:var(--info);background:transparent;padding:0">${d.serialNumber}</code></div>
+            <div style="font-size:11px;color:var(--muted)">SW: ${d.softwareVersion}</div>
+          </td>
+          <td>
+            <div style="font-size:12px;margin-bottom:2px" title="IP Address"><i class="bi bi-globe" style="color:var(--primary)"></i> ${d.pppoeIP !== '-' ? d.pppoeIP : I18N.noIp}</div>
+            <div style="font-size:12px;margin-bottom:2px" title="PPPoE Username"><i class="bi bi-person-badge" style="color:var(--warning)"></i> ${d.pppoeUsername && d.pppoeUsername !== 'N/A' ? d.pppoeUsername : '<span class="text-muted">-</span>'}</div>
+            <div style="font-size:12px;margin-bottom:2px" title="SSID"><i class="bi bi-wifi" style="color:var(--success)"></i> ${d.ssid}</div>
+            <div style="font-size:11px;color:var(--muted)"><i class="bi bi-people"></i> ${d.userConnected} ${I18N.connectedSuffix}</div>
+          </td>
+          <td>
+            <div><span class="badge ${isOn ? 'ds-on' : 'ds-off'}"><span class="dot ${isOn ? 'dot-on' : 'dot-off'}"></span>${isOn ? I18N.online : I18N.offline}</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px" title="RX Power"><i class="bi bi-activity"></i> ${d.rxPower}</div>
+            <div style="font-size:11px;color:var(--muted)" title="Uptime"><i class="bi bi-clock-history"></i> ${d.uptime}</div>
+            <div style="font-size:11px;color:var(--muted)" title="${I18N.lastSync}"><i class="bi bi-hourglass-split"></i> ${d.lastSyncAgo || '-'}</div>
+            ${syncBadge}
+          </td>
+          <td style="white-space:nowrap">
+            <div class="act">
+              <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+              <div class="act-menu">
+                <button type="button" class="act-item btn-dev-detail" data-tag="${(d.tags && d.tags[0]) || d.id}"><i class="bi bi-eye"></i> ${I18N.titleDetail}</button>
+                <button type="button" class="act-item primary btn-dev-summon" data-id="${d.id}" data-acs="${d.acs_server_id || 'legacy'}"><i class="bi bi-arrow-repeat"></i> ${I18N.syncNow}</button>
+                <button type="button" class="act-item primary btn-dev-wifi" data-tag="${(d.tags && d.tags[0]) || d.id}" data-ssid="${escHtml(d.ssid)}"><i class="bi bi-wifi"></i> ${I18N.titleEditSsid}</button>
+                <button type="button" class="act-item btn-dev-pass" data-tag="${(d.tags && d.tags[0]) || d.id}"><i class="bi bi-key"></i> ${I18N.titleEditPassword}</button>
+                <div class="act-sep"></div>
+                <button type="button" class="act-item danger btn-dev-reboot" data-tag="${(d.tags && d.tags[0]) || d.id}"><i class="bi bi-power"></i> ${I18N.titleReboot}</button>
+                <button type="button" class="act-item danger btn-dev-delete" data-id="${d.id}" data-acs="${d.acs_server_id || 'legacy'}"><i class="bi bi-trash"></i> <%= t('admin.dash.del_device','Hapus Perangkat') %></button>
+              </div>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      // Bind event listeners for actions to prevent quote escaping HTML issues
+      tbody.querySelectorAll('.btn-dev-detail').forEach(btn => {
+        btn.addEventListener('click', function() { showDetail(this.getAttribute('data-tag')); });
+      });
+      tbody.querySelectorAll('.btn-dev-summon').forEach(btn => {
+        btn.addEventListener('click', function() { summonMonDevice(this.getAttribute('data-id'), this.getAttribute('data-acs')); });
+      });
+      tbody.querySelectorAll('.btn-dev-wifi').forEach(btn => {
+        btn.addEventListener('click', function() { editSsid(this.getAttribute('data-tag'), this.getAttribute('data-ssid')); });
+      });
+      tbody.querySelectorAll('.btn-dev-pass').forEach(btn => {
+        btn.addEventListener('click', function() { editPassword(this.getAttribute('data-tag')); });
+      });
+      tbody.querySelectorAll('.btn-dev-reboot').forEach(btn => {
+        btn.addEventListener('click', function() { rebootDevice(this.getAttribute('data-tag')); });
+      });
+      tbody.querySelectorAll('.btn-dev-delete').forEach(btn => {
+        btn.addEventListener('click', function() { deleteMonDevice(this.getAttribute('data-id'), this.getAttribute('data-acs')); });
+      });
+    }
+
+    // Update offline list on dashboard
+    renderOfflineList(devicesData.filter(d => d.status === 'offline').slice(0, 5));
+    // AUTO-REFRESH DISABLED: scheduleFastRefreshIfNeeded() is intentionally removed
+    // Dashboard will not auto-refresh during sync operations
+
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:32px;color:var(--danger)"><i class="bi bi-exclamation-circle"></i> ' + I18N.errorLoadData + '</td></tr>';
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+// ── OFFLINE LIST (dashboard) ───────────────────────────────────
+function renderOfflineList(offlineDevices) {
+  const el = document.getElementById('offline-list');
+  if (!el) return;
+  if (offlineDevices.length === 0) {
+    el.innerHTML = '<div class="text-center" style="padding:24px;font-size:13px;color:var(--success)"><i class="bi bi-check-circle-fill"></i> ' + I18N.allOnuOnline + '</div>';
+    return;
+  }
+  el.innerHTML = offlineDevices.map(d => {
+    const ago = d.lastInform ? timeSince(new Date(d.lastInform)) : I18N.never;
+    return `<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:600">${(d.pppoeUsername && d.pppoeUsername !== 'N/A' && d.pppoeUsername !== '-') ? d.pppoeUsername : (d.tags.join(', ') || '-')}</div>
+        <div style="font-size:11px;color:var(--muted)">${d.serialNumber}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="badge bd">${I18N.offlineBadge}</span>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${ago}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function timeSince(date) {
+  const sec = Math.floor((Date.now() - date) / 1000);
+  if (sec < 60) return sec + ' ' + I18N.secondsAgo;
+  if (sec < 3600) return Math.floor(sec/60) + ' ' + I18N.minutesAgo;
+  if (sec < 86400) return Math.floor(sec/3600) + ' ' + I18N.hoursAgo;
+  return Math.floor(sec/86400) + ' ' + I18N.daysAgo;
+}
+
+// ── DEVICE ACTIONS ─────────────────────────────────────────────
+async function showDetail(tag) {
+  openModal('deviceModal');
+  document.getElementById('device-detail').innerHTML = '<div class="text-muted text-center" style="padding:20px">' + I18N.loading + '</div>';
+  try {
+    const res = await fetch('/admin/api/device/' + encodeURIComponent(tag));
+    const d   = await res.json();
+    const isOn = String(d.status || '').toLowerCase() === 'online';
+    const lastInformText = d.lastInform ? new Date(d.lastInform).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-';
+    const lastSyncText = d.lastSync ? new Date(d.lastSync).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-';
+    const syncStateText = d.syncInProgress ? `${I18N.syncRunning} (${d.syncPendingCount || 0})` : (d.syncStatusLabel || '-');
+    const connected = Array.isArray(d.connectedUsers) ? d.connectedUsers : [];
+    document.getElementById('device-detail').innerHTML = `
+      <div style="padding:14px 16px;border-radius:12px;margin-bottom:16px;font-weight:700;border:1px solid var(--border);background:${isOn ? 'rgba(16,185,129,.10)' : 'rgba(239,68,68,.10)'};color:${isOn ? 'var(--success)' : 'var(--danger)'}">
+        <i class="bi bi-circle-fill" style="font-size:10px"></i>
+        ${isOn ? I18N.online : I18N.offline}
+        <span style="color:var(--muted);font-weight:600">— ${I18N.lastInform}: ${lastInformText} | ${I18N.lastSync}: ${lastSyncText} | Queue: ${syncStateText}</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+        <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;color:var(--muted)"><i class="bi bi-info-circle"></i> Device Info</div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px;border-bottom:1px solid rgba(51,65,85,.10)"><span style="color:var(--muted)">Tag</span><span style="font-weight:800">${d.phone || '-'}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px;border-bottom:1px solid rgba(51,65,85,.10)"><span style="color:var(--muted)">Model</span><span>${d.model || '-'}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px;border-bottom:1px solid rgba(51,65,85,.10)"><span style="color:var(--muted)">Serial</span><code style="color:var(--info)">${d.serialNumber || '-'}</code></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px"><span style="color:var(--muted)">SW Version</span><span>${d.softwareVersion || '-'}</span></div>
+        </div>
+
+        <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;color:var(--muted)"><i class="bi bi-diagram-3"></i> Network Info</div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px;border-bottom:1px solid rgba(51,65,85,.10)"><span style="color:var(--muted)">PPPoE User</span><span>${d.pppoeUsername || '-'}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px;border-bottom:1px solid rgba(51,65,85,.10)"><span style="color:var(--muted)">IP</span><code>${d.pppoeIP || '-'}</code></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px;border-bottom:1px solid rgba(51,65,85,.10)"><span style="color:var(--muted)">RX Power</span><span class="badge" style="background:var(--primary);color:white">${d.rxPower || '-'}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px;border-bottom:1px solid rgba(51,65,85,.10)"><span style="color:var(--muted)">SSID</span><span>${d.ssid || '-'}</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 18px"><span style="color:var(--muted)">Uptime</span><span>${d.uptime || '-'}</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div><i class="bi bi-people"></i> Connected Clients (Live)</div>
+          <span class="badge bm">${connected.length}</span>
+        </div>
+        <div style="padding:16px 18px">
+          ${connected.length > 0 ? connected.map((u) => {
+            const iface = String(u.iface || '');
+            const isWiFi = iface.toLowerCase().includes('wifi') || iface.toLowerCase().includes('wlan') || iface.toLowerCase().includes('802.11');
+            const isUon = String(u.status || '').toLowerCase() === 'online';
+            return `
+              <div style="background:var(--sub-bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                  <div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(59,130,246,.10);color:var(--primary)">
+                    <i class="bi bi-${isWiFi ? 'wifi' : 'ethernet'}"></i>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-weight:800">${u.hostname || '-'}</div>
+                    <div style="font-size:11px;color:var(--muted)">${u.ip || '-'} | ${u.mac || '-'}</div>
+                  </div>
+                  <span class="badge ${isUon ? 'bs' : 'bm'}">${u.status || '-'}</span>
+                </div>
+                <div style="font-size:11px;color:var(--muted)">Interface: ${iface || '-'}</div>
+              </div>
+            `;
+          }).join('') : `<div style="text-align:center;color:var(--muted);padding:10px 0"><i class="bi bi-info-circle"></i> ${I18N.noConnectedDevices}</div>`}
+        </div>
+      </div>
+    `;
+  } catch(e) { document.getElementById('device-detail').innerHTML = '<p class="text-muted text-center" style="padding:20px">' + I18N.detailLoadFailed + '</p>'; }
+}
+
+function editSsid(tag, currentSsid) { document.getElementById('edit-tag').value = tag; document.getElementById('new-ssid').value = (currentSsid && currentSsid !== '-') ? currentSsid : ''; openModal('ssidModal'); }
+function editPassword(tag) { document.getElementById('edit-pass-tag').value = tag; document.getElementById('new-password').value = ''; openModal('passwordModal'); }
+
+async function rebootDevice(tag) {
+  if (!confirm(I18N.rebootConfirmPrefix + ' ' + tag + '?')) return;
+  try {
+    const res  = await fetch('/admin/api/device/' + encodeURIComponent(tag) + '/reboot', { method: 'POST' });
+    const data = await res.json();
+    showToast(data.message || (data.ok ? I18N.rebootSent : I18N.failed), data.ok ? 's' : 'd');
+  } catch(e) { showToast('Error: ' + e.message, 'd'); }
+}
+
+document.getElementById('btn-save-ssid').addEventListener('click', async function() {
+  const btn = this;
+  const txt = btn.querySelector('.btn-text');
+  const ldr = btn.querySelector('.btn-loader');
+  const tag  = document.getElementById('edit-tag').value;
+  const ssid = document.getElementById('new-ssid').value.trim();
+  
+  if (!ssid) return showToast(I18N.ssidRequired, 'd');
+  
+  btn.disabled = true;
+  txt.style.display = 'none';
+  ldr.style.display = 'inline-block';
+
+  try {
+    const res  = await fetch('/admin/api/device/' + encodeURIComponent(tag) + '/ssid', { 
+      method:'POST', 
+      headers:{'Content-Type':'application/json'}, 
+      body: JSON.stringify({ ssid }) 
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(I18N.ssidSent, 's');
+      closeModal('ssidModal');
+      setTimeout(loadDevices, 2000);
+    } else {
+      showToast(data.message || I18N.ssidFailed, 'd');
+    }
+  } catch(e) {
+    showToast(I18N.connectionError, 'd');
+  } finally {
+    btn.disabled = false;
+    txt.style.display = 'inline-block';
+    ldr.style.display = 'none';
+  }
+});
+
+document.getElementById('btn-save-password').addEventListener('click', async function() {
+  const btn = this;
+  const txt = btn.querySelector('.btn-text');
+  const ldr = btn.querySelector('.btn-loader');
+  const tag  = document.getElementById('edit-pass-tag').value;
+  const pass = document.getElementById('new-password').value;
+  
+  if (!pass || pass.length < 8) return showToast(I18N.passwordMin, 'd');
+  
+  btn.disabled = true;
+  txt.style.display = 'none';
+  ldr.style.display = 'inline-block';
+
+  try {
+    const res  = await fetch('/admin/api/device/' + encodeURIComponent(tag) + '/password', { 
+      method:'POST', 
+      headers:{'Content-Type':'application/json'}, 
+      body: JSON.stringify({ password: pass }) 
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(I18N.passwordSent, 's');
+      closeModal('passwordModal');
+    } else {
+      showToast(data.message || I18N.passwordFailed, 'd');
+    }
+  } catch(e) {
+    showToast(I18N.connectionError, 'd');
+  } finally {
+    btn.disabled = false;
+    txt.style.display = 'inline-block';
+    ldr.style.display = 'none';
+  }
+});
+
+// ── SEARCH DEBOUNCE ────────────────────────────────────────────
+const searchEl = document.getElementById('search-device');
+if (searchEl) {
+  let st;
+  searchEl.addEventListener('input', () => { clearTimeout(st); st = setTimeout(loadDevices, 400); });
+}
+
+// ── TOAST NOTIFICATION ─────────────────────────────────────────
+function showToast(msg, type = 's') {
+  const old = document.querySelector('.toast-notif');
+  if (old) old.remove();
+  
+  const t = document.createElement('div');
+  t.className = 'toast-notif';
+  t.style.cssText = `position:fixed;bottom:32px;right:32px;z-index:10000;background:var(--bg2);border-left:5px solid var(--${type==='s'?'success':'danger'});border-radius:8px;padding:16px 24px;font-size:14px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 32px rgba(0,0,0,.5);animation:slideInRight .3s ease;color:var(--text);min-width:300px`;
+  
+  const icon = type === 's' ? 'check-circle-fill' : 'exclamation-circle-fill';
+  const color = type === 's' ? 'var(--success)' : 'var(--danger)';
+  
+  t.innerHTML = `
+    <i class="bi bi-${icon}" style="font-size:20px;color:${color}"></i>
+    <div style="flex:1">
+      <div style="font-weight:600;margin-bottom:2px">${type === 's' ? I18N.success : I18N.failed}</div>
+      <div style="color:var(--muted);font-size:13px">${msg}</div>
+    </div>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px"><i class="bi bi-x-lg"></i></button>
+  `;
+  document.body.appendChild(t);
+  setTimeout(() => { if(t.parentElement) t.style.animation = 'slideOutRight .3s ease forwards'; setTimeout(() => t.remove(), 300); }, 5000);
+}
+
+// ── REFRESH ALL ────────────────────────────────────────────────
+// DEPRECATED: This function is kept for backward compatibility but is disabled
+// Use manualRefreshAll() for user-initiated refreshes only
+function refreshAll() {
+  // INTENTIONALLY DISABLED - Auto-refresh has been turned off
+  // This function will only be called when user manually clicks "Refresh" button
+  loadStats();
+  loadDevices();
+}
+
+// This is the proper function to call for auto-refresh (which is now disabled)
+function manualRefreshAll() {
+  loadStats();
+  loadDevices();
+}
+
+function scheduleFastRefreshIfNeeded() {
+  // Auto-refresh during sync disabled to prevent continuous polling
+  if (fastRefreshTimer) {
+    clearTimeout(fastRefreshTimer);
+    fastRefreshTimer = null;
+  }
+  // Commented out: Previously would auto-refresh every 5s when devices were syncing
+  // if (!Array.isArray(devicesData) || !devicesData.some(d => d.syncInProgress)) return;
+  // fastRefreshTimer = setTimeout(() => {
+  //   refreshAll();
+  // }, 5000);
+}
+
+loadStats();
+loadDevices();
+// Auto-refresh disabled: Dashboard akan hanya refresh saat halaman pertama kali dibuka atau saat admin click tombol Refresh
+// setInterval(refreshAll, 30000);
+// NOTE: AUTO-REFRESH HAS BEEN COMPLETELY DISABLED
+// Users must manually click the "Refresh" button to update device list
+
+// ── CHECK IF SHOULD GO TO MONITORING TAB (from sidebar link) ──
+if (window.location.hash === '#monitoring') showTab('monitoring');
+window.addEventListener('hashchange', () => {
+  if (window.location.hash === '#monitoring') showTab('monitoring');
+  else if (window.location.hash === '#dashboard' || !window.location.hash) showTab('dashboard');
+});
+
+// ── GENIEACS SETTINGS FUNCTIONS ────────────────────────────────
+function openGenieACSSettings() {
+  openModal('genieacsModal');
+}
+
+async function saveGenieACSSettings() {
+  const formData = {
+    genieacs_timeout: parseInt(document.getElementById('genieacs_timeout').value),
+    genieacs_rxpower_threshold: parseFloat(document.getElementById('genieacs_rxpower_threshold').value),
+    genieacs_monitoring_interval: parseInt(document.getElementById('genieacs_monitoring_interval').value),
+    genieacs_monitoring_enabled: document.getElementById('genieacs_monitoring_enabled').checked
+  };
+
+  // Validate
+  if (formData.genieacs_timeout < 5000 || formData.genieacs_timeout > 120000) {
+    showGenieACSMessage('Timeout harus antara 5000-120000 ms', 'danger');
+    return;
+  }
+  if (formData.genieacs_rxpower_threshold < -40 || formData.genieacs_rxpower_threshold > -15) {
+    showGenieACSMessage('RX Power threshold harus antara -40 sampai -15 dBm', 'danger');
+    return;
+  }
+  if (formData.genieacs_monitoring_interval < 1 || formData.genieacs_monitoring_interval > 24) {
+    showGenieACSMessage('Monitoring interval harus antara 1-24 jam', 'danger');
+    return;
+  }
+
+  try {
+    const response = await fetch('/admin/api/genieacs/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      showGenieACSMessage(result.message, 'success');
+      setTimeout(() => {
+        closeModal('genieacsModal');
+        showToast('Pengaturan GenieACS berhasil disimpan', 's');
+      }, 1500);
+    } else {
+      showGenieACSMessage(result.message, 'danger');
+    }
+  } catch (error) {
+    showGenieACSMessage('Error: ' + error.message, 'danger');
+  }
+}
+
+async function testGenieACSConnection() {
+  showGenieACSMessage('Testing koneksi ke GenieACS...', 'info');
+
+  try {
+    const response = await fetch('/admin/api/genieacs/test');
+    const result = await response.json();
+    
+    if (result.success) {
+      const msg = result.message + (result.deviceCount !== undefined ? ' (' + result.deviceCount + ' devices)' : '');
+      showGenieACSMessage(msg, 'success');
+    } else {
+      showGenieACSMessage('Koneksi gagal: ' + result.message, 'danger');
+    }
+  } catch (error) {
+    showGenieACSMessage('Error: ' + error.message, 'danger');
+  }
+}
+
+function showGenieACSMessage(msg, type) {
+  const messageDiv = document.getElementById('genieacsMessage');
+  messageDiv.style.display = 'block';
+  
+  const colors = {
+    success: { bg: 'rgba(63, 185, 80, 0.15)', border: 'rgba(63, 185, 80, 0.3)', text: '#3fb950' },
+    danger: { bg: 'rgba(248, 81, 73, 0.15)', border: 'rgba(248, 81, 73, 0.3)', text: '#f85149' },
+    info: { bg: 'rgba(102, 126, 234, 0.15)', border: 'rgba(102, 126, 234, 0.3)', text: '#667eea' }
+  };
+  
+  const color = colors[type] || colors.info;
+  messageDiv.style.background = color.bg;
+  messageDiv.style.border = '1px solid ' + color.border;
+  messageDiv.style.color = color.text;
+  
+  const icons = { success: 'check-circle', danger: 'x-circle', info: 'info-circle' };
+  messageDiv.innerHTML = '<i class="bi bi-' + icons[type] + '"></i> ' + msg;
+}
+
+function toggleSelectAllMon(master) {
+  const checkboxes = document.querySelectorAll('.mon-device-checkbox');
+  checkboxes.forEach(cb => cb.checked = master.checked);
+  updateMonBulkPanel();
+}
+
+function updateMonBulkPanel() {
+  const checkboxes = document.querySelectorAll('.mon-device-checkbox:checked');
+  const panel = document.getElementById('monBulkActionsPanel');
+  const countSpan = document.getElementById('monSelectedCount');
+  
+  if (checkboxes.length > 0) {
+    panel.style.display = 'flex';
+    countSpan.textContent = checkboxes.length;
+  } else {
+    panel.style.display = 'none';
+    document.getElementById('selectAllMonDevices').checked = false;
+  }
+}
+
+function getSelectedMonDevices() {
+  const checkboxes = document.querySelectorAll('.mon-device-checkbox:checked');
+  const devices = [];
+  checkboxes.forEach(cb => {
+    devices.push({
+      id: cb.dataset.id,
+      acsId: cb.dataset.acs
+    });
+  });
+  return devices;
+}
+
+async function bulkMonSummon() {
+  const devices = getSelectedMonDevices();
+  if (devices.length === 0) return;
+  if (!confirm(`Summon / Sinkronisasi ulang ${devices.length} perangkat?`)) return;
+  
+  try {
+    const res = await fetch('/admin/acs/api/bulk/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ devices })
+    });
+    const d = await res.json();
+    showToast(d.message, d.success ? 's' : 'd');
+    if (d.success) setTimeout(refreshAll, 1500);
+  } catch (err) {
+    showToast('Gagal memproses bulk summon: ' + err.message, 'd');
+  }
+}
+
+async function bulkMonDelete() {
+  const devices = getSelectedMonDevices();
+  if (devices.length === 0) return;
+  if (!confirm(`HAPUS ${devices.length} perangkat dari database ACS?\n(Tindakan ini tidak dapat dibatalkan)`)) return;
+  
+  try {
+    const res = await fetch('/admin/acs/api/bulk/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ devices })
+    });
+    const d = await res.json();
+    showToast(d.message, d.success ? 's' : 'd');
+    if (d.success) setTimeout(refreshAll, 1500);
+  } catch (err) {
+    showToast('Gagal memproses bulk delete: ' + err.message, 'd');
+  }
+}
+
+async function summonMonDevice(deviceId, acsId) {
+  if (!confirm('Summon / Sinkronisasi ulang perangkat ' + deviceId + '?')) return;
+  try {
+    const res = await fetch('/admin/acs/api/refresh/' + encodeURIComponent(deviceId), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acsId })
+    });
+    const d = await res.json();
+    showToast(d.message, d.success ? 's' : 'd');
+    if (d.success) setTimeout(refreshAll, 1500);
+  } catch (err) {
+    showToast('Gagal mengirim summon: ' + err.message, 'd');
+  }
+}
+
+async function deleteMonDevice(deviceId, acsId) {
+  if (!confirm('Hapus perangkat ' + deviceId + ' dari database ACS?')) return;
+  try {
+    const res = await fetch('/admin/acs/api/device/' + encodeURIComponent(deviceId), {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acsId })
+    });
+    const d = await res.json();
+    showToast(d.message, d.success ? 's' : 'd');
+    if (d.success) setTimeout(refreshAll, 1500);
+  } catch (err) {
+    showToast('Gagal menghapus perangkat: ' + err.message, 'd');
+  }
+}
+
+// ── Grafik Pendapatan per Bulan ──
+(function () {
+  var el = document.getElementById('revenueChart');
+  if (!el || typeof Chart === 'undefined') return;
+  var rows = <%- JSON.stringify(revenueMonthly || []).split('<').join('\\u003c') %>;
+  var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  var byM = {}; (rows || []).forEach(function (r) { byM[r.month] = Number(r.revenue || 0); });
+  var labels = [], vals = [];
+  for (var m = 1; m <= 12; m++) { labels.push(months[m - 1]); vals.push(byM[m] || 0); }
+  var light = document.documentElement.getAttribute('data-theme') === 'light' || document.documentElement.classList.contains('light-theme');
+  var tick = light ? '#475569' : '#7d8590';
+  var grid = light ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.07)';
+  new Chart(el, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ label: 'Pendapatan', data: vals, backgroundColor: 'rgba(173,255,47,.5)', borderColor: '#ADFF2F', borderWidth: 1, borderRadius: 5, maxBarThickness: 34 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return 'Rp ' + Number(c.raw || 0).toLocaleString('id-ID'); } } } },
+      scales: { x: { ticks: { color: tick }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: tick, callback: function (v) { return 'Rp ' + (v >= 1000 ? (v / 1000) + 'k' : v); } }, grid: { color: grid } } }
+    }
+  });
+})();
+</script>
+</body>
+</html>

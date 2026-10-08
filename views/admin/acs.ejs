@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="<%= (typeof lang !== 'undefined' ? lang : 'id') %>">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>GenieACS Pro | <%= company %></title>
+    <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:30px; }
+        .stat-card { background:var(--card-bg); border:1px solid var(--border); border-radius:18px; padding:24px; display:flex; align-items:center; gap:20px; cursor:pointer; transition:all 0.3s; position:relative; overflow:hidden; }
+        .stat-card:hover { transform:translateY(-5px); border-color:var(--primary); background:var(--sidebar-bg); }
+        .stat-card::after { content:''; position:absolute; left:0; top:0; height:100%; width:4px; background:var(--card-color); }
+        .stat-icon { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; background:var(--sub-bg); color:var(--card-color); }
+        .stat-info h3 { font-size:28px; font-weight:800; margin:0; line-height:1; }
+        .stat-info p { font-size:13px; color:var(--muted); margin:8px 0 0; }
+
+        .acs-box { background:var(--card-bg); border:1px solid var(--border); border-radius:22px; overflow:hidden; }
+        .tab-bar { display:flex; background:var(--sub-bg); border-bottom:1px solid var(--border); }
+        .tab-bar button { padding:18px 25px; background:none; border:none; color:var(--muted); font-weight:600; cursor:pointer; transition:all 0.3s; border-bottom:3px solid transparent; display:flex; align-items:center; gap:8px; font-size:14px; }
+        .tab-bar button.active { color:var(--primary); border-bottom-color:var(--primary); background:rgba(59,130,246,0.05); }
+
+        .tab-pane { padding:30px; display:none; animation:fadeIn 0.4s ease; }
+        .tab-pane.active { display:block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        .table-container { width:100%; overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; }
+        th { background:var(--sub-bg); color:var(--muted); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:1px; padding:15px 20px; text-align:left; }
+        td { padding:15px 20px; border-bottom:1px solid var(--border); font-size:13px; color:var(--text); vertical-align:middle; }
+        tr:hover td { background:var(--hover-bg); }
+
+        .status-badge { padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:6px; }
+        .status-up { background:rgba(16,185,129,0.1); color:#10B981; border:1px solid rgba(16,185,129,0.2); }
+        .status-down { background:rgba(239,68,68,0.1); color:#EF4444; border:1px solid rgba(239,68,68,0.2); }
+
+        .btn-action { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--sub-bg); color:var(--muted); cursor:pointer; transition:all 0.2s; }
+        .btn-action:hover { background:var(--primary); color:white; border-color:var(--primary); transform:scale(1.1); }
+        .btn-action.danger:hover { background:var(--danger); border-color:var(--danger); }
+        .btn-action:disabled { opacity:0.5; cursor:not-allowed; }
+        .btn-action:disabled:hover { background:var(--sub-bg); color:var(--muted); border-color:var(--border); transform:none; }
+
+        .acs-server-tag { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; background:rgba(59,130,246,0.1); color:var(--primary); border:1px solid rgba(59,130,246,0.2); }
+        .acs-server-tag.offline { background:rgba(239,68,68,0.1); color:#EF4444; border-color:rgba(239,68,68,0.2); }
+
+        .modal-overlay { position:fixed; inset:0; background:var(--overlay-bg); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:2000; padding:20px; }
+        .modal-card { background:var(--sidebar-bg); border:1px solid var(--border); border-radius:24px; width:100%; max-width:500px; padding:30px; }
+
+        .device-link { text-decoration: none; display: block; transition: all 0.2s; }
+        .device-link:hover { opacity: 0.8; }
+        .device-link:hover div:first-child { text-decoration: underline; }
+
+        .bind-tag { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--card-bg); font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s; color: var(--text); }
+        .bind-tag:hover { border-color: var(--primary); background: var(--hover-bg); }
+        .bind-tag.active { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; box-shadow: 0 4px 12px rgba(59,130,246,0.2); }
+    </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'acs_pro', company }) %>
+<div class="mw">
+    <div class="topbar">
+        <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-hdd-network"></i> GenieACS Monitoring Pro</div>
+        <div class="tb-right">
+            <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
+            <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
+            <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+        </div>
+    </div>
+    <div class="page">
+        <div class="acs-head" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;">
+            <h1 class="page-title" style="margin:0;"><%= t('admin.acs.monitoring','GenieACS Monitoring') %></h1>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-g" onclick="syncOnuTags()" title="Sinkron Tag ONU pelanggan dari device.id ACS (berdasarkan PPPoE user)">
+                    <i class="bi bi-tags"></i> Sync Tag ONU
+                </button>
+                <button class="btn btn-p" onclick="syncAllACS()">
+                    <i class="bi bi-arrow-repeat"></i> Sync All ACS
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card" style="--card-color: var(--primary)">
+                <div class="stat-icon"><i class="bi bi-cpu"></i></div>
+                <div class="stat-info">
+                    <h3><%= devices.length %></h3>
+                    <p><%= t('admin.acs.total_devices','Total Devices') %></p>
+                </div>
+            </div>
+            <div class="stat-card" style="--card-color: #10B981">
+                <div class="stat-icon"><i class="bi bi-wifi"></i></div>
+                <div class="stat-info">
+                    <h3><%= devices.filter(d => d.isOnline).length %></h3>
+                    <p>Online</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="acs-box">
+            <div class="tab-bar">
+                <button class="active" onclick="switchTab('devices', this)"><i class="bi bi-display"></i> Devices</button>
+                <button onclick="switchTab('servers', this)"><i class="bi bi-hdd-rack"></i> ACS Servers</button>
+                <button onclick="switchTab('logs', this)"><i class="bi bi-clipboard-data"></i> Log</button>
+            </div>
+
+            <div id="tab-devices" class="tab-pane active">
+                <form action="/admin/acs" method="GET" class="srow">
+                    <div class="sinput" style="max-width:340px">
+                        <i class="bi bi-search"></i>
+                        <input class="fc" name="q" placeholder='<%= t("admin.acs.search_ph","Cari SN, Pelanggan, PPPoE...") %>' value="<%= (typeof searchQuery !== 'undefined' && searchQuery) ? searchQuery : '' %>">
+                    </div>
+                    <select class="fs" id="acsFilter" name="acs" style="width:190px" onchange="this.form.submit()">
+                        <option value="all"><%= t('admin.acs.all_servers','All ACS Servers') %></option>
+                        <% acsServers.forEach(s => { %>
+                            <option value="<%= s.id %>" <%= String(selectedAcsId) === String(s.id) ? 'selected' : '' %>><%= s.name %></option>
+                        <% }); %>
+                    </select>
+                    <select class="fs" name="dev_status" style="width:150px" onchange="this.form.submit()">
+                        <option value="">Semua Status</option>
+                        <option value="online" <%= (typeof filterDevStatus!=='undefined' && filterDevStatus==='online')?'selected':'' %>>Online</option>
+                        <option value="offline" <%= (typeof filterDevStatus!=='undefined' && filterDevStatus==='offline')?'selected':'' %>>Offline</option>
+                    </select>
+                    <select class="fs" name="vendor" style="width:150px" onchange="this.form.submit()">
+                        <option value="">Semua Vendor</option>
+                        <% (typeof vendors!=='undefined'?vendors:[]).forEach(v => { %><option value="<%= v %>" <%= (typeof filterVendor!=='undefined' && filterVendor===v)?'selected':'' %>><%= v %></option><% }) %>
+                    </select>
+                    <button class="btn btn-g btn-sm" type="submit"><i class="bi bi-search"></i> Search</button>
+                    <% if ((typeof searchQuery!=='undefined' && searchQuery) || (typeof filterDevStatus!=='undefined' && filterDevStatus) || (typeof filterVendor!=='undefined' && filterVendor)) { %>
+                        <a href="/admin/acs" class="btn btn-g btn-sm"><i class="bi bi-x"></i> Reset</a>
+                    <% } %>
+                </form>
+                
+                <!-- Bulk Actions Panel -->
+                <div id="bulkActionsPanel" style="display: none; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; align-items: center; justify-content: space-between;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text);">
+                        <span id="selectedCount">0</span> perangkat terpilih
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-p btn-sm" onclick="bulkSummon()" style="background: var(--primary);"><i class="bi bi-arrow-repeat"></i> Summon Terpilih</button>
+                        <button class="btn btn-d btn-sm" onclick="bulkDelete()" style="background: var(--danger);"><i class="bi bi-trash"></i> Hapus Terpilih</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="selectAllDevices" onchange="toggleSelectAll(this)"></th>
+                                <th><%= t('admin.acs.device_id','Device ID / SN') %></th>
+                                <th><%= t('admin.acs.customer_name','Customer Name') %></th>
+                                <th>IP Address</th>
+                                <th>RX Power</th>
+                                <th>PPPoE User</th>
+                                <th>ACS Server</th>
+                                <th><%= t('common.status','Status') %></th>
+                                <th><%= t('admin.acs.action','Aksi') %></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% devices.forEach(d => { %>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="device-checkbox" data-id="<%= d.id %>" data-acs="<%= d.acs_server_id || selectedAcsId %>" onchange="updateBulkPanel()">
+                                </td>
+                                <td>
+                                    <a href="/admin/acs/device/<%= encodeURIComponent(d.id) %>?acsId=<%= d.acs_server_id || selectedAcsId %>" class="device-link">
+                                        <div style="font-weight:700; color:var(--primary);"><%= d.sn %></div>
+                                        <div style="font-size:10px; color:var(--muted);"><%= d.id %></div>
+                                    </a>
+                                </td>
+                                <td>
+                                    <% if (d.customer_name && d.customer_name !== '-') { %>
+                                        <div style="font-weight:700; color:var(--text);"><i class="bi bi-person-fill text-primary me-1"></i><%= d.customer_name %></div>
+                                    <% } else { %>
+                                        <span class="text-muted" style="font-size:12px;">-</span>
+                                    <% } %>
+                                </td>
+                                <td><code><%= d.ip %></code></td>
+                                <td><%= d.rx_power %> dBm</td>
+                                <td><%= d.pppoe_user %></td>
+                                <td><span class="acs-server-tag"><%= d.acs_server_name %></span></td>
+                                <td>
+                                    <span class="status-badge <%= d.isOnline ? 'status-up' : 'status-down' %>">
+                                        <%= d.isOnline ? 'Online' : 'Offline' %>
+                                    </span>
+                                </td>
+                                <td style="white-space:nowrap">
+                                    <div class="act">
+                                        <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                                        <div class="act-menu">
+                                            <button type="button" class="act-item primary" onclick="refreshDevice('<%= d.id %>')"><i class="bi bi-arrow-repeat"></i> Refresh Device</button>
+                                            <button type="button" class="act-item" onclick="openAddWanModal('<%= d.id %>', '<%= d.acs_server_id || selectedAcsId %>', '<%= d.sn %>', '<%= d.manufacturer || "" %>', '<%= d.model || "" %>')"><i class="bi bi-diagram-3"></i> Add WAN (All-in-One)</button>
+                                            <div class="act-sep"></div>
+                                            <button type="button" class="act-item danger" onclick="deleteDevice('<%= d.id %>', '<%= d.acs_server_id || selectedAcsId %>')"><i class="bi bi-trash"></i> Hapus Perangkat</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-servers" class="tab-pane">
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                    <h3>ACS Servers</h3>
+                    <button class="btn btn-p btn-sm" onclick="openAddServerModal()"><i class="bi bi-plus-lg"></i> Add ACS Server</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><%= t('admin.acs.name','Name') %></th>
+                                <th>URL</th>
+                                <th><%= t('admin.acs.location','Location') %></th>
+                                <th><%= t('admin.acs.devices','Devices') %></th>
+                                <th><%= t('admin.acs.action','Aksi') %></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% acsServers.forEach(s => { %>
+                            <tr>
+                                <td><%= s.name %></td>
+                                <td><code><%= s.url %></code></td>
+                                <td><%= s.location %></td>
+                                <td><%= s.device_count %></td>
+                                <td>
+                                    <% if (String(s.id) !== 'legacy') { %>
+                                        <div class="act" style="display:inline-block">
+                                            <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                                            <div class="act-menu">
+                                                <button type="button" class="act-item primary" onclick="openEditServerModal(this)" data-id="<%= s.id %>" data-name="<%= s.name %>" data-url="<%= s.url %>" data-username="<%= s.username || '' %>" data-location="<%= s.location || '' %>"><i class="bi bi-pencil-square"></i> Edit Server</button>
+                                                <div class="act-sep"></div>
+                                                <button type="button" class="act-item danger" onclick="deleteServer('<%= s.id %>')"><i class="bi bi-trash"></i> Hapus Server</button>
+                                            </div>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="act" style="display:inline-block">
+                                            <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                                            <div class="act-menu">
+                                                <button type="button" class="act-item primary" onclick="openEditLegacyAcsModal()"><i class="bi bi-pencil-square"></i> Edit Default ACS</button>
+                                                <button type="button" class="act-item danger" disabled style="opacity:.5;cursor:not-allowed"><i class="bi bi-trash"></i> Hapus (tidak bisa)</button>
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-logs" class="tab-pane">
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
+                    <h3 style="margin:0;">Log Aktivitas ACS</h3>
+                    <select class="fs" id="logServerFilter" style="width:220px;" onchange="loadAcsLogs()">
+                        <option value="all">Semua Server</option>
+                        <% acsServers.forEach(s => { %>
+                        <option value="<%= s.id %>"><%= s.name %></option>
+                        <% }); %>
+                    </select>
+                    <label style="display:flex; gap:6px; align-items:center; font-size:13px; color:var(--muted);">
+                        <input type="checkbox" id="logOnlyError" onchange="loadAcsLogs()"> Hanya error / fault
+                    </label>
+                    <button class="btn btn-p btn-sm" onclick="loadAcsLogs()"><i class="bi bi-arrow-clockwise"></i> Muat Ulang</button>
+                    <span style="font-size:12px; color:var(--muted);">Log diambil dari tiap ACS (Built-in: riwayat task; GenieACS: <code>/faults</code>).</span>
+                </div>
+                <div id="acsLogContainer"><div class="text-muted" style="padding:12px;">Pilih filter lalu klik "Muat Ulang" untuk memuat log.</div></div>
+            </div>
+        </div>
+        <footer style="margin-top: 30px; padding: 20px; text-align: center; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border);">
+            &copy; <%= new Date().getFullYear() %> <%= (typeof settings !== 'undefined' ? settings.company_header : 'OPEN-ISP') %> - GenieACS Pro
+        </footer>
+    </div>
+</div>
+
+<!-- Unified Add WAN All-in-One Modal -->
+<div class="mo" id="addWanModal">
+  <div class="mb" style="max-width:650px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-diagram-3"></i> Provisioning All-in-One WAN</span>
+      <button class="mc" onclick="closeModal('addWanModal')">&times;</button>
+    </div>
+    <div class="mbody" style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+      <form id="addWanForm" onsubmit="submitAddWanForm(event)">
+        <input type="hidden" id="wanDeviceId" value="">
+        <input type="hidden" id="wanAcsId" value="">
+        
+        <div style="background: var(--sub-bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed var(--border);">
+            <div style="display: flex; gap: 15px; font-size: 13px;">
+                <div><strong>SN Perangkat:</strong> <span id="lblWanSn" class="text-primary" style="font-weight: 700;">-</span></div>
+                <div><strong>Vendor:</strong> <span id="lblWanVendor" style="text-transform: capitalize; font-weight: 700;">-</span></div>
+                <div><strong>Tipe:</strong> <span id="lblWanModel" style="font-weight: 700;">-</span></div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div class="fg" style="margin: 0;">
+              <label class="fl">WAN Connection Mode</label>
+              <select id="wanMode" class="fc" onchange="toggleWanModeFields()" style="height: 42px;">
+                <option value="pppoe">PPPoE (Router Mode)</option>
+                <option value="bridge">Bridge Mode</option>
+              </select>
+            </div>
+            <div class="fg" style="margin: 0;">
+              <label class="fl">VLAN ID</label>
+              <input type="number" id="wanVlanId" class="fc" required min="1" max="4094" placeholder="e.g. 100" style="height: 42px;">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display:flex; align-items:center; gap:10px; font-size:13px; color:var(--text); font-weight:700; cursor:pointer;">
+              <input type="checkbox" id="wanDhcp" checked style="width:18px; height:18px;">
+              <i class="bi bi-hdd-rack text-primary"></i> Aktifkan DHCP Server LAN (Rekomendasi: Nonaktifkan jika Bridge)
+            </label>
+        </div>
+
+        <!-- PPPoE Credentials Block -->
+        <div id="pppoeFields" style="background: rgba(59,130,246,0.03); border: 1px solid rgba(59,130,246,0.1); padding: 18px; border-radius: 16px; margin-bottom: 15px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--primary);"><i class="bi bi-key"></i> Kredensial PPPoE</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                <div class="fg" style="margin: 0;">
+                  <label class="fl">Username PPPoE</label>
+                  <input type="text" id="wanPppoeUser" class="fc" placeholder="e.g. customer123">
+                </div>
+                <div class="fg" style="margin: 0;">
+                  <label class="fl">Password PPPoE</label>
+                  <input type="text" id="wanPppoePass" class="fc" placeholder="e.g. secretpass">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; align-items: center; margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border);">
+                <div>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); font-weight:600; cursor:pointer;">
+                      <input type="checkbox" id="wanAutoMikrotik" checked style="width:18px; height:18px;" onchange="toggleMikrotikProfileField()">
+                      Auto-create PPPoE Secret di MikroTik
+                    </label>
+                </div>
+                <div class="fg" style="margin: 0;" id="pppoeProfileContainer">
+                  <label class="fl"><%= t('admin.acs.profile_mikrotik','MikroTik Profile') %></label>
+                  <select id="wanPppoeProfile" class="fc" style="height: 38px;">
+                    <% pppoeProfiles.forEach(p => { %>
+                        <option value="<%= p.name %>" <%= p.name === 'default' ? 'selected' : '' %>><%= p.name %></option>
+                    <% }); %>
+                  </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unified Wi-Fi Block -->
+        <div style="border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; overflow: hidden;">
+            <div style="background: var(--sub-bg); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
+                <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13px; cursor: pointer; margin: 0; width: 100%;">
+                    <input type="checkbox" id="wanConfigureWifi" onchange="toggleWifiFields()" style="width: 18px; height: 18px;">
+                    <i class="bi bi-wifi text-primary"></i> Konfigurasikan Wi-Fi Sekaligus
+                </label>
+            </div>
+            <div id="wifiFields" style="display: none; padding: 20px; background: rgba(16,185,129,0.01);">
+                <div id="wifiLoading" style="text-align: center; padding: 15px; color: var(--muted);">
+                    <i class="bi bi-arrow-clockwise spin" style="font-size: 20px;"></i> Mengunduh SSID lama...
+                </div>
+                <div id="wifiBandsContainer" style="display: grid; gap: 15px;">
+                    <!-- 2.4GHz Band -->
+                    <div id="band24Fields" style="display: block;">
+                        <h5 style="margin: 0 0 10px 0; font-size: 13px; color: var(--text); font-weight: 700;"><i class="bi bi-broadcast"></i> Wi-Fi 2.4GHz</h5>
+                        <div class="form-row2">
+                            <div class="fg" style="margin: 0;">
+                              <label class="fl">SSID (Nama Wi-Fi)</label>
+                              <input type="text" id="wifiSsid24" class="fc" placeholder="Mengunduh...">
+                            </div>
+                            <div class="fg" style="margin: 0;">
+                              <label class="fl">Sandi Wi-Fi (WPA2)</label>
+                              <input type="password" id="wifiPass24" class="fc" placeholder="<%= t('admin.common.keep_empty','Biarkan kosong jika tidak diganti') %>">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 5GHz Band -->
+                    <div id="band5Fields" style="display: none; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 10px;">
+                        <h5 style="margin: 0 0 10px 0; font-size: 13px; color: var(--text); font-weight: 700;"><i class="bi bi-lightning-charge"></i> Wi-Fi 5GHz</h5>
+                        <div class="form-row2">
+                            <div class="fg" style="margin: 0;">
+                              <label class="fl">SSID (Nama Wi-Fi)</label>
+                              <input type="text" id="wifiSsid5" class="fc" placeholder="Mengunduh...">
+                            </div>
+                            <div class="fg" style="margin: 0;">
+                              <label class="fl">Sandi Wi-Fi (WPA2)</label>
+                              <input type="password" id="wifiPass5" class="fc" placeholder="<%= t('admin.common.keep_empty','Biarkan kosong jika tidak diganti') %>">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAN / WLAN Port Binding -->
+        <div style="background: var(--sub-bg); border: 1px solid var(--border); padding: 18px; border-radius: 16px; margin-bottom: 5px;">
+            <h4 style="margin: 0 0 12px 0; font-size: 13px; color: var(--text); font-weight: 700;"><i class="bi bi-bezier2 text-primary"></i> LAN / WLAN Port Binding</h4>
+            
+            <label class="fl" style="margin-bottom: 8px;">Pilih LAN Port yang akan di-bind:</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                <label class="bind-tag active" id="lblLan1">
+                    <input type="checkbox" name="lanPorts" value="LAN1" checked style="display: none;" onchange="syncTagClass(this, 'lblLan1')"> LAN 1
+                </label>
+                <label class="bind-tag active" id="lblLan2">
+                    <input type="checkbox" name="lanPorts" value="LAN2" checked style="display: none;" onchange="syncTagClass(this, 'lblLan2')"> LAN 2
+                </label>
+                <label class="bind-tag active" id="lblLan3">
+                    <input type="checkbox" name="lanPorts" value="LAN3" checked style="display: none;" onchange="syncTagClass(this, 'lblLan3')"> LAN 3
+                </label>
+                <label class="bind-tag active" id="lblLan4">
+                    <input type="checkbox" name="lanPorts" value="LAN4" checked style="display: none;" onchange="syncTagClass(this, 'lblLan4')"> LAN 4
+                </label>
+            </div>
+
+            <label class="fl" style="margin-bottom: 8px;">Pilih WLAN (SSID) yang akan di-bind:</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                <label class="bind-tag active" id="lblWlan1">
+                    <input type="checkbox" name="wlanSsids" value="SSID1" checked style="display: none;" onchange="syncTagClass(this, 'lblWlan1')"> SSID 1
+                </label>
+                <label class="bind-tag" id="lblWlan2">
+                    <input type="checkbox" name="wlanSsids" value="SSID2" style="display: none;" onchange="syncTagClass(this, 'lblWlan2')"> SSID 2
+                </label>
+                <label class="bind-tag" id="lblWlan3">
+                    <input type="checkbox" name="wlanSsids" value="SSID3" style="display: none;" onchange="syncTagClass(this, 'lblWlan3')"> SSID 3
+                </label>
+                <label class="bind-tag" id="lblWlan4">
+                    <input type="checkbox" name="wlanSsids" value="SSID4" style="display: none;" onchange="syncTagClass(this, 'lblWlan4')"> SSID 4
+                </label>
+            </div>
+        </div>
+
+        <div id="addWanProgressBox" style="display:none; margin-top:16px; border:1px solid var(--border); border-radius:16px; padding:16px; background:rgba(59,130,246,0.04);">
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:8px;">
+                <strong style="font-size:13px; color:var(--text);"><i class="bi bi-diagram-3 me-1"></i><%= t('admin.acs.progress_add_wan','Progress Add WAN') %></strong>
+                <span id="addWanProgressBadge" class="text-primary" style="font-size:12px; font-weight:700;"><%= t('admin.acs.waiting','Menunggu') %></span>
+            </div>
+            <div id="addWanProgressSummary" style="font-size:12px; color:var(--muted); margin-bottom:10px;"><%= t('admin.acs.workflow_not_started','Workflow not started.') %></div>
+            <div id="addWanProgressList" style="display:grid; gap:8px;"></div>
+        </div>
+
+      </form>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('addWanModal')"><%= t('admin.acs.cancel','Batal') %></button>
+      <button type="submit" form="addWanForm" class="btn btn-p" id="btn-save-add-wan">
+        <span class="btn-text"><i class="bi bi-save"></i> Jalankan Provisioning</span>
+        <span class="btn-loader" style="display:none"><i class="bi bi-arrow-clockwise spin"></i> Memproses...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="serverModal">
+  <div class="mb" style="max-width:560px">
+    <div class="mh">
+      <span class="mt" id="acsServerModalTitle"><i class="bi bi-server"></i> Add ACS Server</span>
+      <button class="mc" onclick="closeModal('serverModal')">&times;</button>
+    </div>
+    <div class="mbody">
+      <form id="acsServerForm" onsubmit="saveServer(event)">
+        <input type="hidden" id="sId" value="">
+        <div class="fg">
+          <label class="fl"><%= t('admin.acs.server_name','Server Name') %></label>
+          <input type="text" id="sName" class="fc" required placeholder="e.g. Server Pusat">
+        </div>
+        <div class="fg">
+          <label class="fl">API URL</label>
+          <input type="text" id="sUrl" class="fc" required placeholder="http://192.168.1.10:7557">
+        </div>
+        <div class="form-row2">
+          <div class="fg" style="margin:0">
+            <label class="fl">Username</label>
+            <input type="text" id="sUser" class="fc" placeholder='<%= t("admin.acs.optional","Opsional") %>'>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--muted);font-weight:600">
+              <input type="checkbox" id="sClearUser" style="width:16px;height:16px">
+              Kosongkan username
+            </label>
+          </div>
+          <div class="fg" style="margin:0">
+            <label class="fl">Password</label>
+            <input type="password" id="sPass" class="fc" placeholder='<%= t("admin.acs.optional","Opsional") %>'>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--muted);font-weight:600">
+              <input type="checkbox" id="sClearPass" style="width:16px;height:16px">
+              Kosongkan password
+            </label>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.acs.location_note','Location / Note') %></label>
+          <input type="text" id="sLoc" class="fc" placeholder='<%= t("admin.acs.location_note_ph","cth. Data Center") %>'>
+        </div>
+      </form>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('serverModal')"><%= t('admin.acs.cancel','Batal') %></button>
+      <button type="submit" form="acsServerForm" class="btn btn-p" id="btn-save-acs-server">
+        <span class="btn-text"><i class="bi bi-save"></i> <%= t('common.save','Simpan') %></span>
+        <span class="btn-loader" style="display:none"><i class="bi bi-arrow-clockwise spin"></i> Menyimpan...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-pane').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+    var pane = document.getElementById('tab-' + id);
+    if (pane) pane.classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (id === 'logs' && typeof loadAcsLogs === 'function' && !window._acsLogsLoaded) { window._acsLogsLoaded = true; loadAcsLogs(); }
+}
+function escAcs(v){ return String(v == null ? '' : v).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]); }); }
+function loadAcsLogs() {
+    var el = document.getElementById('acsLogContainer');
+    if (!el) return;
+    var server = (document.getElementById('logServerFilter') || {}).value || 'all';
+    var onlyErr = (document.getElementById('logOnlyError') || {}).checked ? '1' : '0';
+    el.innerHTML = '<div class="text-muted" style="padding:12px;">Memuat log…</div>';
+    fetch('/admin/acs/logs?server=' + encodeURIComponent(server) + '&onlyError=' + onlyErr + '&limit=200')
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            if (!d || !d.ok) { el.innerHTML = '<div style="color:var(--danger);padding:12px;">Gagal: ' + escAcs((d && d.error) || '') + '</div>'; return; }
+            if (!d.servers.length) { el.innerHTML = '<div class="text-muted" style="padding:12px;">Tidak ada server ACS.</div>'; return; }
+            el.innerHTML = d.servers.map(function(s){
+                var rows = (s.entries && s.entries.length) ? s.entries.map(function(e){
+                    var color = e.status === 'completed' ? '#10b981' : (e.status === 'skipped' ? '#f59e0b' : '#ef4444');
+                    return '<tr>' +
+                        '<td style="white-space:nowrap;font-size:12px;color:var(--muted);">' + escAcs(e.time || '-') + '</td>' +
+                        '<td><code style="font-size:12px;">' + escAcs(e.device || '-') + '</code></td>' +
+                        '<td style="font-size:12px;">' + escAcs(e.action || '-') + '</td>' +
+                        '<td style="font-size:12px;font-weight:700;color:' + color + ';">' + escAcs(e.status || '-') + '</td>' +
+                        '<td style="font-size:12px;color:var(--muted);max-width:520px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escAcs(e.message || '') + '">' + escAcs(e.message || '') + '</td>' +
+                    '</tr>';
+                }).join('') : '<tr><td colspan="5" class="text-muted" style="text-align:center;padding:16px;">Tidak ada log.</td></tr>';
+                return '<div style="margin-bottom:22px;">' +
+                    '<div style="font-weight:700;margin-bottom:8px;"><i class="bi bi-hdd-rack"></i> ' + escAcs(s.name) + ' <code style="font-size:11px;color:var(--muted);">' + escAcs(s.url) + '</code> <span class="badge" style="font-size:10px;">' + (s.entries ? s.entries.length : 0) + '</span></div>' +
+                    '<div class="table-container"><table><thead><tr><th><%= t('collector.col_time','Waktu') %></th><th>Perangkat</th><th><%= t('common.actions','Aksi') %></th><th><%= t('common.status','Status') %></th><th>Pesan</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+                '</div>';
+            }).join('');
+        })
+        .catch(function(e){ el.innerHTML = '<div style="color:var(--danger);padding:12px;">Error: ' + escAcs(e.message) + '</div>'; });
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+    if (id === 'addWanModal') stopAddWanProgressPolling();
+}
+document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => {
+    if (e.target === m) closeModal(m.id);
+}));
+
+function openAddServerModal() {
+    document.getElementById('acsServerModalTitle').innerHTML = '<i class="bi bi-server"></i> Add ACS Server';
+    document.getElementById('sId').value = '';
+    document.getElementById('sName').value = '';
+    document.getElementById('sUrl').value = '';
+    document.getElementById('sUser').value = '';
+    document.getElementById('sPass').value = '';
+    document.getElementById('sLoc').value = '';
+    document.getElementById('sClearUser').checked = false;
+    document.getElementById('sClearPass').checked = false;
+    document.getElementById('sName').disabled = false;
+    document.getElementById('sLoc').disabled = false;
+    openModal('serverModal');
+}
+
+function openEditServerModal(btn) {
+    document.getElementById('acsServerModalTitle').innerHTML = '<i class="bi bi-server"></i> Edit ACS Server';
+    document.getElementById('sId').value = btn.dataset.id || '';
+    document.getElementById('sName').value = btn.dataset.name || '';
+    document.getElementById('sUrl').value = btn.dataset.url || '';
+    document.getElementById('sUser').value = btn.dataset.username || '';
+    document.getElementById('sPass').value = '';
+    document.getElementById('sLoc').value = btn.dataset.location || '';
+    document.getElementById('sClearUser').checked = false;
+    document.getElementById('sClearPass').checked = false;
+    document.getElementById('sName').disabled = false;
+    document.getElementById('sLoc').disabled = false;
+    openModal('serverModal');
+}
+
+function openEditLegacyAcsModal() {
+    document.getElementById('acsServerModalTitle').innerHTML = '<i class="bi bi-server"></i> Edit Default ACS';
+    document.getElementById('sId').value = 'legacy';
+    document.getElementById('sName').value = 'Default ACS';
+    document.getElementById('sUrl').value = '<%= (typeof settings !== "undefined" && settings.genieacs_url) ? String(settings.genieacs_url) : "" %>';
+    document.getElementById('sUser').value = '<%= (typeof settings !== "undefined" && settings.genieacs_username) ? String(settings.genieacs_username) : "" %>';
+    document.getElementById('sPass').value = '';
+    document.getElementById('sLoc').value = '';
+    document.getElementById('sClearUser').checked = false;
+    document.getElementById('sClearPass').checked = false;
+    document.getElementById('sName').disabled = true;
+    document.getElementById('sLoc').disabled = true;
+    openModal('serverModal');
+}
+
+async function saveServer(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save-acs-server');
+    const txt = btn.querySelector('.btn-text');
+    const ldr = btn.querySelector('.btn-loader');
+    btn.disabled = true;
+    txt.style.display = 'none';
+    ldr.style.display = 'inline-block';
+    const id = document.getElementById('sId').value.trim();
+    const body = {
+        name: document.getElementById('sName').value,
+        url: document.getElementById('sUrl').value,
+        username: document.getElementById('sUser').value,
+        password: document.getElementById('sPass').value,
+        location: document.getElementById('sLoc').value,
+        clear_username: document.getElementById('sClearUser').checked,
+        clear_password: document.getElementById('sClearPass').checked
+    };
+    try {
+        const isLegacy = id === 'legacy';
+        const endpoint = isLegacy ? '/admin/acs/api/servers/legacy' : (id ? ('/admin/acs/api/servers/' + encodeURIComponent(id)) : '/admin/acs/api/servers');
+        const method = isLegacy ? 'PUT' : (id ? 'PUT' : 'POST');
+        const res = await fetch(endpoint, {
+            method,
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data && data.success) return location.reload();
+        alert((data && data.message) ? data.message : 'Gagal menyimpan server');
+    } finally {
+        btn.disabled = false;
+        txt.style.display = 'inline-block';
+        ldr.style.display = 'none';
+    }
+}
+async function deleteServer(id) {
+    if(!confirm('Hapus server ini?')) return;
+    const res = await fetch('/admin/acs/api/servers/' + id, { method: 'DELETE' });
+    if((await res.json()).success) location.reload();
+}
+async function refreshDevice(deviceId) {
+    if(!confirm('Refresh device ' + deviceId + '?')) return;
+    const res = await fetch('/admin/acs/api/refresh/' + encodeURIComponent(deviceId), {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ acsId: '<%= selectedAcsId %>' })
+    });
+    const d = await res.json();
+    alert(d.message);
+}
+// Sync class active on binding tag label based on checkbox state
+function syncTagClass(checkbox, labelId) {
+    const lbl = document.getElementById(labelId);
+    if (checkbox.checked) {
+        lbl.classList.add('active');
+    } else {
+        lbl.classList.remove('active');
+    }
+}
+
+// Toggle visibility of PPPoE-specific fields
+function toggleWanModeFields() {
+    const mode = document.getElementById('wanMode').value;
+    const pppoeFields = document.getElementById('pppoeFields');
+    const wanDhcp = document.getElementById('wanDhcp');
+    if (mode === 'pppoe') {
+        pppoeFields.style.display = 'block';
+        if (wanDhcp) wanDhcp.checked = true;
+    } else {
+        pppoeFields.style.display = 'none';
+        if (wanDhcp) wanDhcp.checked = false;
+    }
+}
+
+// Toggle visibility of Profile MikroTik field based on auto-create check
+function toggleMikrotikProfileField() {
+    const autoChk = document.getElementById('wanAutoMikrotik');
+    const container = document.getElementById('pppoeProfileContainer');
+    if (autoChk.checked) {
+        container.style.visibility = 'visible';
+    } else {
+        container.style.visibility = 'hidden';
+    }
+}
+
+// Toggle Wi-Fi configuration slide-down and AJAX fetch
+async function toggleWifiFields() {
+    const configureWifi = document.getElementById('wanConfigureWifi').checked;
+    const wifiFields = document.getElementById('wifiFields');
+    
+    if (configureWifi) {
+        wifiFields.style.display = 'block';
+        
+        const deviceId = document.getElementById('wanDeviceId').value;
+        const acsId = document.getElementById('wanAcsId').value;
+        const wifiLoading = document.getElementById('wifiLoading');
+        const band24Fields = document.getElementById('band24Fields');
+        const band5Fields = document.getElementById('band5Fields');
+        
+        wifiLoading.style.display = 'block';
+        band24Fields.style.opacity = '0.5';
+        band5Fields.style.opacity = '0.5';
+        
+        try {
+            const res = await fetch(`/admin/acs/api/wifi-settings/${encodeURIComponent(deviceId)}?acsId=${encodeURIComponent(acsId)}`);
+            const d = await res.json();
+            
+            if (d && d.success && Array.isArray(d.bands)) {
+                // Reset fields
+                document.getElementById('wifiSsid24').value = '';
+                document.getElementById('wifiSsid5').value = '';
+                band5Fields.style.display = 'none';
+                
+                d.bands.forEach(b => {
+                    if (b.index === '1') {
+                        document.getElementById('wifiSsid24').value = b.ssid;
+                        document.getElementById('wifiSsid24').placeholder = 'Nama Wi-Fi 2.4G';
+                    } else if (b.index === '5' || b.index === '2') {
+                        band5Fields.style.display = 'block';
+                        document.getElementById('wifiSsid5').value = b.ssid;
+                        document.getElementById('wifiSsid5').placeholder = 'Nama Wi-Fi 5G';
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Gagal mengambil SSID perangkat:', e);
+        } finally {
+            wifiLoading.style.display = 'none';
+            band24Fields.style.opacity = '1';
+            band5Fields.style.opacity = '1';
+        }
+    } else {
+        wifiFields.style.display = 'none';
+    }
+}
+
+let addWanProgressTimer = null;
+let addWanTrackingState = null;
+
+function stopAddWanProgressPolling() {
+    if (addWanProgressTimer) {
+        clearTimeout(addWanProgressTimer);
+        addWanProgressTimer = null;
+    }
+}
+
+function resetAddWanProgress() {
+    stopAddWanProgressPolling();
+    addWanTrackingState = null;
+    const box = document.getElementById('addWanProgressBox');
+    const badge = document.getElementById('addWanProgressBadge');
+    const summary = document.getElementById('addWanProgressSummary');
+    const list = document.getElementById('addWanProgressList');
+    if (box) box.style.display = 'none';
+    if (badge) {
+        badge.className = 'text-primary';
+        badge.textContent = '<%= t("admin.acs.waiting","Menunggu") %>';
+    }
+    if (summary) {
+        summary.textContent = '<%= t("admin.acs.workflow_not_started","Workflow not started.") %>';
+    }
+    if (list) {
+        list.innerHTML = '';
+    }
+}
+
+function renderAddWanProgress(data) {
+    const box = document.getElementById('addWanProgressBox');
+    const badge = document.getElementById('addWanProgressBadge');
+    const summary = document.getElementById('addWanProgressSummary');
+    const list = document.getElementById('addWanProgressList');
+    if (!box || !badge || !summary || !list) return;
+
+    box.style.display = 'block';
+    summary.textContent = data.summary || 'Workflow sedang diproses.';
+
+    if (data.hasFailure) {
+        badge.className = 'text-danger';
+        badge.textContent = 'Ada Gagal';
+    } else if (data.done) {
+        badge.className = 'text-success';
+        badge.textContent = 'Selesai';
+    } else {
+        badge.className = 'text-warning';
+        badge.textContent = 'Berjalan';
+    }
+
+    const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+    list.innerHTML = tasks.map(task => {
+        const status = String(task.status || 'pending');
+        let statusClass = 'text-muted';
+        let statusLabel = 'Pending';
+        if (status === 'completed') {
+            statusClass = 'text-success';
+            statusLabel = 'Selesai';
+        } else if (status === 'failed') {
+            statusClass = 'text-danger';
+            statusLabel = 'Gagal';
+        } else if (status === 'in_progress') {
+            statusClass = 'text-warning';
+            statusLabel = 'Diproses';
+        }
+        return `
+            <div style="display:flex; justify-content:space-between; gap:12px; border:1px dashed var(--border); border-radius:12px; padding:10px 12px; background:rgba(15,23,42,0.08);">
+                <span style="font-size:12px; color:var(--text);">${task.label || task.name || 'Task ACS'}</span>
+                <span class="${statusClass}" style="font-size:12px; font-weight:700;">${statusLabel}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+async function pollAddWanProgress() {
+    if (!addWanTrackingState || !addWanTrackingState.deviceId) return;
+
+    const params = new URLSearchParams();
+    if (addWanTrackingState.workflowId) params.set('workflowId', addWanTrackingState.workflowId);
+    if (addWanTrackingState.rootTaskId) params.set('rootTaskId', String(addWanTrackingState.rootTaskId));
+
+    try {
+        const res = await fetch(`/admin/acs/api/add-wan-status/${encodeURIComponent(addWanTrackingState.deviceId)}?${params.toString()}`, {
+            cache: 'no-store'
+        });
+        const data = await res.json();
+        if (!data || !data.success) throw new Error(data && data.message ? data.message : 'Gagal membaca progress Add WAN');
+
+        renderAddWanProgress(data);
+
+        if (data.done) {
+            stopAddWanProgressPolling();
+            const btn = document.getElementById('btn-save-add-wan');
+            const txt = btn ? btn.querySelector('.btn-text') : null;
+            const ldr = btn ? btn.querySelector('.btn-loader') : null;
+            if (btn) btn.disabled = false;
+            if (txt) txt.style.display = 'inline-block';
+            if (ldr) ldr.style.display = 'none';
+            setTimeout(() => {
+                closeModal('addWanModal');
+                location.reload();
+            }, data.hasFailure ? 2500 : 1800);
+            return;
+        }
+
+        addWanProgressTimer = setTimeout(pollAddWanProgress, 4000);
+    } catch (err) {
+        stopAddWanProgressPolling();
+        const summary = document.getElementById('addWanProgressSummary');
+        if (summary) summary.textContent = 'Gagal membaca progress workflow Add WAN.';
+        const btn = document.getElementById('btn-save-add-wan');
+        const txt = btn ? btn.querySelector('.btn-text') : null;
+        const ldr = btn ? btn.querySelector('.btn-loader') : null;
+        if (btn) btn.disabled = false;
+        if (txt) txt.style.display = 'inline-block';
+        if (ldr) ldr.style.display = 'none';
+    }
+}
+
+// Open modal Add WAN All-in-One and populate basic details
+async function openAddWanModal(deviceId, acsId, sn, manufacturer, model) {
+    resetAddWanProgress();
+    document.getElementById('wanDeviceId').value = deviceId;
+    document.getElementById('wanAcsId').value = acsId;
+    document.getElementById('lblWanSn').innerText = sn || deviceId;
+    document.getElementById('lblWanVendor').innerText = manufacturer || '-';
+    document.getElementById('lblWanModel').innerText = model || '-';
+    
+    // Reset form fields
+    document.getElementById('wanVlanId').value = '';
+    document.getElementById('wanPppoeUser').value = '';
+    document.getElementById('wanPppoePass').value = '';
+    document.getElementById('wanConfigureWifi').checked = false;
+    document.getElementById('wifiFields').style.display = 'none';
+    
+    // Default active bindings
+    document.querySelectorAll('input[name="lanPorts"]').forEach(c => {
+        c.checked = true;
+        syncTagClass(c, 'lbl' + c.value.charAt(0) + c.value.slice(1).toLowerCase());
+    });
+    
+    // Reset SSID labels to original text first
+    for (let i = 1; i <= 4; i++) {
+        const lbl = document.getElementById(`lblWlan${i}`);
+        if (lbl) {
+            lbl.innerHTML = `<input type="checkbox" name="wlanSsids" value="SSID${i}" ${i === 1 ? 'checked' : ''} style="display: none;" onchange="syncTagClass(this, 'lblWlan${i}')"> SSID ${i}`;
+            if (i === 1) lbl.classList.add('active');
+            else lbl.classList.remove('active');
+        }
+    }
+    
+    toggleWanModeFields();
+    toggleMikrotikProfileField();
+    openModal('addWanModal');
+    
+    // Async fetch WLAN actual SSID names
+    try {
+        const res = await fetch(`/admin/acs/api/wifi-settings/${encodeURIComponent(deviceId)}?acsId=${encodeURIComponent(acsId)}`);
+        const d = await res.json();
+        if (d && d.success && Array.isArray(d.bands)) {
+            d.bands.forEach(b => {
+                const lbl = document.getElementById(`lblWlan${b.index}`);
+                if (lbl) {
+                    const isChecked = b.index === '1'; // Default SSID 1 is checked
+                    lbl.innerHTML = `<input type="checkbox" name="wlanSsids" value="SSID${b.index}" ${isChecked ? 'checked' : ''} style="display: none;" onchange="syncTagClass(this, 'lblWlan${b.index}')"> SSID ${b.index}: ${b.ssid}`;
+                }
+            });
+        }
+    } catch (e) {
+        console.error('Gagal mengambil nama SSID:', e);
+    }
+}
+
+// AJAX submission of the Provisioning form
+async function submitAddWanForm(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save-add-wan');
+    const txt = btn.querySelector('.btn-text');
+    const ldr = btn.querySelector('.btn-loader');
+    
+    btn.disabled = true;
+    txt.style.display = 'none';
+    ldr.style.display = 'inline-block';
+    
+    const deviceId = document.getElementById('wanDeviceId').value;
+    const acsId = document.getElementById('wanAcsId').value;
+    
+    const lanPorts = [];
+    document.querySelectorAll('input[name="lanPorts"]:checked').forEach(c => lanPorts.push(c.value));
+    
+    const wlanSsids = [];
+    document.querySelectorAll('input[name="wlanSsids"]:checked').forEach(c => wlanSsids.push(c.value));
+    
+    const body = {
+        acsId,
+        mode: document.getElementById('wanMode').value,
+        vlanId: document.getElementById('wanVlanId').value,
+        pppoeUser: document.getElementById('wanPppoeUser').value,
+        pppoePass: document.getElementById('wanPppoePass').value,
+        pppoeProfile: document.getElementById('wanPppoeProfile').value,
+        autoCreateMikrotik: document.getElementById('wanAutoMikrotik').checked,
+        lanPorts,
+        wlanSsids,
+        configureWifi: document.getElementById('wanConfigureWifi').checked,
+        wifiSsid24: document.getElementById('wifiSsid24').value,
+        wifiPass24: document.getElementById('wifiPass24').value,
+        wifiSsid5: document.getElementById('wifiSsid5').value,
+        wifiPass5: document.getElementById('wifiPass5').value,
+        dhcp: document.getElementById('wanDhcp').checked
+    };
+    
+    try {
+        const res = await fetch(`/admin/acs/api/add-wan/${encodeURIComponent(deviceId)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        
+        if (data && data.success) {
+            if (data.trackingSupported) {
+                addWanTrackingState = {
+                    deviceId,
+                    workflowId: data.workflowId || '',
+                    rootTaskId: data.rootTaskId || ''
+                };
+                renderAddWanProgress({
+                    summary: data.message || 'Workflow Add WAN dimulai.',
+                    done: false,
+                    hasFailure: false,
+                    tasks: []
+                });
+                addWanProgressTimer = setTimeout(pollAddWanProgress, 1200);
+            } else {
+                alert(data.message);
+                closeModal('addWanModal');
+                location.reload();
+            }
+        } else {
+            alert(data.message || 'Gagal menjalankan provisioning');
+        }
+    } catch (err) {
+        alert('Terjadi kesalahan: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        txt.style.display = 'inline-block';
+        ldr.style.display = 'none';
+    }
+}
+
+async function syncAllACS() {
+    const res = await fetch('/admin/acs/api/sync/all', { method: 'POST' });
+    const d = await res.json();
+    alert(d.message);
+    if(d.success) location.reload();
+}
+
+async function syncOnuTags() {
+    if (!confirm('Sinkron Tag ONU pelanggan dari device.id ACS sekarang? (Tag diisi otomatis dari PPPoE user ONU)')) return;
+    try {
+        const res = await fetch('/admin/acs/api/sync/tags', { method: 'POST' });
+        const d = await res.json();
+        alert(d.message);
+        if (d.success) location.reload();
+    } catch (e) { alert('Gagal sync tag: ' + e.message); }
+}
+
+function toggleSelectAll(master) {
+    const checkboxes = document.querySelectorAll('.device-checkbox');
+    checkboxes.forEach(cb => cb.checked = master.checked);
+    updateBulkPanel();
+}
+
+function updateBulkPanel() {
+    const checkboxes = document.querySelectorAll('.device-checkbox:checked');
+    const panel = document.getElementById('bulkActionsPanel');
+    const countSpan = document.getElementById('selectedCount');
+    
+    if (checkboxes.length > 0) {
+        panel.style.display = 'flex';
+        countSpan.textContent = checkboxes.length;
+    } else {
+        panel.style.display = 'none';
+        document.getElementById('selectAllDevices').checked = false;
+    }
+}
+
+function getSelectedDevices() {
+    const checkboxes = document.querySelectorAll('.device-checkbox:checked');
+    const devices = [];
+    checkboxes.forEach(cb => {
+        devices.push({
+            id: cb.dataset.id,
+            acsId: cb.dataset.acs
+        });
+    });
+    return devices;
+}
+
+async function bulkSummon() {
+    const devices = getSelectedDevices();
+    if (devices.length === 0) return;
+    if (!confirm(`Summon / Sinkronisasi ulang ${devices.length} perangkat?`)) return;
+    
+    try {
+        const res = await fetch('/admin/acs/api/bulk/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ devices })
+        });
+        const d = await res.json();
+        alert(d.message);
+        if (d.success) location.reload();
+    } catch (err) {
+        alert('Gagal memproses bulk summon: ' + err.message);
+    }
+}
+
+async function bulkDelete() {
+    const devices = getSelectedDevices();
+    if (devices.length === 0) return;
+    if (!confirm(`HAPUS ${devices.length} perangkat dari database ACS?\n(Tindakan ini tidak dapat dibatalkan)`)) return;
+    
+    try {
+        const res = await fetch('/admin/acs/api/bulk/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ devices })
+        });
+        const d = await res.json();
+        alert(d.message);
+        if (d.success) location.reload();
+    } catch (err) {
+        alert('Gagal memproses bulk delete: ' + err.message);
+    }
+}
+
+async function deleteDevice(deviceId, acsId) {
+    if (!confirm('Hapus perangkat ' + deviceId + ' dari database ACS?')) return;
+    try {
+        const res = await fetch('/admin/acs/api/device/' + encodeURIComponent(deviceId), {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acsId })
+        });
+        const d = await res.json();
+        alert(d.message);
+        if (d.success) location.reload();
+    } catch (err) {
+        alert('Gagal menghapus perangkat: ' + err.message);
+    }
+}
+
+</script>
+</body>
+</html>

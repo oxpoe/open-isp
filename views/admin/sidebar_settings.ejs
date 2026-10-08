@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.sb.title', 'Pengaturan Sidebar') %> | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="manifest" href="/admin/manifest.webmanifest">
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'sidebar_settings', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-layout-sidebar-inset"></i> <%= t('admin.sb.title', 'Pengaturan Sidebar') %>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-shield-lock"></i> <%= t('admin.sb.control', 'Kontrol Menu') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type === 'success' ? 's' : 'd' %>" data-flash="1">
+        <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-circle' %>"></i>
+        <%= msg.text %>
+      </div>
+    <% } %>
+
+    <div style="display:grid;gap:16px">
+      <div class="card">
+        <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <h6 style="margin:0"><i class="bi bi-grid-3x3-gap"></i> <%= t('admin.sb.status_all', 'Status Semua Menu Sidebar') %></h6>
+          <% if (canManageSidebar) { %>
+            <span class="badge badge-success" style="background:rgba(34,197,94,.18);color:#bbf7d0;padding:6px 10px;border-radius:999px"><%= t('admin.sb.can_manage', 'Admin dapat mengubah semua menu') %></span>
+          <% } else { %>
+            <span class="badge badge-warning" style="background:rgba(245,158,11,.18);color:#fde68a;padding:6px 10px;border-radius:999px"><%= t('admin.sb.readonly', 'Mode baca saja untuk akun ini') %></span>
+          <% } %>
+        </div>
+        <div class="card-bd">
+          <p class="hint" style="margin-top:0">
+            <%= t('admin.sb.intro', 'Setiap menu bisa diatur menjadi Tampil, Sembunyikan, atau Kunci. Menu yang dikunci akan meminta password khusus sebelum dibuka.') %>
+          </p>
+
+          <% if (canManageSidebar) { %>
+            <form method="POST" action="/admin/sidebar-settings">
+              <div class="tbl-wrap">
+                <table class="dtbl">
+                  <thead>
+                    <tr>
+                      <th><%= t('admin.sb.th_menu', 'Menu') %></th>
+                      <th><%= t('admin.sb.th_section', 'Section') %></th>
+                      <th><%= t('admin.sb.th_role', 'Role') %></th>
+                      <th><%= t('admin.sb.th_status', 'Status') %></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% menuConfigs.forEach((menu) => { %>
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px">
+                            <i class="<%= menu.icon %>"></i>
+                            <div>
+                              <div style="font-weight:700"><%= menu.labelKey ? t(menu.labelKey, menu.labelDefault) : menu.labelDefault %></div>
+                              <div class="hint mono"><%= menu.href %></div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="hint"><%= menu.sectionLabelKey ? t(menu.sectionLabelKey, menu.sectionLabel) : menu.sectionLabel %></span></td>
+                        <td><span class="hint"><%= menu.roleLabel %></span></td>
+                        <td style="min-width:180px">
+                          <select class="fs" name="menu_state[<%= menu.key %>]">
+                            <option value="visible" <%= menu.state === 'visible' ? 'selected' : '' %>><%= t('admin.sb.st_visible', 'Tampil') %></option>
+                            <option value="hidden" <%= menu.state === 'hidden' ? 'selected' : '' %>><%= t('admin.sb.st_hidden', 'Sembunyikan') %></option>
+                            <option value="locked" <%= menu.state === 'locked' ? 'selected' : '' %>><%= t('admin.sb.st_locked', 'Kunci') %></option>
+                          </select>
+                        </td>
+                      </tr>
+                      <% (menu.children || []).forEach((ch) => { %>
+                      <tr style="background:rgba(255,255,255,0.02)">
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;padding-left:22px">
+                            <i class="<%= ch.icon %>" style="opacity:.8"></i>
+                            <div>
+                              <div style="font-weight:600"><span class="hint" style="margin-right:6px">↳</span><%= ch.labelKey ? t(ch.labelKey, ch.labelDefault) : ch.labelDefault %></div>
+                              <div class="hint mono"><%= ch.href %></div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="hint"><%= ch.sectionLabelKey ? t(ch.sectionLabelKey, ch.sectionLabel) : ch.sectionLabel %></span></td>
+                        <td><span class="hint"><%= ch.roleLabel %></span></td>
+                        <td style="min-width:180px">
+                          <select class="fs" name="menu_state[<%= ch.key %>]">
+                            <option value="visible" <%= ch.state === 'visible' ? 'selected' : '' %>><%= t('admin.sb.st_visible', 'Tampil') %></option>
+                            <option value="hidden" <%= ch.state === 'hidden' ? 'selected' : '' %>><%= t('admin.sb.st_hidden', 'Sembunyikan') %></option>
+                            <option value="locked" <%= ch.state === 'locked' ? 'selected' : '' %>><%= t('admin.sb.st_locked', 'Kunci') %></option>
+                          </select>
+                        </td>
+                      </tr>
+                      <% }) %>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+              <div class="sidebar-settings-save-grid" style="margin-top:16px">
+                <div class="fg" style="margin:0">
+                  <label class="fl"><%= t('admin.sb.pass_label', 'Password Aktivasi (Seikhlasnya)') %></label>
+                  <input type="password" class="fc" name="feature_password" placeholder="<%= t('admin.sb.pass_ph', 'Masukkan password aktivasi sebelum menyimpan') %>" required>
+                  <div class="hint" style="margin-top:6px"><%= t('admin.sb.pass_hint', 'Perubahan status menu sidebar hanya akan disimpan jika password aktivasi benar.') %></div>
+                </div>
+                <div class="hint" style="align-self:center">
+                  <%= t('admin.sb.no_pass', 'Belum punya kode aktivasi?') %> <a href="/donate" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;"><i class="bi bi-heart-fill me-1"></i> <%= t('admin.sb.get_donation', 'Dapatkan kode aktivasi GRATIS di halaman Dukungan OPEN-ISP') %></a> <%= t('admin.sb.or_contact', 'atau hubungi') %> <strong><%= featureContactPhone %></strong>.
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap">
+                <a href="/donate" target="_blank" rel="noopener" class="btn btn-g">
+                  <i class="bi bi-heart-fill"></i> <%= t('admin.sb.donation_page', 'Kode Aktivasi Gratis (Dukungan OPEN-ISP)') %>
+                </a>
+                <button type="submit" class="btn btn-p">
+                  <i class="bi bi-save"></i> <%= t('admin.sb.save', 'Simpan Pengaturan Sidebar') %>
+                </button>
+              </div>
+            </form>
+          <% } else { %>
+            <div class="alert alert-d">
+              <i class="bi bi-lock"></i> <%= t('admin.sb.only_admin', 'Hanya admin utama yang dapat mengubah status menu sidebar.') %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h6 style="margin:0"><i class="bi bi-lightbulb"></i> <%= t('admin.sb.notes', 'Catatan') %></h6>
+        </div>
+        <div class="card-bd">
+          <div class="alert alert-s" style="margin-bottom:12px">
+            <i class="bi bi-info-circle"></i> <%= t('admin.sb.note_lock', 'Jika menu berstatus Kunci diklik dari sidebar, sistem menampilkan cara mengambil kode aktivasi GRATIS atau menghubungi') %> <strong><%= featureContactPhone %></strong>.
+          </div>
+          <ul style="margin:0;padding-left:18px;display:grid;gap:8px">
+            <li><%= t('admin.sb.note1', 'Status Sembunyikan akan menghilangkan menu dari sidebar dan menolak akses URL langsung.') %></li>
+            <li><%= t('admin.sb.note2', 'Status Kunci tetap menampilkan menu, tetapi tidak bisa dibuka sampai statusnya diubah di halaman ini.') %></li>
+            <li><%= t('admin.sb.note3', 'Perubahan status menu hanya dapat disimpan setelah memasukkan password aktivasi yang benar.') %></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

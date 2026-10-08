@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Laporan Kasir | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'cashiers_reports', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-journal-text"></i>
+      <span>Laporan Kasir</span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/billing" class="btn btn-g btn-sm"><i class="bi bi-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='error'?'d':'s' %>" data-flash="1"><%= msg.text %></div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-funnel"></i> Filter</h6>
+      </div>
+      <div class="card-bd" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <% if (cashiers && cashiers.length > 1) { %>
+          <select class="fs" style="min-width:240px" onchange="location='/admin/cashiers/reports?cashierId='+encodeURIComponent(this.value)">
+            <option value="">Semua Kasir</option>
+            <% (cashiers || []).forEach(c => { %>
+              <option value="<%= c.id %>" <%= cashierId && Number(cashierId)===Number(c.id) ? 'selected' : '' %>><%= c.name %> (@<%= c.username %>)</option>
+            <% }) %>
+          </select>
+        <% } else if (cashiers && cashiers.length === 1) { %>
+          <span class="badge bm"><%= cashiers[0].name %><%= cashiers[0].username ? (' (@' + cashiers[0].username + ')') : '' %></span>
+        <% } %>
+        <span class="badge bm"><%= Number(summary?.count || 0) %> transaksi</span>
+        <span class="badge bs">Rp <%= Number(summary?.total || 0).toLocaleString('id-ID') %></span>
+        <span class="badge bm">Tagihan: <%= Number(summary?.invoice_count || 0) %> (Rp <%= Number(summary?.invoice_total || 0).toLocaleString('id-ID') %>)</span>
+        <span class="badge bm">Deposit Agent: <%= Number(summary?.topup_count || 0) %> (Rp <%= Number(summary?.topup_total || 0).toLocaleString('id-ID') %>)</span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-ul"></i> Riwayat Transaksi</h6>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('collector.col_time','Waktu') %></th>
+              <th>Kasir</th>
+              <th>Jenis</th>
+              <th>Detail</th>
+              <th class="num"><%= t('collector.col_amount','Nominal') %></th>
+              <th>Catatan</th>
+              <th class="num">Ref</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!rows || rows.length === 0) { %>
+              <tr><td colspan="7" class="text-center text-muted" style="padding:24px">Belum ada transaksi kasir.</td></tr>
+            <% } else { %>
+              <% rows.forEach(r => { %>
+                <tr>
+                  <td style="font-size:11px;color:var(--muted)"><%= r.at ? new Date(r.at).toLocaleString((lang || 'id') === 'en' ? 'en-US' : 'id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-' %></td>
+                  <td class="fw6"><%= r.actor_name || '-' %></td>
+                  <td>
+                    <% if (r.kind === 'agent_topup') { %>
+                      <span class="badge bs">DEPOSIT</span>
+                    <% } else { %>
+                      <span class="badge bm">TAGIHAN</span>
+                    <% } %>
+                  </td>
+                  <td style="font-size:12px">
+                    <% if (r.kind === 'agent_topup') { %>
+                      <div class="fw6"><%= r.agent_name || '-' %> <span class="text-muted" style="font-size:11px"><%= r.agent_username ? '(@' + r.agent_username + ')' : '' %></span></div>
+                    <% } else { %>
+                      <div class="fw6"><%= r.customer_name || '-' %></div>
+                      <div style="font-size:11px;color:var(--muted)">
+                        <%= r.customer_phone || '' %><%= r.period_month && r.period_year ? (' • ' + r.period_month + '/' + r.period_year) : '' %><%= r.package_name ? (' • ' + r.package_name) : '' %>
+                      </div>
+                    <% } %>
+                  </td>
+                  <td class="num fw6" style="color:var(--success)">Rp <%= Number(r.amount||0).toLocaleString('id-ID') %></td>
+                  <td style="font-size:11px;color:var(--muted)"><%= r.notes ? r.notes : '-' %></td>
+                  <td class="num"><code>#<%= r.ref_id %></code></td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

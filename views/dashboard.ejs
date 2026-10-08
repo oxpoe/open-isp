@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.dashboard_title', 'Dashboard Pelanggan') %> | <%= settings.company_header || 'OPEN-ISP' %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/dashboard.css?v=3">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="/css/theme-toggle.css">
+</head>
+<body>
+
+<!-- ═══ APP BAR ═══ -->
+<header class="app-bar">
+  <div class="container inner">
+    <a class="app-brand" href="/customer/dashboard">
+      <img src="/img/icons/icon-192.png" alt="<%= brandName %>"> <%= t('customer.dashboard.portal', 'Portal Pelanggan') %>
+    </a>
+    <div class="app-actions">
+
+      <div class="notif-bell-btn" onclick="openNotifDrawer()" title="Notifikasi">
+        <i class="bi bi-bell-fill"></i>
+        <span class="notif-badge-count" id="notifCountBadge" style="display:none">0</span>
+      </div>
+      <% if (pppoeOnline === true) { %>
+        <span class="status-pill online"><span class="pulse-dot green"></span> PPPoE Online</span>
+      <% } else if (pppoeOnline === false) { %>
+        <span class="status-pill offline"><span class="pulse-dot red"></span> PPPoE Offline</span>
+      <% } else { %>
+        <span class="status-pill offline">PPPoE —</span>
+      <% } %>
+      <form method="POST" action="/customer/reconnect" style="margin:0">
+        <button type="submit" class="chip-btn ok" title="Reconnect internet"><i class="bi bi-arrow-repeat"></i> Re-Connect</button>
+      </form>
+      <form method="POST" action="/customer/logout" style="margin:0">
+        <button type="submit" class="chip-btn danger" title="Keluar"><i class="bi bi-box-arrow-right"></i></button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<main class="container dash-wrap">
+
+  <!-- NOTIF -->
+  <% if (typeof notif !== 'undefined' && notif && notif.text) { %>
+    <div class="auth-alert <%= notif.type === 'danger' ? 'err' : notif.type === 'warning' ? 'warn' : notif.type === 'info' ? 'info' : 'ok' %>" id="notif-alert">
+      <i class="bi bi-info-circle"></i> <%= notif.text %>
+    </div>
+    <script>setTimeout(function(){var a=document.getElementById('notif-alert');if(a)a.style.display='none';},4000);</script>
+  <% } %>
+
+  <!-- PROMO ROTATOR -->
+  <div class="promo-rot" id="promoRot">
+    <div class="welcome"><i class="bi bi-wifi"></i><span>Selamat Datang di Portal Pelanggan</span></div>
+  </div>
+  <script>
+    fetch('/customer/api/promo-slides')
+      .then(function(r){return r.json();})
+      .then(function(slides){
+        if (!slides || !slides.length) return;
+        var box = document.getElementById('promoRot');
+        box.innerHTML = slides.map(function(s,i){
+          var img = '<img src="'+s.image_path+'" alt="'+(s.title||'Promo')+'" loading="lazy">';
+          var inner = s.url ? '<a href="'+s.url+'"'+(s.open_in_new_tab?' target="_blank" rel="noopener"':'')+'>'+img+'</a>' : img;
+          return '<div class="promo-slide" style="display:'+(i===0?'block':'none')+'">'+inner+'</div>';
+        }).join('') + '<div class="dots">'+slides.map(function(_,i){return '<span class="'+(i===0?'on':'')+'"></span>';}).join('')+'</div>';
+        var idx=0, items=box.querySelectorAll('.promo-slide'), dots=box.querySelectorAll('.dots span');
+        if(items.length>1){
+          setInterval(function(){
+            items[idx].style.display='none'; dots[idx].classList.remove('on');
+            idx=(idx+1)%items.length;
+            items[idx].style.display='block'; dots[idx].classList.add('on');
+          },5000);
+        }
+      }).catch(function(){});
+  </script>
+
+  <!-- ═══ SERVICE NOTICE ═══ -->
+  <%- include('partials/service-notice') %>
+
+  <!-- HERO -->
+  <section class="hero-banner" id="home-section">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <span class="id-badge"><i class="bi bi-person-badge"></i> ID: <b id="custIdText" class="mono"><%= profile ? (profile.customer_code || profile.genieacs_tag || profile.pppoe_username || profile.phone) : customer.phone %></b><button class="copy-mini" type="button" onclick="copyId()" title="Salin ID pelanggan"><i class="bi bi-clipboard"></i></button></span>
+          <% if (onuMissing) { %>
+            <button type="button" class="onu-chip" onclick="showModal('onuMissingModal')"><i class="bi bi-exclamation-triangle-fill"></i> ONU belum terdeteksi</button>
+          <% } %>
+          <% if (profile) { %>
+            <span class="status-pill <%= profile.status === 'active' ? 'online' : 'suspended' %>">
+              <span class="pulse-dot <%= profile.status === 'active' ? 'green' : 'red' %>"></span>
+              Layanan: <%= profile.status === 'active' ? 'AKTIF' : 'ISOLIR' %>
+            </span>
+          <% } %>
+        </div>
+        <h3><%= t('customer.dashboard.hello', 'Halo') %>, <%= profile ? profile.name : customer.phone %></h3>
+        <p class="muted" style="font-size:13px;margin-top:6px;display:flex;gap:14px;flex-wrap:wrap">
+          <span><i class="bi bi-reception-4" style="color:var(--success)"></i> Sinyal Optik: <strong style="color:var(--text)"><%= customer.rxPower || '-20 dBm' %></strong></span>
+          <span><i class="bi bi-hdd-network" style="color:var(--info)"></i> <span class="mono"><%= (profile && profile.pppoe_username) || customer.pppoeUsername || 'Belum ada akun PPPoE' %></span></span>
+        </p>
+        <% if (!((profile && profile.pppoe_username) || customer.pppoeUsername)) { %>
+          <div style="margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:var(--warning,#fbbf24);font-size:12.5px;display:flex;gap:8px;align-items:center">
+            <i class="bi bi-hourglass-split"></i> Akun PPPoE Anda belum dibuat — menunggu pemasangan/aktivasi oleh teknisi.
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <!-- BILL HERO -->
+  <%
+    const paidInvoices = (invoices || []).filter(function(i){return i.status === 'paid';});
+    const unpaidInvoices = (invoices || []).filter(function(i){return i.status !== 'paid';});
+    const hasUnpaid = unpaidInvoices.length > 0;
+    const latestUnpaid = hasUnpaid ? unpaidInvoices[0] : null;
+    const totalUnpaidAmount = latestUnpaid ? Number(latestUnpaid.amount != null ? latestUnpaid.amount : (latestUnpaid.package_price != null ? latestUnpaid.package_price : 0)) : 0;
+    const unpaidPeriods = latestUnpaid ? (latestUnpaid.period_month + '/' + latestUnpaid.period_year) : '';
+    const unpaidCount = unpaidInvoices.length;
+    const isolateDay = (typeof profile !== 'undefined' && profile && profile.isolate_day) ? Number(profile.isolate_day) : ((typeof settings !== 'undefined' && settings && settings.isolir_day) ? Number(settings.isolir_day) : 10);
+    const bulanNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const fmtDue = function(m, y){ return isolateDay + ' ' + (bulanNames[Number(m) - 1] || '') + ' ' + y; };
+    let dueText = '';
+    let dueDiffDays = null;
+    if (latestUnpaid) {
+      dueText = fmtDue(latestUnpaid.period_month, latestUnpaid.period_year);
+      const d0 = new Date(Number(latestUnpaid.period_year), Number(latestUnpaid.period_month) - 1, isolateDay);
+      d0.setHours(0, 0, 0, 0);
+      const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+      dueDiffDays = Math.round((d0.getTime() - t0.getTime()) / 86400000);
+    }
+    const nowD = new Date();
+    const nextD = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 1);
+    const nextDueText = fmtDue(nextD.getMonth() + 1, nextD.getFullYear());
+  %>
+  <section class="bill-hero-card <%= hasUnpaid ? 'unpaid' : 'paid' %>">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="bico"><i class="bi bi-<%= hasUnpaid ? 'exclamation-triangle-fill' : 'shield-check' %>"></i></div>
+      <div>
+        <% if (hasUnpaid) { %>
+          <span class="badge bw" style="font-size:10px"><i class="bi bi-exclamation-circle"></i> TAGIHAN BELUM DIBAYAR <%= unpaidCount > 1 ? '('+unpaidCount+' BULAN)' : '' %></span>
+          <h5 style="margin-top:6px;color:var(--warning)">Rp <%= parseInt(totalUnpaidAmount || 0).toLocaleString('id-ID') %></h5>
+          <div class="muted" style="font-size:12.5px;margin-top:2px">Periode <%= unpaidPeriods %></div>
+          <div style="font-size:13px;margin-top:6px;display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+            <i class="bi bi-calendar-event" style="color:var(--warning)"></i>
+            <span>Jatuh tempo: <strong style="color:var(--text)"><%= dueText %></strong></span>
+            <% if (dueDiffDays !== null) { %>
+              <span class="badge <%= dueDiffDays < 0 ? 'bd' : (dueDiffDays <= 2 ? 'bw' : 'bm') %>" style="font-size:10px">
+                <%= dueDiffDays > 0 ? ('Sisa ' + dueDiffDays + ' hari') : (dueDiffDays === 0 ? 'Hari ini!' : ('Lewat ' + Math.abs(dueDiffDays) + ' hari')) %>
+              </span>
+            <% } %>
+          </div>
+        <% } else { %>
+          <span class="badge bs" style="font-size:10px"><i class="bi bi-check-circle"></i> SEMUA TAGIHAN LUNAS</span>
+          <h5 style="margin-top:6px">Layanan Internet Aktif</h5>
+          <div class="muted" style="font-size:12.5px;margin-top:2px">Terima kasih telah membayar tepat waktu!</div>
+          <div style="font-size:13px;margin-top:6px;display:flex;align-items:center;gap:7px">
+            <i class="bi bi-calendar-event" style="color:var(--success)"></i>
+            <span>Jatuh tempo berikutnya: <strong style="color:var(--text)"><%= nextDueText %></strong></span>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    <% if (hasUnpaid) { %>
+      <button type="button" class="lbtn lbtn-primary lbtn-lg" onclick="openPaymentModal('<%= latestUnpaid.id %>', '<%= totalUnpaidAmount %>')"><i class="bi bi-wallet2"></i> Bayar Sekarang</button>
+    <% } %>
+  </section>
+
+  <!-- INFO LAYANAN -->
+  <section class="svc-grid">
+    <div class="svc-card">
+      <div class="svc-ic"><i class="bi bi-box-seam"></i></div>
+      <div class="svc-tx"><span>Paket Berjalan</span>
+        <b><%= profile && profile.package_name ? profile.package_name : 'Belum ada paket' %></b>
+        <small><% if (profile && Number(profile.speed_down) > 0) { %><%= Math.round(Number(profile.speed_down)/1000) %> Mbps<%= profile.speed_up ? ' / ' + Math.round(Number(profile.speed_up)/1000) + ' Mbps' : '' %><% } else { %>—<% } %></small>
+      </div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-ic"><i class="bi bi-person-check"></i></div>
+      <div class="svc-tx"><span>Status Akun</span>
+        <% if (profile && profile.status === 'active') { %><b class="ok">Aktif</b><% } else { %><b class="warn">Isolir</b><% } %>
+        <small><%= profile ? profile.name : '—' %></small>
+      </div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-ic"><i class="bi bi-hdd-network"></i></div>
+      <div class="svc-tx"><span>Internet (PPPoE)</span>
+        <% if (pppoeOnline === true) { %><b class="ok">Online</b><% } else if (pppoeOnline === false) { %><b class="off">Offline</b><% } else { %><b>Tidak diketahui</b><% } %>
+        <small class="mono"><%= (profile ? profile.pppoe_username : '') || customer.pppoeUsername || 'Belum dibuat' %></small>
+      </div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-ic"><i class="bi bi-router"></i></div>
+      <div class="svc-tx"><span>Perangkat (ONU)</span>
+        <% if (onuMissing) { %><b class="warn">Tidak ditemukan</b><% } else { %><b class="ok">Terhubung</b><% } %>
+        <small><%= customer.rxPower || '-' %> • <%= customer.model || 'ONU' %></small>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK ACTIONS -->
+  <div class="action-grid">
+    <% const navPayAmt = hasUnpaid ? totalUnpaidAmount : 0; %>
+    <div class="action-item" onclick="<%= hasUnpaid ? "openPaymentModal('"+latestUnpaid.id+"','"+navPayAmt+"')" : "location.href='#billing-section'" %>">
+      <div class="action-icon ai-pay"><i class="bi bi-credit-card-2-front-fill"></i></div><div class="action-label">Bayar Tagihan</div>
+    </div>
+    <div class="action-item" data-ssid-change onclick="editSsid('<%= (customer.tags && customer.tags[0]) || customer.id %>', '<%= customer.ssid %>')">
+      <div class="action-icon ai-ssid"><i class="bi bi-wifi"></i></div><div class="action-label">Nama WiFi</div>
+    </div>
+    <div class="action-item" onclick="editPassword('<%= (customer.tags && customer.tags[0]) || customer.id %>')">
+      <div class="action-icon ai-pass"><i class="bi bi-key-fill"></i></div><div class="action-label">Sandi WiFi</div>
+    </div>
+    <div class="action-item" onclick="rebootDevice('<%= (customer.tags && customer.tags[0]) || customer.id %>')">
+      <div class="action-icon ai-reboot"><i class="bi bi-arrow-clockwise"></i></div><div class="action-label">Restart Modem</div>
+    </div>
+    <div class="action-item" onclick="openNotifDrawer()"><div class="action-icon ai-ppob"><i class="bi bi-bell-fill"></i></div><div class="action-label">Notifikasi</div></div>
+    <div class="action-item" onclick="showModal('ticketModal')"><div class="action-icon ai-ticket"><i class="bi bi-headset"></i></div><div class="action-label">Bantuan / Tiket</div></div>
+  </div>
+
+  <!-- DEVICE + TRAFFIC -->
+  <div class="dash-grid" style="margin-bottom:18px">
+    <!-- Router card -->
+    <div class="glass-card">
+      <div class="glass-header">
+        <h5><i class="bi bi-router" style="color:var(--primary)"></i> Kontrol Perangkat Router</h5>
+        <span class="badge-soft"><%= customer.model !== '-' ? customer.model : 'ONT / ONU' %></span>
+      </div>
+      <div class="glass-body">
+        <div id="deviceSyncPanel" data-sync-in-progress="<%= customer.syncInProgress ? 'true' : 'false' %>" style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <span class="muted" id="deviceSyncNotice" style="font-size:11px"></span>
+          <button type="button" id="btnDeviceRefresh" class="lbtn lbtn-ghost lbtn-sm"><i class="bi bi-arrow-repeat"></i> Poll ONU</button>
+        </div>
+        <div class="stats-grid" style="margin-bottom:14px">
+          <div class="stat-card"><div class="stat-icon <%= customer.status === 'Online' ? 'online' : 'offline' %>"><i class="bi bi-power"></i></div><div class="stat-label">Status Router</div><div class="stat-value"><%= customer.status %></div></div>
+          <div class="stat-card"><div class="stat-icon activity"><i class="bi bi-reception-4"></i></div><div class="stat-label">Rx Optical</div><div class="stat-value"><%= customer.rxPower %></div></div>
+          <div class="stat-card"><div class="stat-icon people"><i class="bi bi-laptop"></i></div><div class="stat-label">User Terhubung</div><div class="stat-value"><%= customer.totalAssociations || 0 %> User</div></div>
+        </div>
+
+        <div class="wifi-box" style="margin-bottom:14px">
+          <div class="wifi-row"><span class="wifi-label" style="color:var(--info)"><i class="bi bi-wifi"></i> Nama SSID WiFi</span>
+            <button class="link-btn" data-ssid-change onclick="editSsid('<%= (customer.tags && customer.tags[0]) || customer.id %>', '<%= customer.ssid %>')">Ubah <i class="bi bi-pencil"></i></button></div>
+          <div class="wifi-val" style="margin-bottom:12px"><%= customer.ssid || '-' %></div>
+          <div class="wifi-row"><span class="wifi-label" style="color:var(--success)"><i class="bi bi-shield-lock"></i> Password WiFi</span>
+            <button class="link-btn" onclick="editPassword('<%= (customer.tags && customer.tags[0]) || customer.id %>')">Ubah <i class="bi bi-pencil"></i></button></div>
+          <div style="display:flex;gap:8px">
+            <input type="password" id="wifiPassInput" class="inp inp-plain" value="••••••••" readonly style="padding-left:14px">
+            <button class="chip-btn" type="button" onclick="togglePassVisibility()"><i class="bi bi-eye" id="eyeIcon"></i></button>
+          </div>
+        </div>
+
+        <div class="muted" style="font-size:12px;font-weight:700;margin-bottom:8px"><i class="bi bi-people"></i> Perangkat Terhubung saat ini:</div>
+        <% if (connectedUsers && connectedUsers.length > 0) { %>
+          <div class="dev-list">
+            <% connectedUsers.forEach(function(u){ %>
+              <div class="dev-item">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <i class="bi bi-laptop" style="color:var(--primary)"></i>
+                  <div>
+                    <div style="font-weight:700"><%= u.hostname || 'Device' %></div>
+                    <div class="mono muted" style="font-size:10px"><%= u.ip || '-' %> | <%= u.mac || '-' %></div>
+                  </div>
+                </div>
+                <span class="badge bs" style="font-size:9px">Active</span>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="dev-empty">Tidak ada perangkat aktif terdeteksi</div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Traffic card -->
+    <div class="glass-card">
+      <div class="glass-header">
+        <h5><i class="bi bi-speedometer2" style="color:var(--info)"></i> Pemantauan Trafik Real-Time</h5>
+        <span class="badge-soft">Live Mbps</span>
+      </div>
+      <div class="glass-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;text-align:center">
+          <div>
+            <div class="stat-label" style="margin-bottom:6px">Trafik Download</div>
+            <div class="traffic-gauge">
+              <canvas id="pppoe_rx_gauge" width="220" height="140" data-max="<%= typeof trafficMaxDownMbps !== 'undefined' ? trafficMaxDownMbps : 10 %>"></canvas>
+              <div class="traffic-gauge-center"><div class="traffic-gauge-value" id="pppoe_rx_value">-</div><div class="traffic-gauge-unit" id="pppoe_rx_unit">&nbsp;</div></div>
+              <div class="traffic-gauge-scale"><span>0</span><span id="pppoe_rx_max"><%= typeof trafficMaxDownMbps !== 'undefined' ? trafficMaxDownMbps : 10 %> Mbps</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="stat-label" style="margin-bottom:6px">Trafik Upload</div>
+            <div class="traffic-gauge">
+              <canvas id="pppoe_tx_gauge" width="220" height="140" data-max="<%= typeof trafficMaxUpMbps !== 'undefined' ? trafficMaxUpMbps : 10 %>"></canvas>
+              <div class="traffic-gauge-center"><div class="traffic-gauge-value" id="pppoe_tx_value">-</div><div class="traffic-gauge-unit" id="pppoe_tx_unit">&nbsp;</div></div>
+              <div class="traffic-gauge-scale"><span>0</span><span id="pppoe_tx_max"><%= typeof trafficMaxUpMbps !== 'undefined' ? trafficMaxUpMbps : 10 %> Mbps</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="auth-alert info" style="margin-top:16px;justify-content:center"><i class="bi bi-info-circle"></i> Kecepatan disesuaikan dengan paket berlangganan Anda.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAGIHAN -->
+  <details class="acc" id="billing-section" open>
+    <summary><span><i class="bi bi-receipt" style="color:var(--warning)"></i> Status Tagihan &amp; Riwayat Pembayaran</span><i class="bi bi-chevron-down chev"></i></summary>
+    <div class="acc-body">
+      <% if (invoices && invoices.length > 0) { %>
+        <% invoices.forEach(function(inv){ %>
+          <% const itemAmt = inv.amount != null ? inv.amount : (inv.package_price != null ? inv.package_price : 0); %>
+          <div class="inv-card">
+            <div class="inv-top">
+              <% if (inv.status === 'paid') { %><span class="badge bs" style="font-size:10px">LUNAS</span><% } else { %><span class="badge bd" style="font-size:10px">BELUM BAYAR</span><% } %>
+              <span class="muted" style="font-size:12px"><i class="bi bi-calendar-event"></i> Periode <%= inv.period_month %>/<%= inv.period_year %></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap">
+              <div><div class="inv-name"><%= inv.package_name || 'Paket Internet' %></div><div class="inv-amt">Rp <%= parseInt(itemAmt || 0).toLocaleString('id-ID') %></div></div>
+            </div>
+            <div class="inv-actions">
+              <% if (inv.status !== 'paid') { %>
+                <button class="lbtn lbtn-primary lbtn-sm" onclick="openPaymentModal('<%= inv.id %>', '<%= itemAmt %>')"><i class="bi bi-wallet2"></i> Bayar</button>
+                <a class="lbtn lbtn-ghost lbtn-sm" href="/customer/invoice/<%= inv.id %>/pdf" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf-fill"></i> Tagihan PDF</a>
+                <button class="lbtn lbtn-ghost lbtn-sm" onclick="sendInvoiceWa(<%= inv.id %>, this)"><i class="bi bi-whatsapp"></i> Kirim ke WA</button>
+              <% } else { %>
+                <a class="lbtn lbtn-ghost lbtn-sm" href="/customer/invoice/<%= inv.id %>/print-thermal" target="_blank" rel="noopener"><i class="bi bi-receipt"></i> Struk Thermal</a>
+                <a class="lbtn lbtn-ghost lbtn-sm" href="/customer/invoice/<%= inv.id %>/print" target="_blank" rel="noopener"><i class="bi bi-printer-fill"></i> Faktur A4</a>
+                <a class="lbtn lbtn-ghost lbtn-sm" href="/customer/invoice/<%= inv.id %>/pdf" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf-fill"></i> PDF</a>
+                <button class="lbtn lbtn-ghost lbtn-sm" onclick="sendInvoiceWa(<%= inv.id %>, this)"><i class="bi bi-whatsapp"></i> Kirim ke WA</button>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="dev-empty">Belum ada riwayat tagihan</div>
+      <% } %>
+    </div>
+  </details>
+
+  <!-- TIKET -->
+  <details class="acc" id="ticket-section">
+    <summary><span><i class="bi bi-headset" style="color:#c084fc"></i> Tiket Keluhan &amp; Bantuan</span><i class="bi bi-chevron-down chev"></i></summary>
+    <div class="acc-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-weight:700">Daftar Tiket Anda</span>
+        <button class="lbtn lbtn-primary lbtn-sm" onclick="showModal('ticketModal')"><i class="bi bi-plus-lg"></i> Buat Tiket</button>
+      </div>
+      <% if (tickets && tickets.length > 0) { %>
+        <div class="srch-wrap">
+          <table class="btbl">
+            <thead><tr><th>ID</th><th>Jenis Kendala</th><th>Tanggal</th><th>Status</th></tr></thead>
+            <tbody>
+              <% tickets.forEach(function(t){ %>
+                <tr>
+                  <td class="mono" style="color:var(--info)">#TK-<%= t.id %></td>
+                  <td><%= t.subject %></td>
+                  <td class="muted"><%= t.created_at %></td>
+                  <td><span class="badge <%= t.status === 'open' ? 'bw' : (t.status === 'in_progress' ? 'bi2' : 'bs') %>" style="font-size:10px"><%= t.status === 'open' ? 'TERKIRIM' : (t.status === 'in_progress' ? 'DIPROSES' : 'SELESAI') %></span></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="dev-empty">Belum ada tiket keluhan yang dibuat.</div>
+      <% } %>
+    </div>
+  </details>
+
+</main>
+
+<!-- ═══ MODAL PEMBAYARAN ═══ -->
+<div class="mo" id="paymentModal" onclick="if(event.target===this)hideModal('paymentModal')">
+  <div class="mb">
+    <div class="mh"><h3><i class="bi bi-credit-card-2-front" style="color:var(--warning)"></i> Pembayaran</h3>
+      <button class="mc" onclick="hideModal('paymentModal')"><i class="bi bi-x-lg"></i></button></div>
+    <div class="mbody">
+      <div style="text-align:center;padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--warning-glow);margin-bottom:16px">
+        <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px">Total Tagihan</div>
+        <h2 id="pay_amount_text" style="font-family:var(--font-display);color:var(--warning);font-size:26px;margin-top:4px">Rp 0</h2>
+      </div>
+      <div class="stack">
+        <%
+          const _payMode = String(settings.payment_mode || 'selfservice').toLowerCase();
+          const _gwActive = (_payMode === 'gateway') && String(settings.mayar_api_key || '').trim();
+          const _channels = (typeof paymentChannels !== 'undefined' && paymentChannels) ? paymentChannels : [];
+        %>
+        <% if (_gwActive && _channels.length > 0) { %>
+          <% _channels.forEach(function(ch){ %>
+            <button class="pay-item" style="text-align:left;width:100%" onclick="submitPayment('<%= ch.code %>')">
+              <div class="pay-icon"><i class="bi bi-credit-card-2-front"></i></div>
+              <div class="pay-info"><span class="pay-name"><%= ch.name %></span><span class="pay-sub"><span class="pay-chip"><%= ch.group || 'Gateway' %></span></span></div>
+              <i class="bi bi-chevron-right" style="color:var(--primary)"></i>
+            </button>
+          <% }); %>
+        <% } else { %>
+          <button class="pay-item" style="text-align:left;width:100%" onclick="submitPayment('<%= _gwActive ? 'gateway' : 'qris' %>')">
+            <div class="pay-icon"><i class="bi <%= _gwActive ? 'bi-credit-card-2-front' : 'bi-wallet2' %>"></i></div>
+            <div class="pay-info"><span class="pay-name">Bayar Sekarang</span><span class="pay-sub"><span class="pay-chip"><%= _gwActive ? 'Gateway Mayar' : 'QRIS / Transfer Bank / E-Wallet' %></span></span></div>
+            <i class="bi bi-chevron-right" style="color:var(--primary)"></i>
+          </button>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL NOTIFIKASI ═══ -->
+<div class="mo" id="notifDrawerModal" onclick="if(event.target===this)hideModal('notifDrawerModal')">
+  <div class="mb" style="max-width:460px">
+    <div class="mh"><h3><i class="bi bi-bell-fill" style="color:var(--warning)"></i> Pusat Notifikasi</h3>
+      <button class="mc" onclick="hideModal('notifDrawerModal')"><i class="bi bi-x-lg"></i></button></div>
+    <div class="mbody" id="notifListContainer"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL SSID ═══ -->
+<div class="mo" id="editSsidModal" onclick="if(event.target===this)hideModal('editSsidModal')">
+  <div class="mb" style="max-width:460px">
+    <div class="mh"><h3><i class="bi bi-wifi" style="color:var(--info)"></i> Ubah Nama WiFi (SSID)</h3>
+      <button class="mc" onclick="hideModal('editSsidModal')"><i class="bi bi-x-lg"></i></button></div>
+    <form action="/customer/change-ssid" method="POST">
+      <div class="mbody">
+        <div class="field" style="margin-top:0">
+          <label for="modalSsidInput">Nama WiFi (SSID) Baru</label>
+          <input type="text" name="ssid" id="modalSsidInput" class="inp inp-plain" placeholder="Contoh: WiFi_Rumah_Keluarga" required>
+          <div class="form-note">Perangkat akan terputus sesaat setelah nama WiFi diubah.</div>
+        </div>
+      </div>
+      <div class="mf"><button type="button" class="lbtn lbtn-ghost" onclick="hideModal('editSsidModal')">Batal</button><button type="submit" class="lbtn lbtn-primary">Simpan Nama WiFi</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL PASSWORD ═══ -->
+<div class="mo" id="editPasswordModal" onclick="if(event.target===this)hideModal('editPasswordModal')">
+  <div class="mb" style="max-width:460px">
+    <div class="mh"><h3><i class="bi bi-shield-lock" style="color:var(--success)"></i> Ubah Password WiFi</h3>
+      <button class="mc" onclick="hideModal('editPasswordModal')"><i class="bi bi-x-lg"></i></button></div>
+    <form action="/customer/change-password" method="POST">
+      <div class="mbody">
+        <div class="field" style="margin-top:0">
+          <label for="modalPassInput">Password WiFi Baru (Minimal 8 Karakter)</label>
+          <input type="password" name="password" id="modalPassInput" class="inp inp-plain" minlength="8" placeholder="Contoh: Rahasia12345" required>
+          <div class="form-note">Gunakan minimal 8 kombinasi huruf dan angka. Simpan password ini baik-baik.</div>
+        </div>
+      </div>
+      <div class="mf"><button type="button" class="lbtn lbtn-ghost" onclick="hideModal('editPasswordModal')">Batal</button><button type="submit" class="lbtn lbtn-primary">Simpan Password</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL REBOOT ═══ -->
+<div class="mo" id="rebootModal" onclick="if(event.target===this)hideModal('rebootModal')">
+  <div class="mb" style="max-width:460px">
+    <div class="mh"><h3><i class="bi bi-arrow-clockwise" style="color:var(--warning)"></i> Reboot Router / Modem</h3>
+      <button class="mc" onclick="hideModal('rebootModal')"><i class="bi bi-x-lg"></i></button></div>
+    <form action="/customer/reboot" method="POST">
+      <div class="mbody" style="text-align:center">
+        <div style="width:64px;height:64px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:var(--wdim);color:var(--warning);font-size:28px"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <h4 style="font-size:15px">Yakin ingin menyalakan ulang modem?</h4>
+        <p class="muted" style="font-size:13px;margin-top:8px">Proses reboot ±1–2 menit. Koneksi internet akan terputus sementara.</p>
+      </div>
+      <div class="mf"><button type="button" class="lbtn lbtn-ghost" onclick="hideModal('rebootModal')">Batal</button><button type="submit" class="lbtn lbtn-primary">Ya, Reboot Sekarang</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL TIKET ═══ -->
+<div class="mo" id="ticketModal" onclick="if(event.target===this)hideModal('ticketModal')">
+  <div class="mb" style="max-width:520px">
+    <div class="mh"><h3><i class="bi bi-headset" style="color:#c084fc"></i> Buat Tiket Keluhan Baru</h3>
+      <button class="mc" onclick="hideModal('ticketModal')"><i class="bi bi-x-lg"></i></button></div>
+    <form action="/customer/tickets/create" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="customerId" value="<%= profile ? profile.id : '' %>">
+      <div class="mbody">
+        <div class="field" style="margin-top:0">
+          <label for="tk_subject">Jenis Kendala / Subjek</label>
+          <select name="subject" id="tk_subject" class="inp inp-plain" required>
+            <option value="" disabled selected>-- Pilih Jenis Kendala --</option>
+            <option>Koneksi Terputus / Tidak Bisa Konek</option>
+            <option>Koneksi Lambat / Lemot</option>
+            <option>Lampu PON Merah / Los Sinyal</option>
+            <option>Kendala Lupa Password WiFi</option>
+            <option>Pertanyaan Tagihan &amp; Pembayaran</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="tk_msg">Detail Pesan / Penjelasan</label>
+          <textarea name="message" id="tk_msg" class="inp inp-plain" rows="3" placeholder="Jelaskan kendala Anda…" required></textarea>
+        </div>
+        <div class="field">
+          <label for="tk_photo">Foto Lampiran (Opsional)</label>
+          <input type="file" name="photos" id="tk_photo" class="inp inp-plain" accept="image/*" multiple style="padding:10px">
+        </div>
+      </div>
+      <div class="mf"><button type="button" class="lbtn lbtn-ghost" onclick="hideModal('ticketModal')">Batal</button><button type="submit" class="lbtn lbtn-primary">Kirim Tiket</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ POPUP AWAL: ONU TIDAK TERDETEKSI ═══ -->
+<div class="mo" id="onuMissingModal" onclick="if(event.target===this)hideModal('onuMissingModal')">
+  <div class="mb" style="max-width:440px">
+    <div class="mh"><h3><i class="bi bi-exclamation-triangle-fill" style="color:var(--warning)"></i> ONU Belum Terdeteksi</h3>
+      <button class="mc" onclick="hideModal('onuMissingModal')"><i class="bi bi-x-lg"></i></button></div>
+    <div class="mbody">
+      <div class="onu-pop-ic"><i class="bi bi-router"></i></div>
+      <p style="font-size:13.5px;text-align:center">Perangkat ONU/ONT Anda belum terbaca di sistem, sehingga data sinyal optik, WiFi, dan trafik mungkin belum akurat.</p>
+      <div class="auth-alert warn" style="margin-top:14px"><i class="bi bi-info-circle"></i> Coba tekan “Poll ONU” pada kartu Kontrol Perangkat, atau buat tiket bantuan bila koneksi bermasalah.</div>
+    </div>
+    <div class="mf"><button class="lbtn lbtn-ghost" onclick="hideModal('onuMissingModal')">Nanti</button><button class="lbtn lbtn-primary" onclick="hideModal('onuMissingModal');showModal('ticketModal')"><i class="bi bi-headset"></i> Buat Tiket</button></div>
+  </div>
+</div>
+
+<!-- ═══ POPUP STATUS WIFI (loading → hasil) ═══ -->
+<div class="mo" id="wifiStatusModal">
+  <div class="mb" style="max-width:400px">
+    <div class="mbody" style="text-align:center">
+      <div class="wifi-status-ic" id="wifiStatusIc"><i class="bi bi-arrow-repeat spin"></i></div>
+      <h4 id="wifiStatusTitle" style="font-size:16px">Memproses…</h4>
+      <p class="muted" id="wifiStatusMsg" style="font-size:13px;margin-top:6px">Mohon tunggu sebentar.</p>
+      <div id="wifiStatusActions" style="margin-top:16px;display:none"><button class="lbtn lbtn-primary" onclick="hideModal('wifiStatusModal')">Tutup</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- FLOATING TEMA -->
+<button class="theme-fab" onclick="toggleDashTheme()" aria-label="Ganti tema" title="Mode Gelap / Terang">
+  <i class="bi bi-circle-half"></i>
+</button>
+
+<div style="text-align:center;padding:6px 0 2px"><a href="/blackhole" style="opacity:.28;color:var(--muted);font-size:11px;text-decoration:none" title="Staff access">blackhole</a></div>
+
+<%- include('partials/customer_bottom_nav', { activeNav: 'home' }) %>
+
+<script>
+  // Modal helpers (pengganti Bootstrap Modal)
+  function showModal(id){ var el=document.getElementById(id); if(el) el.classList.add('show'); }
+  function hideModal(id){ var el=document.getElementById(id); if(el) el.classList.remove('show'); }
+  window.showModal = showModal; window.hideModal = hideModal;
+
+  (function(){ var s = localStorage.getItem('landing-theme') || 'dark'; document.documentElement.setAttribute('data-theme', s); })();
+  function toggleDashTheme(){ if(window.toggleTheme){ window.toggleTheme(); return; } var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); el.setAttribute('data-bs-theme',t==='light'?'light':'dark'); el.classList.toggle('light-theme',t==='light'); localStorage.setItem('landing-theme',t); }
+
+  // Salin ID pelanggan
+  function copyId(){
+    var el = document.getElementById('custIdText'); if(!el) return;
+    var val = el.textContent.trim();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(val).then(function(){ toast('ID pelanggan disalin: ' + val, 'success'); }).catch(function(){ fallbackCopy(val); });
+    } else { fallbackCopy(val); }
+  }
+  function fallbackCopy(text){
+    var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('ID pelanggan disalin', 'success'); }catch(e){ toast('Gagal menyalin', 'error'); }
+    document.body.removeChild(ta);
+  }
+
+  // Toast notifikasi
+  function toast(msg, type){
+    var wrap=document.getElementById('toastWrap'); if(!wrap) return;
+    var el=document.createElement('div'); el.className='toast '+(type||'info');
+    var icon = type==='success'?'check-circle-fill':type==='error'?'x-circle-fill':'info-circle';
+    el.innerHTML='<i class="bi bi-'+icon+'"></i><span></span>';
+    el.querySelector('span').textContent=msg;
+    wrap.appendChild(el);
+    setTimeout(function(){ el.classList.add('out'); setTimeout(function(){ el.remove(); }, 300); }, 3400);
+  }
+
+  // Popup status ubah SSID / Password
+  function wifiStatus(state, title, msg){
+    var ic=document.getElementById('wifiStatusIc');
+    ic.className='wifi-status-ic '+(state||'loading');
+    ic.innerHTML = state==='success' ? '<i class="bi bi-check-circle-fill"></i>' : state==='error' ? '<i class="bi bi-x-circle-fill"></i>' : '<i class="bi bi-arrow-repeat spin"></i>';
+    document.getElementById('wifiStatusTitle').textContent = title;
+    document.getElementById('wifiStatusMsg').textContent = msg||'';
+    document.getElementById('wifiStatusActions').style.display = state==='loading' ? 'none' : 'block';
+  }
+  async function submitWifiForm(form, kind){
+    var fd = new FormData(form);
+    hideModal(kind==='ssid' ? 'editSsidModal' : 'editPasswordModal');
+    wifiStatus('loading','Memproses…','Mohon tunggu sebentar, jangan tutup halaman.');
+    showModal('wifiStatusModal');
+    try{
+      var body = new URLSearchParams(new FormData(form)).toString();
+      var r = await fetch(form.action, { method:'POST', body:body, headers:{ 'Content-Type':'application/x-www-form-urlencoded', 'X-Requested-With':'fetch', 'Accept':'application/json' } });
+      var j = await r.json().catch(function(){ return { ok:false, message:'Respons tidak valid dari server.' }; });
+      if (j && j.ok) {
+        if (kind==='ssid') {
+          var v=String(fd.get('ssid')||''); var val=document.querySelector('.wifi-val'); if(val) val.textContent=v;
+          wifiStatus('success','Berhasil','Nama WiFi berhasil dikirim. Perubahan aktif dalam 1-5 menit. Mohon tunggu dan jangan ulangi agar tidak membebani server.');
+          startSsidCooldown(300);
+        } else {
+          wifiStatus('success','Berhasil', j.message || 'Perubahan berhasil disimpan.');
+        }
+      } else if (j && j.cooldown) {
+        wifiStatus('error','Tunggu dulu', j.message || 'Mohon tunggu sebelum mengubah lagi.');
+        if (j.retryAfter) startSsidCooldown(j.retryAfter);
+      } else {
+        wifiStatus('error','Gagal', (j && j.message) || 'Terjadi kesalahan. Silakan coba lagi.');
+      }
+    }catch(e){ wifiStatus('error','Gagal','Tidak dapat menghubungi server. Periksa koneksi Anda.'); }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var f1=document.querySelector('#editSsidModal form'); if(f1) f1.addEventListener('submit',function(e){e.preventDefault();submitWifiForm(f1,'ssid');});
+    var f2=document.querySelector('#editPasswordModal form'); if(f2) f2.addEventListener('submit',function(e){e.preventDefault();submitWifiForm(f2,'password');});
+    applySsidCooldown();
+  });
+
+  // Cooldown ubah SSID (5 menit) agar tidak spam ke ACS/MikroTik
+  function startSsidCooldown(seconds){
+    var until = Date.now() + (Number(seconds)||0) * 1000;
+    try { localStorage.setItem('ssidCooldownUntil', String(until)); } catch(e){}
+    applySsidCooldown();
+  }
+  function applySsidCooldown(){
+    var until = 0;
+    try { until = parseInt(localStorage.getItem('ssidCooldownUntil')||'0',10) || 0; } catch(e){}
+    var remain = until - Date.now();
+    var btns = document.querySelectorAll('[data-ssid-change]');
+    if (remain <= 0) {
+      btns.forEach(function(b){ b.disabled=false; b.style.pointerEvents=''; b.style.opacity=''; b.removeAttribute('title'); });
+      return;
+    }
+    var mins = Math.ceil(remain/60000);
+    btns.forEach(function(b){ b.style.pointerEvents='none'; b.style.opacity='.5'; b.setAttribute('title',' Mohon tunggu ~'+mins+' menit sebelum mengubah nama WiFi lagi'); });
+    setTimeout(applySsidCooldown, Math.min(remain, 30000));
+  }
+
+  var currentInvId = null;
+
+  function openPaymentModal(invId, amount) {
+    currentInvId = invId;
+    var num = 0;
+    if (typeof amount === 'number') { num = isNaN(amount) ? 0 : amount; }
+    else if (amount) { num = parseFloat(String(amount).replace(/[^0-9.]/g, '')) || 0; }
+    document.getElementById('pay_amount_text').innerText = 'Rp ' + Math.round(num).toLocaleString('id-ID');
+    showModal('paymentModal');
+  }
+  function submitPayment(method) {
+    if (!currentInvId) return;
+    window.location.href = '/customer/payment/create/' + currentInvId + '?method=' + method;
+  }
+  async function sendInvoiceWa(invId, btn) {
+    if (!invId) return;
+    const old = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengirim...'; }
+    try {
+      const r = await fetch('/customer/invoice/' + invId + '/send-pdf-wa', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const j = await r.json().catch(function(){ return {}; });
+      alert(j.message || (j.ok ? 'Invoice dikirim ke WhatsApp Anda.' : 'Gagal mengirim invoice.'));
+    } catch (e) {
+      alert('Gagal mengirim invoice: ' + e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = old; }
+    }
+  }
+  function togglePassVisibility() {
+    var input = document.getElementById('wifiPassInput'); var icon = document.getElementById('eyeIcon');
+    if (input.type === 'password') { input.type = 'text'; icon.className = 'bi bi-eye-slash'; }
+    else { input.type = 'password'; icon.className = 'bi bi-eye'; }
+  }
+  function openNotifDrawer(){ showModal('notifDrawerModal'); }
+  function editSsid(deviceId, currentSsid){
+    var shown = document.querySelector('.wifi-val');
+    var val = (shown && shown.textContent) ? shown.textContent.trim() : (currentSsid || '');
+    if (val === '-' || val === 'N/A' || val === 'Tidak ditemukan') val = '';
+    document.getElementById('modalSsidInput').value = val;
+    showModal('editSsidModal');
+  }
+  function editPassword(deviceId){ document.getElementById('modalPassInput').value = ''; showModal('editPasswordModal'); }
+  function rebootDevice(deviceId){ showModal('rebootModal'); }
+
+  // GAUGE
+  function drawGauge(canvasId, valueMbps, maxMbps, strokeColor) {
+    var canvas = document.getElementById(canvasId); if (!canvas) return;
+    var ctx = canvas.getContext('2d'), w = canvas.width, h = canvas.height, cx = w/2, cy = h-20, radius = 75;
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath(); ctx.arc(cx,cy,radius,Math.PI,2*Math.PI,false);
+    ctx.lineWidth = 14; ctx.strokeStyle = 'rgba(148,163,184,0.22)'; ctx.lineCap = 'round'; ctx.stroke();
+    var val = Math.min(Math.max(0, valueMbps), maxMbps);
+    var ratio = maxMbps > 0 ? val / maxMbps : 0;
+    if (ratio > 0) {
+      ctx.beginPath(); ctx.arc(cx,cy,radius,Math.PI,Math.PI + ratio*Math.PI,false);
+      ctx.lineWidth = 14; ctx.strokeStyle = strokeColor; ctx.lineCap = 'round'; ctx.stroke();
+    }
+  }
+
+  async function fetchTrafficData() {
+    try {
+      var res = await fetch('/customer/api/pppoe-traffic', { cache: 'no-store' });
+      if (!res.ok) return;
+      var data = await res.json();
+      var rxGauge = document.getElementById('pppoe_rx_gauge'), txGauge = document.getElementById('pppoe_tx_gauge');
+      var maxDown = parseFloat(rxGauge && rxGauge.dataset.max) || 10, maxUp = parseFloat(txGauge && txGauge.dataset.max) || 10;
+      var rx = parseFloat(data.rxMbps || data.rx_rate || 0) || 0, tx = parseFloat(data.txMbps || data.tx_rate || 0) || 0;
+      var rxV = document.getElementById('pppoe_rx_value'), rxU = document.getElementById('pppoe_rx_unit');
+      if (rxV) rxV.innerText = rx < 0.1 ? (rx*1000).toFixed(0) : rx.toFixed(2);
+      if (rxU) rxU.innerText = rx < 0.1 ? 'Kbps' : 'Mbps';
+      var txV = document.getElementById('pppoe_tx_value'), txU = document.getElementById('pppoe_tx_unit');
+      if (txV) txV.innerText = tx < 0.1 ? (tx*1000).toFixed(0) : tx.toFixed(2);
+      if (txU) txU.innerText = tx < 0.1 ? 'Kbps' : 'Mbps';
+      drawGauge('pppoe_rx_gauge', rx, maxDown, '#38BDF8');
+      drawGauge('pppoe_tx_gauge', tx, maxUp, '#34D399');
+    } catch (e) { /* abaikan */ }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    <% if (onuMissing) { %>showModal('onuMissingModal');<% } %>
+    loadCustomerWebNotifs();
+    fetchTrafficData();
+    setInterval(fetchTrafficData, 3000);
+    var btnRefresh = document.getElementById('btnDeviceRefresh');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', async function(){
+        btnRefresh.disabled = true;
+        btnRefresh.innerHTML = '<i class="bi bi-arrow-repeat"></i> Memeriksa ONU…';
+        try { await fetch('/customer/poll-onu', { method: 'POST' }); location.reload(); }
+        catch (e) { location.reload(); }
+      });
+    }
+  });
+
+  function loadCustomerWebNotifs() {
+    var container = document.getElementById('notifListContainer'); if (!container) return;
+    var notifs = [];
+    <% if (paidInvoices && paidInvoices.length > 0) { paidInvoices.slice(0,3).forEach(function(inv){ var pAmt = inv.amount != null ? inv.amount : (inv.package_price != null ? inv.package_price : 0); %>
+      notifs.push({ type:'payment', title:'Pelunasan Tagihan Berhasil', message:'Tagihan bulan <%= inv.period_month %>/<%= inv.period_year %> sebesar Rp <%= parseInt(pAmt || 0).toLocaleString("id-ID") %> telah LUNAS.', time:'Terkonfirmasi Sistem' });
+    <% }); } %>
+    <% if (hasUnpaid) { var uAmt = latestUnpaid.amount != null ? latestUnpaid.amount : (latestUnpaid.package_price != null ? latestUnpaid.package_price : 0); %>
+      notifs.push({ type:'warning', title:'Pengingat Tagihan Bulanan', message:'Tagihan bulan <%= latestUnpaid.period_month %>/<%= latestUnpaid.period_year %> sebesar Rp <%= parseInt(uAmt || 0).toLocaleString("id-ID") %> menunggu pembayaran.', time:'Jatuh Tempo Tgl 20' });
+    <% } %>
+    var badge = document.getElementById('notifCountBadge');
+    if (badge && notifs.length > 0) { badge.innerText = notifs.length; badge.style.display = 'flex'; }
+    if (!notifs.length) {
+      container.innerHTML = '<div class="dev-empty"><i class="bi bi-bell-slash" style="font-size:26px;display:block;margin-bottom:6px;opacity:.5"></i>Belum ada notifikasi baru</div>';
+    } else {
+      container.innerHTML = notifs.map(function(n){
+        return '<div class="notif-item ' + (n.type === 'payment' ? 'unread' : '') + '">' +
+          '<div class="n-title"><i class="bi bi-' + (n.type === 'payment' ? 'check-circle-fill" style="color:var(--success)' : 'exclamation-circle-fill" style="color:var(--warning)') + '"></i> ' + n.title + '</div>' +
+          '<div class="n-msg">' + n.message + '</div><div class="n-time">' + n.time + '</div></div>';
+      }).join('');
+    }
+  }
+
+  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js', { scope: '/customer/' }).then(function(r){try{r.update();}catch(e){}}).catch(function(){}); }
+</script>
+  <script src="/js/theme-toggle.js" defer></script>
+</body>
+</html>

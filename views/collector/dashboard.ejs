@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link href="/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/portal.css?v=4">
+  <link rel="stylesheet" href="/css/portal-theme.css?v=3">
+  <link rel="stylesheet" href="/css/theme-toggle.css">
+  <style>
+    :root{--bg:#0A0D14;--panel:rgba(17,22,34,.72);--panel2:#0A0D14;--muted:#8A96A6;--text:#F2F5F1;--border:rgba(242,245,241,.1)}
+    body{background:var(--bg);color:var(--text)}
+    .cardx{background:var(--panel);border:1px solid var(--border);border-radius:16px}
+    .form-control{background:var(--panel2);border:1px solid var(--border);color:var(--text)}
+    .form-control:focus{box-shadow:none;border-color:rgba(99,102,241,.75)}
+    .muted{color:var(--muted)}
+    .badgey{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid var(--border);background:var(--panel2)}
+    .badgey.s{color:#bbf7d0;border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.1)}
+    .badgey.d{color:#fecaca;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.1)}
+    .badgey.w{color:#fde68a;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.1)}
+    .tbl td{border-top:1px solid rgba(148,163,184,.12);padding:8px 0;font-size:12px;vertical-align:top}
+    .tbl td:first-child{color:var(--muted);width:120px;padding-right:12px}
+    .bn{position:fixed;left:0;right:0;bottom:0;z-index:2000;padding:10px 12px;background:rgba(15,23,42,.92);border-top:1px solid rgba(148,163,184,.14);backdrop-filter:blur(8px)}
+    .bnw{max-width:980px;margin:0 auto;display:flex;gap:8px;justify-content:space-between}
+    .bni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 6px;border-radius:14px;text-decoration:none;color:var(--muted);border:1px solid rgba(148,163,184,.08);background:rgba(30,41,59,.35)}
+    .bni i{font-size:18px;line-height:1}
+    .bni span{font-size:10px;font-weight:800;letter-spacing:.02em}
+    .bni.active{color:var(--primary);border-color:var(--primary-glow);background:var(--pdim)}
+    .bni.active i{color:var(--primary)}
+  </style>
+</head>
+<body>
+  <div class="container" style="max-width:980px;padding-top:14px;padding-bottom:96px">
+    <div class="collector-top d-flex justify-content-between align-items-center">
+      <div>
+        <div style="font-weight:900;letter-spacing:-.02em"><%= t('collector.role','Kolektor') %>: <%= session.collectorName || t('collector.fallback_name','Penagih') %></div>
+        <div class="muted" style="font-size:12px">
+          <%= company %> · v<%= appVersion %> (<%= appVersionName %>)
+          <% if (session.collectorArea) { %>
+            <span class="badge bg-indigo ms-1" style="background:rgba(99,102,241,0.2);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3)"><i class="bi bi-geo-alt"></i> <%= t('collector.col_area_short','Area:') %> <%= session.collectorArea %></span>
+          <% } else { %>
+            <span class="badge bg-secondary ms-1" style="font-weight:normal;opacity:0.7"><i class="bi bi-globe"></i> <%= t('collector.filter_all_area','Semua Area') %></span>
+          <% } %>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-light btn-sm" id="topbarThemeBtn" title="Ganti tema"><i class="bi bi-circle-half"></i></button>
+        <a href="/lang/<%= lang === 'en' ? 'id' : 'en' %>" class="btn btn-outline-light btn-sm" style="text-decoration:none" title="<%= lang === 'en' ? 'Bahasa Indonesia' : 'English' %>"><i class="bi bi-translate"></i> <%= lang === 'en' ? 'ID' : 'EN' %></a>
+        <a class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" href="/collector/attendance">
+          <i class="bi bi-calendar-check"></i> <%= t('collector.absensi','Absensi') %>
+        </a>
+        <a class="btn btn-outline-light btn-sm" href="/collector/logout"><i class="bi bi-box-arrow-left"></i></a>
+      </div>
+    </div>
+
+    <%- include('../partials/service-notice') %>
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='error'?'danger':'success' %> d-flex align-items-center gap-2 flex-wrap">
+        <span><%- msg.text %></span>
+      </div>
+    <% } %>
+
+    <div class="row g-2 mb-3">
+      <div class="col-6 col-md-3">
+        <a class="cardx p-3 d-block text-decoration-none" href="/collector?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'today', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
+          <div class="muted" style="font-size:12px"><%= t('collector.tag_hari_ini_tgl','Tagihan Hari Ini (tgl') %> <%= todayDay %>)</div>
+          <div style="font-weight:900;font-size:20px"><%= Number(summary?.today_count || 0) %></div>
+          <div class="muted" style="font-size:12px">Rp <%= Number(summary?.today_total || 0).toLocaleString('id-ID') %></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a class="cardx p-3 d-block text-decoration-none" href="/collector?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'unpaid', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
+          <div class="muted" style="font-size:12px"><%= t('collector.tag_belum_bayar','Tagihan Belum Bayar') %></div>
+          <div style="font-weight:900;font-size:20px"><%= Number(summary?.unpaid_count || 0) %></div>
+          <div class="muted" style="font-size:12px">Rp <%= Number(summary?.unpaid_total || 0).toLocaleString('id-ID') %></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a class="cardx p-3 d-block text-decoration-none" href="/collector?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'isolir', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
+          <div class="muted" style="font-size:12px"><%= t('collector.tag_isolir','Tagihan Isolir') %></div>
+          <div style="font-weight:900;font-size:20px"><%= Number(summary?.isolir_count || 0) %></div>
+          <div class="muted" style="font-size:12px">Rp <%= Number(summary?.isolir_total || 0).toLocaleString('id-ID') %></div>
+        </a>
+      </div>
+      <div class="col-6 col-md-3">
+        <a class="cardx p-3 d-block text-decoration-none" href="/collector?<%= new URLSearchParams({ month: String(month), year: String(year), status: 'unpaid', scope: 'multi', search: String(search||''), jump: 'data' }).toString() %>#data-tagihan">
+          <div class="muted" style="font-size:12px"><%= t('collector.tag_menunggak','Menunggak > 1 Bulan') %></div>
+          <div style="font-weight:900;font-size:20px"><%= Number(summary?.multi_customer_count || 0) %></div>
+          <div class="muted" style="font-size:12px">Rp <%= Number(summary?.multi_total || 0).toLocaleString('id-ID') %></div>
+        </a>
+      </div>
+    </div>
+
+    <div class="cardx p-3 mb-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div style="font-weight:800"><i class="bi bi-receipt"></i> <%= t('collector.bill_list','Daftar Tagihan') %></div>
+        <span class="badgey"><i class="bi bi-shield-check"></i><%= t('collector.read_only','Read Only') %></span>
+      </div>
+      <form method="GET" action="/collector" class="d-flex gap-2 flex-wrap">
+        <select class="form-control" name="month" style="max-width:110px">
+          <% for (let m=1; m<=12; m++) { %>
+            <option value="<%= m %>" <%= Number(month)===m ? 'selected' : '' %>><%= String(m).padStart(2,'0') %></option>
+          <% } %>
+        </select>
+        <select class="form-control" name="year" style="max-width:120px">
+          <% const baseY = Number(year) || new Date().getFullYear(); %>
+          <% for (let y=baseY-2; y<=baseY+1; y++) { %>
+            <option value="<%= y %>" <%= Number(year)===y ? 'selected' : '' %>><%= y %></option>
+          <% } %>
+        </select>
+        <select class="form-control" name="status" style="max-width:170px">
+          <option value="unpaid" <%= String(status)==='unpaid' ? 'selected' : '' %>><%= t('collector.filter_belum','Belum Bayar') %></option>
+          <option value="paid" <%= String(status)==='paid' ? 'selected' : '' %>><%= t('collector.lunas','Lunas') %></option>
+          <option value="all" <%= String(status)==='all' ? 'selected' : '' %>><%= t('collector.filter_all','Semua') %></option>
+        </select>
+        <select class="form-control" name="scope" style="max-width:200px">
+          <option value="" <%= !scope ? 'selected' : '' %>><%= t('collector.filter_all_cust','Semua Pelanggan') %></option>
+          <option value="today" <%= String(scope)==='today' ? 'selected' : '' %>><%= t('collector.tag_hari_ini','Tagihan Hari Ini') %></option>
+          <option value="unpaid" <%= String(scope)==='unpaid' ? 'selected' : '' %>><%= t('collector.filter_unpaid','Belum Bayar (Filter)') %></option>
+          <option value="isolir" <%= String(scope)==='isolir' ? 'selected' : '' %>><%= t('collector.btn_isolir','Isolir') %></option>
+          <option value="multi" <%= String(scope)==='multi' ? 'selected' : '' %>><%= t('collector.tag_menunggak','Menunggak > 1 Bulan') %></option>
+        </select>
+        <input class="form-control" name="search" value="<%= search || '' %>" placeholder="<%= t('collector.filter_search','Cari (opsional): nama / HP / PPPoE / TAG') %>">
+        <button class="btn btn-primary" type="submit" style="min-width:90px"><i class="bi bi-funnel"></i></button>
+      </form>
+      <div class="muted mt-2" style="font-size:12px">
+        <%= t('collector.count_prefix','Menampilkan maks 500 tagihan periode') %><span style="font-weight:900"><%= String(month).padStart(2,'0') %>/<%= year %></span>.
+      </div>
+    </div>
+
+    <div class="cardx p-3 mb-3" id="data-tagihan">
+      <div style="font-weight:800" class="mb-2"><i class="bi bi-list-ul"></i> <%= t('collector.data_title','Data Pelanggan & Tagihan Area') %> (<%= (invoices || []).length %>)</div>
+      <% if (!invoices || invoices.length === 0) { %>
+        <div class="muted" style="font-size:12px"><%= t('collector.no_data','Tidak ada data pelanggan untuk filter ini.') %></div>
+      <% } else { %>
+        <div class="d-flex flex-column gap-2">
+          <% invoices.forEach(inv => { 
+               const invId = inv.invoice_id;
+               const isPaid = String(inv.invoice_status||'').toLowerCase()==='paid';
+               const reqRow = pendingMap && pendingMap.get ? (pendingMap.get('inv_' + invId) || pendingMap.get('cust_' + inv.customer_id)) : null;
+               const reqStatus = reqRow ? String(reqRow.status||'') : '';
+               const isPending = reqStatus === 'pending';
+               const noInvoice = !invId;
+               const amount = Number(inv.invoice_amount || inv.package_price || 0);
+          %>
+            <div style="background:var(--panel2);border:1px solid rgba(148,163,184,.14);border-radius:14px;padding:12px">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <div style="min-width:0">
+                  <div style="font-weight:900">
+                    <%= inv.customer_name || '-' %>
+                    <span class="muted" style="font-size:12px"><%= inv.customer_phone ? '('+inv.customer_phone+')' : '' %></span>
+                    <% if (inv.customer_status === 'suspended') { %>
+                      <span class="badge bg-danger ms-1" style="font-size:10px"><i class="bi bi-pause-circle"></i> <%= t('collector.status_isolir','ISOLIR') %></span>
+                    <% } else if (inv.customer_status === 'active') { %>
+                      <span class="badge bg-success ms-1" style="font-size:10px;opacity:0.8"><i class="bi bi-check-circle"></i> <%= t('collector.status_active','Aktif') %></span>
+                    <% } else { %>
+                      <span class="badge bg-secondary ms-1" style="font-size:10px;opacity:0.8"><%= inv.customer_status %></span>
+                    <% } %>
+                  </div>
+                  <div class="muted" style="font-size:12px"><%= inv.package_name || 'Internet' %> <%= invId ? ('• Invoice #' + invId) : '• Belum Ada Invoice' %></div>
+                </div>
+                <div class="text-end">
+                  <div style="font-weight:900">Rp <%= amount.toLocaleString('id-ID') %></div>
+                  <% if (isPaid) { %>
+                    <span class="badgey s"><i class="bi bi-check-circle"></i> <%= t('collector.status_lunas','LUNAS') %></span>
+                  <% } else if (isPending) { %>
+                    <span class="badgey w"><i class="bi bi-hourglass"></i> <%= t('collector.waiting_approval','MENUNGGU APPROVAL') %></span>
+                  <% } else if (noInvoice) { %>
+                    <span class="badgey w" style="background:rgba(99,102,241,0.15);color:#a5b4fc;border-color:rgba(99,102,241,0.3)"><i class="bi bi-file-earmark-plus"></i> <%= t('collector.status_belum_tagihan','BELUM TAGIHAN') %></span>
+                  <% } else { %>
+                    <span class="badgey d"><i class="bi bi-exclamation-circle"></i> <%= t('collector.status_belum_bayar','BELUM BAYAR') %></span>
+                  <% } %>
+                </div>
+              </div>
+
+              <table class="tbl mt-2" style="width:100%;border-collapse:collapse">
+                <tr><td><%= t('collector.col_period','Periode') %></td><td><%= month %>/<%= year %></td></tr>
+                <tr><td><%= t('collector.col_area','Area / Wilayah') %></td><td><strong style="color:#a5b4fc"><%= inv.customer_area || '-' %></strong></td></tr>
+                <tr><td><%= t('collector.col_due','Jatuh Tempo') %></td><td><%= inv.isolate_day ? ('Tgl ' + inv.isolate_day) : '-' %></td></tr>
+                <tr><td><%= t('collector.col_cust_id','ID Pelanggan') %></td><td>#<%= inv.customer_id %></td></tr>
+                <tr><td><%= t('collector.col_pppoe','PPPoE') %></td><td><%= inv.pppoe_username ? inv.pppoe_username : '-' %></td></tr>
+                <tr><td><%= t('collector.col_onu_tag','Tag ONU') %></td><td><%= inv.genieacs_tag ? inv.genieacs_tag : '-' %></td></tr>
+                <tr><td><%= t('collector.col_address','Alamat') %></td><td><%= inv.customer_address ? inv.customer_address : '-' %></td></tr>
+              </table>
+
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <% if (inv.lat && inv.lng) { %>
+                  <a class="btn btn-outline-light btn-sm" target="_blank" href="https://www.google.com/maps?q=<%= encodeURIComponent(inv.lat + ',' + inv.lng) %>"><i class="bi bi-geo-alt"></i> <%= t('collector.map','Map') %></a>
+                <% } %>
+                <% if (isPaid && inv.invoice_id) { %>
+                  <a class="btn btn-primary btn-sm fw-bold shadow-sm" target="_blank" href="/collector/invoice/<%= inv.invoice_id %>/print-thermal">
+                    <i class="bi bi-printer"></i> <%= t('collector.print_receipt','Cetak Struk (Thermal)') %>
+                  </a>
+                  <a class="btn btn-outline-info btn-sm fw-bold" target="_blank" href="/customer/invoice/<%= inv.invoice_id %>/pdf">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                  </a>
+                  <button type="button" class="btn btn-outline-success btn-sm fw-bold" onclick="sendWaPdf('<%= inv.invoice_id %>')">
+                    <i class="bi bi-whatsapp"></i> <%= t('collector.send_wa_pdf','Kirim WA PDF') %>
+                  </button>
+                <% } else if (!isPaid && !isPending) { %>
+                  <form method="POST" action="/collector/payment-request" class="d-flex gap-2" style="flex:1;min-width:260px">
+                    <input type="hidden" name="customer_id" value="<%= inv.customer_id %>">
+                    <input type="hidden" name="invoice_id" value="<%= inv.invoice_id || '' %>">
+                    <input type="hidden" name="month" value="<%= month %>">
+                    <input type="hidden" name="year" value="<%= year %>">
+                    <input type="hidden" name="status" value="<%= status %>">
+                    <input type="hidden" name="search" value="<%= search || '' %>">
+                    <input class="form-control form-control-sm" name="note" placeholder="Catatan (opsional)">
+                    <button class="btn btn-warning btn-sm fw-bold" type="submit">
+                      <i class="bi bi-cash-stack"></i> <%= noInvoice ? 'Buat & Bayar Tagihan' : 'Ajukan Pembayaran' %>
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="cardx p-3">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div style="font-weight:800"><i class="bi bi-list-ul"></i> <%= t('collector.request_history','Riwayat Pengajuan Saya') %></div>
+        <span class="badgey"><%= (myReqs || []).length %></span>
+      </div>
+      <% if (!myReqs || myReqs.length === 0) { %>
+        <div class="muted" style="font-size:12px"><%= t('collector.no_requests','Belum ada pengajuan.') %></div>
+      <% } else { %>
+        <div class="table-responsive">
+          <table class="table table-dark table-sm align-middle" style="margin:0">
+            <thead>
+              <tr>
+                <th><%= t('collector.col_time','Waktu') %></th>
+                <th><%= t('collector.customer','Pelanggan') %></th>
+                <th><%= t('collector.col_period','Periode') %></th>
+                <th class="text-end"><%= t('collector.col_amount','Nominal') %></th>
+                <th><%= t('collector.col_status_action','Status / Aksi') %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% myReqs.forEach(r => { %>
+                <% const st = String(r.status||''); %>
+                <tr>
+                  <td style="font-size:12px"><%= r.created_at ? new Date(r.created_at).toLocaleString('id-ID') : '-' %></td>
+                  <td style="font-size:12px"><%= r.customer_name || '-' %> <span class="muted"><%= r.customer_phone ? '('+r.customer_phone+')' : '' %></span></td>
+                  <td style="font-size:12px"><%= r.period_month %>/<%= r.period_year %></td>
+                  <td class="text-end" style="font-size:12px">Rp <%= Number(r.amount||0).toLocaleString('id-ID') %></td>
+                  <td style="font-size:12px">
+                    <% if (st === 'approved') { %>
+                      <span class="badgey s"><%= t('collector.approved','APPROVED') %></span>
+                      <a href="/collector/invoice/<%= r.invoice_id %>/print-thermal" target="_blank" class="btn btn-sm btn-outline-light ms-1" style="font-size:11px;padding:2px 6px;" title="Cetak Struk Thermal"><i class="bi bi-printer"></i> <%= t('collector.struk','Struk') %></a>
+                    <% } else if (st === 'rejected') { %>
+                      <span class="badgey d"><%= t('collector.rejected','REJECTED') %></span>
+                    <% } else { %>
+                      <span class="badgey w"><%= t('collector.status_pending','PENDING') %></span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" class="muted" style="font-size:12px"><%= t('collector.total_requests','Total pengajuan (halaman ini)') %></td>
+                <td class="text-end" style="font-size:12px;font-weight:900">Rp <%= (myReqs || []).reduce((s, r) => s + (Number(r.amount||0) || 0), 0).toLocaleString('id-ID') %></td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <%
+    const qsBase = { month: String(month), year: String(year), search: String(search || '') };
+    const qsAll = new URLSearchParams({ ...qsBase, status: String(status || 'all'), scope: '' }).toString();
+    const qsToday = new URLSearchParams({ ...qsBase, status: 'unpaid', scope: 'today' }).toString();
+    const qsUnpaid = new URLSearchParams({ ...qsBase, status: 'unpaid', scope: 'unpaid' }).toString();
+    const qsIsolir = new URLSearchParams({ ...qsBase, status: 'unpaid', scope: 'isolir' }).toString();
+    const qsMulti = new URLSearchParams({ ...qsBase, status: 'unpaid', scope: 'multi' }).toString();
+    const activeScope = String(scope || '');
+    const activeStatus = String(status || '');
+  %>
+  <div class="bn">
+    <div class="bnw">
+      <a class="bni <%= (!activeScope && (activeStatus === 'all' || activeStatus === 'paid' || activeStatus === 'unpaid')) ? 'active' : '' %>" href="/collector?<%= qsAll %>#data-tagihan">
+        <i class="bi bi-grid-3x3-gap"></i><span><%= t('collector.filter_all','Semua') %></span>
+      </a>
+      <a class="bni <%= activeScope === 'today' ? 'active' : '' %>" href="/collector?<%= qsToday %>#data-tagihan">
+        <i class="bi bi-calendar-check"></i><span><%= t('collector.today','Hari Ini') %></span>
+      </a>
+      <a class="bni <%= activeScope === 'unpaid' ? 'active' : '' %>" href="/collector?<%= qsUnpaid %>#data-tagihan">
+        <i class="bi bi-exclamation-circle"></i><span><%= t('collector.btn_belum','Belum') %></span>
+      </a>
+      <a class="bni <%= activeScope === 'isolir' ? 'active' : '' %>" href="/collector?<%= qsIsolir %>#data-tagihan">
+        <i class="bi bi-shield-exclamation"></i><span><%= t('collector.btn_isolir','Isolir') %></span>
+      </a>
+      <a class="bni <%= activeScope === 'multi' ? 'active' : '' %>" href="/collector?<%= qsMulti %>#data-tagihan">
+        <i class="bi bi-layers"></i><span>&gt;1 <%= t('collector.month_short','Bln') %></span>
+      </a>
+      <a class="bni" href="/collector/attendance">
+        <i class="bi bi-calendar-check-fill"></i><span><%= t('collector.absensi','Absensi') %></span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      try {
+        const u = new URL(window.location.href);
+        if (u.hash === '#data-tagihan') {
+          const el = document.getElementById('data-tagihan');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch (e) {}
+    })();
+
+    async function sendWaPdf(invId) {
+      if (!confirm('Kirimkan dokumen Invoice PDF ke WhatsApp pelanggan sekarang?')) return;
+      try {
+        const res = await fetch('/collector/invoice/' + invId + '/send-pdf-wa', { method: 'POST' });
+        const data = await res.json();
+        alert(data.message || (data.success ? 'Berhasil dikirim!' : 'Gagal mengirim'));
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    }
+  </script>
+  <script src="/js/theme-toggle.js" defer></script>
+</body>
+</html>

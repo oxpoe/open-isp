@@ -1,0 +1,135 @@
+<%- include('partials/header') %>
+
+<div style="margin-bottom:18px">
+  <div class="muted" style="font-size:12.5px"><%= t('tech.dashboard.greeting', 'Halo, Selamat Bekerja!') %></div>
+  <div style="font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px"><i class="bi bi-person-badge" style="color:var(--primary)"></i><%= techName %></div>
+</div>
+
+<div class="p-stat-grid">
+  <div class="p-stat" style="border-left:3px solid var(--warning)">
+    <div class="lbl"><%= t('tech.dashboard.in_progress', 'Sedang Dikerjakan') %></div>
+    <div class="val" style="color:var(--warning)"><%= stats.inProgress %></div>
+  </div>
+  <div class="p-stat" style="border-left:3px solid var(--success)">
+    <div class="lbl"><%= t('tech.dashboard.resolved_today', 'Selesai Hari Ini') %></div>
+    <div class="val" style="color:var(--success)"><%= stats.resolved %></div>
+  </div>
+</div>
+
+<div class="p-sec"><i class="bi bi-list-task"></i> <%= t('tech.dashboard.active_tasks', 'Tugas Aktif Anda') %> (<%= tickets.length %>)</div>
+
+<% if (tickets.length === 0) { %>
+  <div class="p-empty">
+    <i class="bi bi-check2-circle" style="color:var(--success);opacity:1"></i>
+    <p style="font-size:13px"><%= t('tech.dashboard.empty_active', 'Bagus! Tidak ada tugas aktif saat ini.') %><br><%= t('tech.dashboard.empty_active_hint', 'Silakan cek tab "Tiket Baru" untuk mengambil tugas.') %></p>
+  </div>
+<% } else { %>
+  <% tickets.forEach(function(ticket){ %>
+    <div class="p-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+        <span class="badge-status badge-<%= ticket.status %>">
+          <% var statusLabel = ticket.status; if (ticket.status === 'open') statusLabel = t('tech.ticket.open', 'Belum Ditangani'); if (ticket.status === 'in_progress') statusLabel = t('tech.ticket.in_progress', 'Sedang Dikerjakan'); if (ticket.status === 'resolved') statusLabel = t('tech.ticket.resolved', 'Selesai'); %>
+          <% if (ticket.status === 'in_progress') { %><i class="bi bi-tools"></i><% } %> <%= statusLabel %>
+        </span>
+        <span class="muted" style="font-size:11px"><%= typeof formatTimeLocal === 'function' ? formatTimeLocal(ticket.created_at) : (ticket.created_at ? new Date(ticket.created_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '-') %></span>
+      </div>
+
+      <div style="font-weight:700;font-size:15px"><%= ticket.customer_name %></div>
+      <div class="muted" style="font-size:12px;margin:6px 0 0">
+        <i class="bi bi-geo-alt-fill"></i> <%= ticket.customer_address || t('tech.ticket.no_address', 'Tidak ada alamat') %><br>
+        <i class="bi bi-telephone-fill"></i> <a href="https://wa.me/<%= ticket.customer_phone %>" style="color:var(--info)"><%= ticket.customer_phone || '-' %></a>
+      </div>
+
+      <div class="ticket-msg">
+        <div class="subj"><%= ticket.subject %></div>
+        <div><%= ticket.message %></div>
+        <% if (ticket.customer_photos && ticket.customer_photos !== '' && ticket.customer_photos !== '[]') { %>
+          <% var customerPhotos = JSON.parse(ticket.customer_photos || '[]'); %>
+          <% if (customerPhotos.length > 0) { %>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+              <div style="color:var(--info);font-size:12px;margin-bottom:8px"><i class="bi bi-images"></i> <%= t('tech.cust_photos','Foto dari pelanggan') %><%= customerPhotos.length %>)</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+                <% customerPhotos.slice(0,3).forEach(function(photo){ %>
+                  <a href="<%= photo %>" target="_blank" rel="noopener"><img src="<%= photo %>" class="p-img" alt="Foto"></a>
+                <% }); %>
+              </div>
+              <% if (customerPhotos.length > 3) { %><div class="muted" style="font-size:11px;margin-top:6px">+<%= customerPhotos.length - 3 %> <%= t('tech.more_photos_suffix','foto lainnya') %></div><% } %>
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+
+      <button type="button" class="p-btn success" onclick="openResolve(<%= ticket.id %>)"><i class="bi bi-check-circle-fill"></i> <%= t('tech.ticket.mark_resolved', 'Tandai Selesai') %></button>
+    </div>
+
+    <!-- Modal Selesai -->
+    <div class="mo" id="resolveModal<%= ticket.id %>" onclick="if(event.target===this)hideModal('resolveModal<%= ticket.id %>')">
+      <div class="mb">
+        <div class="mh"><h3><i class="bi bi-check-circle" style="color:var(--success)"></i> <%= t('tech.ticket.resolve_title', 'Selesaikan Tugas') %></h3>
+          <button class="mc" onclick="hideModal('resolveModal<%= ticket.id %>')"><i class="bi bi-x-lg"></i></button></div>
+        <form method="POST" action="/tech/tickets/<%= ticket.id %>/update" enctype="multipart/form-data" id="resolveForm<%= ticket.id %>">
+          <div class="mbody">
+            <div class="auth-alert info"><i class="bi bi-info-circle"></i> <%= t('tech.task_for','Tugas untuk') %> <b><%= ticket.customer_name %></b> — <b><%= ticket.subject %></b></div>
+            <input type="hidden" name="status" value="resolved">
+
+            <div class="p-field">
+              <label><%= t('tech.job_note','Catatan Pekerjaan *') %></label>
+              <textarea name="notes" class="p-input" rows="3" placeholder="<%= t('tech.note_ph','Jelaskan pekerjaan, kendala, material yang digunakan…') %>" required></textarea>
+              <div class="muted" style="font-size:11.5px;margin-top:5px"><%= t('tech.job_note_hint','Catatan ini akan dilihat admin dan pelanggan.') %></div>
+            </div>
+
+            <div class="p-field">
+              <label><%= t('tech.job_photos','Foto Pekerjaan (Opsional, max 10)') %></label>
+              <input type="file" name="photos" class="p-input" accept="image/*" multiple capture="environment" onchange="previewPhotos(this, <%= ticket.id %>)" style="padding:10px">
+              <div class="muted" style="font-size:11.5px;margin-top:5px"><%= t('tech.job_photos_hint','Foto sebelum/sesudah, perangkat, atau signal level. Max 5MB/foto.') %></div>
+            </div>
+
+            <div id="photoPreview<%= ticket.id %>" style="display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px"></div>
+
+            <input type="hidden" id="gpsLat<%= ticket.id %>" name="gps_lat" value="">
+            <input type="hidden" id="gpsLng<%= ticket.id %>" name="gps_lng" value="">
+            <div class="auth-alert warn"><i class="bi bi-geo-alt-fill"></i> <%= t('tech.gps_note','Lokasi GPS otomatis tersimpan saat menyelesaikan tugas.') %></div>
+          </div>
+          <div class="mf">
+            <button type="button" class="lbtn lbtn-ghost" onclick="hideModal('resolveModal<%= ticket.id %>')"><i class="bi bi-x-circle"></i> <%= t('common.cancel','Batal') %></button>
+            <button type="submit" class="lbtn lbtn-primary"><i class="bi bi-check-circle-fill"></i> <%= t('tech.done_save','Selesai & Simpan') %></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  <% }); %>
+<% } %>
+
+<script>
+  function showModal(id){ var el=document.getElementById(id); if(el) el.classList.add('show'); }
+  function hideModal(id){ var el=document.getElementById(id); if(el) el.classList.remove('show'); }
+  function getGps(id){
+    if(!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function(p){
+      var la=document.getElementById('gpsLat'+id), ln=document.getElementById('gpsLng'+id);
+      if(la) la.value=p.coords.latitude; if(ln) ln.value=p.coords.longitude;
+    }, function(){}, {enableHighAccuracy:true, timeout:8000});
+  }
+  function openResolve(id){ showModal('resolveModal'+id); getGps(id); }
+  function previewPhotos(input, ticketId) {
+    var previewContainer = document.getElementById('photoPreview' + ticketId);
+    previewContainer.innerHTML = '';
+    if (input.files && input.files.length > 0) {
+      previewContainer.style.display = 'grid';
+      var files = Array.prototype.slice.call(input.files, 0, 10);
+      files.forEach(function(file, index){
+        var reader = new FileReader();
+        reader.onload = function(e){
+          var col = document.createElement('div');
+          col.style.position = 'relative';
+          col.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:78px;object-fit:cover;border:2px solid var(--border);border-radius:8px"><span style="position:absolute;top:4px;left:4px;background:var(--primary);color:var(--on-primary);border-radius:6px;font-size:10px;font-weight:800;padding:1px 6px">'+(index+1)+'</span>';
+          previewContainer.appendChild(col);
+        };
+        reader.readAsDataURL(file);
+      });
+      if (input.files.length > 10) alert('Maksimal 10 foto. Sisanya diabaikan.');
+    } else { previewContainer.style.display = 'none'; }
+  }
+</script>
+
+<%- include('partials/bottom_nav') %>

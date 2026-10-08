@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= t('admin.onustickers.title', 'Cetak Stiker Modem / ONU') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    @page { size: A4 portrait; margin: 6mm 6mm; }
+/* Print Page Container */
+    .print-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 20px auto;
+      background: #ffffff;
+      padding: 4mm 4mm;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+      border-radius: 4px;
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* Sticker Grid: 2 Columns x 5 Rows = 10 stickers per A4 */
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 3.5mm 3.5mm;
+    }
+
+    /* Individual Sticker: Name Tag Size (~96mm x 53mm) */
+    .sticker-card {
+      width: 100%;
+      height: 54mm;
+      border: 1px dashed #cbd5e1;
+      border-radius: 7px;
+      padding: 4.5mm 5mm;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      box-sizing: border-box;
+    }
+
+    .sticker-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #0284c7, #0ea5e9, #38bdf8);
+    }
+
+    /* Header */
+    .st-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 3px;
+      margin-bottom: 2px;
+    }
+    .st-brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .st-logo {
+      height: 20px;
+      max-width: 60px;
+      object-fit: contain;
+    }
+    .st-company {
+      font-size: 10.5px;
+      font-weight: 900;
+      color: #0f172a;
+      letter-spacing: .2px;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+    .st-badge {
+      font-size: 8px;
+      font-weight: 700;
+      color: #0369a1;
+      background: #e0f2fe;
+      padding: 1.5px 5px;
+      border-radius: 999px;
+      border: 0.5px solid #bae6fd;
+      white-space: nowrap;
+    }
+
+    /* Body 2 Columns */
+    .st-body {
+      display: flex;
+      gap: 5px;
+      align-items: stretch;
+      flex: 1;
+      margin: 2px 0;
+    }
+
+    /* Left Side: Cust details & Guidance (62%) */
+    .st-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .cust-info-box {
+      background: #f8fafc;
+      border: 0.5px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 3px 5px;
+      line-height: 1.25;
+    }
+    .cust-row {
+      display: flex;
+      align-items: baseline;
+      font-size: 8.5px;
+      color: #334155;
+    }
+    .cust-row .label {
+      width: 48px;
+      color: #64748b;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .cust-row .val {
+      font-weight: 800;
+      color: #0f172a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Important Warnings / Tips Box */
+    .tips-box {
+      background: #fffbeb;
+      border: 0.8px solid #fde68a;
+      border-radius: 5px;
+      padding: 4px 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      gap: 3px;
+      flex: 1;
+    }
+    .tip-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 4.5px;
+      font-size: 8.6px;
+      color: #78350f;
+      line-height: 1.3;
+    }
+    .tip-item i {
+      font-size: 10px;
+      flex-shrink: 0;
+      margin-top: 0.5px;
+    }
+    .tip-item strong {
+      color: #9a3412;
+      font-weight: 800;
+      letter-spacing: .1px;
+    }
+
+    /* Right Side: QR Code (38%) */
+    .st-right {
+      width: 29mm;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: #f8fafc;
+      border: 0.5px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 2px;
+    }
+    .qr-img {
+      width: 23.5mm;
+      height: 23.5mm;
+      object-fit: contain;
+      display: block;
+    }
+    .qr-label {
+      font-size: 7.5px;
+      font-weight: 900;
+      color: #0284c7;
+      text-transform: uppercase;
+      letter-spacing: .2px;
+      margin-top: 1px;
+      line-height: 1.1;
+    }
+    .qr-sub {
+      font-size: 6.5px;
+      color: #64748b;
+      line-height: 1;
+      margin-top: 0.5px;
+    }
+
+    /* Footer */
+    .st-footer {
+      border-top: 0.5px solid #e2e8f0;
+      padding-top: 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 7.5px;
+      color: #475569;
+    }
+    .st-cs {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-weight: 800;
+      color: #047857;
+    }
+    .st-cs i {
+      color: #10b981;
+      font-size: 8.5px;
+    }
+    .st-notice {
+      color: #94a3b8;
+      font-size: 6.8px;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+      }
+      .screen-controls {
+        display: none !important;
+      }
+      .print-sheet {
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+      }
+      .sticker-card {
+        border: 0.5px dashed #cbd5e1 !important;
+      }
+    }
+    @media screen {
+      .sheets-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; max-width: 100%; }
+    }
+  
+    @media (max-width: 720px) {
+      .topbar { flex-wrap: wrap; gap: 8px; }
+      .tb-title { min-width: 0; }
+      .tb-right { flex-wrap: wrap; }
+    }
+    /* Layout admin: sembunyikan kontrol saat cetak */
+    @media print {
+      .topbar, .card, .hb-menu, .bottom-nav { display: none !important; }
+      .page { padding: 0 !important; margin: 0 !important; }
+      .sheets-scroll { overflow: visible !important; padding: 0 !important; }
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'onu_stickers', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-qr-code-scan"></i> <%= t('admin.onustickers.topbar_title', 'Cetak Stiker ONU') %>
+    </div>
+    <div class="tb-right">
+      <button type="button" class="btn btn-p btn-sm" onclick="window.print()"><i class="bi bi-printer-fill"></i> <%= t('admin.onustickers.print', 'Cetak Stiker (A4 / PDF)') %></button>
+      <a href="/admin/customers" class="btn btn-g btn-sm"><i class="bi bi-arrow-left"></i> <%= t('common.back', 'Kembali') %></a>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <div class="card mb16">
+      <div class="card-hd"><h6 style="margin:0"><i class="bi bi-sliders"></i> <%= t('admin.onustickers.ctrl_title', 'Cetak Stiker Modem / ONU (Name Tag Size)') %></h6></div>
+      <div class="card-bd">
+        <form method="GET" action="/admin/onu-stickers" id="filterForm">
+          <div class="form-row" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">
+            <div class="fg">
+              <label class="fl"><%= t('admin.onustickers.mode', 'Mode Cetak') %></label>
+              <select class="fs" name="mode" onchange="document.getElementById('filterForm').submit()">
+                <option value="blank" <%= mode === 'blank' ? 'selected' : '' %>><%= t('admin.onustickers.mode_blank', 'Template Blank (Stok Teknisi Lapangan)') %></option>
+                <option value="customers" <%= mode === 'customers' ? 'selected' : '' %>><%= t('admin.onustickers.mode_customers', 'Data Pelanggan (Personalized)') %></option>
+              </select>
+            </div>
+            <% if (mode === 'blank') { %>
+              <div class="fg">
+                <label class="fl"><%= t('admin.onustickers.count', 'Jumlah Stiker') %></label>
+                <select class="fs" name="count" onchange="document.getElementById('filterForm').submit()">
+                  <option value="10" <%= count === 10 ? 'selected' : '' %>><%= t('admin.onustickers.count10', '10 Stiker (1 Lembar A4)') %></option>
+                  <option value="20" <%= count === 20 ? 'selected' : '' %>><%= t('admin.onustickers.count20', '20 Stiker (2 Lembar A4)') %></option>
+                  <option value="30" <%= count === 30 ? 'selected' : '' %>><%= t('admin.onustickers.count30', '30 Stiker (3 Lembar A4)') %></option>
+                  <option value="1" <%= count === 1 ? 'selected' : '' %>><%= t('admin.onustickers.count1', '1 Stiker (Thermal / Satuan)') %></option>
+                </select>
+              </div>
+            <% } else { %>
+              <div class="fg">
+                <label class="fl"><%= t('admin.onustickers.filter_router', 'Filter Router') %></label>
+                <select class="fs" name="router_id" onchange="document.getElementById('filterForm').submit()">
+                  <option value=""><%= t('admin.onustickers.all_routers', 'Semua Router') %></option>
+                  <% (routers || []).forEach(r => { %>
+                    <option value="<%= r.id %>" <%= String(selectedRouterId) === String(r.id) ? 'selected' : '' %>><%= r.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.onustickers.search', 'Cari Pelanggan') %></label>
+                <input class="fc" type="text" name="q" value="<%= searchQuery || '' %>" placeholder="<%= t('admin.onustickers.search_ph', 'Ketik nama / ID...') %>" />
+              </div>
+            <% } %>
+            <div class="fg">
+              <label class="fl"><%= t('admin.onustickers.cs_label', 'No. CS / WA Bantuan (Tampil di Stiker)') %></label>
+              <input class="fc" type="text" name="cs_phone" value="<%= csPhone %>" placeholder="08xxxxxxxxxx" onchange="document.getElementById('filterForm').submit()" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-g btn-sm"><i class="bi bi-funnel"></i> <%= t('common.apply', 'Terapkan') %></button>
+        </form>
+        <div class="hint" style="margin-top:10px"><i class="bi bi-info-circle"></i> <%= t('admin.onustickers.info', 'Ukuran stiker diatur presisi standar Name Tag / Kartu ID (~8.5cm x 5.4cm). Format A4 memuat 10 stiker per lembar. Gunakan kertas stiker HVS atau Glossy.') %></div>
+      </div>
+    </div>
+
+    <div class="sheets-scroll">
+  <!-- Printable Sheets (Auto breaks pages if items > 10) -->
+  <% 
+    const STICKERS_PER_PAGE = 10;
+    const totalPages = Math.max(1, Math.ceil(stickers.length / STICKERS_PER_PAGE));
+    for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+      const pageItems = stickers.slice(pageIdx * STICKERS_PER_PAGE, (pageIdx + 1) * STICKERS_PER_PAGE);
+  %>
+    <div class="print-sheet">
+      <div class="sticker-grid">
+        <% pageItems.forEach(item => { %>
+          <div class="sticker-card">
+            
+            <!-- 1. Header -->
+            <div class="st-header">
+              <div class="st-brand">
+                <% if (companyLogo) { %>
+                  <img src="<%= companyLogo %>" class="st-logo" alt="Logo" />
+                <% } else { %>
+                  <i class="bi bi-wifi" style="font-size:14px; color:#0284c7"></i>
+                <% } %>
+                <span class="st-company"><%= company %></span>
+              </div>
+              <span class="st-badge"><i class="bi bi-router"></i> <%= t('admin.onustickers.badge', 'MODEM ONU') %></span>
+            </div>
+
+            <!-- 2. Body -->
+            <div class="st-body">
+              
+              <!-- Left: Info & Warnings -->
+              <div class="st-left">
+                <div class="cust-info-box">
+                  <div class="cust-row">
+                    <span class="label"><%= t('admin.onustickers.l_name', 'Nama') %></span>: <span class="val"><%= item.name || '..................................................' %></span>
+                  </div>
+                  <div class="cust-row">
+                    <span class="label"><%= t('admin.onustickers.l_id', 'ID / Inet') %></span>: <span class="val"><%= item.id_display || '..................................................' %></span>
+                  </div>
+                  <% if (item.package_name) { %>
+                    <div class="cust-row">
+                      <span class="label"><%= t('admin.onustickers.l_pkg', 'Paket') %></span>: <span class="val" style="color:#0284c7"><%= item.package_name %></span>
+                    </div>
+                  <% } %>
+                </div>
+
+                <div class="tips-box">
+                  <div class="tip-item">
+                    <i class="bi bi-lightning-charge-fill" style="color:#d97706"></i>
+                    <div><strong><%= t('admin.onustickers.tip1_t', 'Waspada Petir:') %></strong> <%= t('admin.onustickers.tip1_x', 'Cabut adaptor daya & kabel saat hujan lebat!') %></div>
+                  </div>
+                  <div class="tip-item">
+                    <i class="bi bi-arrow-repeat" style="color:#2563eb"></i>
+                    <div><strong><%= t('admin.onustickers.tip2_t', 'Cara Reboot:') %></strong> <%= t('admin.onustickers.tip2_x', 'Matikan power 10 detik, nyalakan kembali saat lambat.') %></div>
+                  </div>
+                  <div class="tip-item">
+                    <i class="bi bi-exclamation-triangle-fill" style="color:#dc2626"></i>
+                    <div><strong><%= t('admin.onustickers.tip3_t', 'LOS Merah:') %></strong> <%= t('admin.onustickers.tip3_x', 'Kabel optik bermasalah/putus, segera kontak CS.') %></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: QR Code -->
+              <div class="st-right">
+                <img src="<%= item.qrCodeDataUrl %>" class="qr-img" alt="QR Server" />
+                <div class="qr-label"><i class="bi bi-phone"></i> <%= t('admin.onustickers.qr_label', 'SCAN DI APLIKASI') %></div>
+                <div class="qr-sub"><%= t('admin.onustickers.qr_sub', 'Auto-koneksi Server') %></div>
+              </div>
+
+            </div>
+
+            <!-- 3. Footer -->
+            <div class="st-footer">
+              <div class="st-cs">
+                <i class="bi bi-whatsapp"></i> <%= t('admin.onustickers.footer_cs', 'CS / Bantuan:') %> <%= csPhone %>
+              </div>
+              <div class="st-notice">
+                <%= t('admin.onustickers.footer_notice', 'Tempel pada Modem Pelanggan') %>
+              </div>
+            </div>
+
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+  </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.nav.mikrotik_monitoring', 'Monitoring MikroTik') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .mtabs { display: flex; gap: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .mtab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; }
+    .mtab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .mtab.active { background: var(--primary); color: white; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.3s; font-weight: 500; }
+    .tab.active { background: var(--primary); color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'mikrotik', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-router"></i> <%= t('admin.nav.mikrotik_monitoring', 'Monitoring MikroTik') %></div>
+    <div class="tb-right" style="display:flex;align-items:center;gap:15px">
+      <div class="router-selector" style="display:flex;align-items:center;gap:8px;padding:4px 10px;border-radius:10px;">
+        <i class="bi bi-hdd-network small" style="color:#60a5fa;"></i>
+        <select id="global-router-id" class="fs" style="padding:4px 8px;font-size:13px;border-radius:6px;cursor:pointer;" onchange="changeRouter()">
+          <option value="" <%= (!selectedRouterId) ? 'selected' : '' %>><%= t('admin.mikrotik.default_router', '-- Default / Semua Router --') %></option>
+          <% routers.forEach(r => { %>
+            <option value="<%= r.id %>" <%= (String(selectedRouterId || activeRouterId || '') === String(r.id)) ? 'selected' : '' %>><%= r.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <button id="auto-refresh-toggle" onclick="toggleAutoRefresh()" class="btn btn-sm" style="background:rgba(34,197,94,0.2);color:#22c55e;border:1px solid rgba(34,197,94,0.3)" title="Auto-refresh aktif (10 detik)">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span id="refresh-status">Auto</span>
+      </button>
+      <a href="#" onclick="downloadBackup(event)" class="btn btn-p btn-sm"><i class="bi bi-download"></i> <%= t('admin.mikrotik.backup_rsc', 'Backup RSC') %></a>
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+    <% const mTab = 'monitoring'; %>
+
+    <div class="mtabs">
+      <a href="/admin/mikrotik" class="mtab <%= mTab==='monitoring' ? 'active' : '' %>"><i class="bi bi-router"></i> Monitoring</a>
+      <a href="/admin/vouchers" class="mtab <%= mTab==='vouchers' ? 'active' : '' %>"><i class="bi bi-ticket-perforated"></i> Voucher Hotspot</a>
+      <a href="/admin/routers" class="mtab <%= mTab==='routers' ? 'active' : '' %>"><i class="bi bi-hdd-network"></i> Router</a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;position:relative">
+      <!-- 1. PPPoE Online -->
+      <div class="sc p" onclick="showOnlineUsersModal()" style="cursor:pointer" title="Klik untuk melihat detail user online">
+        <i class="bi bi-ethernet sc-icon"></i>
+        <div class="sc-label"><%= t('admin.mikrotik.stats.pppoe_online', 'PPPoE Online') %></div>
+        <div class="sc-val" id="pppoe-online-count">0</div>
+      </div>
+      <!-- 2. PPPoE Offline -->
+      <div class="sc w" onclick="showOfflineUsersModal()" style="cursor:pointer" title="Klik untuk melihat detail user offline">
+        <i class="bi bi-plug sc-icon"></i>
+        <div class="sc-label"><%= t('admin.mikrotik.stats.pppoe_offline', 'PPPoE Offline') %></div>
+        <div class="sc-val" id="pppoe-offline-count">0</div>
+      </div>
+      <!-- 3. Total Secrets -->
+      <div class="sc w" onclick="showAllSecretsModal()" style="cursor:pointer" title="Klik untuk melihat semua PPPoE secrets">
+        <i class="bi bi-people sc-icon"></i>
+        <div class="sc-label"><%= t('admin.mikrotik.stats.total_secrets', 'Total Secrets') %></div>
+        <div class="sc-val" id="total-secrets-count">0</div>
+      </div>
+      <!-- 4. Hotspot Online -->
+      <div class="sc s" onclick="showHotspotOnlineModal()" style="cursor:pointer" title="Klik untuk melihat detail hotspot online">
+        <i class="bi bi-wifi sc-icon"></i>
+        <div class="sc-label"><%= t('admin.mikrotik.stats.hotspot_online', 'Hotspot Online') %></div>
+        <div class="sc-val" id="hotspot-online-count">0</div>
+      </div>
+      <!-- 5. Total Hotspot -->
+      <div class="sc d" onclick="showAllHotspotModal()" style="cursor:pointer" title="Klik untuk melihat semua hotspot users">
+        <i class="bi bi-person-badge sc-icon"></i>
+        <div class="sc-label"><%= t('admin.mikrotik.stats.total_hotspot', 'Total Hotspot') %></div>
+        <div class="sc-val" id="total-hotspot-count">0</div>
+      </div>
+      <div id="refresh-indicator" style="position:absolute;top:-8px;right:0;font-size:11px;color:var(--muted);display:none;align-items:center;gap:4px">
+        <i class="bi bi-arrow-clockwise" style="animation:spin 1s linear infinite"></i>
+        <span>Memperbarui...</span>
+      </div>
+    </div>
+    <style>
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    </style>
+
+    <div class="tabs">
+      <div class="tab active" onclick="showTab(event, 'pppoe')"><%= t('admin.mikrotik.tabs.pppoe_secrets', 'PPPoE Secrets') %></div>
+      <div class="tab" onclick="showTab(event, 'hotspot')"><%= t('admin.mikrotik.tabs.hotspot_users', 'Hotspot Users') %></div>
+      <div class="tab" onclick="showTab(event, 'pppoe-profiles')"><%= t('admin.mikrotik.tabs.pppoe_profiles', 'PPPoE Profiles') %></div>
+      <div class="tab" onclick="showTab(event, 'hotspot-profiles-tab')"><%= t('admin.mikrotik.tabs.hotspot_profiles', 'Hotspot Profiles') %></div>
+    </div>
+
+    <!-- PPPoE Tab -->
+    <div id="pppoe" class="tab-content active">
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-ethernet"></i> <%= t('admin.mikrotik.pppoe.title', 'Daftar PPPoE Secrets') %></h6>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="sinput" style="max-width:280px">
+              <i class="bi bi-search"></i>
+              <input type="text" class="fc" placeholder="<%= t('admin.mikrotik.search_placeholder', 'Cari...') %>" onkeyup="filterTable('pppoe-list', this.value)">
+            </div>
+            <button class="btn btn-p btn-sm" onclick="openAddSecret()"><i class="bi bi-plus-lg"></i> <%= t('admin.mikrotik.actions.add_secret', 'Tambah Secret') %></button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="dtbl">
+            <thead>
+              <tr><th>Name</th><th>Profile</th><th>Local Address</th><th>Remote Address</th><th><%= t('admin.common.uptime','Uptime') %></th><th><%= t('common.status','Status') %></th><th><%= t('common.actions', 'Aksi') %></th></tr>
+            </thead>
+            <tbody id="pppoe-list">
+              <tr><td colspan="7" class="text-center text-muted"><%= t('common.loading', 'Memuat data...') %></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hotspot Tab -->
+    <div id="hotspot" class="tab-content">
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-wifi"></i> <%= t('admin.mikrotik.hotspot.title', 'Daftar Hotspot Users') %></h6>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="sinput" style="max-width:280px">
+              <i class="bi bi-search"></i>
+              <input type="text" class="fc" placeholder="<%= t('admin.mikrotik.search_placeholder', 'Cari...') %>" onkeyup="filterTable('hotspot-list', this.value)">
+            </div>
+            <button class="btn btn-p btn-sm" onclick="openAddHotspot()"><i class="bi bi-plus-lg"></i> <%= t('admin.mikrotik.actions.add_user', 'Tambah User') %></button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="dtbl">
+            <thead>
+              <tr><th>Name</th><th>Profile</th><th>Address</th><th>Limit Uptime</th><th>Comment</th><th><%= t('admin.common.uptime','Uptime') %></th><th><%= t('common.status','Status') %></th><th><%= t('common.actions', 'Aksi') %></th></tr>
+            </thead>
+            <tbody id="hotspot-list">
+              <tr><td colspan="8" class="text-center text-muted"><%= t('common.loading', 'Memuat data...') %></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PPPoE Profiles Tab -->
+    <div id="pppoe-profiles" class="tab-content">
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-file-earmark-text"></i> <%= t('admin.mikrotik.pppoe_profiles.title', 'Daftar PPPoE Profiles') %></h6>
+          <button class="btn btn-p btn-sm" onclick="openAddPppoeProfile()"><i class="bi bi-plus-lg"></i> <%= t('admin.mikrotik.actions.add_profile', 'Tambah Profile') %></button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="dtbl">
+            <thead>
+              <tr><th>Name</th><th>Local Address</th><th>Remote Address</th><th>Rate Limit</th><th><%= t('common.actions', 'Aksi') %></th></tr>
+            </thead>
+            <tbody id="pppoe-profiles-list">
+              <tr><td colspan="5" class="text-center text-muted"><%= t('common.loading', 'Memuat data...') %></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hotspot Profiles Tab -->
+    <div id="hotspot-profiles-tab" class="tab-content">
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-file-earmark-text"></i> <%= t('admin.mikrotik.hotspot_profiles.title', 'Daftar Hotspot User Profiles') %></h6>
+          <button class="btn btn-p btn-sm" onclick="openAddHotspotProfile()"><i class="bi bi-plus-lg"></i> <%= t('admin.mikrotik.actions.add_profile', 'Tambah Profile') %></button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="dtbl">
+            <thead>
+              <tr><th>Name</th><th><%= t('admin.mikrotik.hotspot_profiles.price', 'Harga') %></th><th><%= t('admin.mikrotik.hotspot_profiles.duration', 'Durasi') %></th><th>Rate Limit</th><th>Shared Users</th><th>Uptime Limit</th><th><%= t('common.actions', 'Aksi') %></th></tr>
+            </thead>
+            <tbody id="hotspot-profiles-list">
+              <tr><td colspan="7" class="text-center text-muted"><%= t('common.loading', 'Memuat data...') %></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Secret -->
+<div class="mo" id="secretModal">
+  <div class="mb">
+    <div class="mh"><span class="mt" id="secretModalTitle"><%= t('admin.mikrotik.actions.add_secret', 'Tambah Secret') %></span><button class="mc" onclick="closeModal('secretModal')">&times;</button></div>
+    <form id="secretForm">
+      <input type="hidden" id="secret_id">
+      <div class="mbody">
+        <div class="form-row">
+          <div class="fg"><label class="fl">Username</label><input class="fc" id="s_name" required></div>
+          <div class="fg"><label class="fl">Password</label><input class="fc" id="s_password" type="text"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Service</label>
+            <select class="fs" id="s_service"><option value="pppoe">pppoe</option><option value="any">any</option></select>
+          </div>
+          <div class="fg">
+            <label class="fl">Profile</label>
+            <select class="fs" id="s_profile"><option value="default">default</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Local Address</label><input class="fc" id="s_local"></div>
+          <div class="fg"><label class="fl">Remote Address</label><input class="fc" id="s_remote"></div>
+        </div>
+        <div class="fg"><label class="fl">Comment</label><input class="fc" id="s_comment"></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('secretModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p" id="secretSubmitBtn"><%= t('common.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Hotspot -->
+<div class="mo" id="hotspotModal">
+  <div class="mb">
+    <div class="mh"><span class="mt" id="hotspotModalTitle"><%= t('admin.mikrotik.actions.add_hotspot_user', 'Tambah User Hotspot') %></span><button class="mc" onclick="closeModal('hotspotModal')">&times;</button></div>
+    <form id="hotspotForm">
+      <input type="hidden" id="h_id">
+      <div class="mbody">
+        <div class="form-row">
+          <div class="fg"><label class="fl">Name</label><input class="fc" id="h_name" required></div>
+          <div class="fg"><label class="fl">Password</label><input class="fc" id="h_password" type="text"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Profile Hotspot</label>
+            <select class="fs" id="h_profile"><option value="default">default</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Limit Uptime (e.g. 1h)</label><input class="fc" id="h_uptime"></div>
+          <div class="fg"><label class="fl">MAC Address</label><input class="fc" id="h_mac"></div>
+        </div>
+        <div class="fg"><label class="fl">Comment</label><input class="fc" id="h_comment"></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('hotspotModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p" id="hotspotSubmitBtn"><%= t('common.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Online Users -->
+<div class="mo" id="onlineUsersModal">
+  <div class="mb" style="max-width:900px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-ethernet"></i> Daftar User PPPoE Online</span>
+      <button class="mc" onclick="closeModal('onlineUsersModal')">&times;</button>
+    </div>
+    <div class="mbody" style="max-height:500px;overflow-y:auto">
+      <div style="margin-bottom:15px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;color:var(--muted)">
+          Total: <span id="online-users-total" style="font-weight:700;color:var(--text)">0</span> user online
+        </div>
+        <div class="sinput" style="max-width:250px">
+          <i class="bi bi-search"></i>
+          <input type="text" class="fc" id="online-search" placeholder="<%= t('admin.common.search_user','Cari username...') %>" onkeyup="filterModalTable('online-users-list', this.value)">
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th style="width:50px">#</th>
+              <th>Username</th>
+              <th>Profile</th>
+              <th>IP Address</th>
+              <th><%= t('admin.common.uptime','Uptime') %></th>
+            </tr>
+          </thead>
+          <tbody id="online-users-list">
+            <tr><td colspan="5" class="text-center text-muted"><%= t('common.loading','Memuat data...') %></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('onlineUsersModal')"><%= t('common.close','Tutup') %></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Offline Users -->
+<div class="mo" id="offlineUsersModal">
+  <div class="mb" style="max-width:800px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-plug"></i> Daftar User PPPoE Offline</span>
+      <button class="mc" onclick="closeModal('offlineUsersModal')">&times;</button>
+    </div>
+    <div class="mbody" style="max-height:500px;overflow-y:auto">
+      <div style="margin-bottom:15px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;color:var(--muted)">
+          Total: <span id="offline-users-total" style="font-weight:700;color:var(--text)">0</span> user offline
+        </div>
+        <div class="sinput" style="max-width:250px">
+          <i class="bi bi-search"></i>
+          <input type="text" class="fc" id="offline-search" placeholder="<%= t('admin.common.search_user','Cari username...') %>" onkeyup="filterModalTable('offline-users-list', this.value)">
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th style="width:50px">#</th>
+              <th>Username</th>
+              <th>Profile</th>
+              <th><%= t('common.status','Status') %></th>
+            </tr>
+          </thead>
+          <tbody id="offline-users-list">
+            <tr><td colspan="4" class="text-center text-muted"><%= t('common.loading','Memuat data...') %></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('offlineUsersModal')"><%= t('common.close','Tutup') %></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Hotspot Online -->
+<div class="mo" id="hotspotOnlineModal">
+  <div class="mb" style="max-width:900px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-wifi"></i> Daftar Hotspot User Online</span>
+      <button class="mc" onclick="closeModal('hotspotOnlineModal')">&times;</button>
+    </div>
+    <div class="mbody" style="max-height:500px;overflow-y:auto">
+      <div style="margin-bottom:15px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;color:var(--muted)">
+          Total: <span id="hotspot-online-total" style="font-weight:700;color:var(--text)">0</span> user online
+        </div>
+        <div class="sinput" style="max-width:250px">
+          <i class="bi bi-search"></i>
+          <input type="text" class="fc" id="hotspot-online-search" placeholder="<%= t('admin.common.search_user','Cari username...') %>" onkeyup="filterModalTable('hotspot-online-list', this.value)">
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th style="width:50px">#</th>
+              <th>Username</th>
+              <th>IP Address</th>
+              <th>MAC Address</th>
+              <th><%= t('admin.common.uptime','Uptime') %></th>
+            </tr>
+          </thead>
+          <tbody id="hotspot-online-list">
+            <tr><td colspan="5" class="text-center text-muted"><%= t('common.loading','Memuat data...') %></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('hotspotOnlineModal')"><%= t('common.close','Tutup') %></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal All Secrets -->
+<div class="mo" id="allSecretsModal">
+  <div class="mb" style="max-width:900px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-people"></i> Semua PPPoE Secrets</span>
+      <button class="mc" onclick="closeModal('allSecretsModal')">&times;</button>
+    </div>
+    <div class="mbody" style="max-height:500px;overflow-y:auto">
+      <div style="margin-bottom:15px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;color:var(--muted)">
+          Total: <span id="all-secrets-total" style="font-weight:700;color:var(--text)">0</span> secrets
+        </div>
+        <div class="sinput" style="max-width:250px">
+          <i class="bi bi-search"></i>
+          <input type="text" class="fc" id="all-secrets-search" placeholder="<%= t('admin.common.search_user','Cari username...') %>" onkeyup="filterModalTable('all-secrets-list', this.value)">
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th style="width:50px">#</th>
+              <th>Username</th>
+              <th>Profile</th>
+              <th><%= t('common.status','Status') %></th>
+            </tr>
+          </thead>
+          <tbody id="all-secrets-list">
+            <tr><td colspan="4" class="text-center text-muted"><%= t('common.loading','Memuat data...') %></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('allSecretsModal')"><%= t('common.close','Tutup') %></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal All Hotspot -->
+<div class="mo" id="allHotspotModal">
+  <div class="mb" style="max-width:900px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-person-badge"></i> Semua Hotspot Users</span>
+      <button class="mc" onclick="closeModal('allHotspotModal')">&times;</button>
+    </div>
+    <div class="mbody" style="max-height:500px;overflow-y:auto">
+      <div style="margin-bottom:15px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;color:var(--muted)">
+          Total: <span id="all-hotspot-total" style="font-weight:700;color:var(--text)">0</span> users
+        </div>
+        <div class="sinput" style="max-width:250px">
+          <i class="bi bi-search"></i>
+          <input type="text" class="fc" id="all-hotspot-search" placeholder="<%= t('admin.common.search_user','Cari username...') %>" onkeyup="filterModalTable('all-hotspot-list', this.value)">
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th style="width:50px">#</th>
+              <th>Username</th>
+              <th>Profile</th>
+              <th><%= t('common.status','Status') %></th>
+            </tr>
+          </thead>
+          <tbody id="all-hotspot-list">
+            <tr><td colspan="4" class="text-center text-muted"><%= t('common.loading','Memuat data...') %></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('allHotspotModal')"><%= t('common.close','Tutup') %></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal PPPoE Profile -->
+<div class="mo" id="pppoeProfileModal">
+  <div class="mb">
+    <div class="mh"><span class="mt" id="pppoeProfileModalTitle"><%= t('admin.mikrotik.actions.add_pppoe_profile', 'Tambah PPPoE Profile') %></span><button class="mc" onclick="closeModal('pppoeProfileModal')">&times;</button></div>
+    <form id="pppoeProfileForm">
+      <input type="hidden" id="pp_id">
+      <div class="mbody">
+        <div class="fg"><label class="fl">Name</label><input class="fc" id="pp_name" required></div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Local Address</label><input class="fc" id="pp_local" placeholder="192.168.20.1"></div>
+          <div class="fg">
+            <label class="fl">Remote Address</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select class="fs" id="pp_remote_pool" style="flex:1"><option value="">-</option></select>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap">
+                <input type="checkbox" id="pp_remote_manual_toggle"> Manual
+              </label>
+            </div>
+            <input class="fc" id="pp_remote_manual" placeholder="Pilih pool atau isi manual" style="margin-top:8px;display:none">
+          </div>
+        </div>
+        <div class="fg"><label class="fl">Rate Limit (Rx/Tx e.g. 5M/10M)</label><input class="fc" id="pp_rate"></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('pppoeProfileModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('common.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Hotspot Profile -->
+<div class="mo" id="hotspotProfileModal">
+  <div class="mb">
+    <div class="mh"><span class="mt" id="hotspotProfileModalTitle"><%= t('admin.mikrotik.actions.add_hotspot_profile', 'Tambah Hotspot Profile') %></span><button class="mc" onclick="closeModal('hotspotProfileModal')">&times;</button></div>
+    <form id="hotspotProfileForm">
+      <input type="hidden" id="hp_id">
+      <div class="mbody">
+        <div class="fg"><label class="fl">Name</label><input class="fc" id="hp_name" required></div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Harga Beli (Rp)</label><input class="fc" id="hp_cost" type="number" min="0" step="500" value="0" oninput="syncMikhmonOnLogin()"></div>
+          <div class="fg"><label class="fl">Harga Jual (Rp)</label><input class="fc" id="hp_price" type="number" min="0" step="500" value="0" oninput="syncMikhmonOnLogin()"></div>
+          <div class="fg"><label class="fl">Durasi Voucher (mis. 1h / 1d / 7d)</label><input class="fc" id="hp_validity" value="1d" oninput="syncMikhmonOnLogin()"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Rate Limit (Rx/Tx)</label><input class="fc" id="hp_rate"></div>
+          <div class="fg"><label class="fl">Shared Users</label><input class="fc" id="hp_shared" type="number" value="1"></div>
+        </div>
+        <div class="fg">
+          <label class="fl">On Login (Mikhmon)</label>
+          <textarea class="fc" id="hp_onlogin" rows="5" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 12px;"></textarea>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('hotspotProfileModal')"><%= t('common.cancel', 'Batal') %></button>
+        <div id="hotspotProfileStatus" class="text-muted" style="margin-right:auto;font-size:12px"></div>
+        <button type="button" class="btn btn-p" id="hotspotProfileSaveBtn" onclick="submitHotspotProfile()"><%= t('common.save', 'Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const I18N = {
+    addSecret: "<%= t('admin.mikrotik.actions.add_secret', 'Tambah Secret') %>",
+    editSecret: "<%= t('admin.mikrotik.actions.edit_secret', 'Edit Secret') %>",
+    addHotspotUser: "<%= t('admin.mikrotik.actions.add_hotspot_user', 'Tambah User Hotspot') %>",
+    editHotspotUser: "<%= t('admin.mikrotik.actions.edit_hotspot_user', 'Edit User Hotspot') %>",
+    addPppoeProfile: "<%= t('admin.mikrotik.actions.add_pppoe_profile', 'Tambah PPPoE Profile') %>",
+    editPppoeProfile: "<%= t('admin.mikrotik.actions.edit_pppoe_profile', 'Edit PPPoE Profile') %>",
+    addHotspotProfile: "<%= t('admin.mikrotik.actions.add_hotspot_profile', 'Tambah Hotspot Profile') %>",
+    editHotspotProfile: "<%= t('admin.mikrotik.actions.edit_hotspot_profile', 'Edit Hotspot Profile') %>",
+    saveFailed: "<%= t('admin.mikrotik.errors.save_failed', 'Gagal menyimpan') %>",
+    deleteFailed: "<%= t('admin.mikrotik.errors.delete_failed', 'Gagal menghapus') %>",
+    deleteSecretConfirm: "<%= t('admin.mikrotik.confirm.delete_secret', 'Hapus secret ini?') %>",
+    deleteHotspotConfirm: "<%= t('admin.mikrotik.confirm.delete_hotspot_user', 'Hapus user hotspot ini?') %>",
+    deleteProfileConfirm: "<%= t('admin.mikrotik.confirm.delete_profile', 'Hapus profile ini?') %>",
+    emptySecrets: "<%= t('admin.mikrotik.empty.secrets', 'Tidak ada data secret') %>",
+    emptyHotspotUsers: "<%= t('admin.mikrotik.empty.hotspot_users', 'Tidak ada data user hotspot') %>",
+    loadFailed: "<%= t('admin.mikrotik.errors.load_failed', 'Gagal memuat data') %>",
+    statusOnline: "<%= t('admin.mikrotik.status.online', 'Online') %>",
+    statusOffline: "<%= t('admin.mikrotik.status.offline', 'Offline') %>",
+    statusDisabled: "<%= t('admin.mikrotik.status.disabled', 'Disabled') %>"
+  };
+
+  function showTab(e, id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    document.getElementById(id).classList.add('active');
+    if(id==='pppoe') loadSecrets();
+    else if(id==='hotspot') loadHotspotUsers();
+    else if(id==='pppoe-profiles') loadPppoeProfiles();
+    else if(id==='hotspot-profiles-tab') loadHotspotUserProfiles();
+  }
+
+  function openModal(id){document.getElementById(id).classList.add('show')}
+  function closeModal(id){document.getElementById(id).classList.remove('show')}
+
+  let filterTimeout;
+  function filterTable(id, val) {
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+      const q = val.toLowerCase();
+      const tbody = document.getElementById(id);
+      if(!tbody) return;
+      const rows = tbody.getElementsByTagName('tr');
+      for (let i = 0; i < rows.length; i++) {
+        const text = rows[i].textContent.toLowerCase();
+        rows[i].style.display = text.includes(q) ? '' : 'none';
+      }
+    }, 200);
+  }
+
+  function filterModalTable(tbodyId, val) {
+    const q = val.toLowerCase();
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const rows = tbody.getElementsByTagName('tr');
+    for (let i = 0; i < rows.length; i++) {
+      const text = rows[i].textContent.toLowerCase();
+      rows[i].style.display = text.includes(q) ? '' : 'none';
+    }
+  }
+
+  // Store data globally
+  let onlineUsersData = [];
+  let hotspotOnlineData = [];
+  let allHotspotUsersData = [];
+
+  function showOnlineUsersModal() {
+    const tbody = document.getElementById('online-users-list');
+    const totalEl = document.getElementById('online-users-total');
+    
+    if (!onlineUsersData || onlineUsersData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada user online</td></tr>';
+      if (totalEl) totalEl.textContent = '0';
+    } else {
+      if (totalEl) totalEl.textContent = onlineUsersData.length;
+      tbody.innerHTML = onlineUsersData.map((s, i) => {
+        return `
+          <tr>
+            <td class="text-center">${i + 1}</td>
+            <td class="fw6">${escapeHtmlAttr(s.name)}</td>
+            <td><span class="badge bp">${escapeHtmlAttr(s.profile || '-')}</span></td>
+            <td>${escapeHtmlAttr(s.address || '-')}</td>
+            <td>${escapeHtmlAttr(s.uptime || '-')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    const searchInput = document.getElementById('online-search');
+    if (searchInput) searchInput.value = '';
+    
+    openModal('onlineUsersModal');
+  }
+
+  function showOfflineUsersModal() {
+    const tbody = document.getElementById('offline-users-list');
+    const totalEl = document.getElementById('offline-users-total');
+    
+    if (!offlineUsersData || offlineUsersData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tidak ada user offline</td></tr>';
+      if (totalEl) totalEl.textContent = '0';
+    } else {
+      if (totalEl) totalEl.textContent = offlineUsersData.length;
+      tbody.innerHTML = offlineUsersData.map((s, i) => {
+        return `
+          <tr>
+            <td class="text-center">${i + 1}</td>
+            <td class="fw6">${escapeHtmlAttr(s.name)}</td>
+            <td><span class="badge bp">${escapeHtmlAttr(s.profile)}</span></td>
+            <td><span class="badge bw">Offline</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    // Clear search input
+    const searchInput = document.getElementById('offline-search');
+    if (searchInput) searchInput.value = '';
+    
+    openModal('offlineUsersModal');
+  }
+
+  function showHotspotOnlineModal() {
+    const tbody = document.getElementById('hotspot-online-list');
+    const totalEl = document.getElementById('hotspot-online-total');
+    
+    if (!hotspotOnlineData || hotspotOnlineData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tidak ada hotspot user online</td></tr>';
+      if (totalEl) totalEl.textContent = '0';
+    } else {
+      if (totalEl) totalEl.textContent = hotspotOnlineData.length;
+      tbody.innerHTML = hotspotOnlineData.map((s, i) => {
+        return `
+          <tr>
+            <td class="text-center">${i + 1}</td>
+            <td class="fw6">${escapeHtmlAttr(s.user || s.name || '-')}</td>
+            <td>${escapeHtmlAttr(s.address || '-')}</td>
+            <td>${escapeHtmlAttr(s.macAddress || s['mac-address'] || '-')}</td>
+            <td>${escapeHtmlAttr(s.uptime || '-')}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    const searchInput = document.getElementById('hotspot-online-search');
+    if (searchInput) searchInput.value = '';
+    
+    openModal('hotspotOnlineModal');
+  }
+
+  function showAllSecretsModal() {
+    const tbody = document.getElementById('all-secrets-list');
+    const totalEl = document.getElementById('all-secrets-total');
+    
+    if (!pppoeData || pppoeData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tidak ada PPPoE secrets</td></tr>';
+      if (totalEl) totalEl.textContent = '0';
+    } else {
+      if (totalEl) totalEl.textContent = pppoeData.length;
+      tbody.innerHTML = pppoeData.map((s, i) => {
+        const isOnline = onlineUsersData.some(a => a.name === s.name);
+        const isDisabled = s.disabled === true || s.disabled === 'true';
+        let statusBadge = '';
+        if (isOnline) {
+          statusBadge = '<span class="badge bs">Online</span>';
+        } else if (isDisabled) {
+          statusBadge = '<span class="badge bd">Disabled</span>';
+        } else {
+          statusBadge = '<span class="badge bw">Offline</span>';
+        }
+        
+        return `
+          <tr>
+            <td class="text-center">${i + 1}</td>
+            <td class="fw6">${escapeHtmlAttr(s.name)}</td>
+            <td><span class="badge bp">${escapeHtmlAttr(s.profile)}</span></td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    const searchInput = document.getElementById('all-secrets-search');
+    if (searchInput) searchInput.value = '';
+    
+    openModal('allSecretsModal');
+  }
+
+  function showAllHotspotModal() {
+    const tbody = document.getElementById('all-hotspot-list');
+    const totalEl = document.getElementById('all-hotspot-total');
+    
+    if (!allHotspotUsersData || allHotspotUsersData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tidak ada hotspot users</td></tr>';
+      if (totalEl) totalEl.textContent = '0';
+    } else {
+      if (totalEl) totalEl.textContent = allHotspotUsersData.length;
+      tbody.innerHTML = allHotspotUsersData.map((s, i) => {
+        const isOnline = hotspotOnlineData.some(a => (a.user || a.name) === s.name);
+        const isDisabled = s.disabled === true || s.disabled === 'true';
+        let statusBadge = '';
+        if (isOnline) {
+          statusBadge = '<span class="badge bs">Online</span>';
+        } else if (isDisabled) {
+          statusBadge = '<span class="badge bd">Disabled</span>';
+        } else {
+          statusBadge = '<span class="badge bw">Offline</span>';
+        }
+        
+        return `
+          <tr>
+            <td class="text-center">${i + 1}</td>
+            <td class="fw6">${escapeHtmlAttr(s.name)}</td>
+            <td><span class="badge bp">${escapeHtmlAttr(s.profile || '-')}</span></td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    const searchInput = document.getElementById('all-hotspot-search');
+    if (searchInput) searchInput.value = '';
+    
+    openModal('allHotspotModal');
+  }
+
+  let pppoeData = [];
+  let hotspotData = [];
+  let pppoeProfilesData = [];
+  let hotspotProfilesData = [];
+  let ipPoolsData = [];
+  let ipPoolsRouterId = null;
+
+  function getRouterId() {
+    return document.getElementById('global-router-id').value;
+  }
+
+  function changeRouter() {
+    const rId = getRouterId();
+    window.location.href = '/admin/set-active-router?router_id=' + (rId || 'all');
+  }
+
+  function downloadBackup(e) {
+    e.preventDefault();
+    const routerId = getRouterId();
+    window.location.href = `/admin/api/mikrotik/backup?routerId=${routerId}`;
+  }
+
+  function escapeHtmlAttr(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  async function ensureIpPoolsLoaded() {
+    const routerId = getRouterId() || '';
+    if (ipPoolsRouterId === routerId && Array.isArray(ipPoolsData) && ipPoolsData.length > 0) return;
+    ipPoolsRouterId = routerId;
+    try {
+      const res = await fetch(`/admin/api/mikrotik/ip-pools?routerId=${routerId}`);
+      const data = await res.json();
+      ipPoolsData = Array.isArray(data) ? data : [];
+    } catch (e) {
+      ipPoolsData = [];
+    }
+  }
+
+  function renderIpPoolsSelect(selectedValue) {
+    const sel = document.getElementById('pp_remote_pool');
+    if (!sel) return;
+    const options = [
+      '<option value="">-</option>',
+      ...(ipPoolsData || []).map((p) => `<option value="${escapeHtmlAttr(p.name)}">${escapeHtmlAttr(p.name)}</option>`)
+    ];
+    sel.innerHTML = options.join('');
+    if (selectedValue) sel.value = selectedValue;
+  }
+
+  function setRemoteManualMode(enabled) {
+    const toggle = document.getElementById('pp_remote_manual_toggle');
+    const poolSel = document.getElementById('pp_remote_pool');
+    const manualInput = document.getElementById('pp_remote_manual');
+    if (toggle) toggle.checked = !!enabled;
+    if (poolSel) poolSel.disabled = !!enabled;
+    if (manualInput) manualInput.style.display = enabled ? 'block' : 'none';
+  }
+
+  document.getElementById('pp_remote_manual_toggle')?.addEventListener('change', (e) => {
+    setRemoteManualMode(!!e.target.checked);
+    if (!e.target.checked) {
+      const manualInput = document.getElementById('pp_remote_manual');
+      if (manualInput) manualInput.value = '';
+    }
+  });
+
+  async function readApiErrorMessage(res, fallback) {
+    try {
+      const ct = String(res.headers.get('content-type') || '');
+      if (ct.includes('application/json')) {
+        const j = await res.json();
+        if (j && j.error) return String(j.error);
+        if (j && j.message) return String(j.message);
+        return fallback;
+      }
+      const t = await res.text();
+      return t ? String(t) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  async function loadPppoeProfiles() {
+    try {
+      const tbody = document.getElementById('pppoe-profiles-list');
+      const res = await fetch(`/admin/api/mikrotik/profiles?routerId=${getRouterId()}`);
+      if (!res.ok) {
+        const msg = await readApiErrorMessage(res, I18N.loadFailed);
+        pppoeProfilesData = [];
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${escapeHtmlAttr(msg)}</td></tr>`;
+        return;
+      }
+      pppoeProfilesData = await res.json();
+      if (!Array.isArray(pppoeProfilesData) || pppoeProfilesData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Tidak ada data profile PPPoE.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = pppoeProfilesData.map((p, i) => `
+        <tr>
+          <td class="fw6">${p.name}</td>
+          <td>${p.localAddress || '-'}</td>
+          <td>${p.remoteAddress || '-'}</td>
+          <td>${p.rateLimit || '-'}</td>
+          <td style="white-space:nowrap">
+            <div class="act">
+              <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+              <div class="act-menu">
+                <button type="button" class="act-item" onclick="editPppoeProfile(${i})"><i class="bi bi-pencil"></i> <%= t('admin.common.edit_profile','Edit Profil') %></button>
+                <div class="act-sep"></div>
+                <button type="button" class="act-item danger" onclick="deletePppoeProfile('${p.id || p.name}')"><i class="bi bi-trash"></i> <%= t('admin.common.del_profile','Hapus Profil') %></button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  async function loadHotspotUserProfiles() {
+    try {
+      const tbody = document.getElementById('hotspot-profiles-list');
+      const res = await fetch(`/admin/api/mikrotik/hotspot-user-profiles?routerId=${getRouterId()}`);
+      if (!res.ok) {
+        const msg = await readApiErrorMessage(res, I18N.loadFailed);
+        hotspotProfilesData = [];
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${escapeHtmlAttr(msg)}</td></tr>`;
+        return;
+      }
+      hotspotProfilesData = await res.json();
+      if (!Array.isArray(hotspotProfilesData) || hotspotProfilesData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Tidak ada data profile Hotspot.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = hotspotProfilesData.map((p, i) => {
+        const meta = parseMikhmonOnLogin(p.onLogin || p['on-login'] || '');
+        const price = meta ? `Rp ${Number(meta.price || 0).toLocaleString('id-ID')}` : '-';
+        const validity = meta ? (meta.validity || '-') : '-';
+        return `
+        <tr>
+          <td class="fw6">${p.name}</td>
+          <td>${price}</td>
+          <td>${validity}</td>
+          <td>${p.rateLimit || '-'}</td>
+          <td>${p.sharedUsers || '-'}</td>
+          <td>${p.sessionTimeout || '-'}</td>
+          <td style="white-space:nowrap">
+            <div class="act">
+              <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+              <div class="act-menu">
+                <button type="button" class="act-item" onclick="editHotspotProfile(${i})"><i class="bi bi-pencil"></i> <%= t('admin.common.edit_profile','Edit Profil') %></button>
+                <div class="act-sep"></div>
+                <button type="button" class="act-item danger" onclick="deleteHotspotProfile('${p.id || ''}')"><i class="bi bi-trash"></i> <%= t('admin.common.del_profile','Hapus Profil') %></button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+      }).join('');
+    } catch (e) { console.error(e); }
+  }
+
+  // Store offline users data globally
+  let offlineUsersData = [];
+
+  async function loadSecrets() {
+    try {
+      const routerId = getRouterId();
+      const [sRes, aRes] = await Promise.all([
+        fetch(`/admin/api/mikrotik/secrets?routerId=${routerId}`),
+        fetch(`/admin/api/mikrotik/active-pppoe?routerId=${routerId}`)
+      ]);
+      const tbody = document.getElementById('pppoe-list');
+      if (!sRes.ok) {
+        const msg = await readApiErrorMessage(sRes, I18N.loadFailed);
+        pppoeData = [];
+        offlineUsersData = [];
+        document.getElementById('pppoe-online-count').innerText = '0';
+        document.getElementById('pppoe-offline-count').innerText = '0';
+        document.getElementById('total-secrets-count').innerText = '0';
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${escapeHtmlAttr(msg)}</td></tr>`;
+        return;
+      }
+      if (!aRes.ok) {
+        const msg = await readApiErrorMessage(aRes, I18N.loadFailed);
+        pppoeData = [];
+        offlineUsersData = [];
+        document.getElementById('pppoe-online-count').innerText = '0';
+        document.getElementById('pppoe-offline-count').innerText = '0';
+        document.getElementById('total-secrets-count').innerText = '0';
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${escapeHtmlAttr(msg)}</td></tr>`;
+        return;
+      }
+      pppoeData = await sRes.json();
+      const activeSessions = await aRes.json();
+      
+      // Store online users data with profile info
+      onlineUsersData = activeSessions.map(active => {
+        const secret = pppoeData.find(s => s.name === active.name);
+        return {
+          ...active,
+          profile: secret ? secret.profile : '-'
+        };
+      });
+      
+      // Calculate offline users
+      offlineUsersData = pppoeData.filter(s => {
+        const isOnline = activeSessions.some(a => a.name === s.name);
+        const isDisabled = s.disabled === true || s.disabled === 'true';
+        return !isOnline && !isDisabled;
+      });
+      
+      document.getElementById('pppoe-online-count').innerText = activeSessions.length;
+      document.getElementById('pppoe-offline-count').innerText = offlineUsersData.length;
+      document.getElementById('total-secrets-count').innerText = pppoeData.length;
+
+      if (!pppoeData.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">' + I18N.emptySecrets + '</td></tr>';
+        return;
+      }
+      tbody.innerHTML = pppoeData.map((s, i) => {
+        const active = activeSessions.find(a => a.name === s.name);
+        const statusHtml = active
+          ? '<span class="badge bs">' + I18N.statusOnline + '</span>'
+          : (s.disabled === true || s.disabled === 'true'
+            ? '<span class="badge bd">' + I18N.statusDisabled + '</span>'
+            : '<span class="badge bw">' + I18N.statusOffline + '</span>');
+        return `
+          <tr>
+            <td class="fw6">${s.name}</td>
+            <td><span class="badge bp">${s.profile}</span></td>
+            <td>${s.localAddress || s['local-address'] || '-'}</td>
+            <td>${s.remoteAddress || s['remote-address'] || (active ? active.address : '-')}</td>
+            <td>${active ? active.uptime : '-'}</td>
+            <td>${statusHtml}</td>
+            <td style="white-space:nowrap">
+              <div class="act">
+                <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                <div class="act-menu">
+                  <button type="button" class="act-item" onclick="editSecret(${i})"><i class="bi bi-pencil"></i> <%= t('admin.common.edit_user','Edit User') %></button>
+                  <div class="act-sep"></div>
+                  <button type="button" class="act-item danger" onclick="deleteSecret('${s.id}')"><i class="bi bi-trash"></i> <%= t('admin.common.del_user','Hapus User') %></button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('Error loadSecrets:', err);
+      document.getElementById('pppoe-list').innerHTML = '<tr><td colspan="7" class="text-center text-danger">' + I18N.loadFailed + '</td></tr>';
+    }
+  }
+
+  async function loadHotspotUsers() {
+    const tbody = document.getElementById('hotspot-list');
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center"><i class="bi bi-hourglass-split"></i> ' + I18N.loading + '</td></tr>';
+    
+    try {
+      const routerId = getRouterId();
+      const startTime = Date.now();
+      
+      // Parallel fetch with timeout
+      const [uRes, aRes] = await Promise.race([
+        Promise.all([
+          fetch(`/admin/api/mikrotik/hotspot-users?routerId=${routerId}`),
+          fetch(`/admin/api/mikrotik/active-hotspot?routerId=${routerId}`)
+        ]),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout (15s)')), 15000))
+      ]);
+      
+      if (!uRes.ok) {
+        const msg = await readApiErrorMessage(uRes, I18N.loadFailed);
+        hotspotData = [];
+        document.getElementById('hotspot-online-count').innerText = '0';
+        document.getElementById('total-hotspot-count').innerText = '0';
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${escapeHtmlAttr(msg)}</td></tr>`;
+        return;
+      }
+      if (!aRes.ok) {
+        const msg = await readApiErrorMessage(aRes, I18N.loadFailed);
+        hotspotData = [];
+        document.getElementById('hotspot-online-count').innerText = '0';
+        document.getElementById('total-hotspot-count').innerText = '0';
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${escapeHtmlAttr(msg)}</td></tr>`;
+        return;
+      }
+      
+      hotspotData = await uRes.json();
+      const activeSessions = await aRes.json();
+      
+      // Store data globally for modals
+      allHotspotUsersData = hotspotData;
+      hotspotOnlineData = activeSessions;
+      
+      const loadTime = Date.now() - startTime;
+      console.log(`Hotspot users loaded in ${loadTime}ms`);
+
+      document.getElementById('hotspot-online-count').innerText = activeSessions.length;
+      document.getElementById('total-hotspot-count').innerText = hotspotData.length;
+
+      if (!hotspotData.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">' + I18N.emptyHotspotUsers + '</td></tr>';
+        return;
+      }
+      
+      // Optimized rendering: Build active sessions map for O(1) lookup
+      const activeMap = new Map();
+      activeSessions.forEach(a => activeMap.set(a.user, a));
+      
+      // Batch rendering for better performance with large datasets
+      const batchSize = 100;
+      let html = '';
+      
+      for (let i = 0; i < hotspotData.length; i++) {
+        const h = hotspotData[i];
+        const active = activeMap.get(h.name);
+        const statusHtml = active
+          ? '<span class="badge bs">' + I18N.statusOnline + '</span>'
+          : (h.disabled === true || h.disabled === 'true'
+            ? '<span class="badge bd">' + I18N.statusDisabled + '</span>'
+            : '<span class="badge bw">' + I18N.statusOffline + '</span>');
+        
+        html += `
+          <tr>
+            <td class="fw6">${h.name}</td>
+            <td><span class="badge bm">${h.profile}</span></td>
+            <td>${active ? active.address : (h.address || '-')}</td>
+            <td>${h.limitUptime || h['limit-uptime'] || '-'}</td>
+            <td>${h.comment || '-'}</td>
+            <td>${active ? active.uptime : '-'}</td>
+            <td>${statusHtml}</td>
+            <td style="white-space:nowrap">
+              <div class="act">
+                <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                <div class="act-menu">
+                  <button type="button" class="act-item" onclick="editHotspot(${i})"><i class="bi bi-pencil"></i> <%= t('admin.common.edit_user','Edit User') %></button>
+                  <div class="act-sep"></div>
+                  <button type="button" class="act-item danger" onclick="deleteHotspot('${h.id}')"><i class="bi bi-trash"></i> <%= t('admin.common.del_user','Hapus User') %></button>
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+        
+        // Render in batches to prevent UI blocking
+        if ((i + 1) % batchSize === 0 || i === hotspotData.length - 1) {
+          tbody.innerHTML = html;
+          if (i < hotspotData.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 0)); // Yield to browser
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error loadHotspotUsers:', err);
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">' + (err.message || I18N.loadFailed) + '</td></tr>';
+    }
+  }
+
+  async function loadProfiles() {
+    const routerId = getRouterId();
+    const [pRes, hRes] = await Promise.all([
+      fetch(`/admin/api/mikrotik/profiles?routerId=${routerId}`),
+      fetch(`/admin/api/mikrotik/hotspot-user-profiles?routerId=${routerId}`)
+    ]);
+    const pProfiles = pRes.ok ? await pRes.json() : [];
+    const hProfiles = hRes.ok ? await hRes.json() : [];
+    
+    const pSel = document.getElementById('s_profile');
+    pSel.innerHTML = pProfiles.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    
+    const hSel = document.getElementById('h_profile');
+    hSel.innerHTML = hProfiles.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  }
+
+  async function openAddSecret() {
+    document.getElementById('secretForm').reset();
+    document.getElementById('secret_id').value = '';
+    document.getElementById('secretModalTitle').innerText = I18N.addSecret;
+    await loadProfiles();
+    openModal('secretModal');
+  }
+
+  async function editSecret(idx) {
+    const s = pppoeData[idx];
+    document.getElementById('secret_id').value = s.id;
+    document.getElementById('s_name').value = s.name;
+    document.getElementById('s_password').value = s.password || '';
+    document.getElementById('s_service').value = s.service;
+    await loadProfiles();
+    document.getElementById('s_profile').value = s.profile;
+    document.getElementById('s_local').value = s['local-address'] || '';
+    document.getElementById('s_remote').value = s['remote-address'] || '';
+    document.getElementById('s_comment').value = s.comment || '';
+    document.getElementById('secretModalTitle').innerText = I18N.editSecret;
+    openModal('secretModal');
+  }
+
+  document.getElementById('secretForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    const id = document.getElementById('secret_id').value;
+    const name = document.getElementById('s_name').value;
+    const password = document.getElementById('s_password').value;
+    const service = document.getElementById('s_service').value;
+    const profile = document.getElementById('s_profile').value;
+    const local = document.getElementById('s_local').value.trim();
+    const remote = document.getElementById('s_remote').value.trim();
+    const comment = document.getElementById('s_comment').value.trim();
+
+    const data = { name, password, service, profile };
+    if (local) data['local-address'] = local;
+    if (remote) data['remote-address'] = remote;
+    if (comment) data['comment'] = comment;
+
+    const routerId = getRouterId();
+    const url = id ? `/admin/api/mikrotik/secrets/${id}/update?routerId=${routerId}` : `/admin/api/mikrotik/secrets?routerId=${routerId}`;
+    try {
+      const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+      if (res.ok) {
+        closeModal('secretModal');
+        loadSecrets();
+        return;
+      }
+      const msg = await readApiErrorMessage(res, I18N.saveFailed);
+      alert(msg);
+    } catch (err) {
+      alert(String(err?.message || I18N.saveFailed));
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  };
+
+  async function deleteSecret(id) {
+    if(!confirm(I18N.deleteSecretConfirm)) return;
+    const res = await fetch(`/admin/api/mikrotik/secrets/${id}/delete?routerId=${getRouterId()}`, { method: 'POST' });
+    if(res.ok) loadSecrets(); else alert(I18N.deleteFailed);
+  }
+
+  // Hotspot Handlers
+  async function openAddHotspot() {
+    document.getElementById('hotspotForm').reset();
+    document.getElementById('h_id').value = '';
+    document.getElementById('hotspotModalTitle').innerText = I18N.addHotspotUser;
+    await loadProfiles();
+    openModal('hotspotModal');
+  }
+
+  async function editHotspot(idx) {
+    const h = hotspotData[idx];
+    document.getElementById('h_id').value = h.id;
+    document.getElementById('h_name').value = h.name;
+    document.getElementById('h_password').value = h.password || '';
+    await loadProfiles();
+    document.getElementById('h_profile').value = h.profile;
+    document.getElementById('h_uptime').value = h['limit-uptime'] || '';
+    document.getElementById('h_mac').value = h['mac-address'] || '';
+    document.getElementById('h_comment').value = h.comment || '';
+    document.getElementById('hotspotModalTitle').innerText = I18N.editHotspotUser;
+    openModal('hotspotModal');
+  }
+
+  document.getElementById('hotspotForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    const id = document.getElementById('h_id').value;
+    const name = document.getElementById('h_name').value;
+    const password = document.getElementById('h_password').value;
+    const profile = document.getElementById('h_profile').value;
+    const uptime = document.getElementById('h_uptime').value.trim();
+    const mac = document.getElementById('h_mac').value.trim();
+    const comment = document.getElementById('h_comment').value.trim();
+
+    const data = { name, password, profile, server: 'all' };
+    if (uptime) data['limit-uptime'] = uptime;
+    if (mac) data['mac-address'] = mac;
+    if (comment) data['comment'] = comment;
+
+    const routerId = getRouterId();
+    const url = id ? `/admin/api/mikrotik/hotspot-users/${id}/update?routerId=${routerId}` : `/admin/api/mikrotik/hotspot-users?routerId=${routerId}`;
+    try {
+      const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+      if (res.ok) {
+        closeModal('hotspotModal');
+        loadHotspotUsers();
+        return;
+      }
+      const msg = await readApiErrorMessage(res, I18N.saveFailed);
+      alert(msg);
+    } catch (err) {
+      alert(String(err?.message || I18N.saveFailed));
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  };
+
+  async function deleteHotspot(id) {
+    if(!confirm(I18N.deleteHotspotConfirm)) return;
+    const res = await fetch(`/admin/api/mikrotik/hotspot-users/${id}/delete?routerId=${getRouterId()}`, { method: 'POST' });
+    if(res.ok) loadHotspotUsers(); else alert(I18N.deleteFailed);
+  }
+
+  // PPPoE Profile Handlers
+  async function openAddPppoeProfile() {
+    document.getElementById('pppoeProfileForm').reset();
+    document.getElementById('pp_id').value = '';
+    document.getElementById('pppoeProfileModalTitle').innerText = I18N.addPppoeProfile;
+    await ensureIpPoolsLoaded();
+    renderIpPoolsSelect('');
+    setRemoteManualMode(false);
+    openModal('pppoeProfileModal');
+  }
+  async function editPppoeProfile(idx) {
+    const p = pppoeProfilesData[idx];
+    document.getElementById('pp_id').value = p.id || '';
+    document.getElementById('pp_name').value = p.name;
+    document.getElementById('pp_local').value = p.localAddress || '';
+    const remote = (p.remoteAddress && p.remoteAddress !== '-') ? p.remoteAddress : '';
+    await ensureIpPoolsLoaded();
+    renderIpPoolsSelect(remote);
+    const inPool = remote && (ipPoolsData || []).some(pool => String(pool?.name || '').trim() === String(remote).trim());
+    document.getElementById('pp_remote_manual').value = inPool ? '' : remote;
+    setRemoteManualMode(!!(remote && !inPool));
+    document.getElementById('pp_rate').value = p.rateLimit || '';
+    document.getElementById('pppoeProfileModalTitle').innerText = I18N.editPppoeProfile;
+    openModal('pppoeProfileModal');
+  }
+  document.getElementById('pppoeProfileForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+    const id = document.getElementById('pp_id').value;
+    const name = document.getElementById('pp_name').value;
+    const local = String(document.getElementById('pp_local').value || '').trim();
+    const remoteManual = String(document.getElementById('pp_remote_manual').value || '').trim();
+    const remotePool = String(document.getElementById('pp_remote_pool').value || '').trim();
+    const remote = remoteManual || remotePool;
+    const rate = String(document.getElementById('pp_rate').value || '').trim();
+    const data = { name };
+    if (local) data['local-address'] = local;
+    if (remote) data['remote-address'] = remote;
+    if (rate) data['rate-limit'] = rate;
+    const routerId = getRouterId();
+    const url = id && id !== data.name ? `/admin/api/mikrotik/pppoe-profiles/${id}/update?routerId=${routerId}` : `/admin/api/mikrotik/pppoe-profiles?routerId=${routerId}`;
+    try {
+      const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+      if (res.ok) {
+        closeModal('pppoeProfileModal');
+        loadPppoeProfiles();
+        loadProfiles();
+        return;
+      }
+      const msg = await readApiErrorMessage(res, I18N.saveFailed);
+      alert(msg);
+    } catch (err) {
+      alert(String(err?.message || I18N.saveFailed));
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  };
+  async function deletePppoeProfile(id) {
+    if(!confirm(I18N.deleteProfileConfirm)) return;
+    const res = await fetch(`/admin/api/mikrotik/pppoe-profiles/${id}/delete?routerId=${getRouterId()}`, { method: 'POST' });
+    if(res.ok) { loadPppoeProfiles(); loadProfiles(); } else alert(I18N.deleteFailed);
+  }
+
+  // Hotspot Profile Handlers
+  function openAddHotspotProfile() {
+    document.getElementById('hotspotProfileForm').reset();
+    document.getElementById('hp_id').value = '';
+    document.getElementById('hotspotProfileModalTitle').innerText = I18N.addHotspotProfile;
+    const submitBtn = document.getElementById('hotspotProfileSaveBtn');
+    if (submitBtn) submitBtn.disabled = false;
+    openModal('hotspotProfileModal');
+  }
+  async function editHotspotProfile(idx) {
+    const p = hotspotProfilesData[idx];
+    const pid = p.id || p['.id'] || '';
+    document.getElementById('hp_id').value = pid;
+    document.getElementById('hp_name').value = p.name;
+    document.getElementById('hp_rate').value = p.rateLimit || '';
+    document.getElementById('hp_shared').value = p.sharedUsers || 1;
+    const submitBtn = document.getElementById('hotspotProfileSaveBtn');
+    if (submitBtn) submitBtn.disabled = false;
+    let script = p.onLogin || p['on-login'] || '';
+    if (pid) {
+      try {
+        const res = await fetch(`/admin/api/mikrotik/hotspot-user-profiles/${pid}?routerId=${getRouterId()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.row) script = data.row.onLogin || data.row['on-login'] || script;
+        }
+      } catch {}
+    }
+    document.getElementById('hp_onlogin').value = script;
+    const meta = parseMikhmonOnLogin(script);
+    document.getElementById('hp_cost').value = meta ? (meta.cost || 0) : 0;
+    document.getElementById('hp_price').value = meta ? (meta.price || 0) : 0;
+    document.getElementById('hp_validity').value = meta ? (meta.validity || '1d') : '1d';
+    document.getElementById('hotspotProfileModalTitle').innerText = I18N.editHotspotProfile;
+    openModal('hotspotProfileModal');
+  }
+  document.getElementById('hotspotProfileForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    const saveBtn = document.getElementById('hotspotProfileSaveBtn');
+    const statusEl = document.getElementById('hotspotProfileStatus');
+    if (statusEl) statusEl.textContent = 'Menyimpan...';
+    if (saveBtn) saveBtn.disabled = true;
+    try {
+      const formEl = e.currentTarget;
+      if (formEl && typeof formEl.checkValidity === 'function' && !formEl.checkValidity()) {
+        if (typeof formEl.reportValidity === 'function') formEl.reportValidity();
+        if (statusEl) statusEl.textContent = '';
+        return;
+      }
+
+      const idEl = document.getElementById('hp_id');
+      const nameEl = document.getElementById('hp_name');
+      const rateEl = document.getElementById('hp_rate');
+      const sharedEl = document.getElementById('hp_shared');
+      const onLoginEl = document.getElementById('hp_onlogin');
+      if (!idEl || !nameEl || !rateEl || !sharedEl) {
+        alert('Form hotspot profile tidak lengkap. Silakan refresh halaman.');
+        return;
+      }
+
+      const id = String(idEl.value || '');
+      const name = String(nameEl.value || '');
+      const rate = String(rateEl.value || '').trim();
+      const sharedRaw = String(sharedEl.value || '').trim() || '1';
+      const sharedNum = Number(sharedRaw);
+      const shared = Number.isFinite(sharedNum) && sharedNum > 0 ? sharedNum : 1;
+      const onLogin = onLoginEl ? String(onLoginEl.value || '').trim() : '';
+
+      const data = { name, 'shared-users': shared };
+      if (rate) data['rate-limit'] = rate;
+      if (onLogin) data['on-login'] = onLogin;
+
+      const routerId = getRouterId();
+      const url = id && id !== data.name
+        ? `/admin/api/mikrotik/hotspot-user-profiles/${id}/update?routerId=${routerId}`
+        : `/admin/api/mikrotik/hotspot-user-profiles?routerId=${routerId}`;
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 10000) : null;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        signal: controller ? controller.signal : undefined
+      }).finally(() => {
+        if (timeoutId) clearTimeout(timeoutId);
+      });
+      if (res.ok) {
+        closeModal('hotspotProfileModal');
+        loadHotspotUserProfiles();
+        loadProfiles();
+        return;
+      }
+      const msg = await readApiErrorMessage(res, I18N.saveFailed);
+      if (statusEl) statusEl.textContent = '';
+      alert(msg);
+    } catch (err) {
+      if (statusEl) statusEl.textContent = '';
+      const m = String(err?.message || '');
+      if (m.toLowerCase().includes('aborted') || m.toLowerCase().includes('abort')) {
+        alert('Timeout saat menyimpan Hotspot Profile (lebih dari 10 detik). Cek koneksi API MikroTik / beban router.');
+      } else {
+        alert(m || I18N.saveFailed);
+      }
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  };
+
+  function submitHotspotProfile() {
+    const formEl = document.getElementById('hotspotProfileForm');
+    const statusEl = document.getElementById('hotspotProfileStatus');
+    if (statusEl) statusEl.textContent = 'Klik diterima...';
+    if (!formEl) {
+      if (statusEl) statusEl.textContent = 'Form tidak ditemukan';
+      return;
+    }
+    if (typeof formEl.requestSubmit === 'function') {
+      return formEl.requestSubmit();
+    }
+    formEl.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  }
+  async function deleteHotspotProfile(id) {
+    if(!confirm(I18N.deleteProfileConfirm)) return;
+    const res = await fetch(`/admin/api/mikrotik/hotspot-user-profiles/${id}/delete?routerId=${getRouterId()}`, { method: 'POST' });
+    if(res.ok) { loadHotspotUserProfiles(); loadProfiles(); } else alert(I18N.deleteFailed);
+  }
+
+  function parseMikhmonOnLogin(script) {
+    if (!script) return null;
+    const s = String(script).trim();
+    
+    // Cari pattern :put (",rem, ... , ... , ...
+    const putMatch = s.match(/:\s*put\s*\(\s*[",]rem[",]?\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)/i);
+    if (putMatch) {
+      const cost = String(putMatch[1] || '').trim();
+      const validity = String(putMatch[2] || '').trim();
+      const priceStr = String(putMatch[3] || '').trim();
+      const price = Number(priceStr.replace(/[^\d]/g, '')) || 0;
+      
+      if (validity && price > 0) {
+        return { validity, price, cost: Number(cost.replace(/[^\d]/g, '')) || 0 };
+      }
+    }
+    
+    // Fallback: split by comma
+    const parts = s.split(',').map(p => String(p).trim());
+    let remIdx = -1;
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].includes('rem')) {
+        remIdx = i;
+        break;
+      }
+    }
+    
+    if (remIdx >= 0 && remIdx + 3 < parts.length) {
+      const cost = String(parts[remIdx + 1] || '').trim();
+      const validity = String(parts[remIdx + 2] || '').trim();
+      const priceStr = String(parts[remIdx + 3] || '').trim();
+      const price = Number(priceStr.replace(/[^\d]/g, '')) || 0;
+      
+      if (validity && price > 0) {
+        return { validity, price, cost: Number(cost.replace(/[^\d]/g, '')) || 0 };
+      }
+    }
+    
+    return null;
+  }
+
+  function buildMikhmonOnLoginScript(price, validity, cost) {
+    const p = String(price == null ? '' : price).trim() || '0';
+    const v = String(validity || '').trim() || '1d';
+    const c = String(cost == null ? '' : cost).trim() || '0';
+    // Format: :put (",rem,COST,VALIDITY,PRICE,,Disable,");
+    const meta = `:put (\",rem,${c},${v},${p},,Disable,\");`;
+    
+    // Script yang support ROS6 dan ROS7 (auto-detect format tanggal)
+    const body =
+      ` {:local c [ /ip hotspot user get [/ip hotspot user find where name=\\\"$user\\\"] comment];` +
+      ` :local ucode [:pick $c 0 2];` +
+      ` :if ($ucode = \\\"vc\\\" or $ucode = \\\"up\\\" or $c = \\\"\\\") do={` +
+      ` :local d [ /system clock get date ];` +
+      ` :local t [ /system clock get time ];` +
+      ` :local sch (\\\"exp-\\\" . $user);` +
+      ` /system scheduler add name=$sch disabled=no start-date=$d start-time=$t interval=\\\"${v}\\\";` +
+      ` :delay 2s;` +
+      ` :local exp [ /system scheduler get [ /system scheduler find where name=$sch ] next-run ];` +
+      ` :local explen [:len $exp];` +
+      ` :if ($explen > 0) do={` +
+      `   :if ($explen = 19) do={ :local comment ([:pick $exp 0 10] . \\\" \\\" . [:pick $exp 11 19]); /ip hotspot user set comment=$comment [find where name=\\\"$user\\\"]; }` +
+      `   :if ($explen = 15) do={ :local comment ([:pick $exp 0 6] . \\\"/\\\" . [:pick $exp 7 15]); /ip hotspot user set comment=$comment [find where name=\\\"$user\\\"]; }` +
+      `   :if ($explen = 8) do={ /ip hotspot user set comment=$d . \\\" \\\" . $exp [find where name=\\\"$user\\\"]; }` +
+      ` }` +
+      ` :delay 1s;` +
+      ` /system scheduler remove [find where name=$sch];` +
+      ` } }`;
+    return meta + body;
+  }
+
+  function syncMikhmonOnLogin() {
+    const cost = document.getElementById('hp_cost')?.value;
+    const price = document.getElementById('hp_price')?.value;
+    const validity = document.getElementById('hp_validity')?.value;
+    const ta = document.getElementById('hp_onlogin');
+    if (!ta) return;
+    ta.value = buildMikhmonOnLoginScript(price, validity, cost);
+  }
+
+  // Load initial card summary stats on page load
+  async function loadInitialStats() {
+    try {
+      const routerId = getRouterId();
+      // Load hotspot stats for card summary
+      const [hsUsersRes, hsActiveRes] = await Promise.all([
+        fetch(`/admin/api/mikrotik/hotspot-users?routerId=${routerId}`).catch(() => null),
+        fetch(`/admin/api/mikrotik/active-hotspot?routerId=${routerId}`).catch(() => null)
+      ]);
+      
+      if (hsUsersRes && hsUsersRes.ok) {
+        const users = await hsUsersRes.json();
+        allHotspotUsersData = users; // Store for modal
+        document.getElementById('total-hotspot-count').innerText = users.length;
+      }
+      
+      if (hsActiveRes && hsActiveRes.ok) {
+        const active = await hsActiveRes.json();
+        hotspotOnlineData = active; // Store for modal
+        document.getElementById('hotspot-online-count').innerText = active.length;
+      }
+    } catch (err) {
+      console.error('Error loading initial hotspot stats:', err);
+    }
+  }
+
+  // Auto-refresh functionality for real-time data updates
+  let autoRefreshInterval = null;
+  let isAutoRefreshEnabled = true;
+  let isRefreshing = false;
+  const REFRESH_INTERVAL = 10000; // 10 seconds
+
+  function showRefreshIndicator() {
+    const indicator = document.getElementById('refresh-indicator');
+    if (indicator) indicator.style.display = 'flex';
+  }
+
+  function hideRefreshIndicator() {
+    const indicator = document.getElementById('refresh-indicator');
+    if (indicator) indicator.style.display = 'none';
+  }
+
+  function toggleAutoRefresh() {
+    isAutoRefreshEnabled = !isAutoRefreshEnabled;
+    const btn = document.getElementById('auto-refresh-toggle');
+    const status = document.getElementById('refresh-status');
+    
+    if (isAutoRefreshEnabled) {
+      btn.style.background = 'rgba(34,197,94,0.2)';
+      btn.style.color = '#22c55e';
+      btn.style.borderColor = 'rgba(34,197,94,0.3)';
+      btn.title = 'Auto-refresh aktif (10 detik)';
+      if (status) status.textContent = 'Auto';
+      startAutoRefresh();
+    } else {
+      btn.style.background = 'rgba(239,68,68,0.2)';
+      btn.style.color = '#ef4444';
+      btn.style.borderColor = 'rgba(239,68,68,0.3)';
+      btn.title = 'Auto-refresh nonaktif (klik untuk aktifkan)';
+      if (status) status.textContent = 'Manual';
+      stopAutoRefresh();
+    }
+  }
+
+  function startAutoRefresh() {
+    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    
+    autoRefreshInterval = setInterval(async () => {
+      if (!isAutoRefreshEnabled || isRefreshing) return;
+      
+      isRefreshing = true;
+      showRefreshIndicator();
+      
+      try {
+        // Get active tab and refresh its data
+        const activeTab = document.querySelector('.tab.active');
+        if (activeTab) {
+          const tabText = String(activeTab.textContent || '').toLowerCase();
+          
+          // Refresh data based on active tab
+          if (tabText.includes('pppoe secret')) {
+            await loadSecrets();
+          } else if (tabText.includes('hotspot user')) {
+            await loadHotspotUsers();
+          } else if (tabText.includes('pppoe profile')) {
+            await loadPppoeProfiles();
+          } else if (tabText.includes('hotspot profile')) {
+            await loadHotspotUserProfiles();
+          }
+        }
+        
+        // Always refresh card summary stats
+        await loadInitialStats();
+      } catch (err) {
+        console.error('Auto-refresh error:', err);
+      } finally {
+        isRefreshing = false;
+        hideRefreshIndicator();
+      }
+    }, REFRESH_INTERVAL);
+  }
+
+  function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+      clearInterval(autoRefreshInterval);
+      autoRefreshInterval = null;
+    }
+  }
+
+  // Pause auto-refresh when user is interacting with modals
+  function pauseAutoRefresh() {
+    isAutoRefreshEnabled = false;
+  }
+
+  function resumeAutoRefresh() {
+    isAutoRefreshEnabled = true;
+  }
+
+  // Pause refresh when modal is open
+  const originalOpenModal = window.openModal;
+  window.openModal = function(id) {
+    pauseAutoRefresh();
+    if (originalOpenModal) originalOpenModal(id);
+  };
+
+  const originalCloseModal = window.closeModal;
+  window.closeModal = function(id) {
+    resumeAutoRefresh();
+    if (originalCloseModal) originalCloseModal(id);
+  };
+
+  // Stop auto-refresh when page is hidden (user switched tabs)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopAutoRefresh();
+    } else {
+      startAutoRefresh();
+    }
+  });
+
+  // Initial load
+  loadSecrets();
+  loadInitialStats();
+  
+  // Start auto-refresh
+  startAutoRefresh();
+</script>
+</body>
+</html>

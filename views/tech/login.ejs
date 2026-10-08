@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('tech.login_title', 'Login Teknisi') %> - <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/theme-toggle.css">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<main class="otp-wrap">
+  <div class="auth-card">
+    <div class="auth-logo"><i class="bi bi-tools" style="font-size:26px;color:var(--primary)"></i></div>
+    <h2><%= t('tech.portal_title', 'Portal Teknisi') %></h2>
+    <p class="sub"><%= company %></p>
+
+    <% if (error) { %><div class="auth-alert err" style="justify-content:center"><i class="bi bi-exclamation-triangle"></i> <%= error %></div><% } %>
+
+    <form method="POST" action="/tech/login">
+      <div class="field">
+        <label for="username"><i class="bi bi-person-badge"></i> <%= t('auth.tech_username','Username Teknisi') %></label>
+        <div class="wrap"><i class="bi bi-person-badge lead-ic"></i>
+          <input type="text" id="username" name="username" class="inp" required placeholder="<%= t('auth.username_ph','Masukkan username') %>" autocomplete="username" autofocus></div>
+      </div>
+      <div class="field">
+        <label for="password"><i class="bi bi-key"></i> <%= t('auth.password','Password') %></label>
+        <div class="wrap"><i class="bi bi-key lead-ic"></i>
+          <input type="password" id="password" name="password" class="inp" required placeholder="<%= t('auth.password_ph','Masukkan password') %>" autocomplete="current-password"></div>
+      </div>
+      <button type="submit" class="lbtn lbtn-primary btn-auth"><i class="bi bi-box-arrow-in-right"></i> <%= t('common.login','Masuk') %></button>
+    </form>
+  </div>
+</main>
+<script src="/js/theme-toggle.js" defer></script>
+</body>
+</html>

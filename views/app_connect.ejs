@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.app_connect.title', 'Portal Pelanggan') %> — <%= companyName %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/isolated.css?v=3">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <script>document.documentElement.classList.add('js');(function(){try{var s=localStorage.getItem('landing-theme')||'dark';document.documentElement.setAttribute('data-theme',s);}catch(e){}})();</script>
+</head>
+<body>
+
+<main class="iso-wrap">
+  <div class="iso-card" style="max-width:460px;text-align:center">
+    <div style="display:flex;justify-content:center;gap:8px;margin-bottom:8px">
+      <% (typeof availableLangs !== 'undefined' && availableLangs ? availableLangs : ['id','en']).forEach(function(L){ %>
+        <a href="/lang/<%= L %>" style="font-size:11px;font-weight:800;text-decoration:none;<%= (lang===L)?'color:var(--primary)':'color:var(--muted);opacity:.7' %>"><%= String(L).toUpperCase() %></a>
+      <% }); %>
+    </div>
+    <div class="iso-brand" style="flex-direction:column;gap:8px">
+      <% if (settings.company_logo) { %>
+        <img src="<%= settings.company_logo %>" alt="Logo" style="height:44px;width:auto">
+      <% } else { %>
+        <img src="/img/icons/icon-192.png" alt="Logo" style="height:52px;width:52px">
+      <% } %>
+      <div class="t" style="text-transform:uppercase;letter-spacing:.04em"><%= companyName %></div>
+      <span class="iso-badge success" style="font-size:11px"><%= t('customer.app_connect.badge', 'Koneksi Resmi Modem Pelanggan') %></span>
+    </div>
+
+    <% if (cid) { %>
+      <div class="iso-info" style="margin:14px 0"><div class="row"><span class="label"><%= t('customer.app_connect.id_label', 'ID Pelanggan') %></span><span class="val mono"><%= cid %></span></div></div>
+    <% } %>
+
+    <p class="iso-sub" style="margin:12px 0 18px"><%= t('customer.app_connect.thanks', 'Terima kasih telah menggunakan layanan internet kami. Silakan akses akun dan layanan Anda:') %></p>
+
+    <a href="/downloads/billing-rtrw.apk" class="iso-btn success"><i class="bi bi-download"></i> <%= t('customer.app_connect.download', 'Unduh Aplikasi Pelanggan (APK)') %></a>
+    <a href="/customer/login<%= cid ? ('?cid=' + encodeURIComponent(cid)) : '' %>" class="iso-btn primary iso-space"><i class="bi bi-box-arrow-in-right"></i> <%= t('customer.app_connect.login', 'Masuk ke Portal Web Pelanggan') %></a>
+    <% if (companyPhone) { %>
+      <a href="https://wa.me/<%= companyPhone.replace(/[^0-9]/g, '') %>" target="_blank" rel="noopener" class="iso-btn wa iso-space"><i class="bi bi-whatsapp"></i> <%= t('customer.app_connect.contact', 'Hubungi Bantuan CS WhatsApp') %></a>
+    <% } %>
+
+    <div class="iso-info" style="text-align:left;margin-top:18px">
+      <div class="row" style="align-items:flex-start;gap:10px">
+        <span class="label" style="flex:0 0 auto"><i class="bi bi-lightning-charge-fill" style="color:var(--warning)"></i></span>
+        <span class="val" style="font-weight:400;text-align:left;color:var(--muted)"><strong style="color:var(--text)"><%= t('customer.app_connect.tip1_title', 'Waspada Petir:') %></strong> <%= t('customer.app_connect.tip1_text', 'Cabut adaptor daya &amp; kabel saat hujan lebat demi keselamatan modem Anda.') %></span>
+      </div>
+      <div class="row" style="align-items:flex-start;gap:10px">
+        <span class="label" style="flex:0 0 auto"><i class="bi bi-arrow-repeat" style="color:var(--info)"></i></span>
+        <span class="val" style="font-weight:400;text-align:left;color:var(--muted)"><strong style="color:var(--text)"><%= t('customer.app_connect.tip2_title', 'Cara Reboot:') %></strong> <%= t('customer.app_connect.tip2_text', 'Matikan tombol power modem 10 detik lalu nyalakan kembali jika koneksi melambat.') %></span>
+      </div>
+    </div>
+
+    <% if (settings.company_address) { %>
+      <div class="iso-foot"><%= settings.company_address %></div>
+    <% } %>
+  </div>
+</main>
+
+</body>
+</html>

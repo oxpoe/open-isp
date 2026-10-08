@@ -1,0 +1,31 @@
+/* page-loader.css — Animasi saat berpindah halaman (progress bar + spinner).
+   Netral terhadap tema (pakai CSS var landing.css bila ada, fallback bila tidak). */
+#pgbar{
+  position:fixed;top:0;left:0;height:3px;width:0;z-index:2147483000;opacity:0;pointer-events:none;
+  background:linear-gradient(90deg,var(--primary,#ADFF2F),#7cc61a);
+  box-shadow:0 0 12px rgba(173,255,47,.6);
+  transition:width .25s ease,opacity .3s ease;
+}
+#pgbar.on{opacity:1}
+#pgload{
+  position:fixed;inset:0;z-index:2147482999;display:flex;align-items:center;justify-content:center;
+  background:rgba(10,13,20,.66);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity .25s ease;
+}
+#pgload.on{opacity:1;pointer-events:auto}
+#pgload .pgbox{display:flex;flex-direction:column;align-items:center;gap:14px}
+#pgload .pgspin{
+  width:46px;height:46px;border-radius:50%;
+  border:3px solid rgba(242,245,241,.18);border-top-color:var(--primary,#ADFF2F);
+  animation:pgspin .8s linear infinite;
+}
+#pgload .pgtxt{
+  font:700 11px/1.2 system-ui,-apple-system,'Segoe UI',sans-serif;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted,#8A96A6);
+}
+[data-theme="light"] #pgload{background:rgba(232,237,229,.78)}
+[data-theme="light"] #pgload .pgspin{border-color:rgba(20,26,18,.15);border-top-color:var(--primary,#5C9A0A)}
+[data-theme="light"] #pgload .pgtxt{color:#52604C}
+@media print{ #pgbar,#pgload{display:none !important} }
+@keyframes pgspin{to{transform:rotate(360deg)}}

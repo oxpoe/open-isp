@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Pembayaran | <%= settings.company_header || 'OPEN-ISP' %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/isolated.css?v=3">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <style>
+    .pay-tabs{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+    .pay-tab{flex:1 1 0;min-width:92px;padding:10px 12px;border:1px solid var(--border);background:var(--bg);color:inherit;border-radius:12px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+    .pay-tab.active{background:var(--primary);color:#0A0D14;border-color:var(--primary)}
+    .pay-panel{display:none}
+    .pay-panel.active{display:block}
+  </style>
+  <script>document.documentElement.classList.add('js');(function(){try{var s=localStorage.getItem('landing-theme')||'dark';document.documentElement.setAttribute('data-theme',s);}catch(e){}})();</script>
+</head>
+<body>
+
+<main class="iso-wrap">
+  <div class="iso-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div>
+        <div style="font-family:var(--font-display);font-weight:700;font-size:18px"><i class="bi bi-credit-card-2-front" style="color:var(--primary)"></i> Pembayaran Tagihan</div>
+        <div class="muted" style="font-size:12.5px"><%= settings.company_header || 'OPEN-ISP' %></div>
+      </div>
+      <% if (backUrl) { %>
+        <a class="iso-btn ghost" style="width:auto;padding:8px 14px;font-size:13px" href="<%= backUrl %>"><i class="bi bi-arrow-left"></i> Kembali</a>
+      <% } %>
+    </div>
+
+    <% if (error) { %>
+      <div class="auth-alert err"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+    <% } else { %>
+      <% if (info) { %><div class="auth-alert ok"><i class="bi bi-check-circle"></i> <%= info %></div><% } %>
+      <%
+        const kindSafe = String(kind || 'invoice').toLowerCase();
+        const isVoucher = kindSafe === 'voucher';
+        const refPrefix = isVoucher ? 'VOUCHER' : 'INV';
+        const parseAccounts = function (txt) {
+          return String(txt || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean).map(function(l){
+            const p = l.split('|').map(function(x){ return String(x).trim(); });
+            return { name: p[0] || '', number: p[1] || '', holder: p[2] || '' };
+          }).filter(function(a){ return a.number; });
+        };
+        const bankEnabled = (settings.payment_bank_enabled !== false && settings.payment_bank_enabled !== 'false');
+        const ewalletEnabled = (settings.payment_ewallet_enabled !== false && settings.payment_ewallet_enabled !== 'false');
+        const bankAccounts = bankEnabled ? parseAccounts(settings.payment_bank_accounts) : [];
+        const ewalletAccounts = ewalletEnabled ? parseAccounts(settings.payment_ewallet_accounts) : [];
+        // Metode aktif default: QRIS bila QR tersedia, jika tidak maka bank / e-wallet.
+        const defaultMethod = qrisQrUrl ? 'qris' : (bankAccounts.length ? 'bank' : (ewalletAccounts.length ? 'ewallet' : 'qris'));
+      %>
+
+      <% if (helpText) { %>
+        <div class="auth-alert warn" style="margin-bottom:14px"><i class="bi bi-exclamation-triangle"></i> <%= helpText %></div>
+      <% } %>
+
+      <div style="margin-bottom:14px">
+        <div style="font-weight:700"><%= customerName || (isVoucher ? 'Pembeli Voucher' : 'Pelanggan') %></div>
+        <div class="muted mono" style="font-size:12.5px;margin-top:2px"><%= refPrefix %>-<%= invoiceId %><% if (periodText) { %> • <%= periodText %><% } %></div>
+      </div>
+
+      <!-- Tab metode pembayaran -->
+      <div class="pay-tabs" id="payTabs">
+        <button type="button" class="pay-tab <%= defaultMethod === 'qris' ? 'active' : '' %>" data-method="qris"><i class="bi bi-qr-code-scan"></i> QRIS</button>
+        <% if (bankAccounts.length) { %><button type="button" class="pay-tab <%= defaultMethod === 'bank' ? 'active' : '' %>" data-method="bank"><i class="bi bi-bank"></i> Transfer Bank</button><% } %>
+        <% if (ewalletAccounts.length) { %><button type="button" class="pay-tab <%= defaultMethod === 'ewallet' ? 'active' : '' %>" data-method="ewallet"><i class="bi bi-phone"></i> E-Wallet</button><% } %>
+      </div>
+
+      <!-- Nominal (tampil untuk semua metode) -->
+      <div class="iso-amt-box" style="text-align:center;margin-bottom:14px">
+        <div class="l">Nominal yang harus dibayar (WAJIB tepat)</div>
+        <div class="v">Rp <%= Number(amountUnique || 0).toLocaleString('id-ID') %></div>
+        <% if (uniqueCode) { %><div class="iso-unique">Kode unik <span class="mono"><%= String(uniqueCode).padStart(3, '0') %></span></div><% } %>
+        <div class="iso-actions" style="margin-top:12px">
+          <button class="iso-btn ghost" type="button" id="copyAmountBtn"><i class="bi bi-clipboard"></i> Salin Nominal</button>
+        </div>
+      </div>
+
+      <!-- PANEL: QRIS -->
+      <div class="pay-panel <%= defaultMethod === 'qris' ? 'active' : '' %>" data-panel="qris">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center">
+          <% if (qrisQrUrl) { %>
+            <div class="iso-qr" style="margin-top:0"><img id="qrisImage" src="<%= qrisQrUrl %>" alt="QRIS"></div>
+          <% } else { %>
+            <div class="auth-alert warn" style="justify-content:center">QRIS belum diatur oleh admin.</div>
+          <% } %>
+          <div class="iso-actions">
+            <% if (qrisQrUrl) { %><button class="iso-btn ghost" type="button" id="downloadQrBtn"><i class="bi bi-download"></i> Download QRIS</button><% } %>
+          </div>
+          <div class="iso-help">
+            Scan QRIS di atas (DANA / OVO / ShopeePay / LinkAja / GoPay, dll), lalu masukkan nominal persis seperti tertera.
+            Status lunas terverifikasi otomatis setelah pembayaran terdeteksi.
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL: Transfer Bank -->
+      <% if (bankAccounts.length) { %>
+      <div class="pay-panel <%= defaultMethod === 'bank' ? 'active' : '' %>" data-panel="bank">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:16px">
+          <div style="font-weight:700"><i class="bi bi-bank" style="color:var(--primary)"></i> Transfer Bank</div>
+          <div class="muted" style="font-size:12.5px;margin-top:3px">Transfer <b>tepat</b> sebesar <b>Rp <%= Number(amountUnique || 0).toLocaleString('id-ID') %></b> (sudah termasuk kode unik) ke salah satu rekening:</div>
+          <% bankAccounts.forEach(function(a){ %>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px"><%= a.name %></div>
+              <div class="mono" style="font-size:15px"><%= a.number %></div>
+              <% if (a.holder) { %><div class="muted" style="font-size:11.5px">a.n. <%= a.holder %></div><% } %>
+            </div>
+            <button class="iso-btn ghost" style="width:auto;padding:8px 12px;font-size:12px" type="button" onclick="copyText('<%= String(a.number).replace(/'/g,'') %>')"><i class="bi bi-clipboard"></i> Salin</button>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- PANEL: E-Wallet -->
+      <% if (ewalletAccounts.length) { %>
+      <div class="pay-panel <%= defaultMethod === 'ewallet' ? 'active' : '' %>" data-panel="ewallet">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:16px">
+          <div style="font-weight:700"><i class="bi bi-phone" style="color:var(--primary)"></i> E-Wallet</div>
+          <div class="muted" style="font-size:12.5px;margin-top:3px">Kirim <b>tepat</b> sebesar <b>Rp <%= Number(amountUnique || 0).toLocaleString('id-ID') %></b> ke salah satu e-wallet:</div>
+          <% ewalletAccounts.forEach(function(a){ %>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-top:8px">
+            <div>
+              <div style="font-weight:700;font-size:13px"><%= a.name %></div>
+              <div class="mono" style="font-size:15px"><%= a.number %></div>
+              <% if (a.holder) { %><div class="muted" style="font-size:11.5px">a.n. <%= a.holder %></div><% } %>
+            </div>
+            <button class="iso-btn ghost" style="width:auto;padding:8px 12px;font-size:12px" type="button" onclick="copyText('<%= String(a.number).replace(/'/g,'') %>')"><i class="bi bi-clipboard"></i> Salin</button>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+      <% } %>
+
+      <div class="iso-poll"><div class="spin-pulse"></div><span>Menunggu pembayaran… (Auto-Check)</span></div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px">
+        <div style="font-weight:700">Konfirmasi Pembayaran</div>
+        <div class="muted" style="font-size:12.5px;margin-top:3px">Jika pembayaran belum otomatis terdeteksi, kirim bukti transfer ke admin.</div>
+
+        <% const proofAction = String(proofActionUrl || `/customer/payment/proof/${invoiceId}`); %>
+        <form method="POST" action="<%= proofAction %>" enctype="multipart/form-data" style="margin-top:12px">
+          <% if (publicToken) { %><input type="hidden" name="token" value="<%= publicToken %>"><% } %>
+          <div class="field" style="margin-top:0">
+            <label for="proof"><i class="bi bi-cloud-upload"></i> Bukti Transfer</label>
+            <input class="inp inp-plain" id="proof" type="file" name="proof" accept="image/png,image/jpeg,image/jpg,image/webp" required style="padding:11px">
+          </div>
+          <button class="iso-btn primary" type="submit"><i class="bi bi-cloud-upload"></i> Upload Bukti</button>
+        </form>
+
+        <% if (proofUrl) { %>
+          <div class="muted" style="font-size:12px;margin-top:8px">Bukti tersimpan: <a href="<%= proofUrl %>" target="_blank" rel="noopener"><%= proofUrl %></a></div>
+        <% } %>
+
+        <%
+          const adminWa = String(adminWaDigits || '').trim();
+          const msgLines = [
+            isVoucher ? 'Konfirmasi pembayaran Voucher' : 'Konfirmasi pembayaran',
+            `${refPrefix}-${invoiceId}${periodText ? ' • ' + periodText : ''}`,
+            `Nama: ${customerName || (isVoucher ? 'Pembeli Voucher' : 'Pelanggan')}`,
+            `Nominal: Rp ${Number(amountUnique || 0).toLocaleString('id-ID')} (kode ${String(uniqueCode || 0).padStart(3, '0')})`,
+            proofUrl ? `Bukti: ${proofUrl}` : 'Bukti: (sudah diupload / akan dikirim)',
+          ];
+          const waLink = adminWa ? `https://wa.me/${adminWa}?text=${encodeURIComponent(msgLines.join('\n'))}` : '';
+        %>
+
+        <% if (waLink) { %>
+          <a class="iso-btn wa iso-space" href="<%= waLink %>" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Kirim WhatsApp ke Admin</a>
+        <% } else { %>
+          <div class="auth-alert warn" style="margin-top:12px">Nomor admin WhatsApp belum diatur.</div>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<script>
+  (function () {
+    var amount = <%= Number(amountUnique || 0) || 0 %>;
+    var qrSrc = <%- JSON.stringify(String(qrisQrUrl || '')).split('<').join('\\u003c') %>;
+    var kindSafe = <%- JSON.stringify(String(kind || 'invoice').toLowerCase()).split('<').join('\\u003c') %>;
+    var refPrefix = kindSafe === 'voucher' ? 'VOUCHER' : 'INV';
+    var refId = <%= Number(invoiceId || 0) || 0 %>;
+
+    var copy = async function (text) {
+      try { if (navigator && navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(String(text)); return true; } } catch (e) {}
+      try {
+        var ta = document.createElement('textarea'); ta.value = String(text); ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        var ok = document.execCommand('copy'); document.body.removeChild(ta); return ok;
+      } catch (e) { return false; }
+    };
+
+    window.copyText = copy;
+
+    // Tab metode pembayaran
+    var tabs = document.querySelectorAll('.pay-tab');
+    var panels = document.querySelectorAll('.pay-panel');
+    function showMethod(m) {
+      for (var i = 0; i < tabs.length; i++) { tabs[i].classList.toggle('active', tabs[i].getAttribute('data-method') === m); }
+      for (var j = 0; j < panels.length; j++) { panels[j].classList.toggle('active', panels[j].getAttribute('data-panel') === m); }
+    }
+    for (var k = 0; k < tabs.length; k++) {
+      tabs[k].addEventListener('click', function () { showMethod(this.getAttribute('data-method')); });
+    }
+    // Buka tab sesuai #hash (mis. #bank / #ewallet / #qris)
+    var _h = (window.location.hash || '').replace('#', '').toLowerCase();
+    if (_h && document.querySelector('.pay-tab[data-method="' + _h + '"]')) { showMethod(_h); }
+
+    var aBtn = document.getElementById('copyAmountBtn');
+    if (aBtn) aBtn.addEventListener('click', async function () { if (!amount) return; await copy(amount); });
+
+    var dBtn = document.getElementById('downloadQrBtn');
+    if (dBtn) dBtn.addEventListener('click', async function () {
+      if (!qrSrc) return;
+      var fileName = 'QRIS-' + refPrefix + '-' + (refId || 'ref') + '.png';
+      try {
+        if (qrSrc.startsWith('data:image/')) { var a0 = document.createElement('a'); a0.href = qrSrc; a0.download = fileName; document.body.appendChild(a0); a0.click(); a0.remove(); return; }
+        var res = await fetch(qrSrc, { credentials: 'same-origin' });
+        if (!res.ok) throw new Error('Fetch failed');
+        var blob = await res.blob(); var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function(){ try { URL.revokeObjectURL(url); } catch (e) {} }, 1200);
+      } catch (e) { try { window.open(qrSrc, '_blank', 'noopener'); } catch (e2) {} }
+    });
+
+    var pollInterval = 5000, maxPolls = 120, pollCount = 0;
+    var checkPaymentStatus = async function () {
+      if (pollCount >= maxPolls) return;
+      pollCount++;
+      try {
+        var token = <%- JSON.stringify(String(publicToken || '')).split('<').join('\\u003c') %>;
+        var url = kindSafe === 'voucher'
+          ? '/customer/voucher/status/' + refId + '?t=' + encodeURIComponent(token)
+          : '/customer/payment/status/' + refId + '?t=' + encodeURIComponent(token);
+        var res = await fetch(url, { method: 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error('Status check failed');
+        var data = await res.json();
+        if (data.status === 'fulfilled' || data.status === 'paid') {
+          var bUrl = <%- JSON.stringify(String(backUrl || '')).split('<').join('\\u003c') %>;
+          if (bUrl) { window.location.href = bUrl; }
+          else {
+            var redirectUrl = kindSafe === 'voucher' ? '/customer/voucher?order=' + refId + '&t=' + encodeURIComponent(token) : '/customer/billing?invoice=' + refId;
+            window.location.href = redirectUrl;
+          }
+          return;
+        }
+        setTimeout(checkPaymentStatus, pollInterval);
+      } catch (err) { setTimeout(checkPaymentStatus, pollInterval); }
+    };
+    setTimeout(checkPaymentStatus, 3000);
+  })();
+</script>
+</body>
+</html>

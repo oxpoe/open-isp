@@ -1,0 +1,243 @@
+<!-- views/admin/partials/sidebar.ejs -->
+<script>
+(function() {
+  const savedTheme = localStorage.getItem('app-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  if (savedTheme === 'light') {
+    document.documentElement.classList.add('light-theme');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+  }
+})();
+
+function toggleAppTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  if (newTheme === 'light') {
+    document.documentElement.classList.add('light-theme');
+    if (document.body) document.body.classList.add('light-theme');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+    if (document.body) document.body.classList.remove('light-theme');
+  }
+  localStorage.setItem('app-theme', newTheme);
+  updateThemeToggleIcons(newTheme);
+}
+
+function updateThemeToggleIcons(theme) {
+  const isLight = theme === 'light';
+  document.querySelectorAll('.theme-toggle-icon').forEach(icon => {
+    icon.className = isLight ? 'bi bi-sun-fill theme-toggle-icon' : 'bi bi-moon-stars-fill theme-toggle-icon';
+    icon.style.color = isLight ? '#f59e0b' : '#fbbf24';
+  });
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.setAttribute('title', isLight ? 'Ganti ke Mode Gelap (Dark)' : 'Ganti ke Mode Terang (Light)');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const theme = localStorage.getItem('app-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  if (theme === 'light') {
+    document.documentElement.classList.add('light-theme');
+    if (document.body) document.body.classList.add('light-theme');
+  }
+  updateThemeToggleIcons(theme);
+});
+</script>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-icon"><i class="bi bi-wifi"></i></div>
+    <div style="flex:1">
+      <div class="sb-name">
+        <%= company %>
+      </div>
+      <div class="sb-sub"><%= t('admin.panel', 'Admin Panel') %></div>
+      <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+        <a href="/lang/id" class="btn btn-g btn-sm" style="padding:4px 8px">ID</a>
+        <a href="/lang/en" class="btn btn-g btn-sm" style="padding:4px 8px">EN</a>
+        <button type="button" class="btn btn-g btn-sm theme-toggle-btn" onclick="toggleAppTheme()" title="Ganti Tema Dark / Light" style="padding:4px 8px;margin-left:auto">
+          <i class="bi bi-moon-stars-fill theme-toggle-icon" style="color:#fbbf24"></i> <%= t('admin.side.theme','Tema') %>
+        </button>
+      </div>
+      <% if (typeof multiRouterMode !== 'undefined' && multiRouterMode && allActiveRouters && allActiveRouters.length > 0) { %>
+        <div style="margin-top:10px;padding:8px;background:rgba(255,255,255,0.06);border-radius:10px;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;font-weight:600;display:flex;align-items:center;gap:4px">
+            <i class="bi bi-router"></i> <%= t('admin.side.router_filter','Router Filter') %>
+          </div>
+          <select class="form-select form-select-sm" style="font-size:12px;cursor:pointer" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>> <%= t('admin.side.all_routers','Semua Router') %><%= allActiveRouters.length %>)</option>
+            <% allActiveRouters.forEach(r => { %>
+              <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>>
+                <i class="bi bi-plug-fill"></i> <%= r.name %> (<%= r.host %>)
+              </option>
+            <% }) %>
+          </select>
+        </div>
+      <% } %>
+    </div>
+    <button class="sb-close btn-g btn-sm" onclick="toggleSidebar()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <nav class="sb-nav">
+    <% (sidebarSections || []).forEach((section) => { %>
+      <div class="sb-section"><%= section.labelKey ? t(section.labelKey, section.labelDefault) : section.labelDefault %></div>
+      <% section.items.forEach((item) => { %>
+        <% const _kids = item.children || []; %>
+        <% const _kidActive = _kids.some(k => (k.activePages || []).includes(activePage)); %>
+        <% const _selfActive = (item.activePages || []).includes(activePage) || _kidActive; %>
+        <% if (_kids.length) { %>
+          <a href="javascript:void(0)" class="sb-item sb-parent <%= _selfActive ? 'active' : '' %>" onclick="return sbToggleGroup(event, this)">
+            <i class="<%= item.icon %>"></i>
+            <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
+            <i class="bi bi-chevron-down sb-caret"></i>
+          </a>
+          <div class="sb-sub" style="display:<%= _selfActive ? 'block' : 'none' %>">
+            <% _kids.forEach((k) => { %>
+              <a href="<%= k.locked ? 'javascript:void(0)' : k.hrefResolved %>" class="sb-item sb-child <%= (k.activePages || []).includes(activePage) ? 'active' : '' %>"<% if (k.locked) { %> onclick='return showLockedMenuNotice(<%- JSON.stringify(k.lockedMessage).split('<').join('\\u003c') %>)'<% } %>>
+                <i class="<%= k.icon %>"></i>
+                <span><%= k.labelKey ? t(k.labelKey, k.labelDefault) : k.labelDefault %></span>
+                <% if (k.locked) { %><span style="margin-left:auto;padding:2px 6px;border-radius:999px;background:rgba(245,158,11,.18);color:#fde68a;font-size:10px"><%= t('admin.lock.lock','Kunci') %></span><% } %>
+              </a>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <a
+            href="<%= item.hrefResolved %>"
+            class="sb-item <%= (item.activePages || []).includes(activePage) ? 'active' : '' %>"
+            <% if (item.locked) { %>
+              onclick='return showLockedMenuNotice(<%- JSON.stringify(item.lockedMessage).split('<').join('\\u003c') %>)'
+            <% } %>
+          >
+            <i class="<%= item.icon %>"></i>
+            <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
+            <% if (item.locked) { %>
+              <span style="margin-left:auto;padding:2px 8px;border-radius:999px;background:rgba(245,158,11,.18);color:#fde68a;font-size:11px"><%= t('admin.lock.lock','Kunci') %></span>
+            <% } %>
+          </a>
+        <% } %>
+      <% }) %>
+    <% }) %>
+
+    <div class="sb-section"><%= t('admin.side.section_control','KONTROL') %></div>
+    <a href="/admin/sidebar-settings" class="sb-item <%= activePage==='sidebar_settings' ? 'active' : '' %>">
+      <i class="bi bi-layout-sidebar-inset"></i><span><%= t('admin.side.settings','Pengaturan Sidebar') %></span>
+    </a>
+
+    <a href="/admin/logout" class="sb-item logout">
+      <i class="bi bi-box-arrow-left"></i><span><%= t('common.logout', 'Logout') %></span>
+    </a>
+    <div class="mt-4 px-3 py-2 text-center" style="border-top: 1px solid rgba(255,255,255,0.1);">
+      <a href="https://github.com/oxpoe/open-isp" target="_blank" rel="noopener" style="color: #cbd5e1; font-size: 11px; text-decoration: none; font-weight: 700;">
+        OPEN-ISP BILLING SYSTEM
+      </a>
+      <div style="color:#64748b;font-size:10px;margin-top:3px;line-height:1.5">
+        v<%= (typeof appVersion !== 'undefined' ? appVersion : '0.5') %> (pickle-lime) · ISC · oxpoe
+      </div>
+    </div>
+  </nav>
+</aside>
+
+<div id="lockedMenuModal" style="display:none;position:fixed;inset:0;z-index:1200;background:rgba(2,6,23,.72);backdrop-filter:blur(4px);padding:16px;align-items:center;justify-content:center">
+  <div style="width:min(100%,420px);background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(30,41,59,.98));border:1px solid rgba(148,163,184,.18);border-radius:18px;box-shadow:0 24px 60px rgba(2,6,23,.45);overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(148,163,184,.14)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;border-radius:12px;background:rgba(245,158,11,.16);color:#fde68a;display:grid;place-items:center;font-size:18px">
+          <i class="bi bi-lock-fill"></i>
+        </div>
+        <div>
+          <div style="font-weight:800;color:#f8fafc"><%= t('admin.lock.title','Menu Terkunci') %></div>
+          <div style="font-size:12px;color:#94a3b8"><%= t('admin.lock.reason','Aktivasi diperlukan untuk membuka fitur ini') %></div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-g btn-sm" onclick="hideLockedMenuNotice()" style="padding:6px 10px">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div style="padding:18px">
+      <div id="lockedMenuModalMessage" style="color:#e2e8f0;line-height:1.6">
+        <%= t('admin.lock.desc','Menu ini sedang terkunci.') %>
+      </div>
+      <div style="margin-top:16px;padding:12px 14px;border-radius:14px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.22);color:#bfdbfe;font-size:13px">
+        <%= t('admin.lock.code_label','Kode aktivasi menu ini') %> <strong style="color:#86efac">GRATIS</strong> <%= t('admin.lock.wiki_note','— tanpa perlu donasi untuk membukanya.') %>
+      </div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
+        <a href="https://github.com/oxpoe/open-isp/wiki" target="_blank" rel="noopener" class="btn btn-p" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px">
+          <i class="bi bi-github"></i> <%= t('admin.lock.get_code','Ambil Kode Aktivasi (Gratis)') %>
+        </a>
+        <a href="/admin/sidebar-settings" class="btn btn-g" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px" onclick="hideLockedMenuNotice()">
+          <i class="bi bi-layout-sidebar-inset"></i> <%= t('admin.lock.open_settings','Buka Pengaturan Sidebar') %>
+        </a>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px 18px">
+      <button type="button" class="btn btn-p" onclick="hideLockedMenuNotice()">
+        <i class="bi bi-check2-circle"></i> <%= t('admin.lock.understood','Mengerti') %>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    const ov = document.getElementById('sidebarOverlay');
+    sb.classList.toggle('open');
+    ov.classList.toggle('show');
+  }
+
+  function showLockedMenuNotice(message) {
+    const modal = document.getElementById('lockedMenuModal');
+    const messageBox = document.getElementById('lockedMenuModalMessage');
+    if (messageBox) {
+      messageBox.textContent = message || 'Menu ini sedang terkunci.';
+    }
+    if (modal) {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    return false;
+  }
+
+  function hideLockedMenuNotice() {
+    const modal = document.getElementById('lockedMenuModal');
+    if (modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') hideLockedMenuNotice();
+  });
+</script>
+<script src="/js/theme.js"></script>
+
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="bottom-nav" id="bottomNav">
+  <% (sidebarBottomNavItems || []).slice(0, 4).forEach((item) => { %>
+    <a
+      href="<%= item.hrefResolved %>"
+      class="bn-item <%= (item.activePages || []).includes(activePage) ? 'active' : '' %>"
+      <% if (item.locked) { %>
+        onclick='return showLockedMenuNotice(<%- JSON.stringify(item.lockedMessage).split('<').join('\\u003c') %>)'
+      <% } %>
+    >
+      <i class="<%= item.icon %>"></i>
+      <span><%= item.labelKey ? t(item.labelKey, item.labelDefault) : item.labelDefault %></span>
+    </a>
+  <% }) %>
+  <button class="bn-item" onclick="toggleSidebar()">
+    <i class="bi bi-grid-3x3-gap"></i>
+    <span><%= t('common.menu', 'Menu') %></span>
+  </button>
+</nav>
+
+<script>
+  window.sbToggleGroup = function(e, el){ try{ e && e.preventDefault && e.preventDefault(); }catch(_){}
+    var sub = el.nextElementSibling;
+    if(sub){ var open = sub.style.display !== 'none'; sub.style.display = open ? 'none' : 'block'; el.classList.toggle('open', !open); }
+    return false;
+  };
+</script>

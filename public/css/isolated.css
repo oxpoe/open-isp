@@ -1,0 +1,85 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   isolated.css — Halaman Isolir (redirect MikroTik)
+   Dipakai setelah landing.css + auth.css (token dasar).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.iso-wrap{padding:20px 0 44px;display:flex;flex-direction:column;align-items:center}
+.iso-card{width:100%;max-width:540px;background:var(--glass-2);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-2);padding:22px;position:relative;overflow:hidden}
+.iso-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.iso-card.iso-danger::before{background:linear-gradient(90deg,var(--danger),#FDA4AF)}
+.iso-card.iso-success::before{background:linear-gradient(90deg,var(--success),#6EE7B7)}
+
+.iso-brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:16px}
+.iso-brand img{height:34px;width:34px;border-radius:9px}
+.iso-brand .t{font-family:var(--font-display);font-weight:700;font-size:18px;letter-spacing:.01em}
+
+.iso-badge{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;font-size:12px;font-weight:700}
+.iso-badge.danger{background:var(--ddim);color:var(--danger);border:1px solid var(--danger-glow)}
+.iso-badge.success{background:var(--sdim);color:var(--success);border:1px solid var(--success-glow)}
+.iso-card h1{font-size:clamp(20px,3.2vw,26px);margin:14px 0 8px}
+.iso-sub{color:var(--muted);font-size:14px;line-height:1.55}
+
+.iso-info{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:16px 0}
+.iso-info .row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:13.5px}
+.iso-info .row .label{color:var(--muted)}
+.iso-info .row .val{font-weight:700;color:var(--text);text-align:right;word-break:break-word}
+
+.iso-sec{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin:18px 0 10px}
+.iso-sec i{color:var(--primary)}
+
+.iso-inv{border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--ghost)}
+.iso-inv .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.iso-inv .period{font-size:13px;font-weight:700;color:var(--text)}
+.iso-inv .id{font-size:11.5px;color:var(--muted);margin-top:2px}
+.iso-inv .amt{font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--primary);margin:12px 0}
+
+.iso-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;transition:transform .16s var(--ease),filter .16s var(--ease),border-color .16s var(--ease)}
+.iso-btn:active{transform:translateY(1px)}
+.iso-btn.primary{background:var(--primary);color:var(--on-primary);box-shadow:0 6px 20px var(--primary-glow)}
+.iso-btn.primary:hover{filter:brightness(1.05)}
+.iso-btn.success{background:var(--success);color:#04231a}
+.iso-btn.success:hover{filter:brightness(1.05)}
+.iso-btn.ghost{background:var(--ghost);color:var(--text);border-color:var(--border)}
+.iso-btn.ghost:hover{border-color:var(--primary-glow)}
+.iso-btn.wa{background:rgba(37,211,102,.14);color:#25D366;border-color:rgba(37,211,102,.3)}
+.iso-btn.wa:hover{background:rgba(37,211,102,.22)}
+.iso-space{margin-top:10px}
+.iso-card form > .iso-btn{margin-top:14px}
+.iso-inv .iso-btn.primary{margin-top:4px}
+.iso-error{color:var(--danger);font-size:12.5px;margin-top:8px}
+.iso-foot{color:var(--muted);font-size:12px;text-align:center;margin-top:22px;line-height:1.55}
+
+/* ── MODAL QRIS ── */
+.iso-mo{display:none;position:fixed;inset:0;background:var(--overlay-bg);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:1100;align-items:center;justify-content:center;padding:16px}
+.iso-mo.active{display:flex;animation:fadein .18s var(--ease)}
+.iso-mc{background:var(--bg2);border:1px solid var(--border);border-radius:18px;width:100%;max-width:420px;padding:24px 20px;box-shadow:var(--shadow-3);text-align:center;position:relative;max-height:92vh;overflow:auto}
+.iso-mc-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
+.iso-mc-close:hover{color:var(--danger)}
+.iso-mc .gt{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--primary);font-size:13px;font-weight:800;text-transform:uppercase}
+.iso-mc .per{font-size:12px;color:var(--muted);margin-top:3px}
+.iso-qr{border-radius:14px;background:#fff;padding:10px;margin:14px auto;width:230px;max-width:82%}
+.iso-qr img{width:100%;display:block}
+.iso-amt-box{background:var(--bg);border:1px solid var(--primary-glow);border-radius:12px;padding:12px;margin-top:12px}
+.iso-amt-box .l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.iso-amt-box .v{font-family:var(--font-display);font-weight:800;font-size:26px;color:var(--primary)}
+.iso-unique{display:inline-block;font-size:11px;font-weight:700;color:var(--warning);background:var(--wdim);border:1px solid var(--warning-glow);border-radius:999px;padding:3px 10px;margin-top:8px}
+.iso-poll{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;color:var(--muted);font-size:12.5px}
+.spin-pulse{width:16px;height:16px;border-radius:50%;background:var(--primary);animation:pulse-dot 1.4s infinite;flex:0 0 auto}
+.iso-success-ic{font-size:58px;color:var(--success);display:block;margin-bottom:10px}
+.iso-mc h2{font-size:22px;color:var(--success)}
+.iso-actions{display:flex;gap:8px;margin-top:14px}
+.iso-actions .iso-btn{flex:1}
+.iso-help{font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.5}
+
+/* ── DONASI ── */
+.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.preset-btn{padding:10px 6px;border-radius:10px;border:1px solid var(--border);background:var(--ghost);color:var(--text);font-weight:700;font-size:13px;cursor:pointer;transition:.15s var(--ease)}
+.preset-btn:hover{border-color:var(--primary-glow)}
+.preset-btn.active{background:var(--pdim);border-color:var(--primary);color:var(--primary)}
+.activation-card{border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;background:var(--ghost)}
+.code-box{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border:1px dashed var(--primary-glow);border-radius:12px;padding:12px;margin:10px 0;flex-wrap:wrap}
+.code-text{font-family:var(--font-mono);font-weight:800;font-size:18px;letter-spacing:1px;color:var(--primary)}
+.step-item{display:flex;gap:10px;font-size:13px;color:var(--muted);margin-bottom:6px}
+.step-num{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--pdim);color:var(--primary);font-size:11px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.heart-badge{width:60px;height:60px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:26px;background:var(--ddim);color:var(--danger);border:1px solid var(--danger-glow)}
+.donate-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:820px){.donate-grid{grid-template-columns:1fr}}

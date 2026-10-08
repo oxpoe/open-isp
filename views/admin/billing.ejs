@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.billing.title', 'Tagihan') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .filter-bar{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .paid-row td{opacity:.7}
+    .void-row td{opacity:.5}
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'billing', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-receipt"></i> <%= t('admin.billing.manage_title', 'Manajemen Tagihan') %></div>
+    <div class="tb-right">
+      <button class="btn btn-p btn-sm" onclick="openModal('genModal')"><i class="bi bi-lightning-charge"></i> <%= t('admin.billing.generate', 'Generate Tagihan') %></button>
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- Summary Cards -->
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="sc p"><i class="bi bi-receipt sc-icon"></i><div class="sc-label"><%= t('admin.billing.summary.total', 'Total Tagihan') %></div><div class="sc-val"><%= summary.total.count||0 %></div><div class="sc-sub">Rp <%= (summary.total.total||0).toLocaleString('id-ID') %></div></div>
+      <div class="sc s"><i class="bi bi-check-circle sc-icon"></i><div class="sc-label"><%= t('admin.billing.summary.paid', 'Sudah Bayar') %></div><div class="sc-val"><%= summary.paid.count||0 %></div><div class="sc-sub">Rp <%= (summary.paid.total||0).toLocaleString('id-ID') %></div></div>
+      <div class="sc d"><i class="bi bi-hourglass sc-icon"></i><div class="sc-label"><%= t('admin.billing.summary.unpaid', 'Belum Bayar') %></div><div class="sc-val"><%= summary.unpaid.count||0 %></div><div class="sc-sub">Rp <%= (summary.unpaid.total||0).toLocaleString('id-ID') %></div></div>
+      <div class="sc w"><i class="bi bi-percent sc-icon"></i><div class="sc-label"><%= t('admin.billing.summary.collected_pct', '% Terkumpul') %></div><div class="sc-val"><%= summary.total.count>0 ? Math.round((summary.paid.count/summary.total.count)*100) : 0 %>%</div></div>
+    </div>
+
+    <!-- Filter -->
+    <form method="GET" action="/admin/billing" class="filter-bar">
+      <div class="sinput" style="max-width:340px">
+        <i class="bi bi-search"></i>
+        <input class="fc" name="search" placeholder="<%= t('admin.billing.search_placeholder', 'Cari nama / telepon...') %>" value="<%= search %>">
+      </div>
+      <select class="fs" name="month" style="width:130px">
+        <option value=""><%= t('admin.billing.all_months', 'Semua Bulan') %></option>
+        <% const monthNames = (lang === 'en')
+          ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+          : ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+           for(let m=1;m<=12;m++){%>
+        <option value="<%= m %>" <%= filterMonth==m?'selected':'' %>><%= monthNames[m-1] %></option>
+        <% } %>
+      </select>
+      <select class="fs" name="year" style="width:100px">
+        <% for(let y=new Date().getFullYear(); y>=2023; y--){ %>
+        <option value="<%= y %>" <%= filterYear==y?'selected':'' %>><%= y %></option>
+        <% } %>
+      </select>
+      <select class="fs" name="status" style="width:130px">
+        <option value="all" <%= filterStatus==='all'?'selected':'' %>><%= t('admin.billing.all_status', 'Semua Status') %></option>
+        <option value="unpaid" <%= filterStatus==='unpaid'?'selected':'' %>><%= t('admin.billing.unpaid', 'Belum Bayar') %></option>
+        <option value="paid" <%= filterStatus==='paid'?'selected':'' %>><%= t('admin.billing.paid', 'Sudah Bayar') %></option>
+        <option value="void" <%= filterStatus==='void'?'selected':'' %>><%= t('admin.bill.st_void','Hangus') %></option>
+      </select>
+      <select class="fs" name="package_id" style="width:170px">
+        <option value="">Semua Paket</option>
+        <% (typeof packages !== 'undefined' ? packages : []).forEach(p => { %><option value="<%= p.id %>" <%= String(filterPackage)===String(p.id)?'selected':'' %>><%= p.name %></option><% }) %>
+      </select>
+      <select class="fs" name="area" style="width:150px">
+        <option value="">Semua Area</option>
+        <% (typeof areas !== 'undefined' ? areas : []).forEach(a => { %><option value="<%= a %>" <%= filterArea===a?'selected':'' %>><%= a %></option><% }) %>
+      </select>
+      <select class="fs" name="router_id" style="width:150px">
+        <option value="">Semua Router</option>
+        <% (typeof routers !== 'undefined' ? routers : []).forEach(r => { %><option value="<%= r.id %>" <%= String(filterRouter)===String(r.id)?'selected':'' %>><%= r.name %></option><% }) %>
+      </select>
+      <select class="fs" name="collector_id" style="width:160px">
+        <option value="">Semua Kolektor</option>
+        <% (typeof collectors !== 'undefined' ? collectors : []).forEach(k => { %><option value="<%= k.id %>" <%= String(filterCollector)===String(k.id)?'selected':'' %>><%= k.name %></option><% }) %>
+      </select>
+      <button class="btn btn-g btn-sm" type="submit"><i class="bi bi-funnel"></i> <%= t('common.filter', 'Filter') %></button>
+      <a href="/admin/billing" class="btn btn-g btn-sm"><i class="bi bi-x"></i> <%= t('common.reset', 'Reset') %></a>
+    </form>
+
+    <!-- Print Header (Only visible on paper print) -->
+    <div class="print-only" style="margin-bottom:14px;border-bottom:2px solid #0f172a;padding-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h2 style="font-size:16pt;font-weight:800;text-transform:uppercase;margin:0"><%= company %></h2>
+          <div style="font-size:10pt;color:#334155"><%= t('admin.billing.manage_title', 'Rekapitulasi Tagihan Pelanggan') %> <%= t('admin.bill.period_label','• Periode:') %> <%= filterMonth ? (monthNames[filterMonth-1] + ' ' + filterYear) : ('Tahun ' + filterYear) %></div>
+        </div>
+        <div style="text-align:right;font-size:8.5pt;color:#475569">
+          <div><%= t('admin.cust.printed_at','Dicetak:') %> <%= getNowLocal() %></div>
+          <div>Total Tagihan: <strong><%= invoices.length %> Transaksi</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="card-hd">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;width:100%">
+          <h6 style="margin:0"><i class="bi bi-list-ul"></i> <%= t('admin.billing.list', 'Daftar Tagihan') %> (<%= invoices.length %>)</h6>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn btn-g btn-sm" onclick="window.print()" title="<%= t('admin.bill.tt_print_recap','Cetak Rekap Tagihan') %>"><i class="bi bi-printer"></i> <%= t('admin.bill.btn_print_recap','Cetak Rekap') %></button>
+            <span class="text-muted small" id="bulkCount">0 dipilih</span>
+            <button type="button" class="btn btn-s btn-sm" id="bulkPayBtn" disabled><i class="bi bi-check-lg"></i> <%= t('admin.bill.btn_mass_pay','Bayar Massal') %></button>
+            <button type="button" class="btn btn-d btn-sm" id="bulkDeleteBtn" disabled><i class="bi bi-trash"></i> <%= t('admin.bill.btn_mass_delete','Hapus Massal') %></button>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th style="width:34px"><input type="checkbox" id="inv_all" style="width:16px;height:16px"></th>
+              <th>#</th>
+              <th><%= t('admin.billing.table.customer', 'Pelanggan') %></th>
+              <th><%= t('admin.billing.table.period', 'Periode') %></th>
+              <th><%= t('admin.billing.table.package', 'Paket') %></th>
+              <th class="num"><%= t('admin.billing.table.amount', 'Jumlah') %></th>
+              <th><%= t('admin.billing.table.status', 'Status') %></th>
+              <th><%= t('admin.billing.table.paid_by', 'Dibayar Oleh') %></th>
+              <th><%= t('admin.billing.table.paid_time', 'Waktu Bayar') %></th>
+              <th><%= t('admin.billing.table.actions', 'Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+          <% if (invoices.length===0) { %>
+            <tr><td colspan="10" class="text-center text-muted" style="padding:32px"><%= t('admin.billing.empty', 'Tidak ada tagihan. Generate tagihan bulanan terlebih dahulu.') %></td></tr>
+          <% } %>
+          <% invoices.forEach((inv,i)=>{ %>
+            <tr class="<%= inv.status==='void'?'void-row':(inv.status==='paid'?'paid-row':'') %>">
+              <td>
+                <input
+                  type="checkbox"
+                  class="inv_sel"
+                  style="width:16px;height:16px"
+                  data-id="<%= inv.id %>"
+                  data-status="<%= String(inv.status || '') %>"
+                  data-customer-id="<%= inv.customer_id %>"
+                  data-customer-name="<%= String(inv.customer_name || '').replace(/\"/g, '&quot;') %>"
+                  data-period-month="<%= inv.period_month %>"
+                  data-period-year="<%= inv.period_year %>"
+                  data-amount="<%= Number(inv.amount || 0) %>"
+                  data-package="<%= String(inv.package_name || '-').replace(/\"/g, '&quot;') %>"
+                >
+              </td>
+              <td class="text-muted"><%= i+1 %></td>
+              <td>
+                <div class="fw6"><%= inv.customer_name %></div>
+                <div style="font-size:11px;color:var(--muted)"><%= inv.customer_phone||inv.genieacs_tag||'' %></div>
+              </td>
+              <td>
+                <% const mns = (lang === 'en')
+                  ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                  : ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des']; %>
+                <span class="badge bm"><%= mns[inv.period_month-1] %> <%= inv.period_year %></span>
+                <% if (inv.status === 'unpaid' && inv.isolate_day) { %><div style="font-size:10px;color:var(--muted);margin-top:4px">Jatuh tempo tgl <%= inv.isolate_day %></div><% } %>
+              </td>
+              <td style="font-size:12px;color:var(--muted)"><%= inv.package_name||'-' %></td>
+              <td class="num fw6" style="color:var(--success)">
+                <% if (Number(inv.discount_amount||0) > 0) { %>
+                  <div style="font-size:10px;color:var(--muted);text-decoration:line-through">Rp <%= Number(inv.amount_before_discount||0).toLocaleString('id-ID') %></div>
+                <% } %>
+                <div>Rp <%= inv.amount.toLocaleString('id-ID') %></div>
+                <% if (Number(inv.discount_amount||0) > 0) { %>
+                  <div style="font-size:10px;color:var(--danger);font-weight:700">Diskon <%= inv.discount_type==='percent' ? (inv.discount_value+'%') : '' %> -Rp <%= Number(inv.discount_amount).toLocaleString('id-ID') %></div>
+                <% } %>
+                <% if (inv.status === 'unpaid' && inv.qris_amount_unique) { %>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px">
+                    Nominal unik: <span class="mono" style="font-weight:600;color:var(--primary)">Rp <%= Number(inv.qris_amount_unique || inv.amount || 0).toLocaleString('id-ID') %></span>
+                    <% if (inv.qris_unique_code) { %>
+                      <span class="badge bm" style="margin-left:4px">Kode <%= String(inv.qris_unique_code).padStart(3, "0") %></span>
+                    <% } %>
+                  </div>
+                <% } %>
+              </td>
+              <td>
+                <% if(inv.status==='paid'){%><span class="badge bs"><i class="bi bi-check-circle-fill" style="font-size:9px"></i> <%= t('admin.billing.status.paid', 'Lunas') %></span>
+                <%}else if(inv.status==='void'){%><span class="badge bd" title="<%= inv.void_reason||'' %>"><i class="bi bi-x-octagon-fill" style="font-size:9px"></i> <%= t('admin.bill.st_void','Hangus') %></span>
+                <%}else{%><span class="badge bd"><i class="bi bi-clock-fill" style="font-size:9px"></i> <%= t('admin.billing.status.unpaid', 'Belum Bayar') %></span><%}%>
+              </td>
+              <td style="font-size:12px">
+                <div><%= inv.paid_by_name||'-' %></div>
+                <% if (inv.notes) { %>
+                  <% const _pf = (String(inv.notes).match(/\/(?:admin\/media\/payment-proof|uploads\/payment_proofs)\/([A-Za-z0-9._-]+)/) || [])[1]; %>
+                  <% const _nc = String(inv.notes).replace(/Bukti bayar:\s*\S+/gi, '').replace(/AUTO-QRIS:\s*cocok nominal unik Rp\s*([0-9.]+)[^\n]*/gi, 'QRIS otomatis tercocokkan Rp $1').replace(/https?:\/\/\S*\/uploads\/payment_proofs\/\S+/gi, '').replace(/[ \t]{2,}/g, ' ').replace(/\n{2,}/g, '\n').trim(); %>
+                  <% if (_nc) { %><div style="font-size:10px;color:var(--muted)"><%= _nc %></div><% } %>
+                  <% if (_pf) { %><a class="btn btn-g btn-icon btn-sm" style="margin-top:4px" title="<%= t('admin.bill.tt_view_proof','Lihat Bukti Bayar') %>" target="_blank" href="/admin/media/payment-proof/<%= _pf %>"><i class="bi bi-image"></i> Lihat Bukti</a><% } %>
+                <% } %>
+              </td>
+              <td style="font-size:11px;color:var(--muted)"><%= inv.paid_at ? new Date(inv.paid_at).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '-' %></td>
+              <td style="white-space:nowrap">
+                <% if(inv.status==='unpaid'){%>
+                  <form id="qa-<%= inv.id %>" method="POST" action="/admin/billing/<%= inv.id %>/qris-assign" style="display:none"></form>
+                  <% if (inv.qris_amount_unique) { %>
+                  <form id="qr-<%= inv.id %>" method="POST" action="/admin/billing/<%= inv.id %>/qris-assign?force=1" style="display:none" onsubmit="return confirm('Ganti Kode Unik tagihan ini?')"></form>
+                  <form id="qc-<%= inv.id %>" method="POST" action="/admin/billing/<%= inv.id %>/qris-clear" style="display:none" onsubmit="return confirm('Hapus Kode Unik tagihan ini?')"></form>
+                  <% } %>
+                  <form id="uni-<%= inv.id %>" method="POST" action="/admin/customers/<%= inv.customer_id %>/unisolate" style="display:none" class="needs-confirm" data-confirm-key="confirmUnisolate"></form>
+                  <form id="wa-<%= inv.id %>" method="POST" action="/admin/billing/<%= inv.id %>/whatsapp" style="display:none"></form>
+                <%}else{%>
+                  <form id="upa-<%= inv.id %>" method="POST" action="/admin/billing/<%= inv.id %>/unpay" style="display:none" class="needs-confirm" data-confirm-key="confirmUnpay"></form>
+                <%}%>
+                <form id="iso-<%= inv.id %>" method="POST" action="/admin/customers/<%= inv.customer_id %>/isolate" style="display:none" class="needs-confirm" data-confirm-key="confirmIsolateManual"></form>
+                <form id="delb-<%= inv.id %>" method="POST" action="/admin/billing/<%= inv.id %>/delete" style="display:none" class="needs-confirm" data-confirm-key="confirmDelete"></form>
+                <div class="act">
+                  <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                  <div class="act-menu">
+                    <% if(inv.status==='unpaid'){%>
+                      <button type="button" class="act-item disc-btn" data-id="<%= inv.id %>" data-name="<%= String(inv.customer_name||'').replace(/'/g,'&#39;') %>" data-amount="<%= Number(inv.amount||0) %>" data-period="<%= mns[inv.period_month-1] %> <%= inv.period_year %>"><i class="bi bi-percent"></i> <%= t('admin.bill.btn_discount','Beri Diskon') %></button>
+                      <button type="button" class="act-item success pay-btn" data-id="<%= inv.id %>" data-customer-id="<%= inv.customer_id %>" data-name="<%= inv.customer_name.replace(/'/g, '&#39;') %>" data-period="<%= mns[inv.period_month-1] %> <%= inv.period_year %>"><i class="bi bi-check-lg"></i> Tandai Lunas</button>
+                      <button type="submit" form="qa-<%= inv.id %>" class="act-item"><i class="bi bi-qr-code"></i> <%= t('admin.bill.btn_gen_unique','Buat Kode Unik QRIS') %></button>
+                      <% if (inv.qris_amount_unique) { %>
+                      <button type="submit" form="qr-<%= inv.id %>" class="act-item warn"><i class="bi bi-arrow-repeat"></i> Regenerate Kode Unik</button>
+                      <button type="submit" form="qc-<%= inv.id %>" class="act-item danger"><i class="bi bi-x-lg"></i> <%= t('admin.bill.btn_del_unique','Hapus Kode Unik') %></button>
+                      <% } %>
+                      <button type="submit" form="uni-<%= inv.id %>" class="act-item primary"><i class="bi bi-wifi"></i> <%= t('admin.bill.btn_unisolate','Buka Isolir') %></button>
+                      <button type="submit" form="wa-<%= inv.id %>" class="act-item"><i class="bi bi-whatsapp"></i> Kirim Tagihan WA</button>
+                    <%}else{%>
+                      <a class="act-item" href="/admin/billing/<%= inv.id %>/print" target="_blank"><i class="bi bi-printer"></i> <%= t('admin.bill.btn_print_a4','Cetak Faktur (A4)') %></a>
+                      <a class="act-item" href="/admin/billing/<%= inv.id %>/print-thermal" target="_blank"><i class="bi bi-receipt"></i> <%= t('admin.bill.btn_print_thermal','Cetak Struk Thermal') %></a>
+                      <a class="act-item" href="/admin/billing/<%= inv.id %>/pdf" target="_blank"><i class="bi bi-file-earmark-pdf"></i> <%= t('admin.bill.btn_invoice_pdf','Invoice PDF') %></a>
+                      <% if (inv.customer_phone) { %>
+                      <button type="button" class="act-item" onclick="sendInvoicePdfWa('<%= inv.id %>', this)"><i class="bi bi-file-earmark-arrow-up"></i> Kirim Invoice PDF (WA)</button>
+                      <% } %>
+                      <button type="submit" form="upa-<%= inv.id %>" class="act-item warn"><i class="bi bi-arrow-counterclockwise"></i> <%= t('admin.bill.btn_revert','Batalkan Lunas') %></button>
+                    <%}%>
+                    <div class="act-sep"></div>
+                    <button type="submit" form="iso-<%= inv.id %>" class="act-item warn"><i class="bi bi-wifi-off"></i> Isolir Manual</button>
+                    <button type="submit" form="delb-<%= inv.id %>" class="act-item danger"><i class="bi bi-trash"></i> <%= t('admin.bill.btn_del_bill','Hapus Tagihan') %></button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <form id="bulkDeleteForm" method="POST" action="/admin/billing/delete-bulk" style="display:none"></form>
+  </div>
+</div>
+
+<!-- Modal Generate -->
+<div class="mo" id="genModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-lightning-charge"></i> <%= t('admin.billing.generate_monthly', 'Generate Tagihan Bulanan') %></span><button class="mc" onclick="closeModal('genModal')">&times;</button></div>
+    <form method="POST" action="/admin/billing/generate">
+      <div class="mbody">
+        <div class="alert alert-i"><i class="bi bi-info-circle"></i> <%= t('admin.billing.generate_hint', 'Tagihan akan dibuat untuk semua pelanggan aktif yang belum memiliki tagihan di periode yang dipilih.') %></div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl"><%= t('admin.billing.month', 'Bulan') %></label>
+            <select class="fs" name="month" required>
+              <% const mns2 = (lang === 'en')
+                ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+                : ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                 for(let m=1;m<=12;m++){%>
+              <option value="<%= m %>" <%= m===new Date().getMonth()+1?'selected':'' %>><%= mns2[m-1] %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.billing.year', 'Tahun') %></label>
+            <select class="fs" name="year" required>
+              <% for(let y=new Date().getFullYear(); y>=2023; y--){ %>
+              <option value="<%= y %>"><%= y %></option>
+              <% } %>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('genModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-lightning-charge"></i> <%= t('admin.billing.generate', 'Generate Tagihan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Diskon -->
+<div class="mo" id="discModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-percent"></i> <%= t('admin.bill.btn_discount','Beri Diskon') %></span><button class="mc" onclick="closeModal('discModal')">&times;</button></div>
+    <form method="POST" id="discModalForm">
+      <div class="mbody">
+        <p class="text-muted" id="discModalDesc" style="margin-bottom:14px;font-size:13px"></p>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Tipe Diskon</label>
+            <select class="fs" name="discount_type" id="dmType">
+              <option value="percent">Persen (%)</option>
+              <option value="amount">Nominal (Rp)</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Nilai</label>
+            <input class="fc" type="number" name="discount_value" id="dmValue" min="1" step="1" required>
+          </div>
+        </div>
+        <div class="fg"><label class="fl"><%= t('admin.bill.note_optional','Catatan (opsional)') %></label><input class="fc" name="note" placeholder="<%= t('admin.bill.ph_note','mis. kompensasi gangguan') %>"></div>
+        <div class="hint"><i class="bi bi-info-circle"></i> Persen dihitung dari harga dasar (sebelum PPN/USO). Kode unik QRIS akan digenerate ulang.</div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('discModal')">Batal</button>
+        <button type="submit" class="btn btn-w"><i class="bi bi-percent"></i> Terapkan Diskon</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Tandai Bayar -->
+<div class="mo" id="payModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-cash-coin"></i> <%= t('admin.billing.actions.mark_paid', 'Tandai Lunas') %></span><button class="mc" onclick="closeModal('payModal')">&times;</button></div>
+    <form method="POST" id="payForm">
+      <div class="mbody">
+        <p class="text-muted" id="payDesc" style="margin-bottom:14px;font-size:13px"></p>
+        
+        <div id="multiPaySection" style="display:none; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+          <label class="fl" style="margin-bottom:8px"><%= t('admin.billing.choose_invoice', 'Pilih Tagihan yang akan dilunasi:') %></label>
+          <div id="unpaidList" style="display:flex; flex-direction:column; gap:8px">
+            <!-- Dynamic list of checkboxes -->
+          </div>
+        </div>
+
+        <% const payByDefault = (typeof session !== 'undefined' && session.isCashier)
+          ? (`Kasir ${(session.cashierName || '').trim()}` + ((session.cashierUsername || '').trim() ? ` (@${String(session.cashierUsername).trim()})` : '')).trim()
+          : 'Admin'; %>
+        <div class="fg"><label class="fl">Metode Bayar</label><select class="fs" name="payment_method"><option value="Tunai">Tunai (Cash)</option><option value="Transfer Bank">Transfer Bank</option><option value="QRIS">QRIS</option><option value="E-Wallet">E-Wallet</option><option value="Lainnya">Lainnya</option></select></div>
+                <div class="fg"><label class="fl"><%= t('admin.billing.received_by', 'Diterima Oleh') %></label><input class="fc" name="paid_by_name" placeholder="<%= t('admin.billing.received_by_placeholder', 'Nama petugas / teknisi') %>" value="<%= payByDefault || 'Admin' %>"></div>
+        <div class="fg"><label class="fl"><%= t('admin.billing.notes_optional', 'Catatan (opsional)') %></label><textarea class="fc" name="notes" placeholder="<%= t('admin.billing.notes_placeholder', 'Transfer BRI, tunai, dll...') %>"></textarea></div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('payModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-s"><i class="bi bi-check-lg"></i> <%= t('admin.billing.confirm_paid', 'Konfirmasi Lunas') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+const LANG = "<%= lang || 'id' %>";
+const MONTHS = (LANG === "en")
+  ? ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  : ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+const I18N = {
+  customerPrefix: "<%= t('admin.billing.js.customer_prefix', 'Pelanggan:') %>",
+  loadingOther: "<%= t('admin.billing.loading_other_invoices', 'Loading tagihan lainnya...') %>",
+  periodPrefix: "<%= t('admin.billing.table.period', 'Periode') %>",
+  packageFallback: "<%= t('admin.billing.js.package_fallback', 'Internet') %>",
+  confirmUnisolate: "<%= t('admin.billing.confirm.unisolate_without_payment', 'Buka isolir pelanggan ini tanpa bayar?') %>",
+  confirmUnpay: "<%= t('admin.billing.confirm.unpay', 'Batalkan status lunas?') %>",
+  confirmIsolateManual: "<%= t('admin.billing.confirm.isolate_manual', 'Isolir pelanggan ini secara manual?') %>",
+  confirmDelete: "<%= t('admin.billing.confirm.delete', 'Hapus tagihan ini?') %>"
+};
+
+document.addEventListener('submit', function(e) {
+  const form = e.target;
+  if (!(form instanceof HTMLFormElement)) return;
+  if (!form.classList.contains('needs-confirm')) return;
+  const key = String(form.dataset.confirmKey || '');
+  const msg = I18N[key] || 'Lanjutkan?';
+  if (!confirm(msg)) e.preventDefault();
+});
+
+// Handle "Tandai Lunas" via data-* attributes (avoid EJS/HTML quote conflict)
+document.addEventListener('click', async function(e) {
+  const btn = e.target.closest('.pay-btn');
+  if (!btn) return;
+  
+  const id         = btn.dataset.id;
+  const customerId = btn.dataset.customerId;
+  const name       = btn.dataset.name;
+  const period     = btn.dataset.period;
+  
+  const form = document.getElementById('payForm');
+  const multiSection = document.getElementById('multiPaySection');
+  const unpaidList = document.getElementById('unpaidList');
+  const payDesc = document.getElementById('payDesc');
+  
+  payDesc.textContent = I18N.customerPrefix + ' ' + name;
+  unpaidList.innerHTML = '<div class="text-muted small">' + I18N.loadingOther + '</div>';
+  multiSection.style.display = 'block';
+  
+  openModal('payModal');
+
+  try {
+    const res = await fetch('/admin/api/billing/unpaid/' + customerId);
+    const invoices = await res.json();
+    
+    unpaidList.innerHTML = '';
+    if (invoices.length > 0) {
+      invoices.forEach(inv => {
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.gap = '10px';
+        const isCurrent = inv.id == id;
+        div.innerHTML = `
+          <input type="checkbox" name="invoice_ids" value="${inv.id}" id="inv_${inv.id}" ${isCurrent ? 'checked' : ''} style="width:16px; height:16px">
+          <label for="inv_${inv.id}" style="font-size:13px; cursor:pointer">
+            ${I18N.periodPrefix} ${(MONTHS[inv.period_month] || '')} ${inv.period_year} 
+            <span class="text-muted">(${inv.package_name || I18N.packageFallback})</span> - 
+            <strong style="color:var(--success)">Rp ${inv.amount.toLocaleString('id-ID')}</strong>
+          </label>
+        `;
+        unpaidList.appendChild(div);
+      });
+      form.action = '/admin/billing/pay-bulk';
+    } else {
+      multiSection.style.display = 'none';
+      form.action = '/admin/billing/' + id + '/pay';
+    }
+  } catch (err) {
+    console.error('Failed to load unpaid invoices:', err);
+    multiSection.style.display = 'none';
+    form.action = '/admin/billing/' + id + '/pay';
+  }
+});
+
+function getSelectedInvoices() {
+  return Array.from(document.querySelectorAll('.inv_sel:checked')).map(cb => cb.dataset || {});
+}
+
+function updateBulkUi() {
+  const list = getSelectedInvoices();
+  const countEl = document.getElementById('bulkCount');
+  const payBtn = document.getElementById('bulkPayBtn');
+  const delBtn = document.getElementById('bulkDeleteBtn');
+  if (countEl) countEl.textContent = `${list.length} dipilih`;
+  if (payBtn) payBtn.disabled = list.length === 0;
+  if (delBtn) delBtn.disabled = list.length === 0;
+}
+
+document.addEventListener('change', function(e) {
+  const all = document.getElementById('inv_all');
+  if (e.target && e.target.id === 'inv_all') {
+    const checked = Boolean(all && all.checked);
+    document.querySelectorAll('.inv_sel').forEach(cb => { cb.checked = checked; });
+    updateBulkUi();
+    return;
+  }
+  if (e.target && e.target.classList && e.target.classList.contains('inv_sel')) {
+    updateBulkUi();
+  }
+});
+
+document.getElementById('bulkPayBtn')?.addEventListener('click', function() {
+  const selected = getSelectedInvoices();
+  const unpaid = selected.filter(x => String(x.status || '').toLowerCase() === 'unpaid');
+  if (unpaid.length === 0) return alert('Pilih minimal 1 tagihan BELUM BAYAR.');
+
+  const form = document.getElementById('payForm');
+  const multiSection = document.getElementById('multiPaySection');
+  const unpaidList = document.getElementById('unpaidList');
+  const payDesc = document.getElementById('payDesc');
+
+  if (payDesc) payDesc.textContent = `Bayar massal: ${unpaid.length} tagihan`;
+  if (unpaidList) unpaidList.innerHTML = '';
+  if (multiSection) multiSection.style.display = 'block';
+
+  for (const inv of unpaid) {
+    const div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.gap = '10px';
+    const id = String(inv.id || '').trim();
+    const customerName = String(inv.customerName || '').trim();
+    const pkg = String(inv.package || '').trim();
+    const period = `${(MONTHS[Number(inv.periodMonth || 0)] || '')} ${String(inv.periodYear || '')}`.trim();
+    const amt = Number(inv.amount || 0) || 0;
+    div.innerHTML = `
+      <input type="checkbox" name="invoice_ids" value="${id}" id="bulk_inv_${id}" checked style="width:16px; height:16px">
+      <label for="bulk_inv_${id}" style="font-size:13px; cursor:pointer">
+        ${customerName ? `<strong>${customerName}</strong> • ` : ''}${I18N.periodPrefix} ${period}
+        <span class="text-muted">(${pkg || I18N.packageFallback})</span> -
+        <strong style="color:var(--success)">Rp ${amt.toLocaleString('id-ID')}</strong>
+      </label>
+    `;
+    unpaidList.appendChild(div);
+  }
+  if (form) form.action = '/admin/billing/pay-bulk';
+  openModal('payModal');
+});
+
+document.getElementById('bulkDeleteBtn')?.addEventListener('click', function() {
+  const selected = getSelectedInvoices();
+  if (selected.length === 0) return;
+  if (!confirm(`Hapus ${selected.length} tagihan terpilih?`)) return;
+
+  const f = document.getElementById('bulkDeleteForm');
+  if (!f) return;
+  f.innerHTML = '';
+  for (const inv of selected) {
+    const id = String(inv.id || '').trim();
+    if (!id) continue;
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'invoice_ids';
+    input.value = id;
+    f.appendChild(input);
+  }
+  f.submit();
+});
+
+async function sendInvoicePdfWa(invoiceId, btn) {
+  if (!btn) return;
+  const oldHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+  try {
+    const res = await fetch(`/admin/billing/${invoiceId}/send-pdf-wa`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(' ' + data.message);
+    } else {
+      alert(' ' + data.message);
+    }
+  } catch (err) {
+    alert(' Error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = oldHtml;
+  }
+}
+
+
+document.querySelectorAll('.disc-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var id = btn.getAttribute('data-id');
+    var name = btn.getAttribute('data-name');
+    var amount = btn.getAttribute('data-amount');
+    var period = btn.getAttribute('data-period');
+    var f = document.getElementById('discModalForm');
+    if (!f) return;
+    f.action = '/admin/billing/' + id + '/discount';
+    document.getElementById('discModalDesc').textContent = name + ' — ' + period + ' (Rp ' + Number(amount || 0).toLocaleString('id-ID') + ')';
+    var v = document.getElementById('dmValue'); if (v) v.value = '';
+    openModal('discModal');
+  });
+});
+
+updateBulkUi();
+
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),5000);
+</script>
+</body>
+</html>

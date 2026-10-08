@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.whatsapp.status_title', 'Status WhatsApp') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+  <style>
+    .wa-status-card { text-align: center; padding: 40px 20px; }
+    .status-indicator { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 48px; }
+    .status-open { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 4px solid #10b981; }
+    .status-qr { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 4px solid #f59e0b; }
+    .status-close { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 4px solid #ef4444; }
+    #qr-container { background: white; padding: 20px; display: inline-block; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .wa-info { margin-top: 20px; color: var(--muted); }
+    .wa-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    .wa-tab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; flex-shrink: 0; }
+    .wa-tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .wa-tab.active { background: var(--primary); color: white; }
+    @media (max-width: 768px) {
+      .wa-tabs { font-size: 13px; }
+      .wa-tab { padding: 6px 10px; font-size: 12px; }
+      .form-row, .grid-2 { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body data-connected-label="<%= t('admin.whatsapp.connected', 'Terhubung') %>" data-need-scan-label="<%= t('admin.whatsapp.need_scan', 'Perlu Pemindaian') %>">
+<%- include('partials/sidebar', { activePage: 'whatsapp', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-whatsapp"></i> <%= t('admin.whatsapp.status_title', 'Status WhatsApp') %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+    <% const waTab = 'status'; %>
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+        <div class="wa-tabs">
+      <a href="/admin/whatsapp" class="wa-tab <%= waTab==='status' ? 'active' : '' %>"><i class="bi bi-phone"></i> <%= t('admin.wa.tab_status','Status WhatsApp') %></a>
+      <a href="/admin/whatsapp/broadcast" class="wa-tab <%= waTab==='broadcast' ? 'active' : '' %>"><i class="bi bi-megaphone"></i> <%= t('admin.wa.tab_broadcast','Broadcast & Pengingat') %></a>
+      <a href="/admin/whatsapp/templates" class="wa-tab <%= waTab==='templates' ? 'active' : '' %>"><i class="bi bi-chat-left-quote"></i> <%= t('admin.wa.tab_templates','Template Pesan') %></a>
+      <a href="/admin/whatsapp/preview" class="wa-tab <%= waTab==='preview' ? 'active' : '' %>"><i class="bi bi-eye"></i> <%= t('admin.wa.tab_preview','Preview Pesan') %></a>
+      <a href="/admin/whatsapp/live-chat" class="wa-tab <%= waTab==='livechat' ? 'active' : '' %>"><i class="bi bi-chat-dots-fill"></i> <%= t('admin.wa.tab_livechat','Live Chat') %></a>
+    </div>
+
+    <!-- PENGATURAN HYBRID GATEWAY (BAILEYS VS FONNTE VS META API) -->
+    <div class="card mb16" style="padding: 20px;">
+      <h6 style="margin-bottom: 15px; font-weight: 700; color: var(--primary);"><i class="bi bi-sliders"></i> Mode WhatsApp Gateway (Baileys / Fonnte / GOWA / Meta API)</h6>
+      
+      <form method="POST" action="/admin/whatsapp/gateway-settings">
+        <div class="form-row mb16">
+          <div class="fg">
+            <label class="fl">Pilihan Provider / Gateway WhatsApp</label>
+            <select class="fs" name="wa_gateway_type" id="wa_gateway_type" onchange="toggleGatewayFields()">
+              <option value="fonnte" <%= waGatewayType === 'fonnte' ? 'selected' : '' %>> Fonnte API Gateway (Cloud Resmi & Self-Hosted Ready)</option>
+              <option value="meta" <%= waGatewayType === 'meta' ? 'selected' : '' %>> Meta Cloud API (Official - Resmi Meta & Anti-Banned)</option>
+              <option value="gowa" <%= waGatewayType === 'gowa' ? 'selected' : '' %>> GOWA (go-whatsapp-web-multidevice) — Ringan / Self-Hosted</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Nomor WA Pengirim (Business Phone)</label>
+            <input class="fc" name="meta_business_phone" value="<%= metaSettings.meta_business_phone %>" placeholder="Contoh: 628123456789">
+          </div>
+        </div>
+
+        <!-- 1. FONNTE GATEWAY FIELDS -->
+        <div id="fonnte_fields_container" style="<%= waGatewayType === 'fonnte' ? '' : 'display:none;' %> background: rgba(59, 130, 246, 0.04); padding: 16px; border-radius: 10px; border: 1px solid rgba(59, 130, 246, 0.2); margin-bottom: 16px;">
+          <div class="fw6 mb12" style="color: #2563eb; font-size: 13px;"><i class="bi bi-send-check"></i> Konfigurasi Fonnte WhatsApp Gateway</div>
+          
+          <div class="form-row mb12">
+            <div class="fg" style="flex: 2;">
+              <label class="fl">Fonnte API Token / Device Key *</label>
+              <input class="fc" name="fonnte_token" id="fonnte_token" value="<%= fonnteSettings.fonnte_token %>" placeholder="Paste Token Akun / Device Fonnte di sini...">
+            </div>
+            <div class="fg" style="flex: 1;">
+              <label class="fl">Country Code (Kode Negara)</label>
+              <input class="fc" name="fonnte_country_code" value="<%= fonnteSettings.fonnte_country_code %>" placeholder="62">
+            </div>
+          </div>
+
+          <div class="fg mb12">
+            <label class="fl">API Endpoint URL (Default: <code>https://api.fonnte.com/send</code> atau URL Server Self-Hosted)</label>
+            <input class="fc" name="fonnte_api_url" value="<%= fonnteSettings.fonnte_api_url %>" placeholder="https://api.fonnte.com/send">
+            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
+              <i class="bi bi-info-circle"></i> Gunakan <code>https://api.fonnte.com/send</code> untuk Fonnte Cloud, atau ubah ke domain/IP server mandiri jika menggunakan <b>Fonnte Self-Hosted</b> (misal: <code>http://192.168.1.100:8000/send</code>).
+            </div>
+          </div>
+
+          <!-- BOX COPY-PASTE WEBHOOK URL -->
+          <div style="font-size: 11.5px; margin-top: 12px; background: var(--bg2); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <strong style="color: #2563eb;"><i class="bi bi-link-45deg"></i> Webhook Callback URL (Untuk disalin ke Dashboard Fonnte):</strong>
+              <button type="button" class="btn btn-g btn-sm" onclick="copyWebhookUrl('fonnte_webhook_url')" style="padding: 2px 8px; font-size: 11px;"><i class="bi bi-clipboard"></i> Salin URL</button>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="fonnte_webhook_url" class="fc" readonly value="http://<%= host %>/api/webhook/fonnte" style="font-family: monospace; font-size: 12px; background: var(--bg3); cursor: pointer;" onclick="this.select();">
+            </div>
+          </div>
+
+          <!-- LIVE TEST SENDER FONNTE -->
+          <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(59, 130, 246, 0.2);">
+            <label class="fl" style="color: #2563eb; font-weight: 600;"><i class="bi bi-lightning-charge"></i> Tes Kirim Pesan Cepat via Fonnte</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="text" id="test_fonnte_phone" class="fc" placeholder="Nomor WhatsApp (misal: 08123456789)" style="flex: 1; min-width: 180px;">
+              <input type="text" id="test_fonnte_msg" class="fc" placeholder="Pesan uji coba..." value="🔔 Tes Notifikasi Billing via Fonnte Gateway Berhasil!" style="flex: 2; min-width: 240px;">
+              <button type="button" class="btn btn-p" onclick="sendTestFonnte()"><i class="bi bi-send"></i> Tes Kirim</button>
+            </div>
+            <div id="test_fonnte_result" style="margin-top: 8px; font-size: 12px; display: none;"></div>
+          </div>
+        </div>
+
+        <!-- 2. META CLOUD API FIELDS -->
+        <div id="meta_fields_container" style="<%= waGatewayType === 'meta' ? '' : 'display:none;' %> background: rgba(16, 185, 129, 0.04); padding: 16px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 16px;">
+          <div class="fw6 mb12" style="color: var(--success); font-size: 13px;"><i class="bi bi-shield-check"></i> Kredensial Meta WhatsApp Cloud API</div>
+          
+          <div class="form-row mb12">
+            <div class="fg">
+              <label class="fl">Meta Phone Number ID *</label>
+              <input class="fc" name="meta_phone_number_id" value="<%= metaSettings.meta_phone_number_id %>" placeholder="Contoh: 100654321987654">
+            </div>
+            <div class="fg">
+              <label class="fl">Meta Business Account ID (WABA ID)</label>
+              <input class="fc" name="meta_waba_id" value="<%= metaSettings.meta_waba_id %>" placeholder="Contoh: 109876543210987">
+            </div>
+          </div>
+
+          <div class="fg mb12">
+            <label class="fl">Meta Permanent Access Token *</label>
+            <textarea class="fc" name="meta_access_token" rows="2" placeholder="Paste Permanent Access Token Meta Graph API di sini..."><%= metaSettings.meta_access_token %></textarea>
+          </div>
+
+          <div class="fg">
+            <label class="fl">Webhook Verification Token (Verify Token)</label>
+            <input class="fc" name="meta_verify_token" value="<%= metaSettings.meta_verify_token %>" placeholder="Token Rahasia Webhook">
+          </div>
+
+          <div style="font-size: 11.5px; margin-top: 10px; background: var(--bg2); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="color: var(--primary);"><i class="bi bi-link-45deg"></i> Callback Webhook URL Meta Developer Portal:</strong>
+              <button type="button" class="btn btn-g btn-sm" onclick="copyWebhookUrl('meta_webhook_url')" style="padding: 2px 8px; font-size: 11px;"><i class="bi bi-clipboard"></i> Salin URL</button>
+            </div>
+            <input type="text" id="meta_webhook_url" class="fc" readonly value="http://<%= host %>/api/meta-webhook" style="font-family: monospace; font-size: 12px; background: var(--bg3); cursor: pointer;" onclick="this.select();">
+          </div>
+        </div>
+
+        <!-- 3. GOWA (go-whatsapp-web-multidevice) FIELDS -->
+        <div id="gowa_fields_container" style="<%= waGatewayType === 'gowa' ? '' : 'display:none;' %> background: rgba(173,255,47,0.05); padding: 16px; border-radius: 10px; border: 1px solid var(--primary-glow); margin-bottom: 16px;">
+          <div class="fw6 mb12" style="color: var(--primary); font-size: 13px;"><i class="bi bi-lightning-charge-fill"></i> Konfigurasi GOWA (go-whatsapp-web-multidevice) — Ringan / Self-Hosted</div>
+          <div class="form-row mb12">
+            <div class="fg" style="flex:2;">
+              <label class="fl">Base URL GOWA *</label>
+              <input class="fc" name="gowa_base_url" value="<%= gowaSettings.gowa_base_url %>" placeholder="http://127.0.0.1:3000">
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Default REST GOWA port <code>3000</code>. Jalankan: <code>whatsapp rest</code>.</div>
+            </div>
+            <div class="fg" style="flex:1;">
+              <label class="fl">Device ID (opsional)</label>
+              <input class="fc" name="gowa_device_id" value="<%= gowaSettings.gowa_device_id %>" placeholder="multi-device (mis. device1)">
+            </div>
+          </div>
+          <div class="form-row mb12">
+            <div class="fg">
+              <label class="fl">Username Basic Auth</label>
+              <input class="fc" name="gowa_username" value="<%= gowaSettings.gowa_username %>" placeholder="admin">
+            </div>
+            <div class="fg">
+              <label class="fl">Password Basic Auth</label>
+              <input class="fc" name="gowa_password" value="<%= gowaSettings.gowa_password %>" placeholder="secret">
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(173,255,47,.06);border:1px solid var(--primary-glow);">
+            <div class="fw6" style="font-size:12.5px;color:var(--primary);margin-bottom:6px;"><i class="bi bi-qr-code"></i> Login WhatsApp (Scan QR)</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Klik tombol, lalu buka WhatsApp &rarr; Perangkat Tertaut &rarr; Tautkan perangkat, scan QR. QR berlaku ~30 detik &amp; diperbarui otomatis.</div>
+            <button type="button" class="btn btn-p btn-sm" onclick="showGowaQr()"><i class="bi bi-qr-code-scan"></i> Tampilkan QR</button>
+            <a href="<%= gowaUiUrl %>" target="_blank" rel="noopener" class="btn btn-g btn-sm" style="margin-left:6px"><i class="bi bi-box-arrow-up-right"></i> Buka UI GOWA</a>
+            <div id="gowa_qr_wrap" style="display:none;margin-top:10px;text-align:center">
+              <img id="gowa_qr_img" alt="QR GOWA" style="max-width:240px;background:#fff;padding:10px;border-radius:12px">
+              <div id="gowa_qr_status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);">
+            <div class="fw6" style="font-size:12.5px;color:var(--info,#38BDF8);margin-bottom:6px;"><i class="bi bi-broadcast"></i> Webhook Pesan Masuk (Bot Command &amp; Live Chat)</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Set di GOWA: <code>WHATSAPP_WEBHOOK=&lt;URL di bawah&gt;</code> dan <code>WHATSAPP_WEBHOOK_SECRET=&lt;secret&gt;</code>, lalu restart GOWA.</div>
+            <div class="form-row mb12">
+              <div class="fg" style="flex:2;">
+                <label class="fl">Webhook URL (tempel ke GOWA)</label>
+                <div style="display:flex;gap:8px;">
+                  <input class="fc" id="gowa_webhook_url" readonly value="<%= gowaWebhookUrl %>">
+                  <button type="button" class="btn btn-g" onclick="copyGowaWebhook()"><i class="bi bi-copy"></i></button>
+                </div>
+              </div>
+              <div class="fg" style="flex:1;">
+                <label class="fl">Webhook Secret (HMAC)</label>
+                <input class="fc" name="gowa_webhook_secret" value="<%= gowaSettings.gowa_webhook_secret %>" placeholder="secret">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:6px;padding-top:12px;border-top:1px dashed var(--border);">
+            <label class="fl" style="font-weight:600;"><i class="bi bi-lightning-charge"></i> Tes Kirim Pesan via GOWA</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input type="text" id="test_gowa_phone" class="fc" placeholder="Nomor WhatsApp (mis. 08123456789)" style="flex:1;min-width:180px;">
+              <input type="text" id="test_gowa_msg" class="fc" placeholder="Pesan uji coba..." value="Tes Notifikasi Billing via GOWA Gateway Berhasil!" style="flex:2;min-width:240px;">
+              <button type="button" class="btn btn-p" onclick="sendTestGowa()"><i class="bi bi-send"></i> Tes Kirim</button>
+            </div>
+            <div id="test_gowa_result" style="margin-top:8px;font-size:12px;display:none;"></div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan Gateway</button>
+      </form>
+    </div>
+
+    <script>
+      function toggleGatewayFields() {
+        const val = document.getElementById('wa_gateway_type').value;
+        document.getElementById('fonnte_fields_container').style.display = val === 'fonnte' ? 'block' : 'none';
+        document.getElementById('meta_fields_container').style.display = val === 'meta' ? 'block' : 'none';
+        document.getElementById('gowa_fields_container').style.display = val === 'gowa' ? 'block' : 'none';
+      }
+
+      // Cooldown QR disinkronkan dengan GoWA: interval mengikuti qr_duration dari server.
+      var _gowaQrRefresh = null;   // penjadwal ambil QR berikutnya (timeout)
+      var _gowaQrTick = null;      // interval hitung mundur 1 detik
+      function showGowaQr() {
+        var wrap = document.getElementById('gowa_qr_wrap');
+        if (wrap) wrap.style.display = 'block';
+        var st = document.getElementById('gowa_qr_status');
+        if (st) st.textContent = 'Memuat QR...';
+        gowaQrCycle();
+      }
+      function gowaQrCycle() {
+        fetch('/admin/whatsapp/gowa/qr', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+          var st = document.getElementById('gowa_qr_status');
+          if (!d || !d.ok) { if (st) st.textContent = (d && d.message) || 'Gagal memuat QR'; return; }
+          var img = document.getElementById('gowa_qr_img');
+          if (img) img.src = d.image;
+          // durasi (detik) dari GOWA -> qr_duration; fallback 30s
+          var dur = Number(d.duration) > 0 ? Number(d.duration) : 30;
+          gowaQrCountdown(dur);
+          if (_gowaQrRefresh) clearTimeout(_gowaQrRefresh);
+          // ambil QR baru sedikit sebelum kedaluwarsa, supaya selalu ada QR valid
+          _gowaQrRefresh = setTimeout(gowaQrCycle, Math.max(5, dur - 2) * 1000);
+        }).catch(function (e) { var st = document.getElementById('gowa_qr_status'); if (st) st.textContent = 'Error: ' + e.message; });
+      }
+      function gowaQrCountdown(dur) {
+        var st = document.getElementById('gowa_qr_status');
+        if (_gowaQrTick) clearInterval(_gowaQrTick);
+        var remaining = dur;
+        function render() { if (st) st.innerHTML = 'Scan QR dengan WhatsApp &mdash; QR baru dalam <b>' + remaining + '</b> detik.'; }
+        render();
+        _gowaQrTick = setInterval(function () { remaining--; if (remaining < 0) remaining = 0; render(); }, 1000);
+      }
+function copyGowaWebhook() {
+  var el = document.getElementById('gowa_webhook_url');
+  if (!el) return;
+  el.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  alert('Webhook URL disalin:\n' + el.value);
+}
+async function sendTestGowa() {
+        const phone = (document.getElementById('test_gowa_phone') || {}).value || '';
+        const msg = (document.getElementById('test_gowa_msg') || {}).value || '';
+        const resDiv = document.getElementById('test_gowa_result');
+        if (resDiv) { resDiv.style.display = 'block'; resDiv.style.color = 'var(--muted)'; resDiv.textContent = 'Mengirim...'; }
+        try {
+          const r = await fetch('/admin/whatsapp/test-gowa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, message: msg }) });
+          const d = await r.json();
+          if (resDiv) { resDiv.style.color = d.success ? 'var(--success)' : 'var(--danger)'; resDiv.innerHTML = (d.success ? '<b><%= t('common.success_excl','Berhasil!') %></b> ' : '<b><%= t('common.failed_colon','Gagal:') %></b> ') + (d.message || d.error || ''); }
+        } catch (e) { if (resDiv) { resDiv.style.color = 'var(--danger)'; resDiv.textContent = 'Error: ' + e.message; } }
+      }
+
+      function copyWebhookUrl(elementId) {
+        const el = document.getElementById(elementId);
+        if (el) {
+          el.select();
+          navigator.clipboard.writeText(el.value).then(() => {
+            alert(' Webhook URL berhasil disalin ke clipboard:\n' + el.value);
+          }).catch(() => {
+            document.execCommand('copy');
+            alert(' Webhook URL berhasil disalin ke clipboard:\n' + el.value);
+          });
+        }
+      }
+
+      async function sendTestFonnte() {
+        const phone = document.getElementById('test_fonnte_phone').value.trim();
+        const msg = document.getElementById('test_fonnte_msg').value.trim();
+        const resDiv = document.getElementById('test_fonnte_result');
+
+        if (!phone) {
+          alert('Harap masukkan nomor WhatsApp tujuan tes!');
+          document.getElementById('test_fonnte_phone').focus();
+          return;
+        }
+
+        resDiv.style.display = 'block';
+        resDiv.style.color = 'var(--muted)';
+        resDiv.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengirim pesan tes via Fonnte...';
+
+        try {
+          const resp = await fetch('/admin/whatsapp/test-fonnte', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, message: msg })
+          });
+          const data = await resp.json();
+
+          if (data.success) {
+            resDiv.style.color = 'var(--success)';
+            resDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <b><%= t('common.success_excl','Berhasil!') %></b> Pesan tes telah dikirim via Fonnte. Silakan cek WhatsApp penerima.';
+          } else {
+            resDiv.style.color = 'var(--danger)';
+            resDiv.innerHTML = '<i class="bi bi-x-circle-fill"></i> <b><%= t('common.failed_colon','Gagal:') %></b> ' + (data.error || 'Terjadi kesalahan saat menghubungi API Fonnte.');
+          }
+        } catch (err) {
+          resDiv.style.color = 'var(--danger)';
+          resDiv.innerHTML = '<i class="bi bi-x-circle-fill"></i> <b><%= t('common.error_colon','Error:') %></b> ' + err.message;
+        }
+      }
+    </script>
+
+    <div class="card">
+      <div class="wa-status-card">
+        <div id="status-icon" class="status-indicator status-close">
+          <i class="bi bi-whatsapp"></i>
+        </div>
+        <h2 id="status-text"><%= t('admin.whatsapp.checking', 'Mengecek status...') %></h2>
+        <p id="status-desc" class="text-muted"><%= t('admin.whatsapp.please_wait', 'Harap tunggu sebentar.') %></p>
+        
+        <% if (waGatewayType === 'baileys') { %>
+        <div id="qr-section" style="display:none">
+          <p class="mb-3"><%= t('admin.whatsapp.qr_instruction', 'Silakan pindai QR Code ini dengan aplikasi WhatsApp Anda:') %></p>
+          <div id="qr-container"></div>
+          <p class="mt-3 text-sm text-muted"><%= t('admin.whatsapp.qr_auto_refresh', 'QR Code akan diperbarui secara otomatis.') %></p>
+        </div>
+        <% } %>
+
+        <div id="info-section" style="display:none" class="wa-info">
+          <div class="alert alert-s">
+            <i class="bi bi-check-circle-fill"></i> <%= t('admin.whatsapp.connected_title', 'WhatsApp Terhubung') %>
+          </div>
+          <p><%= t('admin.whatsapp.connected_as', 'Terhubung sebagai:') %> <strong id="wa-user">-</strong></p>
+          <p><%= t('admin.whatsapp.last_updated', 'Terakhir diperbarui:') %> <span id="wa-time">-</span></p>
+        </div>
+
+        <div class="mt-5" style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px">
+          <button class="btn btn-g" onclick="checkStatus()"><i class="bi bi-arrow-clockwise"></i> <%= t('admin.whatsapp.refresh_status', 'Refresh Status') %></button>
+          <form method="POST" action="/admin/whatsapp/test-notification" onsubmit="return confirm('<%= t('admin.whatsapp.confirm_test', 'Kirim test notifikasi WhatsApp ke admin sekarang?') %>');">
+            <button class="btn btn-p"><i class="bi bi-send-check"></i> <%= t('admin.whatsapp.test_notification', 'Kirim Test Notif') %></button>
+          </form>
+          <% if (waGatewayType === 'baileys') { %>
+          <form method="POST" action="/admin/whatsapp/repair-keys" onsubmit="return confirm('Bersihkan cache pre-keys & sesi usang untuk mengatasi masalah pesan pending / Bad-MAC tanpa perlu scan QR ulang?');">
+            <button class="btn btn-g" style="border-color: #3b82f6; color: #2563eb;"><i class="bi bi-wrench-adjustable"></i> Perbaiki Sesi (Anti Waiting)</button>
+          </form>
+          <form method="POST" action="/admin/whatsapp/reset" onsubmit="return confirm('<%= t('admin.whatsapp.confirm_reset', 'Apakah Anda yakin ingin menghapus sesi WhatsApp? Anda harus scan QR ulang setelah ini.') %>')">
+            <button class="btn btn-d"><i class="bi bi-trash"></i> <%= t('admin.whatsapp.reset_session', 'Hapus Sesi / Reset') %></button>
+          </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+  const I18N = {
+    descOpen: "<%= t('admin.whatsapp.desc_open', 'Bot WhatsApp aktif dan siap mengirim notifikasi.') %>",
+    descQr: "<%= t('admin.whatsapp.desc_qr', 'Sesi tidak ditemukan atau kedaluwarsa.') %>",
+    descOffPrefix: "<%= t('admin.whatsapp.disconnected_prefix', 'Terputus') %>",
+    descOff: "<%= t('admin.whatsapp.desc_off', 'Bot WhatsApp sedang offline atau sedang mencoba menghubungkan ulang.') %>",
+    deviceFallback: "<%= t('admin.whatsapp.device_fallback', 'Device') %>",
+    waitQrLib: "<%= t('admin.whatsapp.wait_qr_lib', 'Menunggu library QR Code...') %>",
+    qrFail: "<%= t('admin.whatsapp.qr_fail', 'Gagal memproses QR Code. Silakan cek konsol browser.') %>"
+  };
+
+  async function checkStatus() {
+    try {
+      const res = await fetch('/admin/api/whatsapp/status');
+      if (!res.ok) {
+        console.error('API Status Error:', res.statusText);
+        return;
+      }
+      const status = await res.json();
+      console.log('[WA Status]', status);
+      
+      const icon = document.getElementById('status-icon');
+      const text = document.getElementById('status-text');
+      const desc = document.getElementById('status-desc');
+      const qrSection = document.getElementById('qr-section');
+      const infoSection = document.getElementById('info-section');
+      const qrContainer = document.getElementById('qr-container');
+
+      if (icon) icon.className = 'status-indicator';
+      if (qrSection) qrSection.style.display = 'none';
+      if (infoSection) infoSection.style.display = 'none';
+
+      const connectedLabel = document.body.dataset.connectedLabel || 'Terhubung';
+      const needScanLabel = document.body.dataset.needScanLabel || 'Perlu Pemindaian';
+
+      if (status.connection === 'open') {
+        icon.classList.add('status-open');
+        text.innerText = connectedLabel;
+        desc.innerText = I18N.descOpen;
+        infoSection.style.display = 'block';
+        document.getElementById('wa-user').innerText = status.user?.id || status.user?.name || I18N.deviceFallback;
+        document.getElementById('wa-time').innerText = new Date(status.lastUpdate).toLocaleTimeString();
+      } else if (status.connection === 'qr' && (status.qr || status.qrImage)) {
+        console.log('Generating QR Code Canvas...');
+        icon.classList.add('status-qr');
+        text.innerText = needScanLabel;
+        desc.innerText = I18N.descQr;
+        if (qrSection) qrSection.style.display = 'block';
+        
+        if (qrContainer) qrContainer.innerHTML = '';
+        if (status.qrImage) {
+          const img = document.createElement('img');
+          img.src = status.qrImage;
+          img.style.width = '256px';
+          img.style.height = '256px';
+          img.style.borderRadius = '8px';
+          img.alt = 'Scan WhatsApp QR';
+          qrContainer.appendChild(img);
+        } else if (typeof QRCode !== 'undefined' && status.qr) {
+          QRCode.toCanvas(status.qr, { width: 256, margin: 2 }, function (error, canvas) {
+            if (error) {
+              console.error('QR Generate Error:', error);
+              qrContainer.innerText = I18N.qrFail;
+            } else {
+              console.log('QR Code Canvas generated successfully.');
+              qrContainer.appendChild(canvas);
+            }
+          });
+        } else {
+          qrContainer.innerText = I18N.waitQrLib;
+        }
+      } else if (status.connection === 'connecting') {
+        icon.classList.add('status-qr');
+        text.innerText = 'Menghubungkan...';
+        desc.innerText = status.loadingProgress || 'Autentikasi berhasil, sedang menyinkronkan chat WhatsApp Web... Harap tunggu beberapa detik.';
+      } else {
+        icon.classList.add('status-close');
+        if (status.gateway === 'gowa') {
+          text.innerText = 'Belum Terhubung';
+          desc.innerText = 'Klik Tampilkan QR untuk login WhatsApp via GOWA.';
+        } else {
+          text.innerText = I18N.descOffPrefix + ' (' + (status.connection || 'off') + ')';
+          desc.innerText = I18N.descOff;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to check WA status', e);
+    }
+  }
+
+  // Check every 5 seconds
+  checkStatus();
+  setInterval(checkStatus, 5000);
+</script>
+</body>
+</html>

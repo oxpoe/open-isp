@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Manajemen Area | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'areas', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-geo-alt"></i>
+      <span>Manajemen Area / Wilayah</span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <button class="btn btn-p btn-sm" onclick="openModal('addAreaModal')"><i class="bi bi-plus-lg"></i> Tambah Area Baru</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='error'?'d':'s' %>" data-flash="1"><%= msg.text %></div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-geo-alt-fill"></i> Daftar Master Area / Wilayah (<%= areas.length %>)</h6>
+      </div>
+      <div class="hint" style="padding:12px 16px 0 16px;font-size:12px;color:var(--muted)">
+        Area digunakan untuk mengelompokkan lokasi pelanggan dan wilayah tugas kolektor. Kolektor yang memiliki area tugas tertentu hanya akan mengelola pelanggan di area tersebut.
+      </div>
+      <div class="tbl-wrap" style="padding-top:12px">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nama Area / Wilayah</th>
+              <th>Keterangan / Deskripsi</th>
+              <th>Jumlah Pelanggan</th>
+              <th>Jumlah Kolektor</th>
+              <th><%= t('common.actions','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!areas || areas.length === 0) { %>
+              <tr><td colspan="6" class="text-center text-muted" style="padding:24px">Belum ada data area. Klik "Tambah Area Baru" untuk membuat area.</td></tr>
+            <% } else { %>
+              <% areas.forEach((a, idx) => { %>
+                <tr>
+                  <td><%= idx + 1 %></td>
+                  <td>
+                    <strong style="color:var(--text);font-size:14px"><i class="bi bi-geo-alt text-primary me-1"></i><%= a.name %></strong>
+                  </td>
+                  <td><span class="text-muted"><%= a.description || '-' %></span></td>
+                  <td>
+                    <span class="badge bs" style="font-size:12px"><i class="bi bi-people me-1"></i><%= a.customer_count || 0 %> <%= t('common.customer','Pelanggan') %></span>
+                  </td>
+                  <td>
+                    <span class="badge bm" style="font-size:12px"><i class="bi bi-person-badge me-1"></i><%= a.collector_count || 0 %> <%= t('collector.role','Kolektor') %></span>
+                  </td>
+                  <td style="white-space:nowrap">
+                    <form id="adel-<%= a.id %>" action="/admin/areas/<%= a.id %>/delete" method="POST" style="display:none" onsubmit="return confirm('Hapus area &quot;<%= a.name %>&quot;?')"></form>
+                    <div class="act">
+                      <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                      <div class="act-menu">
+                        <button type="button" class="act-item" onclick='editArea(<%- JSON.stringify(a).split('<').join('\\u003c') %>)'><i class="bi bi-pencil"></i> Edit Area</button>
+                        <div class="act-sep"></div>
+                        <button type="submit" form="adel-<%= a.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus Area</button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah Area -->
+<div class="mo" id="addAreaModal">
+  <div class="mb">
+    <form action="/admin/areas" method="POST">
+      <div class="mh"><span class="mt"><i class="bi bi-geo-alt-fill"></i> Tambah Area Baru</span><button type="button" class="mc" onclick="closeModal('addAreaModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">Nama Area / Wilayah *</label>
+          <input type="text" name="name" class="fc" placeholder="Contoh: Kelurahan Sukamaju, Blok C1-C10" required>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('common.note_optional2','Keterangan / Catatan (Opsional)') %></label>
+          <textarea name="description" class="fc" rows="3" placeholder="Contoh: Wilayah jangkauan ODP-01 s/d ODP-05"></textarea>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addAreaModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> Simpan Area</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Edit Area -->
+<div class="mo" id="editAreaModal">
+  <div class="mb">
+    <form id="editAreaForm" method="POST">
+      <div class="mh"><span class="mt"><i class="bi bi-pencil-square"></i> Edit Data Area</span><button type="button" class="mc" onclick="closeModal('editAreaModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">Nama Area / Wilayah *</label>
+          <input type="text" name="name" id="e-area-name" class="fc" required>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('common.note_optional2','Keterangan / Catatan (Opsional)') %></label>
+          <textarea name="description" id="e-area-desc" class="fc" rows="3"></textarea>
+        </div>
+        <div class="hint" style="font-size:11px;color:var(--muted)">
+          <i class="bi bi-info-circle"></i> Mengubah nama area akan otomatis memperbarui nama area pada semua pelanggan dan kolektor terkait.
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('editAreaModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> <%= t('tech.mon.save','Simpan Perubahan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+
+function editArea(a){
+  document.getElementById('editAreaForm').action = '/admin/areas/' + a.id + '/update';
+  document.getElementById('e-area-name').value = a.name || '';
+  document.getElementById('e-area-desc').value = a.description || '';
+  openModal('editAreaModal');
+}
+</script>
+</body>
+</html>

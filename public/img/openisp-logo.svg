@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" width="360" height="96" role="img" aria-label="OPEN-ISP">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ADFF2F"/>
+      <stop offset="100%" stop-color="#8EDB1C"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="88" height="88" rx="22" fill="#0A0D14" stroke="#2A3350" stroke-width="2"/>
+  <path d="M30 34 h36 M30 46 h26 M30 58 h36" stroke="url(#g)" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <text x="108" y="58" font-family="'Space Grotesk', 'Inter', system-ui, sans-serif" font-size="34" font-weight="700" fill="#FFFFFF">OPEN<tspan fill="#ADFF2F">-ISP</tspan></text>
+  <text x="110" y="78" font-family="'Inter', system-ui, sans-serif" font-size="12" letter-spacing="2" fill="#8A94A6">ISP BILLING SYSTEM</text>
+</svg>

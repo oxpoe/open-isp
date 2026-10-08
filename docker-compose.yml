@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# OPEN-ISP — docker compose (produksi / test)
+#
+# Persiapan pertama (sekali):
+#   mkdir -p docker-data/database docker-data/logs docker-data/uploads docker-data/baileys
+#   echo '{"server_port":3001,"cookie_secure":false}' > docker-data/settings.json
+#
+# Jalankan:
+#   docker compose up -d --build
+#   docker compose logs -f
+#
+# Catatan:
+# - Semua DATA (DB, settings, upload, sesi WhatsApp) tersimpan di ./docker-data
+#   → aman saat container di-update. Backup cukup folder docker-data.
+# - Ganti cookie_secure ke true bila diakses via HTTPS/reverse-proxy TLS.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  open-isp:
+    build: .
+    image: open-isp:0.5
+    container_name: open-isp
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - TZ=Asia/Jakarta
+    volumes:
+      - ./docker-data/settings.json:/app/settings.json
+      - ./docker-data/database:/app/database
+      - ./docker-data/logs:/app/logs
+      - ./docker-data/uploads:/app/public/uploads
+      - ./docker-data/baileys:/app/auth_info_baileys
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3001/version.txt"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s

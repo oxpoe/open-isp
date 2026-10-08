@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Manajemen Promo Slides | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="manifest" href="/admin/manifest.webmanifest">
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'promo_slides', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-image"></i> Manajemen Promo Slides</div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> Admin</span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> Logout</a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- TAMBAH SLIDE BARU -->
+    <div class="card mb16">
+      <div class="card-hd">
+        <h6 style="margin:0"><i class="bi bi-plus-circle"></i> Tambah Promo Slide Baru</h6>
+      </div>
+      <div class="card-bd">
+        <form method="POST" action="/admin/promo-slides" enctype="multipart/form-data">
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Judul *</label>
+              <input class="fc" name="title" placeholder="Contoh: Diskon 50% Paket Internet" required>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('common.description','Deskripsi') %></label>
+              <input class="fc" name="description" placeholder="Deskripsi singkat untuk slide">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Gambar *</label>
+              <input class="fc" type="file" name="image" accept="image/*" required>
+              <div class="hint" style="margin-top:6px">Ukuran optimal: 800x300 px (rasio 8:3)</div>
+            </div>
+            <div class="fg">
+              <label class="fl">Link (URL)</label>
+              <input class="fc" name="url" placeholder="https://example.com" type="url">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('common.order','Urutan') %></label>
+              <input class="fc" type="number" name="sort_order" value="0" min="0">
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.fin.start_date','Tanggal Mulai') %></label>
+              <input class="fc" type="date" name="start_date">
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.fin.end_date','Tanggal Akhir') %></label>
+              <input class="fc" type="date" name="end_date">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+                <input type="checkbox" name="open_in_new_tab">
+                <%= t('admin.common.open_new_tab','Buka Link di Tab Baru') %>
+              </label>
+            </div>
+            <div class="fg">
+              <label class="fl" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+                <input type="checkbox" name="is_active" checked>
+                <%= t('common.active','Aktif') %>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-p" style="margin-top:12px;"><i class="bi bi-plus"></i> Tambah Slide</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- DAFTAR SLIDES -->
+    <div class="card mb16">
+      <div class="card-hd">
+        <h6 style="margin:0"><i class="bi bi-list"></i> Daftar Promo Slides (<%= slides.length %>)</h6>
+      </div>
+      <div class="card-bd">
+        <% if (slides && slides.length > 0) { %>
+        <div class="tbl-wrap">
+          <table class="dtbl">
+            <thead>
+              <tr>
+                <th style="width:60px">ID</th>
+                <th style="width:120px">Gambar</th>
+                <th>Judul</th>
+                <th style="width:80px"><%= t('common.order','Urutan') %></th>
+                <th style="width:100px"><%= t('admin.fin.start_date','Tanggal Mulai') %></th>
+                <th style="width:100px"><%= t('admin.fin.end_date','Tanggal Akhir') %></th>
+                <th style="width:70px"><%= t('common.status','Status') %></th>
+                <th style="width:100px"><%= t('common.actions','Aksi') %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% slides.forEach(s => { %>
+              <tr>
+                <td><strong><%= s.id %></strong></td>
+                <td><img src="<%= s.image_path %>" style="max-width:100px; height:auto; border-radius:6px; object-fit:cover;" alt="<%= s.title %>"></td>
+                <td>
+                  <div style="font-weight:600;"><%= s.title || '(Tanpa Judul)' %></div>
+                  <div style="font-size:12px; color:#888; margin-top:4px;"><%= s.description || '-' %></div>
+                  <% if (s.url) { %>
+                  <div style="font-size:11px; color:#6366f1; margin-top:4px;"><i class="bi bi-link-45deg"></i> <%= s.url %></div>
+                  <% } %>
+                </td>
+                <td><strong><%= s.sort_order %></strong></td>
+                <td><%= s.start_date || '-' %></td>
+                <td><%= s.end_date || '-' %></td>
+                <td>
+                  <% if (s.is_active) { %>
+                  <span class="badge" style="background:#22c55e; color:white;"><i class="bi bi-check-circle"></i> <%= t('common.active','Aktif') %></span>
+                  <% } else { %>
+                  <span class="badge" style="background:#666; color:white;"><i class="bi bi-x-circle"></i> <%= t('common.inactive','Nonaktif') %></span>
+                  <% } %>
+                </td>
+                <td style="white-space:nowrap">
+                  <form id="sdel-<%= s.id %>" method="POST" action="/admin/promo-slides/<%= s.id %>/delete" style="display:none" onsubmit="return confirm('Hapus slide ini?');"></form>
+                  <div class="act">
+                    <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                    <div class="act-menu">
+                      <button type="button" class="act-item" onclick="editSlide(<%= s.id %>)"><i class="bi bi-pencil"></i> Edit Slide</button>
+                      <div class="act-sep"></div>
+                      <button type="submit" form="sdel-<%= s.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus Slide</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        <% } else { %>
+        <div style="text-align:center; padding:40px; color:#888;">
+          <i class="bi bi-inbox" style="font-size:48px; display:block; margin-bottom:12px; opacity:0.5;"></i>
+          <div>Belum ada promo slide</div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .alert { padding:12px 16px; border-radius:8px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+  .alert-s { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+  .alert-d { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+  .badge { padding:4px 8px; border-radius:4px; font-size:11px; font-weight:600; }
+  .btn { padding:8px 12px; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px; text-decoration:none; }
+  .btn-p { background:#6366f1; color:white; }
+  .btn-p:hover { background:#4f46e5; }
+  .btn-g { background:#64748b; color:white; }
+  .btn-g:hover { background:#475569; }
+  .btn-d { background:#ef4444; color:white; }
+  .btn-d:hover { background:#dc2626; }
+  .btn-sm { padding:6px 10px; font-size:12px; }
+</style>
+
+<!-- EDIT SLIDE MODAL -->
+<div id="editSlideModal" class="modal-wrapper" style="display:none;">
+  <div class="modal-overlay" onclick="closeEditModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5><i class="bi bi-pencil-square"></i> Edit Promo Slide</h5>
+      <button type="button" class="modal-close" onclick="closeEditModal()"><i class="bi bi-x"></i></button>
+    </div>
+    <form id="editForm" method="POST" enctype="multipart/form-data">
+      <div class="modal-body">
+        <input type="hidden" id="editSlideId" name="id">
+        
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Judul *</label>
+            <input class="fc" id="editTitle" name="title" placeholder="Contoh: Diskon 50% Paket Internet" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl"><%= t('common.description','Deskripsi') %></label>
+            <input class="fc" id="editDescription" name="description" placeholder="Deskripsi singkat untuk slide">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Gambar Saat Ini</label>
+            <div style="margin-bottom:8px;">
+              <img id="editImagePreview" src="" style="max-width:100%; height:auto; max-height:150px; border-radius:6px;">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Ganti Gambar (Opsional)</label>
+            <input class="fc" type="file" id="editImage" name="image" accept="image/*">
+            <div class="hint" style="margin-top:6px">Ukuran optimal: 800x300 px (rasio 8:3) - Kosongkan jika tidak ingin mengganti</div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Link (URL)</label>
+            <input class="fc" id="editUrl" name="url" placeholder="https://example.com" type="url">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl"><%= t('common.order','Urutan') %></label>
+            <input class="fc" type="number" id="editSortOrder" name="sort_order" value="0" min="0">
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.fin.start_date','Tanggal Mulai') %></label>
+            <input class="fc" type="date" id="editStartDate" name="start_date">
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.fin.end_date','Tanggal Akhir') %></label>
+            <input class="fc" type="date" id="editEndDate" name="end_date">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+              <input type="checkbox" id="editOpenInNewTab" name="open_in_new_tab">
+              <%= t('admin.common.open_new_tab','Buka Link di Tab Baru') %>
+            </label>
+          </div>
+          <div class="fg">
+            <label class="fl" style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+              <input type="checkbox" id="editIsActive" name="is_active" checked>
+              <%= t('common.active','Aktif') %>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-g" onclick="closeEditModal()"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check"></i> <%= t('tech.mon.save','Simpan Perubahan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .modal-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  
+  .modal-content {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-header {
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .modal-header h5 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .modal-close:hover {
+    color: #000;
+  }
+  
+  .modal-body {
+    padding: 16px;
+  }
+  
+  .modal-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .fg {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .fl {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+  }
+  
+  .fc {
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  
+  .fc:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  
+  .hint {
+    font-size: 11px;
+    color: #888;
+  }
+</style>
+
+<script>
+  window.__PROMO_SLIDES = <%- JSON.stringify(slides || []).replace(/</g, '\\u003c') %>;
+  function openEditModal(id) {
+    const slide = (window.__PROMO_SLIDES || []).find(function(s){ return Number(s.id) === Number(id); });
+    if (!slide) {
+      alert('Slide tidak ditemukan');
+      return;
+    }
+    document.getElementById('editSlideId').value = slide.id;
+    document.getElementById('editTitle').value = slide.title || '';
+    document.getElementById('editDescription').value = slide.description || '';
+    document.getElementById('editUrl').value = slide.url || '';
+    document.getElementById('editSortOrder').value = slide.sort_order || 0;
+    document.getElementById('editStartDate').value = slide.start_date || '';
+    document.getElementById('editEndDate').value = slide.end_date || '';
+    document.getElementById('editOpenInNewTab').checked = slide.open_in_new_tab === 1;
+    document.getElementById('editIsActive').checked = slide.is_active === 1;
+    document.getElementById('editImagePreview').src = slide.image_path;
+    document.getElementById('editSlideModal').style.display = 'flex';
+  }
+  
+  function closeEditModal() {
+    document.getElementById('editSlideModal').style.display = 'none';
+    document.getElementById('editForm').reset();
+  }
+  
+  document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const slideId = document.getElementById('editSlideId').value;
+    const formData = new FormData(this);
+    
+    fetch(`/admin/promo-slides/${slideId}/update`, {
+      method: 'POST',
+      body: formData
+    })
+    .then(r => r.text())
+    .then(() => {
+      // Reload page after successful update
+      window.location.reload();
+    })
+    .catch(e => {
+      alert('Gagal: ' + e.message);
+    });
+  });
+  
+  function editSlide(id) {
+    openEditModal(id);
+  }
+  
+  function toggleSidebar() {
+    var sb = document.getElementById('sidebar');
+    var ov = document.getElementById('sidebarOverlay');
+    if (sb) sb.classList.toggle('open');
+    if (ov) ov.classList.toggle('show');
+  }
+</script>
+
+</body>
+</html>

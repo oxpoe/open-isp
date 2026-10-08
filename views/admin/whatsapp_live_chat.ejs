@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Live Chat WhatsApp | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .chat-layout { display: grid; grid-template-columns: 340px 1fr; gap: 16px; height: calc(100vh - 120px); min-height: 520px; }
+    .chat-inbox { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-inbox-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+    .chat-inbox-search { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .chat-user-list { flex: 1; overflow-y: auto; }
+    .chat-user-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; display: flex; gap: 12px; align-items: center; }
+    .chat-user-item:hover { background: rgba(255,255,255,0.04); }
+    .chat-user-item.active { background: var(--pdim) !important; border-left: 3px solid var(--primary); }
+    .chat-user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+    .chat-user-info { flex: 1; min-width: 0; }
+    .chat-user-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+    .chat-user-last { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .chat-user-time { font-size: 10px; color: var(--muted); flex-shrink: 0; }
+
+    .chat-main { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-main-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); }
+    .chat-main-title { font-weight: 700; font-size: 15px; }
+    .chat-messages { flex: 1; padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.02); }
+    
+    .msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; position: relative; word-wrap: break-word; }
+    .msg-bubble.inbound { align-self: flex-start; background: var(--bg3); color: var(--text); border-bottom-left-radius: 2px; }
+    .msg-bubble.outbound { align-self: flex-end; background: var(--primary); color: #ffffff; border-bottom-right-radius: 2px; }
+    .msg-meta { font-size: 10px; opacity: 0.75; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+    .msg-gateway { font-size: 9px; padding: 1px 4px; border-radius: 4px; background: rgba(255,255,255,0.2); }
+
+    .chat-input-area { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; background: var(--bg); }
+    .chat-input-area textarea { flex: 1; height: 46px; border-radius: 8px; resize: none; padding: 10px 12px; font-size: 13px; line-height: 1.3; }
+
+    @media (max-width: 768px) {
+      .chat-layout { grid-template-columns: 1fr; height: auto; }
+      .chat-inbox { height: 350px; }
+      .chat-main { height: 480px; }
+    }
+      .wa-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; white-space: nowrap; }
+    .wa-tab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; flex-shrink: 0; }
+    .wa-tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .wa-tab.active { background: var(--primary); color: white; }
+    @media (max-width: 768px) { .wa-tabs { font-size: 13px; } .wa-tab { padding: 6px 10px; font-size: 12px; } }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'whatsapp', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-chat-dots-fill"></i> Live Chat WhatsApp
+    </div>
+    <div class="tb-right">
+      <%
+        var GW = {
+          meta:    { cls: 'bs', icon: 'meta',       label: 'Meta Cloud API (Resmi)' },
+          gowa:    { cls: 'bp', icon: 'whatsapp',   label: 'GoWA (WhatsApp Multidevice)' },
+          fonnte:  { cls: 'bp', icon: 'send-check', label: 'Fonnte API Gateway' },
+          baileys: { cls: 'bp', icon: 'whatsapp',   label: 'Baileys Web (Gratis)' }
+        };
+        var gw = GW[gatewayType] || { cls: 'bp', icon: 'whatsapp', label: 'WhatsApp Gateway' };
+      %>
+      <span class="badge <%= gw.cls %>" title="Gateway WhatsApp aktif">
+        <i class="bi bi-<%= gw.icon %>"></i> <%= gw.label %>
+      </span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% const waTab = 'livechat'; %>
+    <div class="wa-tabs">
+      <a href="/admin/whatsapp" class="wa-tab <%= waTab==='status' ? 'active' : '' %>"><i class="bi bi-phone"></i> <%= t('admin.wa.tab_status','Status WhatsApp') %></a>
+      <a href="/admin/whatsapp/broadcast" class="wa-tab <%= waTab==='broadcast' ? 'active' : '' %>"><i class="bi bi-megaphone"></i> <%= t('admin.wa.tab_broadcast','Broadcast & Pengingat') %></a>
+      <a href="/admin/whatsapp/templates" class="wa-tab <%= waTab==='templates' ? 'active' : '' %>"><i class="bi bi-chat-left-quote"></i> <%= t('admin.wa.tab_templates','Template Pesan') %></a>
+      <a href="/admin/whatsapp/preview" class="wa-tab <%= waTab==='preview' ? 'active' : '' %>"><i class="bi bi-eye"></i> <%= t('admin.wa.tab_preview','Preview Pesan') %></a>
+      <a href="/admin/whatsapp/live-chat" class="wa-tab <%= waTab==='livechat' ? 'active' : '' %>"><i class="bi bi-chat-dots-fill"></i> <%= t('admin.wa.tab_livechat','Live Chat') %></a>
+    </div>
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='success'?'s':'d' %> mb16" data-flash="1">
+        <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-triangle' %>"></i> <%= msg.text %>
+      </div>
+    <% } %>
+
+    <div class="chat-layout">
+      <!-- INBOX LEFT PANEL -->
+      <div class="chat-inbox">
+        <div class="chat-inbox-header">
+          <span><i class="bi bi-inbox-fill"></i> Percakapan</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-p btn-sm" onclick="openNewChatModal()" title="Mulai Chat Baru"><i class="bi bi-plus-lg"></i> Chat Baru</button>
+            <button class="btn btn-g btn-sm" onclick="loadConversations()" title="Refresh Chat"><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+        </div>
+        <div class="chat-inbox-search">
+          <input type="text" id="chatSearch" class="fc" placeholder="Cari nama atau nomor..." onkeyup="filterUserList()">
+        </div>
+        <div class="chat-user-list" id="userList">
+          <div class="text-center text-muted py-4" style="padding:20px;">Memuat percakapan...</div>
+        </div>
+      </div>
+
+      <!-- MAIN CHAT RIGHT PANEL -->
+      <div class="chat-main">
+        <div class="chat-main-header">
+          <div class="chat-main-title" id="chatHeaderTitle">
+            <i class="bi bi-person-circle"></i> Memuat chat...
+          </div>
+          <div id="chatHeaderSub" style="font-size:11px;" class="text-muted"></div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div style="margin:auto;text-align:center;color:var(--muted)">
+            <i class="bi bi-chat-text" style="font-size:48px;display:block;margin-bottom:10px;"></i>
+            Pilih pelanggan dari daftar di sebelah kiri atau klik <strong>+ Chat Baru</strong> untuk membalas/mengirim WhatsApp.
+          </div>
+        </div>
+
+        <form class="chat-input-area" id="chatForm" onsubmit="sendChatMessage(event)">
+          <input type="hidden" id="activePhone" value="">
+          <textarea id="chatInput" class="fc" placeholder="Tulis pesan WhatsApp... (Tekan Enter untuk kirim, Shift+Enter untuk baris baru)" disabled required onkeydown="handleKeyDown(event)"></textarea>
+          <button type="submit" class="btn btn-p" id="sendBtn" disabled>
+            <i class="bi bi-send-fill"></i> Kirim
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHAT BARU -->
+<div class="mo" id="newChatModal">
+  <div class="mb" style="max-width:520px;">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-chat-plus-fill"></i> Mulai Percakapan WhatsApp Baru</span>
+      <button type="button" class="mc" onclick="closeModal('newChatModal')">&times;</button>
+    </div>
+    <div class="mbody">
+      <div class="fg mb12">
+        <label class="fl">Pilih Pelanggan Terdaftar:</label>
+        <select class="fs" id="selectCustomerPhone" onchange="document.getElementById('manualPhoneInput').value=this.value">
+          <option value="">-- Pilih dari Daftar Pelanggan --</option>
+          <% if (typeof customers !== 'undefined' && customers) { %>
+            <% customers.forEach(c => { %>
+              <% if (c.phone) { %>
+                <option value="<%= c.phone %>"><%= c.name %> (<%= c.phone %>) - <%= c.area || 'Area Default' %></option>
+              <% } %>
+            <% }) %>
+          <% } %>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Atau Ketik Nomor WA Manual:</label>
+        <input type="text" id="manualPhoneInput" class="fc" placeholder="Contoh: 08123456789 atau 628123456789">
+      </div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('newChatModal')"><%= t('common.cancel','Batal') %></button>
+      <button type="button" class="btn btn-p" onclick="startNewChatFromModal()"><i class="bi bi-chat-dots-fill"></i> Buka Chat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let conversationsData = [];
+let activePhone = '';
+
+async function loadConversations() {
+  try {
+    const res = await fetch('/admin/api/whatsapp/conversations');
+    const data = await res.json();
+    if (data.ok) {
+      conversationsData = data.conversations || [];
+      renderUserList(conversationsData);
+
+      // Auto open first conversation if available and not selected yet
+      if (!activePhone && conversationsData.length > 0) {
+        const first = conversationsData[0];
+        const name = first.customer_name || first.phone;
+        openChat(first.phone, name);
+      }
+    }
+  } catch (e) {
+    console.error('Error loading conversations:', e);
+  }
+}
+
+function renderUserList(list) {
+  const container = document.getElementById('userList');
+  if (!list || list.length === 0) {
+    container.innerHTML = `<div class="text-center text-muted" style="padding:24px;">Belum ada percakapan WhatsApp. Klik <b>+ Chat Baru</b>.</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map(c => {
+    const name = c.customer_name || c.phone;
+    const initial = name.charAt(0).toUpperCase();
+    const isActive = c.phone === activePhone ? 'active' : '';
+    const dateStr = c.created_at ? new Date(c.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+    
+    return `
+      <div class="chat-user-item ${isActive}" onclick="openChat('${c.phone}', '${escapeHtml(name)}')">
+        <div class="chat-user-avatar">${initial}</div>
+        <div class="chat-user-info">
+          <div class="chat-user-name">${escapeHtml(name)}</div>
+          <div class="chat-user-last">${escapeHtml(c.message_text || '')}</div>
+        </div>
+        <div class="chat-user-time">${dateStr}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterUserList() {
+  const q = document.getElementById('chatSearch').value.toLowerCase();
+  const filtered = conversationsData.filter(c => 
+    (c.customer_name && c.customer_name.toLowerCase().includes(q)) || 
+    (c.phone && c.phone.includes(q))
+  );
+  renderUserList(filtered);
+}
+
+function openNewChatModal() {
+  document.getElementById('newChatModal').classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function startNewChatFromModal() {
+  const phoneVal = document.getElementById('manualPhoneInput').value.trim();
+  if (!phoneVal) {
+    alert('Harap pilih pelanggan atau ketik nomor WhatsApp.');
+    return;
+  }
+  closeModal('newChatModal');
+  
+  // Find customer name if exists
+  const selectEl = document.getElementById('selectCustomerPhone');
+  const selectedOption = Array.from(selectEl.options).find(o => o.value === phoneVal);
+  const name = selectedOption ? selectedOption.text.split(' (')[0] : phoneVal;
+  
+  openChat(phoneVal, name);
+}
+
+async function openChat(phone, name) {
+  activePhone = phone;
+  document.getElementById('activePhone').value = phone;
+  document.getElementById('chatHeaderTitle').innerHTML = `<i class="bi bi-person-fill"></i> ${escapeHtml(name)}`;
+  document.getElementById('chatHeaderSub').innerText = ` ${phone}`;
+  
+  const inputEl = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendBtn');
+  inputEl.disabled = false;
+  sendBtn.disabled = false;
+  
+  // Highlight active user in inbox
+  renderUserList(conversationsData);
+
+  // Load chat messages
+  loadChatMessages(phone, true);
+}
+
+async function loadChatMessages(phone, showSpinner = false) {
+  const container = document.getElementById('chatMessages');
+  if (showSpinner) {
+    container.innerHTML = `<div class="text-center text-muted" style="margin:auto;"><i class="bi bi-arrow-repeat spin"></i> Memuat pesan...</div>`;
+  }
+  
+  try {
+    const res = await fetch(`/admin/api/whatsapp/messages?phone=${encodeURIComponent(phone)}`);
+    const data = await res.json();
+    if (data.ok) {
+      const messages = data.messages || [];
+      if (messages.length === 0) {
+        container.innerHTML = `<div class="text-center text-muted" style="margin:auto;">Belum ada pesan dengan pelanggan ini. Ketik pesan di bawah dan tekan Enter untuk memulai.</div>`;
+        return;
+      }
+      
+      container.innerHTML = messages.map(m => {
+        const isOutbound = m.direction === 'outbound';
+        const timeStr = m.created_at ? new Date(m.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+        const gatewayBadge = m.gateway === 'meta' ? 'Meta API'
+          : m.gateway === 'gowa' ? 'GoWA'
+          : m.gateway === 'fonnte' ? 'Fonnte'
+          : m.gateway === 'baileys' ? 'Baileys'
+          : 'WhatsApp';
+        const statusIcon = m.status === 'read' ? '<i class="bi bi-check-all"></i>' : m.status === 'delivered' ? '<i class="bi bi-check-all"></i>' : '<i class="bi bi-check-lg"></i>';
+        
+        return `
+          <div class="msg-bubble ${isOutbound ? 'outbound' : 'inbound'}">
+            <div>${escapeHtml(m.message_text).replace(/\n/g, '<br>')}</div>
+            <div class="msg-meta">
+              <span class="msg-gateway">${gatewayBadge}</span>
+              <span>${timeStr}</span>
+              ${isOutbound ? `<span>${statusIcon}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      container.scrollTop = container.scrollHeight;
+    }
+  } catch (e) {
+    if (showSpinner) {
+      container.innerHTML = `<div class="text-center text-danger" style="margin:auto;">Gagal memuat pesan: ${e.message}</div>`;
+    }
+  }
+}
+
+function handleKeyDown(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendChatMessage(event);
+  }
+}
+
+async function sendChatMessage(e) {
+  if (e) e.preventDefault();
+  const phone = document.getElementById('activePhone').value;
+  const inputEl = document.getElementById('chatInput');
+  const text = inputEl.value.trim();
+
+  if (!phone) {
+    alert('Silakan pilih percakapan atau nomor tujuan terlebih dahulu.');
+    return;
+  }
+  if (!text) return;
+
+  const sendBtn = document.getElementById('sendBtn');
+  sendBtn.disabled = true;
+
+  try {
+    const res = await fetch('/admin/api/whatsapp/send-direct', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, message: text })
+    });
+    const data = await res.json();
+    if (data.success) {
+      inputEl.value = '';
+      await loadChatMessages(phone, false);
+      await loadConversations();
+      inputEl.focus();
+    } else {
+      const errDetail = typeof data.error === 'object' ? (data.error.message || JSON.stringify(data.error)) : String(data.error || 'Terjadi kesalahan');
+      alert('Gagal mengirim pesan WA: ' + errDetail);
+    }
+  } catch (err) {
+    alert('Gagal membuat request: ' + err.message);
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadConversations();
+  setInterval(() => {
+    loadConversations();
+    if (activePhone) loadChatMessages(activePhone, false);
+  }, 8000);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.payslip.title', 'Slip Gaji') %> — <%= slip.employee_name %></title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <!-- no-admin-theme -->
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1a1a1a;background:#fff;padding:20px}
+    .slip{max-width:600px;margin:0 auto;border:2px solid #333;padding:24px}
+    .header{text-align:center;border-bottom:2px solid #333;padding-bottom:12px;margin-bottom:16px}
+    .company{font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+    .slip-title{font-size:14px;font-weight:600;margin-top:4px;color:#555}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:16px;font-size:12px}
+    .info-grid .label{color:#666}.info-grid .value{font-weight:600;text-align:right}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px}
+    th,td{padding:6px 8px;text-align:left;border-bottom:1px solid #ddd;font-size:12px}
+    th{background:#f5f5f5;font-weight:600}
+    .amount{text-align:right;font-family:'Courier New',monospace}
+    .section-header{background:#e8e8e8;font-weight:700;font-size:13px}
+    .total-row{font-weight:700;font-size:14px;border-top:2px solid #333;background:#f9f9f9}
+    .net-salary{font-size:18px;color:#1a1a1a}
+    .footer{margin-top:24px;display:flex;justify-content:space-between;font-size:11px}
+    .sign-box{text-align:center;width:40%}
+    .sign-line{border-top:1px solid #333;margin-top:60px;padding-top:4px}
+    .status-badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600}
+    .status-draft{background:#eee;color:#666}
+    .status-approved{background:#dbeafe;color:#2563eb}
+    .status-paid{background:#dcfce7;color:#16a34a}
+    @media print{
+      @page{size:A4 portrait;margin:10mm 15mm}
+      body{padding:0;background:#fff !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
+      .slip{border:1.5px solid #333 !important;max-width:100% !important;padding:20px !important;border-radius:6px}
+      .no-print{display:none !important}
+    }
+    .no-print{margin:20px auto;max-width:600px;text-align:center;display:flex;justify-content:center;gap:10px}
+  </style>
+  <!-- MWRAP (admin.css dipindah ke atas agar style halaman tidak ketimpa) -->
+  <style>
+    @media screen { body { padding: 0 !important; } .print-controls { display: none !important; } .tb-title, .tb-title i { color: var(--text) !important; } .sidebar { color: var(--text); } }
+    @media print {
+      .topbar, .sidebar, .bottom-nav, .hb-menu { display: none !important; }
+      .page { padding: 0 !important; margin: 0 !important; }
+      .mw { display: block !important; height: auto !important; overflow: visible !important; }
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'payroll', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-printer"></i> <%= t('admin.payslip.doc_title', 'Slip Gaji Karyawan') %></div>
+    <div class="tb-right">
+      <a href="/admin/payroll/slip/<%= slip.id %>/pdf" target="_blank" class="btn btn-p btn-sm"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+      <a href="/admin/payroll" class="btn btn-g btn-sm"><i class="bi bi-arrow-left"></i> <%= t('common.back', 'Kembali') %></a>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+<div class="no-print print-controls">
+  <button onclick="window.print()" style="padding:10px 24px;background:#6366f1;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600"><i class="bi bi-printer-fill"></i> <%= t('admin.payslip.print', 'Cetak Slip Gaji') %></button>
+  <button onclick="window.close()" style="padding:10px 24px;background:#666;color:#fff;border:none;border-radius:8px;cursor:pointer"><i class="bi bi-x-lg"></i> <%= t('admin.payslip.close', 'Tutup') %></button>
+</div>
+
+<div class="slip">
+  <div class="header">
+    <div class="company"><%= company %></div>
+    <div class="slip-title"><%= t('admin.payslip.doc_title', 'SLIP GAJI KARYAWAN') %></div>
+    <div style="font-size:11px;color:#888;margin-top:4px"><%= t('admin.payslip.period', 'Periode') %>: <%= new Date(2000, (Number(slip.period_month)||1)-1, 1).toLocaleDateString((typeof lang !== 'undefined' && lang === 'en') ? 'en-US' : 'id-ID', { month: 'long' }) %> <%= slip.period_year %></div>
+  </div>
+
+  <div class="info-grid">
+    <span class="label"><%= t('admin.payslip.employee', 'Nama Karyawan') %>:</span><span class="value"><%= slip.employee_name %></span>
+    <span class="label"><%= t('admin.payslip.position', 'Jabatan') %>:</span><span class="value"><%= slip.employee_type === 'technician' ? t('admin.role.technician','Teknisi') : slip.employee_type === 'cashier' ? t('admin.role.cashier','Kasir') : t('admin.role.collector','Kolektor') %></span>
+    <span class="label"><%= t('admin.payslip.work_days', 'Hari Kerja') %>:</span><span class="value"><%= slip.working_days %> <%= t('common.days', 'hari') %></span>
+    <span class="label"><%= t('admin.payslip.absent_days', 'Hari Absen') %>:</span><span class="value"><%= slip.absent_days %> <%= t('common.days', 'hari') %></span>
+    <span class="label"><%= t('admin.payslip.late', 'Terlambat') %>:</span><span class="value"><%= slip.late_days %> <%= t('common.days', 'hari') %></span>
+    <span class="label"><%= t('admin.payslip.status', 'Status') %>:</span><span class="value"><span class="status-badge status-<%= slip.status %>"><%= slip.status.toUpperCase() %></span></span>
+  </div>
+
+  <table>
+    <tr class="section-header"><td colspan="2"><%= t('admin.payslip.income', 'PENDAPATAN') %></td></tr>
+    <tr><td><%= t('admin.payslip.base_salary', 'Gaji Pokok') %></td><td class="amount">Rp <%= slip.base_salary.toLocaleString('id-ID') %></td></tr>
+    <% if(slip.transport_allowance) { %><tr><td><%= t('admin.payslip.allow_transport', 'Tunjangan Transport') %></td><td class="amount">Rp <%= slip.transport_allowance.toLocaleString('id-ID') %></td></tr><% } %>
+    <% if(slip.meal_allowance) { %><tr><td><%= t('admin.payslip.allow_meal', 'Tunjangan Makan') %></td><td class="amount">Rp <%= slip.meal_allowance.toLocaleString('id-ID') %></td></tr><% } %>
+    <% if(slip.phone_allowance) { %><tr><td><%= t('admin.payslip.allow_phone', 'Tunjangan Pulsa') %></td><td class="amount">Rp <%= slip.phone_allowance.toLocaleString('id-ID') %></td></tr><% } %>
+    <% if(slip.other_allowance) { %><tr><td><%= t('admin.payslip.allow_other', 'Tunjangan Lain') %> (<%= slip.other_allowance_note || '-' %>)</td><td class="amount">Rp <%= slip.other_allowance.toLocaleString('id-ID') %></td></tr><% } %>
+    <% if(slip.ticket_bonus) { %><tr><td><%= t('admin.payslip.ticket_bonus', 'Bonus Tiket') %> (<%= slip.total_tickets_resolved %> <%= t('admin.payslip.tickets_done', 'tiket selesai') %>)</td><td class="amount" style="color:#16a34a">+Rp <%= slip.ticket_bonus.toLocaleString('id-ID') %></td></tr><% } %>
+    <% if(slip.collection_commission) { %><tr><td><%= t('admin.payslip.collection_commission', 'Komisi Tagihan') %> (Rp <%= slip.total_collection_amount.toLocaleString('id-ID') %>)</td><td class="amount" style="color:#16a34a">+Rp <%= slip.collection_commission.toLocaleString('id-ID') %></td></tr><% } %>
+    <% if(slip.overtime_bonus) { %><tr><td><%= t('admin.payslip.overtime', 'Lembur') %> (<%= slip.overtime_hours %> <%= t('common.hours', 'jam') %>)</td><td class="amount" style="color:#16a34a">+Rp <%= slip.overtime_bonus.toLocaleString('id-ID') %></td></tr><% } %>
+    <tr style="font-weight:600;background:#f9f9f9"><td><%= t('admin.payslip.total_income', 'Total Pendapatan') %></td><td class="amount">Rp <%= slip.gross_salary.toLocaleString('id-ID') %></td></tr>
+
+    <% if(slip.total_deductions > 0) { %>
+    <tr class="section-header"><td colspan="2"><%= t('admin.payslip.deductions', 'POTONGAN') %></td></tr>
+    <% if(slip.absence_deduction) { %><tr><td><%= t('admin.payslip.ded_absent', 'Potongan Absen') %> (<%= slip.absent_days %> <%= t('common.days', 'hari') %>)</td><td class="amount" style="color:#dc2626">-Rp <%= slip.absence_deduction.toLocaleString('id-ID') %></td></tr><% } %>
+    <% if(slip.late_deduction) { %><tr><td><%= t('admin.payslip.ded_late', 'Potongan Terlambat') %> (<%= slip.late_days %> <%= t('common.days', 'hari') %>)</td><td class="amount" style="color:#dc2626">-Rp <%= slip.late_deduction.toLocaleString('id-ID') %></td></tr><% } %>
+    <% if(slip.other_deduction) { %><tr><td><%= t('admin.payslip.ded_other', 'Potongan Lain') %> (<%= slip.other_deduction_note || '-' %>)</td><td class="amount" style="color:#dc2626">-Rp <%= slip.other_deduction.toLocaleString('id-ID') %></td></tr><% } %>
+    <tr style="font-weight:600;background:#f9f9f9"><td><%= t('admin.payslip.total_deductions', 'Total Potongan') %></td><td class="amount" style="color:#dc2626">-Rp <%= slip.total_deductions.toLocaleString('id-ID') %></td></tr>
+    <% } %>
+
+    <tr class="total-row"><td><%= t('admin.payslip.net', 'GAJI BERSIH') %></td><td class="amount net-salary">Rp <%= slip.net_salary.toLocaleString('id-ID') %></td></tr>
+  </table>
+
+  <% if(slip.notes) { %>
+  <div style="font-size:11px;color:#666;margin-bottom:16px"><%= t('admin.payslip.note', 'Catatan') %>: <%= slip.notes %></div>
+  <% } %>
+
+  <div class="footer">
+    <div class="sign-box">
+      <div><%= t('admin.payslip.sign_employee', 'Karyawan') %></div>
+      <div class="sign-line"><%= slip.employee_name %></div>
+    </div>
+    <div class="sign-box">
+      <div><%= t('admin.payslip.sign_admin', 'Admin / Pimpinan') %></div>
+      <div class="sign-line">( __________________ )</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:16px;font-size:10px;color:#888">
+    <%= t('admin.payslip.printed', 'Dicetak') %>: <%= getNowLocal() %> — <%= t('admin.payslip.slip_id', 'Slip ID') %>: #<%= slip.id %>
+  </div>
+</div>
+
+<script>
+  window.onload = function() {
+    setTimeout(function() {
+      if (!window.location.search.includes('noprint')) {
+        window.print();
+      }
+    }, 400);
+  };
+</script>
+</div>
+</div>
+</body>
+</html>

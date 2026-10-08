@@ -1,0 +1,15 @@
+<% if (typeof serviceNotice !== 'undefined' && serviceNotice && serviceNotice.active) { %>
+<div class="service-notice" data-tone="<%= serviceNotice.tone || 'primary' %>">
+  <div class="sn-ico"><i class="bi <%= serviceNotice.mode === 'GANGGUAN_MASAL' ? 'bi-exclamation-triangle-fill' : 'bi-tools' %>"></i></div>
+  <div class="sn-main">
+    <div class="sn-title"><%= serviceNotice.label %></div>
+    <div class="sn-text"><%= serviceNotice.text %></div>
+    <% if (serviceNotice.estimateText) { %>
+      <div class="sn-eta">
+        <i class="bi bi-clock-history"></i> <%= t('common.estimated_done','Estimasi selesai') %>: <b><%= serviceNotice.estimateText %></b>
+        <% if (serviceNotice.startText) { %><span class="sn-since">· <%= t('common.since','sejak') %> <%= serviceNotice.startText %></span><% } %>
+      </div>
+    <% } %>
+  </div>
+</div>
+<% } %>

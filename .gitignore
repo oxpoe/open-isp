@@ -1,0 +1,84 @@
+# Dependencies
+node_modules/
+
+# Environment and Secrets
+.env
+*.env
+*.jks
+*.keystore
+local.properties
+
+# Database files
+database/*.db
+database/*.db-shm
+database/*.db-wal
+database/*.sqlite
+database.sqlite
+*.db
+*.db-shm
+*.db-wal
+
+# WhatsApp Sessions & Auth
+auth_info_baileys/
+data/wwebjs_auth/
+data/test_wwebjs_auth/
+data/wa-lid-map.json
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Android Build & Caches
+.gradle/
+.kotlin/
+build/
+android-app/.gradle/
+android-app/.kotlin/
+android-app/app/build/
+android-app/build/
+android-app/local.properties
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Backups and temporary files
+backups/
+scratch/
+scratch_tz_scan.json
+temp/
+tmp/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.pptx
+
+# Settings & data lokal (JANGAN pernah di-commit)
+settings.json
+settings.json.*
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+database/billing.db*
+public/uploads/
+billing-backups/
+docker-data/
+.e2e/
+*.aab
+*.apk
+tailadmin-free-tailwind-dashboard-template/
+ui-preview.html
+auth_info_baileys*
+*.bak-*
+*.old
+update_loader_time.js
+update_loader_logic.js
+update.sh
+public/css/tabler-icons/
+public/downloads/*.apk
+public/downloads/*.aab
+public/downloads/logo-*
+.npmrc
+.gitconfig

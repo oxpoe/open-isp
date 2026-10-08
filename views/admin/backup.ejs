@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .backup-actions { display: flex; gap: 8px; }
+    .badge-database { background: var(--sdim); color: var(--success); }
+    .badge-settings { background: var(--wdim); color: var(--warning); }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: activePage || 'backup', company }) %>
+
+<div class="mw">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-hdd-stack"></i>
+      <span id="page-title">Backup & Recovery</span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i> 
+        <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
+      </span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="page">
+
+    <!-- Alert Message -->
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type === 'danger' ? 'd' : msg.type === 'success' ? 's' : msg.type === 'warning' ? 'w' : 'i' %> mb16" data-flash="1">
+      <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-triangle' %>"></i>
+      <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- Stats Grid -->
+    <div class="stat-grid">
+      <div class="sc p">
+        <i class="bi bi-files sc-icon"></i>
+        <div class="sc-label">Total Backup</div>
+        <div class="sc-val"><%= total %></div>
+        <div class="sc-sub">File tersimpan</div>
+      </div>
+      <div class="sc s">
+        <i class="bi bi-database sc-icon"></i>
+        <div class="sc-label">Database</div>
+        <div class="sc-val"><%= backups.filter(b => b.type === 'database').length %></div>
+        <div class="sc-sub">Backup database</div>
+      </div>
+      <div class="sc w">
+        <i class="bi bi-gear sc-icon"></i>
+        <div class="sc-label">Settings</div>
+        <div class="sc-val"><%= backups.filter(b => b.type === 'settings').length %></div>
+        <div class="sc-sub">Backup pengaturan</div>
+      </div>
+      <div class="sc i">
+        <i class="bi bi-hdd sc-icon"></i>
+        <div class="sc-label">Total Size</div>
+        <div class="sc-val"><%= (backups.reduce((sum, b) => sum + b.sizeKB, 0) / 1024).toFixed(1) %><span style="font-size:14px"> MB</span></div>
+        <div class="sc-sub">Kapasitas digunakan</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+      <!-- Create Backup -->
+      <div class="card">
+        <div class="card-hd"><h6><i class="bi bi-plus-circle"></i> Buat Backup Baru</h6></div>
+        <div class="card-bd">
+          <form action="/admin/backup/create" method="POST">
+            <div class="fg">
+              <label class="fl">Tipe Backup</label>
+              <select class="fs" name="type">
+                <option value="all">Semua (Database + Settings)</option>
+                <option value="database">Database Saja</option>
+                <option value="settings">Settings Saja</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-p w-100">
+              <i class="bi bi-cloud-upload"></i> Mulai Backup
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Upload & Restore -->
+      <div class="card">
+        <div class="card-hd"><h6><i class="bi bi-upload"></i> Upload & Restore Backup</h6></div>
+        <div class="card-bd">
+          <form action="/admin/backup/upload-restore" method="POST" enctype="multipart/form-data" onsubmit="return confirm('PERINGATAN: Memulihkan file backup akan menimpa data/pengaturan aplikasi saat ini. Sistem akan membuat backup otomatis sebelum restore. Lanjutkan?')">
+            <div class="fg">
+              <label class="fl">Pilih File Backup (.db / .json)</label>
+              <input type="file" class="fc" name="backupFile" accept=".db,.sqlite,.json" required style="padding: 6px 10px;">
+              <small class="text-muted" style="font-size: 10px; display: block; margin-top: 4px;">File .db (database) atau .json (settings)</small>
+            </div>
+            <button type="submit" class="btn btn-s w-100">
+              <i class="bi bi-cloud-arrow-up"></i> Upload & Restore
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Cleanup -->
+      <div class="card">
+        <div class="card-hd"><h6><i class="bi bi-trash"></i> Pembersihan Otomatis</h6></div>
+        <div class="card-bd">
+          <form action="/admin/backup/cleanup" method="POST">
+            <div class="fg">
+              <label class="fl">Retensi (Hari)</label>
+              <input type="number" class="fc" name="retentionDays" value="30" min="1" max="365">
+              <small class="text-muted" style="font-size: 10px; display: block; margin-top: 4px;">Backup lebih lama dari periode ini akan dihapus</small>
+            </div>
+            <button type="submit" class="btn btn-w w-100">
+              <i class="bi bi-stars"></i> Bersihkan Sekarang
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backup List -->
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-ul"></i> Riwayat Backup</h6>
+      </div>
+      <div class="card-bd">
+        <% if (backups.length === 0) { %>
+          <div class="text-center py-5">
+            <i class="bi bi-inbox text-muted" style="font-size: 40px; opacity: 0.3;"></i>
+            <p class="text-muted mt-2">Belum ada file backup tersedia</p>
+          </div>
+        <% } else { %>
+          <div class="tbl-wrap">
+            <table class="dtbl">
+              <thead>
+                <tr>
+                  <th>Nama File</th>
+                  <th><%= t('common.type','Tipe') %></th>
+                  <th class="num">Ukuran</th>
+                  <th>Tanggal Dibuat</th>
+                  <th class="text-right"><%= t('common.actions','Aksi') %></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% backups.forEach(backup => { %>
+                <tr>
+                  <td>
+                    <div class="flex ai-c gap">
+                      <i class="bi bi-file-earmark-zip text-primary"></i>
+                      <span><%= backup.fileName %></span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge <%= backup.type === 'database' ? 'bs' : 'bw' %>">
+                      <%= backup.type === 'database' ? 'Database' : 'Settings' %>
+                    </span>
+                  </td>
+                  <td class="num"><%= backup.sizeKB %> KB</td>
+                  <td>
+                    <% if (backup.createdDate) { %>
+                      <%= backup.createdDate.toLocaleString('id-ID', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) %>
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td style="white-space:nowrap">
+                    <div class="act">
+                      <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                      <div class="act-menu">
+                        <a class="act-item primary" href="/admin/backup/download/<%= encodeURIComponent(backup.fileName) %>" download><i class="bi bi-download"></i> Download</a>
+                        <button type="button" class="act-item success" onclick="restoreBackup('<%= backup.fileName %>', '<%= backup.type %>')"><i class="bi bi-arrow-counterclockwise"></i> Restore</button>
+                        <div class="act-sep"></div>
+                        <button type="button" class="act-item danger" onclick="deleteBackup('<%= backup.fileName %>')"><i class="bi bi-trash"></i> Hapus Backup</button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function restoreBackup(fileName, type) {
+    if (!confirm('Apakah Anda yakin ingin merestore backup ini? Data saat ini akan ditimpa.')) {
+      return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/backup/restore';
+    form.innerHTML = `
+      <input type="hidden" name="fileName" value="${fileName}">
+      <input type="hidden" name="type" value="${type}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  function deleteBackup(fileName) {
+    if (!confirm('Apakah Anda yakin ingin menghapus backup ini?')) {
+      return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/backup/delete';
+    form.innerHTML = `
+      <input type="hidden" name="fileName" value="${fileName}">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  function toggleSidebar() {
+    var sb = document.getElementById('sidebar') || document.querySelector('.sidebar');
+    var ov = document.getElementById('sidebarOverlay');
+    if (sb) sb.classList.toggle('open');
+    if (ov) ov.classList.toggle('show');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.public_voucher.title', 'Voucher Hotspot') %> | <%= settings.company_header || 'OPEN-ISP' %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/" aria-label="<%= t('customer.aria_home', 'Beranda') %>">
+      <img class="bmark" src="<%= brandLogo %>" alt="<%= brandName %>"><span class="bname"><%= brandName %></span>
+    </a>
+    <div class="header-actions" style="margin-left:auto;display:flex;align-items:center;gap:6px">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="<%= t('customer.aria_theme', 'Ganti tema') %>"><i class="bi bi-moon-stars-fill"></i></button>
+      <% (typeof availableLangs !== 'undefined' && availableLangs ? availableLangs : ['id','en']).forEach(function(L){ %>
+        <a href="/lang/<%= L %>" class="lbtn lbtn-ghost lbtn-sm" style="padding:4px 8px;<%= (lang === L) ? 'font-weight:800;color:var(--primary);opacity:1' : 'opacity:.65' %>"><%= String(L).toUpperCase() %></a>
+      <% }); %>
+      <a class="lbtn lbtn-ghost lbtn-sm" href="/customer/login"><i class="bi bi-box-arrow-in-right"></i> <%= t('customer.header_login', 'Login') %></a>
+    </div>
+  </div>
+</header>
+
+<main class="bill-wrap">
+  <div class="bill-card reveal">
+    <div class="bill-head">
+      <div>
+        <h1><i class="bi bi-ticket-perforated" style="color:var(--primary)"></i> <%= t('customer.public_voucher.title', 'Voucher Hotspot') %></h1>
+        <div class="sub"><%= settings.company_header || 'OPEN-ISP' %> — <%= t('customer.public_voucher.subtitle', 'beli &amp; kirim ke WhatsApp') %></div>
+      </div>
+    </div>
+
+    <div class="bill-body">
+      <% if (error) { %><div class="auth-alert err"><i class="bi bi-exclamation-triangle"></i> <%= error %></div><% } %>
+      <% if (info) { %><div class="auth-alert ok"><i class="bi bi-check-circle"></i> <%= info %></div><% } %>
+
+      <% if (order) { %>
+        <div style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-weight:700"><%= t('customer.public_voucher.order_status', 'Status Pesanan') %></div>
+              <div class="bill-sub">Order #<%= order.id %> • WA: <%= order.buyer_phone %></div>
+            </div>
+            <div>
+              <% const st = String(order.status || 'pending'); %>
+              <% if (st === 'fulfilled') { %><span class="badge bs"><i class="bi bi-check-circle"></i> <%= t('customer.public_voucher.st_done', 'Selesai') %></span>
+              <% } else if (st === 'paid') { %><span class="badge bw"><i class="bi bi-hourglass-split"></i> <%= t('customer.public_voucher.st_process', 'Diproses') %></span>
+              <% } else { %><span class="badge bm"><i class="bi bi-clock"></i> <%= t('customer.public_voucher.st_wait', 'Menunggu') %></span><% } %>
+            </div>
+          </div>
+          <div class="bill-sub" style="margin-top:8px">
+            <%= t('customer.public_voucher.pkg', 'Paket') %>: <span style="color:var(--text)"><%= order.profile_name %></span> •
+            <%= t('customer.public_voucher.duration', 'Durasi') %>: <span style="color:var(--text)"><%= order.validity || '-' %></span> •
+            <%= t('customer.public_voucher.price', 'Harga') %>: <span style="color:var(--text)">Rp <%= Number(order.price || 0).toLocaleString('id-ID') %></span>
+          </div>
+
+          <% if (String(order.status) === 'fulfilled' && order.voucher_code) { %>
+            <div class="voucher-code">
+              <div style="font-weight:700;margin-bottom:6px"><i class="bi bi-ticket-perforated" style="color:var(--primary)"></i> <%= t('customer.public_voucher.ready', 'Voucher Siap') %></div>
+              <div class="row"><span class="muted">User</span><b><%= order.voucher_code %></b></div>
+              <div class="row"><span class="muted">Pass</span><b><%= order.voucher_password %></b></div>
+              <% if (Number(order.wa_sent || 0) === 1) { %>
+                <div class="bill-sub" style="margin-top:6px"><%= t('customer.public_voucher.sent_wa', 'Voucher berhasil dikirim ke WhatsApp pembeli.') %></div>
+              <% } else if (order.wa_error) { %>
+                <div class="bill-sub" style="margin-top:6px;color:var(--warning)"><%= t('customer.public_voucher.wa_fail', 'WhatsApp gagal terkirim') %>: <%= order.wa_error %></div>
+                <div class="bill-sub"><%= t('customer.public_voucher.backup', 'Cadangan: simpan kode voucher yang tampil di halaman ini.') %></div>
+              <% } else { %>
+                <div class="bill-sub" style="margin-top:6px"><%= t('customer.public_voucher.fallback', 'Jika WhatsApp gagal terkirim, kode voucher tetap tampil di halaman ini.') %></div>
+              <% } %>
+            </div>
+          <% } else if (String(order.status) === 'paid') { %>
+            <div class="auth-alert info" style="margin-top:12px"><i class="bi bi-hourglass-split"></i> <%= t('customer.public_voucher.paid_processing', 'Pembayaran berhasil — voucher sedang dibuat di MikroTik. Halaman ini diperbarui otomatis.') %></div>
+          <% } else if (String(order.status) === 'pending' && (String(order.payment_gateway || '') === 'qris_static' || order.qris_amount_unique)) { %>
+            <% if (orderToken) { %>
+              <a class="lbtn lbtn-primary lbtn-block" style="margin-top:12px" href="/customer/voucher/qris/<%= order.id %>?t=<%= encodeURIComponent(orderToken) %>"><i class="bi bi-qr-code-scan"></i> <%= t('customer.public_voucher.open_qris', 'Buka QRIS Statis') %></a>
+            <% } else { %>
+              <div class="auth-alert warn" style="margin-top:12px"><%= t('customer.public_voucher.qris_na', 'Link QRIS tidak tersedia.') %></div>
+            <% } %>
+          <% } else if (String(order.status) === 'pending' && order.payment_link) { %>
+            <a class="lbtn lbtn-primary lbtn-block" style="margin-top:12px" href="<%= order.payment_link %>"><i class="bi bi-credit-card"></i> <%= t('customer.public_voucher.continue_pay', 'Lanjutkan Pembayaran') %></a>
+          <% } %>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:0 0 18px">
+      <% } %>
+
+      <form method="POST" action="/customer/public/voucher/create-payment" class="stack">
+        <div class="vform">
+          <div>
+            <span class="label-cap"><%= t('customer.public_voucher.pkg_label', 'Paket Voucher') %></span>
+            <% if (!profiles || profiles.length === 0) { %>
+              <div class="bill-sub"><%= t('customer.public_voucher.no_profile', 'Belum ada profile voucher (metadata Mikhmon) di MikroTik.') %></div>
+            <% } else { %>
+              <div class="voucher-grid">
+                <% (profiles || []).forEach(function(p, idx){ %>
+                  <input class="voucher-radio" type="radio" name="profile_name" id="vprofile_<%= idx %>" value="<%= p.name %>" <%= idx === 0 ? 'required' : '' %>>
+                  <label class="voucher-card" for="vprofile_<%= idx %>">
+                    <div class="voucher-title"><span><%= p.name %></span><span class="voucher-price">Rp <%= Number(p.price||0).toLocaleString('id-ID') %></span></div>
+                    <p class="voucher-meta"><i class="bi bi-hourglass-split"></i> <%= p.validity %></p>
+                  </label>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+
+          <div>
+            <span class="label-cap"><%= t('customer.public_voucher.pay_method', 'Metode Pembayaran') %></span>
+            <% const hasStaticQris = (String(settings.qris_static_qr_url || '').trim() || String(settings.qris_static_payload || '').trim()) && (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false' && settings.qris_static_enabled !== 0 && settings.qris_static_enabled !== '0'); %>
+            <% if (true) { %>
+              <input type="hidden" name="method" value="QRIS_STATIC">
+              <div class="pay-grid">
+                <div class="pay-item" style="cursor:default">
+                  <div class="pay-icon"><i class="bi bi-qr-code-scan"></i></div>
+                  <div class="pay-info">
+                    <span class="pay-name"><%= t('customer.check_billing.pay_method', 'QRIS / Transfer Bank / E-Wallet') %></span>
+                    <span class="pay-sub"><span class="pay-chip"><%= t('customer.check_billing.pay_note', 'Metode dipilih di halaman pembayaran') %></span></span>
+                  </div>
+                </div>
+              </div>
+            <% } else { %>
+              <div class="pay-grid">
+                <% if (hasStaticQris) { %>
+                  <label>
+                    <input class="pay-radio" type="radio" name="method" value="QRIS_STATIC" checked>
+                    <div class="pay-item">
+                      <div class="pay-icon"><i class="bi bi-qr-code-scan"></i></div>
+                      <div class="pay-info"><span class="pay-name"><%= t('customer.public_voucher.qris_static', 'QRIS Statis (Scan)') %></span><span class="pay-sub"><span class="pay-chip"><%= t('customer.public_voucher.unique_nominal', 'Nominal unik') %></span></span></div>
+                    </div>
+                  </label>
+                <% } %>
+                <% paymentChannels.forEach(function(ch, idx){
+                  const code = String(ch.code || '').toUpperCase();
+                  const name = ch.name || code;
+                  const group = String(ch.group || '').toLowerCase();
+                  let icon = 'bi-wallet2';
+                  const c = code.toLowerCase();
+                  if (c.includes('qris')) icon = 'bi-qr-code-scan';
+                  else if (c.includes('va') || group.includes('virtual') || c.includes('bank')) icon = 'bi-bank';
+                  else if (c.includes('snap') || c.includes('xendit') || c.includes('duitku')) icon = 'bi-credit-card';
+                  const feeFlat = Number(ch.total_fee && ch.total_fee.flat || 0);
+                %>
+                  <label>
+                    <input class="pay-radio" type="radio" name="method" value="<%= code %>" <%= (!hasStaticQris && idx === 0) ? 'checked' : '' %>>
+                    <div class="pay-item">
+                      <div class="pay-icon">
+                        <% if (ch.icon_url) { %><img src="<%= ch.icon_url %>" alt="<%= name %>" class="pay-logo"><% } else { %><i class="bi <%= icon %>"></i><% } %>
+                      </div>
+                      <div class="pay-info">
+                        <span class="pay-name"><%= name %></span>
+                        <span class="pay-sub">
+                          <% if (feeFlat > 0) { %><span class="pay-chip">Fee: Rp <%= feeFlat.toLocaleString('id-ID') %></span><% } else { %><span class="pay-chip"><%= t('customer.public_voucher.free', 'Gratis') %></span><% } %>
+                        </span>
+                      </div>
+                    </div>
+                  </label>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div>
+          <span class="label-cap"><%= t('customer.public_voucher.buyer_wa', 'Nomor WhatsApp Pembeli') %></span>
+          <input class="inp inp-plain" name="buyer_phone" placeholder="<%= t('customer.public_voucher.buyer_ph', 'Contoh: 08xxxxxxxxxx') %>" inputmode="tel" required>
+          <div class="form-note"><%= t('customer.public_voucher.buyer_note', 'Kode voucher akan dikirim ke nomor ini.') %></div>
+        </div>
+
+        <label class="chk">
+          <input type="checkbox" value="1" id="tos_voucher" name="tos" required>
+          <span><%= t('customer.tos_agree', 'Saya setuju dengan') %> <a href="/customer/tos" target="_blank" rel="noopener"><%= t('customer.tos_terms', 'Syarat &amp; Ketentuan (TOS)') %></a></span>
+        </label>
+
+        <button class="lbtn lbtn-primary" type="submit" <%= (!profiles || profiles.length === 0) ? 'disabled' : '' %>>
+          <i class="bi bi-credit-card"></i> <%= t('customer.public_voucher.pay_create', 'Bayar &amp; Buat Voucher') %>
+        </button>
+      </form>
+
+      <div class="bill-foot">&copy; <%= new Date().getFullYear() %> <%= settings.company_header || '' %></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  (function(){ var s = localStorage.getItem('landing-theme') || 'dark'; document.documentElement.setAttribute('data-theme', s); })();
+  function toggleTheme(){ var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); localStorage.setItem('landing-theme',t); }
+  (function(){ var els=document.querySelectorAll('.reveal'); if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;} var io=new IntersectionObserver(function(en){en.forEach(function(x){if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}});},{threshold:.1}); els.forEach(function(e){io.observe(e);}); })();
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js',{scope:'/customer/'}).then(function(r){try{r.update();}catch(e){}}).catch(function(){}); }
+</script>
+<% if (order && (String(order.status) === 'paid' || String(order.status) === 'pending') && !order.voucher_code) { %>
+<script>setTimeout(function(){ try { window.location.reload(); } catch(e){} }, 5000);</script>
+<% } %>
+</body>
+</html>

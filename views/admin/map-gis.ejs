@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="<%= typeof lang !== 'undefined' ? lang : 'id' %>" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= typeof title !== 'undefined' ? title : 'Peta Geografis (GIS Real Map)' %> | <%= company %></title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tabler Icons -->
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Base Admin CSS -->
+  <link rel="stylesheet" href="/css/admin.css">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            primary: { 400: '#60A5FA', 500: '#3B82F6', 600: '#2563EB' },
+            accent:  { 400: '#34D399', 500: '#10B981', 600: '#059669' },
+            fun:     { pink: '#EC4899', purple: '#8B5CF6', yellow: '#F59E0B' }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #080C15;
+      color: #F8FAFC;
+      overflow-x: hidden;
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Fullscreen GIS Map Viewport */
+    #gis-map-viewport {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 185px);
+      min-height: 600px;
+      border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 2px 25px rgba(0, 0, 0, 0.85);
+      overflow: hidden;
+    }
+
+    /* Leaflet Basemap Overrides */
+    .leaflet-container {
+      background-color: #080C15 !important;
+      font-family: inherit !important;
+    }
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+      border-radius: 10px !important;
+      overflow: hidden;
+    }
+    .leaflet-control-zoom a {
+      background-color: rgba(15, 23, 42, 0.9) !important;
+      color: #94A3B8 !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      width: 32px !important;
+      height: 32px !important;
+      line-height: 30px !important;
+      font-size: 15px !important;
+    }
+    .leaflet-control-zoom a:hover {
+      background-color: #334155 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* Animated Flowing Laser Cable Curves (Online Status) */
+    @keyframes flowGisCable {
+      0% { stroke-dashoffset: 40; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .gis-cable-flow {
+      stroke-dasharray: 8 12;
+      animation: flowGisCable 1.6s linear infinite;
+    }
+
+    /* Cable Status: OFFLINE (STATIS MERAH) */
+    .gis-cable-offline {
+      stroke: #EF4444 !important;
+      stroke-width: 3.5px !important;
+      stroke-dasharray: none !important;
+      animation: none !important;
+      filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.95)) !important;
+    }
+
+    /* Cable Status: STANDBY (GRAY DASHED) */
+    .gis-cable-standby {
+      stroke: #64748B !important;
+      stroke-width: 2px !important;
+      stroke-dasharray: 5 5 !important;
+      animation: none !important;
+      opacity: 0.65 !important;
+    }
+
+    /* Custom Leaflet Markers */
+    .gis-pin-wrapper {
+      background: transparent;
+      border: none;
+    }
+    .gis-marker-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+    .gis-marker-node:hover {
+      transform: translate(-50%, -50%) scale(1.15);
+      z-index: 1000 !important;
+    }
+
+    .gis-marker-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+    }
+    .gis-marker-label {
+      margin-top: 3px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #F8FAFC;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      pointer-events: none;
+    }
+
+    /* Customer Small Pin */
+    .gis-cust-pin {
+      width: 14px;
+      height: 14px;
+      border-radius: 9999px;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .gis-cust-pin:hover {
+      transform: scale(1.5);
+      z-index: 900 !important;
+    }
+
+    /* Leaflet Popups Dark & Glass */
+    .leaflet-popup-content-wrapper {
+      background: rgba(15, 23, 42, 0.95) !important;
+      backdrop-filter: blur(14px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 14px !important;
+      color: #F8FAFC !important;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8) !important;
+      padding: 0 !important;
+    }
+    .leaflet-popup-content {
+      margin: 0 !important;
+      line-height: 1.4 !important;
+    }
+    .leaflet-popup-tip {
+      background: rgba(15, 23, 42, 0.95) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+    .leaflet-container a.leaflet-popup-close-button {
+      color: #94A3B8 !important;
+      padding: 8px 10px 0 0 !important;
+    }
+    .leaflet-container a.leaflet-popup-close-button:hover {
+      color: #FFFFFF !important;
+    }
+
+    /* Mode Pill Buttons */
+    .gis-mode-pill-btn {
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #94A3B8;
+      background: transparent;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+    .gis-mode-pill-btn:hover {
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .gis-mode-pill-btn.active {
+      color: #FFFFFF;
+      background: #0284C7;
+      border-color: #38BDF8;
+      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+    }
+  </style>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+</head>
+
+<body class="bg-[#080C15] text-slate-100 flex h-screen overflow-hidden antialiased select-none">
+
+<!-- SIDEBAR -->
+<%- include('partials/sidebar', { activePage: 'map', company }) %>
+
+<!-- MAIN WRAPPER -->
+<div class="mw min-h-screen flex flex-col flex-1 min-w-0">
+
+  <!-- TOPBAR -->
+  <%- include('partials/topbar', {
+    pageIcon: 'ti-map-2',
+    pageTitle: 'Peta Geografis (Real GIS Map)',
+    pageDesc: 'Visualisasi Geografis Jaringan Fiber Optik, ODC, ODP, HTB P2P & Pelanggan',
+    showRouterSelector: false
+  }) %>
+
+  <!-- MAIN PAGE CONTENT -->
+  <main class="page p-2 sm:p-4 flex-1 flex flex-col min-w-0 space-y-3 max-w-full w-full mx-auto overflow-hidden">
+
+    <!-- ALERT BANNER -->
+    <% if (msg) { %>
+    <div id="autoAlert" class="p-3.5 rounded-xl flex items-center justify-between gap-3 shadow-lg backdrop-blur-xl border transition-all duration-300 <%= msg.type === 'danger' || msg.type === 'error' ? 'bg-rose-500/15 border-rose-500/30 text-rose-300' : (msg.type === 'success' ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300' : 'bg-amber-500/15 border-amber-500/30 text-amber-300') %>">
+      <div class="flex items-center gap-3">
+        <i class="<%= msg.type === 'success' ? 'ti-check' : 'ti-alert-circle' %> text-lg flex-shrink-0"></i>
+        <span class="text-xs sm:text-sm font-semibold"><%= msg.text %></span>
+      </div>
+      <button type="button" onclick="document.getElementById('autoAlert')?.remove()" class="w-6 h-6 rounded-lg hover:bg-white/10 flex items-center justify-center transition flex-shrink-0">
+        <i class="bi bi-x-lg text-sm"></i>
+      </button>
+    </div>
+    <% } %>
+
+    <!-- TOOLBAR CONTROLS -->
+    <div class="glass-panel relative z-[1010] p-2.5 sm:p-3 rounded-xl flex flex-wrap items-center justify-between gap-2.5 shadow-md flex-shrink-0">
+      
+      <!-- Left: Search & Quick Navigation -->
+      <div class="flex items-center gap-2 flex-wrap">
+        
+        <!-- Search Input -->
+        <div class="relative w-48 sm:w-64 z-[1020]">
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+          <input 
+            type="text" 
+            id="gisSearchInp" 
+            placeholder="Cari ODP, ODC, HTB, Pelanggan..." 
+            oninput="handleGisSearch(this.value)"
+            class="w-full bg-slate-900/90 border border-slate-700/70 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500 transition"
+          >
+          <button 
+            type="button" 
+            id="clearGisSearchBtn" 
+            onclick="clearGisSearch()" 
+            class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+          >
+            <i class="bi bi-x-lg text-xs"></i>
+          </button>
+          
+          <!-- Dropdown search suggestions -->
+          <div id="gisSearchDropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-slate-900/98 backdrop-blur-2xl border border-slate-700/90 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] max-h-60 overflow-y-auto z-[1050] divide-y divide-slate-800 text-xs ring-1 ring-white/10"></div>
+        </div>
+
+        <!-- Layer Toggle Filter Button -->
+        <div class="relative z-[1020]">
+          <button 
+            type="button" 
+            onclick="toggleLayerMenu()" 
+            id="btnToggleLayers"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition"
+          >
+            <i class="bi bi-layers text-sm"></i>
+            <span>Layer Peta</span>
+            <i class="bi bi-chevron-down text-xs"></i>
+          </button>
+
+          <!-- Layer Dropdown Box -->
+          <div id="gisLayersMenu" class="hidden absolute left-0 top-full mt-2 w-64 bg-slate-900/98 backdrop-blur-2xl border border-slate-700/90 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] p-3.5 z-[1050] space-y-2.5 text-xs max-h-[calc(100vh-200px)] overflow-y-auto ring-1 ring-white/10">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tampilkan Elemen</div>
+            
+            <label class="flex items-center justify-between cursor-pointer py-1">
+              <span class="flex items-center gap-2 text-slate-300">
+                <span class="w-2.5 h-2.5 rounded bg-blue-500"></span>
+                <span>Server & OLT</span>
+              </span>
+              <input type="checkbox" id="chkLayerServer" checked onchange="toggleLayerVisibility('server')" class="rounded border-slate-700 text-blue-500 focus:ring-0">
+            </label>
+
+            <label class="flex items-center justify-between cursor-pointer py-1">
+              <span class="flex items-center gap-2 text-slate-300">
+                <span class="w-2.5 h-2.5 rounded bg-amber-500"></span>
+                <span>ODC Feeder Hub</span>
+              </span>
+              <input type="checkbox" id="chkLayerOdc" checked onchange="toggleLayerVisibility('odc')" class="rounded border-slate-700 text-amber-500 focus:ring-0">
+            </label>
+
+            <label class="flex items-center justify-between cursor-pointer py-1">
+              <span class="flex items-center gap-2 text-slate-300">
+                <span class="w-2.5 h-2.5 rounded bg-emerald-500"></span>
+                <span>ODP Distribusi</span>
+              </span>
+              <input type="checkbox" id="chkLayerOdp" checked onchange="toggleLayerVisibility('odp')" class="rounded border-slate-700 text-emerald-500 focus:ring-0">
+            </label>
+
+            <label class="flex items-center justify-between cursor-pointer py-1">
+              <span class="flex items-center gap-2 text-slate-300">
+                <span class="w-2.5 h-2.5 rounded bg-fuchsia-500"></span>
+                <span>HTB Media Converter</span>
+              </span>
+              <input type="checkbox" id="chkLayerHtb" checked onchange="toggleLayerVisibility('htb')" class="rounded border-slate-700 text-fuchsia-500 focus:ring-0">
+            </label>
+
+            <label class="flex items-center justify-between cursor-pointer py-1">
+              <span class="flex items-center gap-2 text-slate-300">
+                <span class="w-2.5 h-2.5 rounded bg-sky-400"></span>
+                <span><%= t('common.customer','Pelanggan') %></span>
+              </span>
+              <input type="checkbox" id="chkLayerCust" checked onchange="toggleLayerVisibility('customer')" class="rounded border-slate-700 text-sky-500 focus:ring-0">
+            </label>
+
+            <div class="border-t border-slate-800 pt-2">
+              <label class="flex items-center justify-between cursor-pointer py-1">
+                <span class="flex items-center gap-2 text-slate-300">
+                  <span class="w-3 h-0.5 bg-emerald-400"></span>
+                  <span>Jalur Kabel Fiber</span>
+                </span>
+                <input type="checkbox" id="chkLayerCables" checked onchange="toggleLayerVisibility('cables')" class="rounded border-slate-700 text-emerald-500 focus:ring-0">
+              </label>
+
+              <label class="flex items-center justify-between cursor-pointer py-1">
+                <span class="flex items-center gap-2 text-slate-300">
+                  <span class="w-2.5 h-2.5 rounded-full border border-sky-400"></span>
+                  <span>Radius Sinyal (150m)</span>
+                </span>
+                <input type="checkbox" id="chkLayerRadius" onchange="toggleLayerVisibility('radius')" class="rounded border-slate-700 text-sky-500 focus:ring-0">
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Measurement Tool Toggle -->
+        <button 
+          type="button" 
+          onclick="toggleRulerTool()" 
+          id="btnRulerTool"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition"
+          title="Ukur Jarak Kabel Fiber di Peta"
+        >
+          <i class="bi bi-rulers text-sm"></i>
+          <span>Ukur Jarak</span>
+        </button>
+
+      </div>
+
+      <!-- Right: Mode Switcher & Navigation to Workflow Map -->
+      <div class="flex items-center gap-2 flex-wrap">
+        
+        <!-- Recenter Map Button -->
+        <button 
+          type="button" 
+          onclick="resetMapCenter()" 
+          class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/80 text-slate-300 flex items-center justify-center transition"
+          title="Pusatkan Peta ke Jaringan"
+        >
+          <i class="bi bi-crosshair text-sm"></i>
+        </button>
+
+        <!-- Switch to Visual Workflow Map -->
+        <a 
+          href="/admin/map" 
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600/20 border border-sky-500/30 hover:bg-sky-600/30 text-sky-300 text-xs font-semibold shadow-sm transition"
+          title="Buka Visual Workflow Mapping (n8n Style)"
+        >
+          <i class="bi bi-diagram-3 text-sm"></i>
+          <span>Workflow Map</span>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- REAL GIS MAP VIEWPORT -->
+    <div id="gis-map-viewport" class="flex-1 relative">
+
+      <!-- FLOATING 3 VISUAL MODES SWITCHER (Top Right) -->
+      <div class="absolute top-3 right-3 z-[1000] flex items-center bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-700/80 shadow-2xl">
+        <button 
+          type="button" 
+          id="btnModeVector"
+          onclick="setGisVisualMode('vector')" 
+          class="gis-mode-pill-btn active"
+          title="Mode Vektor Gelap Berkontras Tinggi"
+        >
+          Vector Mode
+        </button>
+        <button 
+          type="button" 
+          id="btnModeClean"
+          onclick="setGisVisualMode('clean')" 
+          class="gis-mode-pill-btn"
+          title="Mode Bersih Jalan & Bangunan Minimalis"
+        >
+          Clean Mode
+        </button>
+        <button 
+          type="button" 
+          id="btnModeFull"
+          onclick="setGisVisualMode('full')" 
+          class="gis-mode-pill-btn"
+          title="Mode Satelit Citra Udara Resolusi Tinggi"
+        >
+          Full Satelit
+        </button>
+      </div>
+
+      <!-- FLOATING MEASUREMENT HUD (Top Left, appears when ruler is active) -->
+      <div id="rulerHudBox" class="hidden absolute top-3 left-3 z-[1000] bg-slate-900/95 backdrop-blur-md p-3 rounded-xl border border-sky-500/50 shadow-2xl text-xs space-y-1.5 max-w-xs">
+        <div class="flex items-center justify-between gap-3">
+          <div class="font-bold text-sky-300 flex items-center gap-1.5">
+            <i class="bi bi-rulers text-sm"></i>
+            <span>Pengukur Panjang Kabel</span>
+          </div>
+          <button type="button" onclick="clearMeasurement()" class="text-slate-400 hover:text-white text-xs">
+            Reset
+          </button>
+        </div>
+        <div class="text-[11px] text-slate-300">Klik titik di peta untuk mengukur rute kabel optik.</div>
+        <div class="pt-1 flex items-baseline gap-2">
+          <span class="text-slate-400">Total Panjang:</span>
+          <span id="rulerDistanceText" class="font-mono font-bold text-sm text-emerald-400">0 m</span>
+        </div>
+      </div>
+
+      <!-- FLOATING HUD: CABLE & NODE LEGEND (Bottom Right) -->
+      <div class="absolute bottom-4 right-4 z-[1000] hidden md:flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700/80 text-xs shadow-2xl text-slate-300">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded bg-blue-500"></span>
+          <span>Server / OLT</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded bg-amber-500"></span>
+          <span>ODC</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded bg-emerald-500"></span>
+          <span>ODP</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded bg-fuchsia-500"></span>
+          <span>HTB P2P</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>Flow</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-3.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_6px_#EF4444]"></span>
+          <span class="text-rose-300 font-semibold">Offline</span>
+        </div>
+      </div>
+
+      <!-- LEAFLET MAP ELEMENT -->
+      <div id="map" class="w-full h-full"></div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- Leaflet JS CDN -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<!-- ========================================================================= -->
+<!-- CLIENT-SIDE JAVASCRIPT: GIS ENGINE, 3 MODES, ANIMATIONS & RELATIONS      -->
+<!-- ========================================================================= -->
+<script>
+  // ── INJECTED DATA ────────────────────────────────────────────────────────
+  const rawRouters   = <%- JSON.stringify(routers || []).split('<').join('\\u003c') %>;
+  const rawOlts      = <%- JSON.stringify(olts || []).split('<').join('\\u003c') %>;
+  const rawOdcs      = <%- JSON.stringify(odcs || []).split('<').join('\\u003c') %>;
+  const rawOdps      = <%- JSON.stringify(odps || []).split('<').join('\\u003c') %>;
+  const rawCustomers = <%- JSON.stringify(customers || []).split('<').join('\\u003c') %>;
+
+  const DEFAULT_MAP_CENTER = [-6.844781, 107.828551];
+  const DEFAULT_ZOOM = 15;
+
+  // ── LEAFLET INSTANCE & 3 VISUAL MODES ────────────────────────────────────
+  const map = L.map('map', {
+    zoomControl: true,
+    attributionControl: false,
+    minZoom: 10,
+    maxZoom: 20
+  }).setView(DEFAULT_MAP_CENTER, DEFAULT_ZOOM);
+
+  // 1. Vector Mode: CartoDB Dark Matter
+  const layerVector = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    subdomains: 'abcd'
+  });
+
+  // 2. Clean Mode: CartoDB Voyager Clean Minimalist Street
+  const layerClean = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    subdomains: 'abcd'
+  });
+
+  // 3. Full Content Mode: Google Satellite Hybrid (Air Photos + Streets)
+  const layerFull = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+  });
+
+  let activeVisualMode = localStorage.getItem('gis_visual_mode') || 'vector';
+
+  function setGisVisualMode(mode) {
+    activeVisualMode = mode;
+    localStorage.setItem('gis_visual_mode', mode);
+
+    [layerVector, layerClean, layerFull].forEach(l => {
+      if (map.hasLayer(l)) map.removeLayer(l);
+    });
+
+    if (mode === 'clean') {
+      layerClean.addTo(map);
+    } else if (mode === 'full') {
+      layerFull.addTo(map);
+    } else {
+      layerVector.addTo(map);
+    }
+
+    document.querySelectorAll('.gis-mode-pill-btn').forEach(btn => btn.classList.remove('active'));
+    if (mode === 'clean') document.getElementById('btnModeClean')?.classList.add('active');
+    else if (mode === 'full') document.getElementById('btnModeFull')?.classList.add('active');
+    else document.getElementById('btnModeVector')?.classList.add('active');
+  }
+
+  // Set initial visual mode
+  setGisVisualMode(activeVisualMode);
+
+  // ── LAYER GROUPS ─────────────────────────────────────────────────────────
+  const groupServer   = L.layerGroup().addTo(map);
+  const groupOdc      = L.layerGroup().addTo(map);
+  const groupOdp      = L.layerGroup().addTo(map);
+  const groupHtb      = L.layerGroup().addTo(map);
+  const groupCustomer = L.layerGroup().addTo(map);
+  const groupCables   = L.layerGroup().addTo(map);
+  const groupRadius   = L.layerGroup(); // off by default
+
+  const markerRegistry = {}; // key -> { marker, type, data, latlng }
+  const cableRegistry  = [];  // array of cable polylines
+
+  // ── POPULATE GEOGRAPHIC NETWORK ──────────────────────────────────────────
+  function populateGisNetwork() {
+    // Customer statistics per ODP
+    const custPerOdp = {};
+    const activeCustPerOdp = {};
+    rawCustomers.forEach(c => {
+      if (c.odp_id) {
+        custPerOdp[c.odp_id] = (custPerOdp[c.odp_id] || 0) + 1;
+        if (c.status === 'active') {
+          activeCustPerOdp[c.odp_id] = (activeCustPerOdp[c.odp_id] || 0) + 1;
+        }
+      }
+    });
+
+    // 1. ROUTERS / SERVERS (NOC GATEWAY)
+    const routerList = rawRouters.length > 0 ? rawRouters : [{ id: 1, name: 'MikroTik Core Gateway', host: '192.168.1.1', is_active: 1 }];
+    routerList.forEach(r => {
+      const lat = DEFAULT_MAP_CENTER[0];
+      const lng = DEFAULT_MAP_CENTER[1];
+
+      const icon = L.divIcon({
+        className: 'gis-pin-wrapper',
+        html: `
+          <div class="gis-marker-node">
+            <div class="gis-marker-icon bg-blue-600 text-white">
+              <i class="bi bi-server"></i>
+            </div>
+            <div class="gis-marker-label">${r.name}</div>
+          </div>
+        `,
+        iconSize: [32, 45],
+        iconAnchor: [16, 22]
+      });
+
+      const m = L.marker([lat, lng], { icon: icon }).addTo(groupServer);
+      m.bindPopup(buildNodePopupHtml({
+        type: 'Server / Core Gateway',
+        title: r.name,
+        subtitle: `MikroTik Gateway • ${r.host || '192.168.1.1'}`,
+        status: r.is_active ? 'online' : 'offline',
+        lat: lat,
+        lng: lng,
+        workflowId: `core-${r.id}`
+      }));
+
+      markerRegistry[`core-${r.id}`] = { marker: m, type: 'core', data: r, latlng: [lat, lng] };
+    });
+
+    // 2. OLT DEVICES
+    const oltList = rawOlts.length > 0 ? rawOlts : [{ id: 1, name: 'OLT Utama (EPON/GPON)', host: '192.168.8.100', router_id: 1, is_active: 1 }];
+    oltList.forEach(olt => {
+      const lat = parseFloat(olt.lat) || (DEFAULT_MAP_CENTER[0] + 0.0003);
+      const lng = parseFloat(olt.lng) || (DEFAULT_MAP_CENTER[1] + 0.0003);
+
+      const icon = L.divIcon({
+        className: 'gis-pin-wrapper',
+        html: `
+          <div class="gis-marker-node">
+            <div class="gis-marker-icon bg-cyan-600 text-white">
+              <i class="bi bi-display"></i>
+            </div>
+            <div class="gis-marker-label">${olt.name}</div>
+          </div>
+        `,
+        iconSize: [32, 45],
+        iconAnchor: [16, 22]
+      });
+
+      const m = L.marker([lat, lng], { icon: icon }).addTo(groupServer);
+      m.bindPopup(buildNodePopupHtml({
+        type: 'OLT Hub',
+        title: olt.name,
+        subtitle: `Optical Line Terminal • ${olt.host || 'GPON Master'}`,
+        status: olt.is_active ? 'online' : 'offline',
+        lat: lat,
+        lng: lng,
+        workflowId: `olt-${olt.id}`
+      }));
+
+      markerRegistry[`olt-${olt.id}`] = { marker: m, type: 'olt', data: olt, latlng: [lat, lng] };
+
+      // Cable Server -> OLT
+      const serverKey = `core-${olt.router_id || 1}`;
+      if (markerRegistry[serverKey]) {
+        drawGisCable(markerRegistry[serverKey].latlng, [lat, lng], {
+          type: 'core-olt',
+          label: 'Trunk Fiber Core -> OLT',
+          color: '#06B6D4',
+          status: olt.is_active ? 'online' : 'offline'
+        });
+      }
+    });
+
+    // 3. ODCs (FEEDER HUBS)
+    const odcCoordFallbacks = {
+      1: [-6.8455, 107.8282], // ODC Ciherang
+      2: [-6.8447, 107.8273], // ODC Pasir SD
+      3: [-6.8420, 107.8200], // ODC Pasirbiru
+      4: [-6.8390, 107.8170], // ODC WLN
+      5: [-6.8465, 107.8290]  // ODC Local Server
+    };
+
+    rawOdcs.forEach(odc => {
+      const fb = odcCoordFallbacks[odc.id] || DEFAULT_MAP_CENTER;
+      const lat = parseFloat(odc.lat) || fb[0];
+      const lng = parseFloat(odc.lng) || fb[1];
+
+      const isCascade = !!odc.parent_odc_id;
+
+      const icon = L.divIcon({
+        className: 'gis-pin-wrapper',
+        html: `
+          <div class="gis-marker-node">
+            <div class="gis-marker-icon bg-amber-500 text-slate-900 font-bold">
+              <i class="bi bi-hdd-rack"></i>
+            </div>
+            <div class="gis-marker-label">${odc.name}</div>
+          </div>
+        `,
+        iconSize: [32, 45],
+        iconAnchor: [16, 22]
+      });
+
+      const m = L.marker([lat, lng], { icon: icon }).addTo(groupOdc);
+      m.bindPopup(buildNodePopupHtml({
+        type: isCascade ? 'ODC Cascade Feeder' : 'ODC Feeder Hub',
+        title: odc.name,
+        subtitle: `Kapasitas: ${odc.port_capacity || 4} Tray Out • PON ${odc.pon_port || 1}`,
+        status: 'online',
+        lat: lat,
+        lng: lng,
+        workflowId: `odc-${odc.id}`
+      }));
+
+      markerRegistry[`odc-${odc.id}`] = { marker: m, type: 'odc', data: odc, latlng: [lat, lng] };
+
+      // Cable for ODC:
+      if (isCascade) {
+        const parentKey = `odc-${odc.parent_odc_id}`;
+        if (markerRegistry[parentKey]) {
+          drawGisCable(markerRegistry[parentKey].latlng, [lat, lng], {
+            type: 'odc-cascade',
+            label: `Cascade Feeder ODC #${odc.parent_odc_id} -> #${odc.id}`,
+            color: '#A855F7',
+            status: 'online'
+          });
+        }
+      } else {
+        const oltKey = `olt-${odc.olt_id || 1}`;
+        if (markerRegistry[oltKey]) {
+          drawGisCable(markerRegistry[oltKey].latlng, [lat, lng], {
+            type: 'olt-odc',
+            label: `Feeder PON ${odc.pon_port || 1} OLT -> ${odc.name}`,
+            color: '#F59E0B',
+            status: 'online'
+          });
+        }
+      }
+    });
+
+    // 4. ODPs (DISTRIBUTION SPLITTERS) & HTBs (P2P MEDIA CONVERTER)
+    rawOdps.forEach(odp => {
+      if (!odp.lat || !odp.lng) return;
+      const lat = parseFloat(odp.lat);
+      const lng = parseFloat(odp.lng);
+
+      const totalCust = custPerOdp[odp.id] || 0;
+      const activeCust = activeCustPerOdp[odp.id] || 0;
+      const capacity = Number(odp.port_capacity || (odp.is_htb ? 1 : 16));
+
+      const isOffline = totalCust > 0 && activeCust === 0;
+      const isStandby = totalCust === 0;
+      const odpStatus = isOffline ? 'offline' : (isStandby ? 'standby' : 'online');
+
+      const isHtb = !!odp.is_htb;
+      const isCascade = !!odp.parent_odp_id;
+
+      if (isHtb) {
+        // HTB MEDIA CONVERTER (P2P)
+        const targetCust = rawCustomers.find(c => Number(c.odp_id) === Number(odp.id));
+        const icon = L.divIcon({
+          className: 'gis-pin-wrapper',
+          html: `
+            <div class="gis-marker-node">
+              <div class="gis-marker-icon bg-fuchsia-600 text-white ${isOffline ? 'bg-rose-600' : ''}">
+                <i class="bi bi-arrow-left-right"></i>
+              </div>
+              <div class="gis-marker-label">${odp.name}</div>
+            </div>
+          `,
+          iconSize: [32, 45],
+          iconAnchor: [16, 22]
+        });
+
+        const m = L.marker([lat, lng], { icon: icon }).addTo(groupHtb);
+        m.bindPopup(buildNodePopupHtml({
+          type: 'HTB Media Converter (P2P 1:1)',
+          title: odp.name,
+          subtitle: `P2P Target: ${targetCust?.name || 'Belum Ada'}`,
+          status: odpStatus,
+          lat: lat,
+          lng: lng,
+          workflowId: `odp-${odp.id}`
+        }));
+
+        markerRegistry[`odp-${odp.id}`] = { marker: m, type: 'htb', data: odp, latlng: [lat, lng] };
+
+        // P2P Uplink Cable:
+        let sourceKey = null;
+        if (odp.parent_customer_id) {
+          // Relay from Pelanggan Lama
+          const parentCustObj = rawCustomers.find(c => c.id === odp.parent_customer_id);
+          if (parentCustObj && parentCustObj.odp_id) {
+            sourceKey = `odp-${parentCustObj.odp_id}`;
+          }
+        } else if (odp.parent_router_id) {
+          sourceKey = `core-${odp.parent_router_id}`;
+        } else if (odp.odc_id) {
+          sourceKey = `odc-${odp.odc_id}`;
+        }
+
+        if (sourceKey && markerRegistry[sourceKey]) {
+          drawGisCable(markerRegistry[sourceKey].latlng, [lat, lng], {
+            type: 'htb-p2p',
+            label: `HTB P2P Link (${odp.name})`,
+            color: '#EC4899',
+            status: odpStatus
+          });
+        }
+
+      } else {
+        // STANDARD ODP SPLITTER
+        const icon = L.divIcon({
+          className: 'gis-pin-wrapper',
+          html: `
+            <div class="gis-marker-node">
+              <div class="gis-marker-icon bg-emerald-600 text-white ${isOffline ? 'bg-rose-600' : (isStandby ? 'bg-slate-700' : '')}">
+                <i class="bi bi-box"></i>
+              </div>
+              <div class="gis-marker-label">${odp.name} (${totalCust}/${capacity})</div>
+            </div>
+          `,
+          iconSize: [32, 45],
+          iconAnchor: [16, 22]
+        });
+
+        const m = L.marker([lat, lng], { icon: icon }).addTo(groupOdp);
+        m.bindPopup(buildNodePopupHtml({
+          type: isCascade ? 'ODP Cascade' : 'ODP Distribusi',
+          title: odp.name,
+          subtitle: `Port: ${totalCust}/${capacity} (${activeCust} Aktif)`,
+          status: odpStatus,
+          lat: lat,
+          lng: lng,
+          workflowId: `odp-${odp.id}`
+        }));
+
+        // Coverage radius circle (150m)
+        L.circle([lat, lng], {
+          radius: 150,
+          color: '#0284C7',
+          fillColor: '#38BDF8',
+          fillOpacity: 0.08,
+          weight: 1
+        }).addTo(groupRadius);
+
+        markerRegistry[`odp-${odp.id}`] = { marker: m, type: 'odp', data: odp, latlng: [lat, lng] };
+
+        // Cable for ODP:
+        if (isCascade) {
+          const parentKey = `odp-${odp.parent_odp_id}`;
+          if (markerRegistry[parentKey]) {
+            drawGisCable(markerRegistry[parentKey].latlng, [lat, lng], {
+              type: 'odp-cascade',
+              label: `Cascade Drop: ${odp.name}`,
+              color: '#38BDF8',
+              status: odpStatus
+            });
+          }
+        } else if (odp.odc_id) {
+          const odcKey = `odc-${odp.odc_id}`;
+          if (markerRegistry[odcKey]) {
+            drawGisCable(markerRegistry[odcKey].latlng, [lat, lng], {
+              type: 'odc-odp',
+              label: `Distribusi: ${odp.name}`,
+              color: '#10B981',
+              status: odpStatus
+            });
+          }
+        }
+      }
+    });
+
+    // 5. CUSTOMERS (PELANGGAN)
+    rawCustomers.forEach(cust => {
+      if (!cust.lat || !cust.lng) return;
+      const lat = parseFloat(cust.lat);
+      const lng = parseFloat(cust.lng);
+
+      const isActive = cust.status === 'active';
+      const isSuspended = cust.status === 'suspended';
+
+      let pinColor = '#10B981'; // Green active
+      if (!isActive) pinColor = isSuspended ? '#F59E0B' : '#EF4444'; // Orange or Red
+
+      const icon = L.divIcon({
+        className: 'gis-pin-wrapper',
+        html: `<div class="gis-cust-pin" style="background-color: ${pinColor};" title="${cust.name} (${cust.status})"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      });
+
+      const m = L.marker([lat, lng], { icon: icon }).addTo(groupCustomer);
+      m.bindPopup(buildCustomerPopupHtml(cust));
+
+      markerRegistry[`cust-${cust.id}`] = { marker: m, type: 'customer', data: cust, latlng: [lat, lng] };
+
+      // Cable ODP -> Customer Dropwire
+      if (cust.odp_id) {
+        const odpKey = `odp-${cust.odp_id}`;
+        if (markerRegistry[odpKey]) {
+          L.polyline([markerRegistry[odpKey].latlng, [lat, lng]], {
+            color: isActive ? '#34D399' : '#EF4444',
+            weight: 1.5,
+            opacity: 0.65,
+            dashArray: isActive ? '3, 4' : 'none'
+          }).addTo(groupCables);
+        }
+      }
+    });
+  }
+
+  // ── DRAW GIS CABLE: DUAL-LAYER WITH STATUS (OFFLINE = STATIS MERAH) ───────
+  function drawGisCable(coord1, coord2, opts) {
+    const isOffline = opts.status === 'offline';
+    const isStandby = opts.status === 'standby';
+
+    if (isOffline) {
+      // OFFLINE: STATIS MERAH TEBAL
+      const line = L.polyline([coord1, coord2], {
+        color: '#EF4444',
+        weight: 3.5,
+        opacity: 0.95,
+        className: 'gis-cable-offline'
+      }).addTo(groupCables);
+
+      line.bindTooltip(`${opts.label} • OFFLINE (Statis Merah)`, { sticky: true });
+      cableRegistry.push(line);
+
+    } else if (isStandby) {
+      // STANDBY: GRAY DASHED
+      const line = L.polyline([coord1, coord2], {
+        color: '#64748B',
+        weight: 2,
+        opacity: 0.6,
+        className: 'gis-cable-standby'
+      }).addTo(groupCables);
+
+      line.bindTooltip(`${opts.label} • Standby (Kosong)`, { sticky: true });
+      cableRegistry.push(line);
+
+    } else {
+      // ONLINE: GLOW BASE + LASER FLOW PATH
+      const glowLine = L.polyline([coord1, coord2], {
+        color: opts.color || '#38BDF8',
+        weight: 5,
+        opacity: 0.35
+      }).addTo(groupCables);
+
+      const flowLine = L.polyline([coord1, coord2], {
+        color: opts.color || '#38BDF8',
+        weight: 2.5,
+        opacity: 0.95,
+        className: 'gis-cable-flow'
+      }).addTo(groupCables);
+
+      flowLine.bindTooltip(`${opts.label} • Online Aktif`, { sticky: true });
+      cableRegistry.push(glowLine);
+      cableRegistry.push(flowLine);
+    }
+  }
+
+  // ── POPUP BUILDERS ───────────────────────────────────────────────────────
+  function buildNodePopupHtml(d) {
+    const isOffline = d.status === 'offline';
+    return `
+      <div class="p-3.5 space-y-2.5 text-xs font-sans max-w-xs">
+        <div class="flex items-center justify-between gap-2 border-b border-slate-700/80 pb-2">
+          <div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${d.type}</div>
+            <div class="font-bold text-white text-sm">${d.title}</div>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isOffline ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}">
+            ${d.status || 'Active'}
+          </span>
+        </div>
+
+        <div class="text-[11px] text-slate-300">${d.subtitle}</div>
+
+        <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400 flex items-center justify-between">
+          <span>Koordinat:</span>
+          <span class="text-white">${d.lat ? d.lat.toFixed(6) : '-'}, ${d.lng ? d.lng.toFixed(6) : '-'}</span>
+        </div>
+
+        <div class="pt-1 flex items-center justify-between gap-2">
+          <a 
+            href="https://www.google.com/maps?q=${d.lat},${d.lng}" 
+            target="_blank" 
+            class="text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1 text-[11px]"
+          >
+            <i class="bi bi-geo-alt text-xs"></i>
+            <span>Google Maps</span>
+          </a>
+          <a 
+            href="/admin/map?focus=${d.workflowId}" 
+            class="px-2.5 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white font-semibold text-[10px] shadow transition"
+          >
+            Workflow Node
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  function buildCustomerPopupHtml(c) {
+    return `
+      <div class="p-3.5 space-y-2 text-xs font-sans max-w-xs">
+        <div class="flex items-center justify-between gap-2 border-b border-slate-700/80 pb-2">
+          <div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider"><%= t('common.customer','Pelanggan') %></div>
+            <div class="font-bold text-white text-sm">${c.name}</div>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+            ${c.status}
+          </span>
+        </div>
+
+        <div class="space-y-1 text-[11px] text-slate-300">
+          <div><span class="text-slate-400">PPPoE User:</span> <span class="font-mono text-white">${c.pppoe_username || '-'}</span></div>
+          <div><span class="text-slate-400">Paket:</span> ${c.package_id || 'Standar'}</div>
+          <div><span class="text-slate-400">Alamat:</span> ${c.address || '-'}</div>
+        </div>
+
+        <div class="pt-1 flex items-center justify-between border-t border-slate-800 text-[10px]">
+          <a href="/admin/customers?search=${encodeURIComponent(c.name)}" class="text-sky-400 hover:text-sky-300 font-semibold">
+            Detail Pelanggan
+          </a>
+          <a href="https://www.google.com/maps?q=${c.lat},${c.lng}" target="_blank" class="text-emerald-400 hover:text-emerald-300 font-semibold">
+            Navigasi GPS
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── LAYER TOGGLE HANDLER ─────────────────────────────────────────────────
+  function toggleLayerMenu() {
+    document.getElementById('gisLayersMenu').classList.toggle('hidden');
+  }
+
+  // Close layer menu on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#btnToggleLayers') && !e.target.closest('#gisLayersMenu')) {
+      document.getElementById('gisLayersMenu')?.classList.add('hidden');
+    }
+  });
+
+  function toggleLayerVisibility(layerKey) {
+    if (layerKey === 'server') {
+      const chk = document.getElementById('chkLayerServer').checked;
+      chk ? groupServer.addTo(map) : map.removeLayer(groupServer);
+    } else if (layerKey === 'odc') {
+      const chk = document.getElementById('chkLayerOdc').checked;
+      chk ? groupOdc.addTo(map) : map.removeLayer(groupOdc);
+    } else if (layerKey === 'odp') {
+      const chk = document.getElementById('chkLayerOdp').checked;
+      chk ? groupOdp.addTo(map) : map.removeLayer(groupOdp);
+    } else if (layerKey === 'htb') {
+      const chk = document.getElementById('chkLayerHtb').checked;
+      chk ? groupHtb.addTo(map) : map.removeLayer(groupHtb);
+    } else if (layerKey === 'customer') {
+      const chk = document.getElementById('chkLayerCust').checked;
+      chk ? groupCustomer.addTo(map) : map.removeLayer(groupCustomer);
+    } else if (layerKey === 'cables') {
+      const chk = document.getElementById('chkLayerCables').checked;
+      chk ? groupCables.addTo(map) : map.removeLayer(groupCables);
+    } else if (layerKey === 'radius') {
+      const chk = document.getElementById('chkLayerRadius').checked;
+      chk ? groupRadius.addTo(map) : map.removeLayer(groupRadius);
+    }
+  }
+
+  // ── SEARCH & ZOOM TO TARGET ──────────────────────────────────────────────
+  function handleGisSearch(val) {
+    const q = val.toLowerCase().trim();
+    const dropdown = document.getElementById('gisSearchDropdown');
+    const clearBtn = document.getElementById('clearGisSearchBtn');
+    clearBtn.classList.toggle('hidden', q.length === 0);
+
+    if (q.length < 2) {
+      dropdown.classList.add('hidden');
+      dropdown.innerHTML = '';
+      return;
+    }
+
+    const results = [];
+    Object.keys(markerRegistry).forEach(key => {
+      const item = markerRegistry[key];
+      const name = (item.data.name || item.data.title || '').toLowerCase();
+      const extra = (item.data.pppoe_username || item.data.host || item.data.description || '').toLowerCase();
+      if (name.includes(q) || extra.includes(q)) {
+        results.push(item);
+      }
+    });
+
+    if (results.length === 0) {
+      dropdown.innerHTML = `<div class="p-3 text-center text-slate-500 italic">Tidak ditemukan titik "${val}"</div>`;
+      dropdown.classList.remove('hidden');
+      return;
+    }
+
+    dropdown.innerHTML = '';
+    results.slice(0, 8).forEach(res => {
+      const div = document.createElement('div');
+      div.className = 'p-2.5 hover:bg-slate-800/80 cursor-pointer flex items-center justify-between transition';
+      div.innerHTML = `
+        <div>
+          <div class="font-bold text-white">${res.data.name || res.data.title}</div>
+          <div class="text-[10px] text-slate-400 capitalize">${res.type} • ${res.data.host || res.data.pppoe_username || ''}</div>
+        </div>
+        <i class="bi bi-arrow-right text-slate-500 text-xs"></i>
+      `;
+      div.onclick = () => {
+        dropdown.classList.add('hidden');
+        map.flyTo(res.latlng, 18, { animate: true, duration: 1.2 });
+        setTimeout(() => { res.marker.openPopup(); }, 1300);
+      };
+      dropdown.appendChild(div);
+    });
+
+    dropdown.classList.remove('hidden');
+  }
+
+  function clearGisSearch() {
+    const inp = document.getElementById('gisSearchInp');
+    inp.value = '';
+    document.getElementById('gisSearchDropdown').classList.add('hidden');
+    document.getElementById('clearGisSearchBtn').classList.add('hidden');
+  }
+
+  function resetMapCenter() {
+    map.flyTo(DEFAULT_MAP_CENTER, DEFAULT_ZOOM, { animate: true, duration: 1.0 });
+  }
+
+  // ── MEASUREMENT RULER TOOL ───────────────────────────────────────────────
+  let isRulerActive = false;
+  let rulerPoints = [];
+  let rulerLine = null;
+  let rulerMarkers = [];
+
+  function toggleRulerTool() {
+    isRulerActive = !isRulerActive;
+    const btn = document.getElementById('btnRulerTool');
+    const hud = document.getElementById('rulerHudBox');
+
+    if (isRulerActive) {
+      btn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 text-white border border-sky-500 text-xs font-semibold shadow-md transition';
+      hud.classList.remove('hidden');
+      map.getContainer().style.cursor = 'crosshair';
+      clearMeasurement();
+    } else {
+      btn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition';
+      hud.classList.add('hidden');
+      map.getContainer().style.cursor = '';
+      clearMeasurement();
+    }
+  }
+
+  map.on('click', function(e) {
+    if (!isRulerActive) return;
+
+    rulerPoints.push(e.latlng);
+
+    const m = L.circleMarker(e.latlng, {
+      radius: 5,
+      color: '#38BDF8',
+      fillColor: '#FFFFFF',
+      fillOpacity: 1
+    }).addTo(map);
+    rulerMarkers.push(m);
+
+    if (rulerPoints.length > 1) {
+      if (rulerLine) map.removeLayer(rulerLine);
+      rulerLine = L.polyline(rulerPoints, {
+        color: '#38BDF8',
+        weight: 3,
+        dashArray: '6, 6'
+      }).addTo(map);
+
+      // Compute total distance
+      let totalMeters = 0;
+      for (let i = 0; i < rulerPoints.length - 1; i++) {
+        totalMeters += rulerPoints[i].distanceTo(rulerPoints[i + 1]);
+      }
+
+      const distText = totalMeters >= 1000 
+        ? `${(totalMeters / 1000).toFixed(2)} km` 
+        : `${Math.round(totalMeters)} meter`;
+      document.getElementById('rulerDistanceText').textContent = distText;
+    }
+  });
+
+  function clearMeasurement() {
+    rulerPoints = [];
+    if (rulerLine) {
+      map.removeLayer(rulerLine);
+      rulerLine = null;
+    }
+    rulerMarkers.forEach(m => map.removeLayer(m));
+    rulerMarkers = [];
+    document.getElementById('rulerDistanceText').textContent = '0 m';
+  }
+
+  // ── INITIALIZE ON LOAD ───────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    populateGisNetwork();
+
+    // Check query params (e.g. ?focus=odp&id=2)
+    const urlParams = new URLSearchParams(window.location.search);
+    const focusType = urlParams.get('focus');
+    const focusId = urlParams.get('id');
+
+    if (focusType && focusId) {
+      const key = `${focusType}-${focusId}`;
+      if (markerRegistry[key]) {
+        setTimeout(() => {
+          map.flyTo(markerRegistry[key].latlng, 18, { animate: true, duration: 1.2 });
+          setTimeout(() => { markerRegistry[key].marker.openPopup(); }, 1300);
+        }, 300);
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

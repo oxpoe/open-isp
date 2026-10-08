@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .type-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .type-technician { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .type-admin { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+    .type-cashier { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+    .type-collector { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+    
+    .time-info {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .location-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .location-link:hover {
+      text-decoration: underline;
+    }
+    .late-badge {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .filter-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .date-input {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg2);
+      color: var(--text);
+      font-size: 13px;
+    }
+    .photo-thumb {
+      width: 52px;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+    .photo-stack {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .photo-item {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'attendance', company }) %>
+
+<div class="mw">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-calendar-check"></i> <%= title %>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i> 
+        <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
+      </span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type === 'success' ? 's' : 'd' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- Filter & Export -->
+    <div class="filter-row">
+      <input type="date" id="filterDate" class="date-input" value="<%= selectedDate %>">
+      <button class="btn btn-p btn-sm" onclick="filterByDate()">
+        <i class="bi bi-funnel"></i> Filter
+      </button>
+      <button class="btn btn-s btn-sm" onclick="exportData()">
+        <i class="bi bi-file-earmark-excel"></i> Export Excel
+      </button>
+    </div>
+
+    <!-- Statistics Grid -->
+    <% 
+      const techStats = stats.find(s => s.employee_type === 'technician') || {};
+      const adminStats = stats.find(s => s.employee_type === 'admin') || {};
+      const cashierStats = stats.find(s => s.employee_type === 'cashier') || {};
+      const collectorStats = stats.find(s => s.employee_type === 'collector') || {};
+      
+      const totalAll = (techStats.total || 0) + (adminStats.total || 0) + (cashierStats.total || 0) + (collectorStats.total || 0);
+      const checkedInAll = (techStats.checked_in || 0) + (adminStats.checked_in || 0) + (cashierStats.checked_in || 0) + (collectorStats.checked_in || 0);
+      const checkedOutAll = (techStats.checked_out || 0) + (adminStats.checked_out || 0) + (cashierStats.checked_out || 0) + (collectorStats.checked_out || 0);
+    %>
+
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="sc p">
+        <i class="bi bi-people sc-icon"></i>
+        <div class="sc-label">Total Karyawan</div>
+        <div class="sc-val"><%= totalAll %></div>
+        <div class="sc-sub">Hari ini</div>
+      </div>
+      <div class="sc s">
+        <i class="bi bi-check-circle sc-icon"></i>
+        <div class="sc-label">Sedang Bekerja</div>
+        <div class="sc-val"><%= checkedInAll %></div>
+        <div class="sc-sub">Check-in</div>
+      </div>
+      <div class="sc p">
+        <i class="bi bi-door-open sc-icon"></i>
+        <div class="sc-label">Sudah Pulang</div>
+        <div class="sc-val"><%= checkedOutAll %></div>
+        <div class="sc-sub">Check-out</div>
+      </div>
+      <div class="sc d">
+        <i class="bi bi-clock-history sc-icon"></i>
+        <div class="sc-label">Terlambat</div>
+        <div class="sc-val"><%= lateCheckIns.length %></div>
+        <div class="sc-sub">Setelah 08:30</div>
+      </div>
+    </div>
+
+    <!-- Breakdown by Type -->
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:16px">
+      <div class="sc" style="border-left:3px solid #3b82f6">
+        <div class="sc-label"><i class="bi bi-person-workspace"></i> Teknisi</div>
+        <div class="sc-val"><%= techStats.total || 0 %></div>
+        <div class="sc-sub">
+          <span style="color:#22c55e"><%= techStats.checked_in || 0 %> aktif</span> • 
+          <span style="color:#3b82f6"><%= techStats.checked_out || 0 %> selesai</span>
+        </div>
+      </div>
+      <div class="sc" style="border-left:3px solid #a855f7">
+        <div class="sc-label"><i class="bi bi-person-badge"></i> Admin</div>
+        <div class="sc-val"><%= adminStats.total || 0 %></div>
+        <div class="sc-sub">
+          <span style="color:#22c55e"><%= adminStats.checked_in || 0 %> aktif</span> • 
+          <span style="color:#3b82f6"><%= adminStats.checked_out || 0 %> selesai</span>
+        </div>
+      </div>
+      <div class="sc" style="border-left:3px solid #22c55e">
+        <div class="sc-label"><i class="bi bi-cash-coin"></i> Kasir</div>
+        <div class="sc-val"><%= cashierStats.total || 0 %></div>
+        <div class="sc-sub">
+          <span style="color:#22c55e"><%= cashierStats.checked_in || 0 %> aktif</span> • 
+          <span style="color:#3b82f6"><%= cashierStats.checked_out || 0 %> selesai</span>
+        </div>
+      </div>
+      <div class="sc" style="border-left:3px solid #f97316">
+        <div class="sc-label"><i class="bi bi-person-walking"></i> <%= t('collector.role','Kolektor') %></div>
+        <div class="sc-val"><%= collectorStats.total || 0 %></div>
+        <div class="sc-sub">
+          <span style="color:#22c55e"><%= collectorStats.checked_in || 0 %> aktif</span> • 
+          <span style="color:#3b82f6"><%= collectorStats.checked_out || 0 %> selesai</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Late Check-ins Alert -->
+    <% if (lateCheckIns.length > 0) { %>
+    <div class="card" style="margin-top:20px;border-left:3px solid #ef4444">
+      <div class="card-hd">
+        <h6><i class="bi bi-exclamation-triangle"></i> Terlambat Check-in (<%= lateCheckIns.length %>)</h6>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('pwa.field.name','Nama') %></th>
+              <th><%= t('common.type','Tipe') %></th>
+              <th>Waktu Check-in</th>
+              <th>Terlambat</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% lateCheckIns.forEach(att => { 
+              const checkInTime = parseDateInTimezone(att.check_in_time);
+              const targetTime = new Date(checkInTime);
+              targetTime.setHours(8, 30, 0, 0);
+              const lateMinutes = Math.floor((checkInTime - targetTime) / 1000 / 60);
+            %>
+            <tr>
+              <td class="fw6"><%= att.employee_name %></td>
+              <td><span class="type-badge type-<%= att.employee_type %>"><%= att.employee_type %></span></td>
+              <td><%= formatTimeLocal(att.check_in_time) %></td>
+              <td><span class="late-badge"><%= lateMinutes %> menit</span></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Not Checked Out Alert -->
+    <% if (notCheckedOut.length > 0) { %>
+    <div class="card" style="margin-top:20px;border-left:3px solid #f59e0b">
+      <div class="card-hd">
+        <h6><i class="bi bi-bell"></i> Belum Check-out (<%= notCheckedOut.length %>)</h6>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('pwa.field.name','Nama') %></th>
+              <th><%= t('common.type','Tipe') %></th>
+              <th>Check-in</th>
+              <th>Durasi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% notCheckedOut.forEach(att => { 
+              const checkInTime = parseDateInTimezone(att.check_in_time);
+              const now = new Date();
+              const durationMinutes = Math.floor((now - checkInTime) / 1000 / 60);
+              const hours = Math.floor(durationMinutes / 60);
+              const minutes = durationMinutes % 60;
+            %>
+            <tr>
+              <td class="fw6"><%= att.employee_name %></td>
+              <td><span class="type-badge type-<%= att.employee_type %>"><%= att.employee_type %></span></td>
+              <td><%= formatTimeLocal(att.check_in_time) %></td>
+              <td><%= hours %> jam <%= minutes %> menit</td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- All Attendance Records -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-hd">
+        <h6><i class="bi bi-calendar-check"></i> Semua Absensi - <%= parseDateInTimezone(selectedDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></h6>
+      </div>
+      
+      <% if (attendances.length > 0) { %>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('pwa.field.name','Nama') %></th>
+              <th><%= t('common.type','Tipe') %></th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Durasi</th>
+              <th><%= t('common.status','Status') %></th>
+              <th>Lokasi</th>
+              <th>Foto</th>
+              <th><%= t('common.actions','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% attendances.forEach(att => { %>
+            <tr>
+              <td class="fw6"><%= att.employee_name %></td>
+              <td><span class="type-badge type-<%= att.employee_type %>"><%= att.employee_type %></span></td>
+              <td>
+                <%= formatTimeLocal(att.check_in_time) %>
+                <% if (att.check_in_note) { %>
+                  <div class="time-info"><i class="bi bi-chat-dots-fill"></i> <%= att.check_in_note %></div>
+                <% } %>
+              </td>
+              <td>
+                <% if (att.check_out_time) { %>
+                  <%= formatTimeLocal(att.check_out_time) %>
+                  <% if (att.check_out_note) { %>
+                    <div class="time-info"><i class="bi bi-chat-dots-fill"></i> <%= att.check_out_note %></div>
+                  <% } %>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (att.work_duration_minutes > 0) { %>
+                  <%= Math.floor(att.work_duration_minutes / 60) %>j <%= att.work_duration_minutes % 60 %>m
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (att.status === 'checked_in') { %>
+                  <span class="badge badge-s"><%= t('common.active','Aktif') %></span>
+                <% } else { %>
+                  <span class="badge badge-p">Selesai</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (att.check_in_lat && att.check_in_lng) { %>
+                  <a href="https://www.google.com/maps?q=<%= att.check_in_lat %>,<%= att.check_in_lng %>" 
+                     target="_blank" class="location-link">
+                    <i class="bi bi-geo-alt-fill"></i> Lihat Map
+                  </a>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (att.check_in_photo || att.check_out_photo) { %>
+                  <div class="photo-stack">
+                    <% if (att.check_in_photo) { %>
+                      <a href="<%= att.check_in_photo %>" target="_blank" class="photo-item">
+                        <img src="<%= att.check_in_photo %>" alt="Foto check-in" class="photo-thumb">
+                        In
+                      </a>
+                    <% } %>
+                    <% if (att.check_out_photo) { %>
+                      <a href="<%= att.check_out_photo %>" target="_blank" class="photo-item">
+                        <img src="<%= att.check_out_photo %>" alt="Foto check-out" class="photo-thumb">
+                        Out
+                      </a>
+                    <% } %>
+                  </div>
+                <% } else { %>
+                  <span class="text-muted">-</span>
+                <% } %>
+              </td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-g btn-sm" data-id="<%= att.id %>" onclick="editAttendance(this.dataset.id)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <form method="POST" action="/admin/attendance/<%= att.id %>/delete" style="display:inline" 
+                        onsubmit="return confirm('Yakin hapus absensi ini?')">
+                    <button type="submit" class="btn btn-d btn-sm">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } else { %>
+      <div class="card-bd" style="text-align:center;padding:60px 20px">
+        <div style="font-size:64px;margin-bottom:16px;opacity:0.3"><i class="bi bi-inbox"></i></div>
+        <h3 style="color:var(--muted);font-weight:500">Tidak ada data absensi</h3>
+        <p style="color:var(--muted);font-size:14px">Belum ada karyawan yang melakukan absensi pada tanggal ini.</p>
+      </div>
+      <% } %>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function filterByDate() {
+    const date = document.getElementById('filterDate').value;
+    if (date) {
+      window.location.href = '/admin/attendance?date=' + date;
+    }
+  }
+
+  function exportData() {
+    const date = document.getElementById('filterDate').value;
+    const today = new Date().toISOString().split('T')[0];
+    const startDate = prompt('Tanggal Mulai (YYYY-MM-DD):', date || today);
+    if (!startDate) return;
+    
+    const endDate = prompt('Tanggal Akhir (YYYY-MM-DD):', date || today);
+    if (!endDate) return;
+    
+    window.location.href = `/admin/attendance/export?startDate=${startDate}&endDate=${endDate}`;
+  }
+
+  function editAttendance(id) {
+    const checkIn = prompt('Waktu Check-in (YYYY-MM-DD HH:MM:SS):');
+    if (!checkIn) return;
+    
+    const checkOut = prompt('Waktu Check-out (YYYY-MM-DD HH:MM:SS) - kosongkan jika belum:');
+    const checkInNote = prompt('Catatan Check-in:') || '';
+    const checkOutNote = prompt('Catatan Check-out:') || '';
+    
+    fetch(`/admin/attendance/${id}/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        check_in_time: checkIn,
+        check_out_time: checkOut || null,
+        check_in_note: checkInNote,
+        check_out_note: checkOutNote
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert(' ' + data.message);
+        window.location.reload();
+      } else {
+        alert(' ' + data.message);
+      }
+    })
+    .catch(err => {
+      alert('Gagal update: ' + err.message);
+    });
+  }
+
+  // Auto-refresh every 5 minutes
+  setTimeout(() => {
+    window.location.reload();
+  }, 5 * 60 * 1000);
+</script>
+</body>
+</html>

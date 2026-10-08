@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.broadcast.title', 'Broadcast WhatsApp') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .wa-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    .wa-tab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; flex-shrink: 0; }
+    .wa-tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .wa-tab.active { background: var(--primary); color: white; }
+    @media (max-width: 768px) {
+      .wa-tab { padding: 6px 10px; font-size: 12px; }
+      .form-row, .grid-2 { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: activePage || 'broadcast', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-megaphone"></i> <%= t('admin.broadcast.title', 'Broadcast WhatsApp') %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+    <% const waTab = 'broadcast'; %>
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+        <div class="wa-tabs">
+      <a href="/admin/whatsapp" class="wa-tab <%= waTab==='status' ? 'active' : '' %>"><i class="bi bi-phone"></i> <%= t('admin.wa.tab_status','Status WhatsApp') %></a>
+      <a href="/admin/whatsapp/broadcast" class="wa-tab <%= waTab==='broadcast' ? 'active' : '' %>"><i class="bi bi-megaphone"></i> <%= t('admin.wa.tab_broadcast','Broadcast & Pengingat') %></a>
+      <a href="/admin/whatsapp/templates" class="wa-tab <%= waTab==='templates' ? 'active' : '' %>"><i class="bi bi-chat-left-quote"></i> <%= t('admin.wa.tab_templates','Template Pesan') %></a>
+      <a href="/admin/whatsapp/preview" class="wa-tab <%= waTab==='preview' ? 'active' : '' %>"><i class="bi bi-eye"></i> <%= t('admin.wa.tab_preview','Preview Pesan') %></a>
+      <a href="/admin/whatsapp/live-chat" class="wa-tab <%= waTab==='livechat' ? 'active' : '' %>"><i class="bi bi-chat-dots-fill"></i> <%= t('admin.wa.tab_livechat','Live Chat') %></a>
+    </div>
+
+    <div class="card">
+      <div class="card-hd" style="display: flex; justify-content: space-between; align-items: center;">
+        <h6><i class="bi bi-send-fill"></i> <%= t('admin.broadcast.send_mass', 'Kirim Pesan Massal') %></h6>
+        <div id="broadcastCounter" class="badge bp" style="display: none;">
+          <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          <%= t('admin.broadcast.sending', 'Mengirim:') %> <span id="sentCount">0</span>/<span id="totalCount">0</span>
+          (<span id="failedCount" class="text-danger ms-1">0</span> <%= t('admin.broadcast.failed', 'Gagal') %>)
+        </div>
+      </div>
+      <form id="broadcastForm" method="POST" action="/admin/whatsapp/broadcast" data-confirm="<%= t('admin.broadcast.confirm_send', 'Kirim pesan broadcast sekarang? Pastikan target dan pesan sudah benar.') %>">
+        <div class="card-bd">
+          <div class="alert alert-i" style="margin-bottom: 14px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3);">
+            <div style="font-weight: 800; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; color: var(--primary);">
+              <i class="bi bi-shield-check" style="font-size: 16px;"></i> Anti-Banned Aktif (Spintax + Jeda Mengetik)
+            </div>
+            <div style="font-size: 12px; line-height: 1.5; color: var(--text);">
+              • <strong>Variasi Kata Spintax:</strong> Gunakan <code>{Halo|Selamat Pagi|Yth.}</code> agar isi pesan otomatis diacak & tidak dianggap spam.<br>
+              • <strong>Jeda Mengetik Manusiawi:</strong> Sebelum dikirim, sistem menunggu sejenak (menyesuaikan panjang pesan) meniru tempo menulis manusia.<br>
+              • <strong>Jeda Acak & Batching:</strong> Dikirim dengan jeda acak dinamis dan jeda istirahat otomatis antar batch.
+            </div>
+          </div>
+
+
+
+          <div class="form-row" style="margin-bottom: 15px;">
+            <div class="fg">
+              <label class="fl"><%= t('admin.broadcast.target', 'Target Penerima') %></label>
+              <select class="fs" name="target" id="targetSelect" required style="width: 100%;">
+                <option value="all"><%= t('admin.broadcast.target_all', 'Semua Pelanggan (Aktif & Isolir)') %></option>
+                <option value="active"><%= t('admin.broadcast.target_active', 'Hanya Pelanggan Aktif') %></option>
+                <option value="suspended"><%= t('admin.broadcast.target_suspended', 'Hanya Pelanggan Terisolir') %></option>
+                <option value="unpaid"><%= t('admin.broadcast.target_unpaid', 'Pelanggan yang Punya Tunggakan Tagihan') %></option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.broadcast.delay', 'Jeda Antar Pesan (Detik)') %></label>
+              <input class="fc" type="number" name="delay" value="<%= getSetting('whatsapp_broadcast_delay', 2) %>" min="1" max="60">
+            </div>
+          </div>
+
+          <div class="alert alert-d alert-permanent" style="margin-bottom: 20px; border: 1px solid rgba(248,81,73,0.4);">
+            <i class="bi bi-exclamation-triangle-fill"></i> <strong><%= t('admin.broadcast.warning_title', 'PERINGATAN PENTING:') %></strong> <%= t('admin.broadcast.warning_body', 'Penggunaan fitur broadcast massal berisiko menyebabkan akun WhatsApp Anda DIBLOKIR (BANNED) oleh pihak Meta jika dianggap melanggar ketentuan spam. Pastikan pesan relevan bagi pelanggan. Developer aplikasi tidak bertanggung jawab atas segala risiko pemblokiran akun.') %>
+          </div>
+          
+          <div class="form-row">
+            <div class="fg" style="width: 100%;">
+              <label class="fl"><%= t('admin.broadcast.message', 'Isi Pesan WhatsApp') %></label>
+              <textarea class="fc" name="message" id="messageBox" rows="8" required style="width: 100%;"></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
+                <i class="bi bi-info-circle"></i> <%= t('admin.broadcast.variables', 'Variabel:') %> <b>{{nama}}</b>, <b>{{tagihan}}</b>, <b>{{rincian}}</b>, <b>{{paket}}</b>, <b>{{link}}</b> (<%= t('admin.broadcast.portal_link', 'Link Portal') %>).
+                <br>
+                <i class="bi bi-chat-text"></i> <%= t('admin.broadcast.formatting', 'Gunakan *Tebal*, _Miring_, atau ~Coret~ sesuai standar WhatsApp.') %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-bd" style="border-top: 1px solid var(--border); background: var(--bg2); display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-p"><i class="bi bi-send"></i> <%= t('admin.broadcast.start', 'Mulai Broadcast') %></button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card mb16">
+      <div class="card-bd">
+        <div class="hint" style="margin:0;padding:12px;border:1px dashed var(--border);border-radius:10px;background:var(--bg2)">
+          <i class="bi bi-robot"></i> <strong>Pengingat otomatis dipindah:</strong> pengaturan jadwal, pemilihan template &amp; isi pesan pengingat tagihan kini di menu <a href="/admin/automation" style="color:var(--primary);font-weight:800">Automation &rarr;</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-send-check"></i> Kirim Tagihan Sekarang (Manual — bila Auto OFF)</h6></div>
+      <form method="POST" action="/admin/whatsapp/send-billing-now" onsubmit="return confirm('Kirim tagihan sekarang ke pelanggan belum bayar?');">
+        <div class="card-bd">
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <div class="fg"><label class="fl"><i class="bi bi-calendar-event"></i> Tanggal Isolir</label>
+              <select class="fs" name="isolate_day">
+                <option value="0"><%= t('collector.filter_all','Semua') %></option>
+                <% (isolateDays||[]).forEach(function(d){ %><option value="<%= d %>">Tgl <%= d %></option><% }); %>
+              </select>
+            </div>
+            <div class="fg"><label class="fl"><i class="bi bi-chat-left-quote"></i> Template</label>
+              <select class="fs" name="template_key">
+                <% Object.keys(billingTemplates||{}).forEach(function(k){ %><option value="<%= k %>"><%= billingTemplates[k] %></option><% }); %>
+              </select>
+            </div>
+            <div class="fg"><label class="fl"><i class="bi bi-clock-history"></i> Interval</label>
+              <select class="fs" name="interval_mode" id="bsMode" onchange="bsToggle()">
+                <option value="static">Statis</option>
+                <option value="random">Random (anti-ban)</option>
+              </select>
+            </div>
+            <div class="fg" id="bsStatic"><label class="fl">Jeda (detik)</label>
+              <input class="fc" type="number" name="interval_value" value="15" min="3" max="600">
+            </div>
+            <div class="fg" id="bsRandom" style="display:none"><label class="fl">Jeda acak (min–max detik)</label>
+              <div style="display:flex;gap:6px">
+                <input class="fc" type="number" name="interval_min" value="15" min="3" max="600">
+                <input class="fc" type="number" name="interval_max" value="40" min="3" max="900">
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="bi bi-info-circle"></i> Kirim ke pelanggan <b>belum bayar</b> pada tanggal isolir terpilih. Gunakan <b>Random</b> agar tidak dianggap spam/di-ban.</div>
+        </div>
+        <div class="card-bd" style="border-top:1px solid var(--border);background:var(--bg2);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div id="bsResult" style="font-size:12px" class="text-muted"></div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-g" onclick="bsStop()"><i class="bi bi-stop-circle"></i> Hentikan</button>
+            <button type="submit" class="btn btn-p"><i class="bi bi-send"></i> Kirim Tagihan Sekarang</button>
+          </div>
+        </div>
+      </form>
+      <div class="card-bd" id="bsProgress" style="display:none;border-top:1px solid var(--border)">
+        <div style="font-weight:700;font-size:13px" id="bsProgressText"></div>
+        <div style="height:8px;background:var(--bg);border-radius:999px;overflow:hidden;margin-top:8px"><div id="bsBar" style="height:100%;width:0;background:var(--primary);transition:width .3s"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const I18N = {
+  confirmChangeTarget: "<%= t('admin.broadcast.confirm_change_target', 'Ganti target penerima? Pesan yang sudah Anda ketik akan ditimpa dengan template baru.') %>",
+  sendingText: "<%= t('admin.broadcast.sending_btn', 'Sedang Mengirim...') %>",
+  donePrefix: "<%= t('admin.broadcast.done_prefix', 'Selesai:') %>",
+  sentSuffix: "<%= t('admin.broadcast.sent_suffix', 'dikirim') %>",
+  startBtn: "<%= t('admin.broadcast.start', 'Mulai Broadcast') %>"
+};
+const templates = {
+  all: `Yth. Pelanggan {{nama}},\n\nBersama ini kami informasikan bahwa akan ada pemeliharaan jaringan rutin pada:\nHari/Tanggal: ...\nPukul: ...\n\nSelama proses tersebut, layanan internet (Paket {{paket}}) akan terganggu sementara waktu. Kami memohon maaf atas ketidaknyamanan ini.\n\nCek status layanan di: {{link}}\n\nTerima kasih.\nSalam,\nAdmin <%= company %>`,
+  
+  active: `Yth. Pelanggan Setia {{nama}},\n\nTerima kasih telah mempercayakan kebutuhan internet Anda kepada kami. Nikmati terus layanan terbaik Paket {{paket}} tanpa hambatan.\n\nKelola akun Anda di: {{link}}\n\nSalam,\nAdmin <%= company %>`,
+  
+  suspended: `Yth. Pelanggan {{nama}},\n\nMohon maaf, layanan internet Anda saat ini sedang dinonaktifkan (Terisolir). \n\nTotal tunggakan Anda: *Rp {{tagihan}}* (Periode: {{rincian}}).\n\nSilakan bayar melalui portal kami: {{link}}\n\nSalam,\nAdmin <%= company %>`,
+  
+  unpaid: `Yth. Pelanggan {{nama}},\n\nBerdasarkan data sistem kami, Anda memiliki tagihan internet yang *BELUM LUNAS*.\n\n📦 *Paket:* {{paket}}\n💰 *Total Tagihan:* Rp {{tagihan}}\n📅 *Periode:* {{rincian}}\n\nMohon segera melakukan pembayaran melalui portal pelanggan: {{link}}\n\nTerima kasih atas kerja samanya.\nSalam,\nAdmin <%= company %>`
+};
+
+const targetSelect = document.getElementById('targetSelect');
+const messageBox = document.getElementById('messageBox');
+
+// Set template awal
+messageBox.value = templates[targetSelect.value];
+
+// Ganti template saat dropdown berubah
+targetSelect.addEventListener('change', function() {
+  if (confirm(I18N.confirmChangeTarget)) {
+    messageBox.value = templates[this.value];
+  } else {
+    // Revert dropdown if canceled
+    for(let i=0; i<this.options.length; i++) {
+      if(templates[this.options[i].value] === messageBox.value) {
+        this.selectedIndex = i;
+        break;
+      }
+    }
+  }
+});
+
+setTimeout(()=>document.querySelectorAll('.alert:not(.alert-permanent)').forEach(a=>a.style.display='none'),5000);
+
+// Polling Broadcast Status
+const broadcastCounter = document.getElementById('broadcastCounter');
+const sentCountEl = document.getElementById('sentCount');
+const totalCountEl = document.getElementById('totalCount');
+const failedCountEl = document.getElementById('failedCount');
+const submitBtn = document.querySelector('button[type="submit"]');
+const broadcastForm = document.getElementById('broadcastForm');
+
+if (broadcastForm) {
+  broadcastForm.addEventListener('submit', function (e) {
+    const msg = String(broadcastForm.dataset.confirm || '').trim();
+    if (msg && !confirm(msg)) e.preventDefault();
+  });
+}
+
+async function checkBroadcastStatus() {
+  try {
+    const res = await fetch('/admin/api/whatsapp/broadcast-status');
+    const status = await res.json();
+    
+    if (status.active) {
+      broadcastCounter.style.display = 'inline-flex';
+      sentCountEl.textContent = status.sent;
+      totalCountEl.textContent = status.total;
+      failedCountEl.textContent = status.failed;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ' + I18N.sendingText;
+    } else {
+      if (status.total > 0 && status.sent + status.failed === status.total) {
+        // Just finished
+        broadcastCounter.className = 'badge bs';
+        broadcastCounter.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> ${I18N.donePrefix} ${status.sent}/${status.total} ${I18N.sentSuffix}`;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-send"></i> ' + I18N.startBtn;
+      } else {
+        broadcastCounter.style.display = 'none';
+      }
+    }
+  } catch (e) { console.error('Status check failed', e); }
+}
+
+// Jalankan pengingat tagihan otomatis sekarang (manual)
+async function runReminderNow(btn) {
+  const out = document.getElementById('runReminderResult');
+  const old = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menjalankan...'; }
+  if (out) { out.textContent = 'Menjalankan pengingat…'; out.style.color = 'var(--muted)'; }
+  try {
+    const r = await fetch('/admin/whatsapp/run-reminder-now', { method: 'POST' });
+    const j = await r.json().catch(function () { return {}; });
+    if (out) { out.textContent = j.ok ? (j.message || 'Berhasil.') : ('Gagal — ' + (j.message || 'Terjadi kesalahan.')); out.style.color = j.ok ? 'var(--success)' : 'var(--danger)'; }
+  } catch (e) {
+    if (out) { out.textContent = 'Gagal — ' + e.message; out.style.color = 'var(--danger)'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = old; }
+  }
+}
+
+// Start polling
+setInterval(checkBroadcastStatus, 2000);
+checkBroadcastStatus();
+
+function bsToggle(){ var m=(document.getElementById('bsMode')||{}).value; document.getElementById('bsStatic').style.display = m==='static'?'':'none'; document.getElementById('bsRandom').style.display = m==='random'?'':'none'; }
+async function bsStop(){ try{ await fetch('/admin/api/whatsapp/billing-send-stop',{method:'POST'}); }catch(e){} }
+async function bsPoll(){ try{ const r=await fetch('/admin/api/whatsapp/billing-send-status'); const s=await r.json(); const box=document.getElementById('bsProgress'); if(!s||(!s.running&&!s.total)) return; box.style.display='block'; const pct = s.total? Math.round(((s.sent+s.failed)/s.total)*100):0; document.getElementById('bsBar').style.width=pct+'%'; document.getElementById('bsProgressText').textContent=(s.running?'Mengirim…':'Selesai')+' '+s.sent+'/'+s.total+' terkirim, '+s.failed+' gagal'+(s.last?(' • terakhir: '+s.last):'')+(s.label?(' • '+s.label):''); }catch(e){} }
+setInterval(bsPoll, 3000); bsPoll();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Offline</title>
+  <meta name="theme-color" content="#161A21">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100dvh;display:flex;align-items:center;justify-content:center;
+      background:radial-gradient(1200px 600px at 50% -10%,#1F2420,#090d16 60%);
+      color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      padding:24px;text-align:center;
+    }
+    .wrap{max-width:420px;width:100%}
+    .icon{
+      width:96px;height:96px;margin:0 auto 20px;border-radius:28px;
+      background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(6,182,212,.15));
+      border:1px solid rgba(99,102,241,.35);
+      display:flex;align-items:center;justify-content:center;font-size:44px;
+    }
+    h1{font-size:20px;font-weight:800;margin-bottom:8px;color:#fff}
+    p{font-size:14px;line-height:1.6;color:#8A96A6;margin-bottom:20px}
+    .box{
+      background:rgba(17,24,39,.8);border:1px solid rgba(99,102,241,.22);
+      border-radius:20px;padding:18px;text-align:left;margin-bottom:20px;
+    }
+    .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(148,163,184,.12)}
+    .row:last-child{border-bottom:0}
+    .row span{color:#8A96A6}
+    .row b{color:#fff;font-weight:700}
+    .btn{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      min-height:48px;width:100%;border-radius:14px;border:0;cursor:pointer;
+      background:linear-gradient(135deg,#ADFF2F,#3b82f6);color:#fff;
+      font-size:15px;font-weight:800;text-decoration:none;box-shadow:0 8px 22px rgba(59,130,246,.35);
+    }
+    .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f87171;margin-right:6px;
+      animation:pulse 1.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+    @media (prefers-reduced-motion:reduce){.dot{animation:none}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="icon">📡</div>
+    <h1>Tidak ada koneksi internet</h1>
+    <p><span class="dot"></span>Koneksi ke server terputus. Aplikasi akan otomatis memuat kembali data saat jaringan kembali normal.</p>
+
+    <div class="box">
+      <div class="row"><span>Status</span><b>Offline</b></div>
+      <div class="row"><span>Data tagihan</span><b>Perlu online</b></div>
+      <div class="row"><span>Pemakaian trafik</span><b>Perlu online</b></div>
+      <div class="row"><span>Tagihan &amp; tiket</span><b>Tersimpan lokal</b></div>
+    </div>
+
+    <a class="btn" href="/customer/dashboard">🔄 Coba Lagi</a>
+  </div>
+  <script>
+    window.addEventListener('online', function () { location.reload(); });
+  </script>
+</body>
+</html>

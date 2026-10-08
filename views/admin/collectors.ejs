@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kolektor | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'collectors', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-person-badge"></i>
+      <span>Manajemen Kolektor</span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <button class="btn btn-p btn-sm" onclick="openModal('addCollectorModal')"><i class="bi bi-plus-lg"></i> Tambah Kolektor</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='error'?'d':'s' %>" data-flash="1"><%= msg.text %></div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-ul"></i> Daftar Kolektor</h6>
+      </div>
+      <div class="hint" style="padding:12px 16px 0 16px;font-size:12px;color:var(--muted)">
+        Pengaturan approval pembayaran berlaku per akun kolektor. `Langsung Lunas` berarti pembayaran dari kolektor langsung melunasi invoice, sedangkan `Perlu Approval` berarti harus disetujui admin atau kasir terlebih dahulu.
+      </div>
+      <div style="padding:12px 16px 0 16px;display:flex;gap:10px;flex-wrap:wrap">
+        <select id="collectorModeFilter" class="fs" style="max-width:220px">
+          <option value="all">Semua Mode Pembayaran</option>
+          <option value="direct">Langsung Lunas</option>
+          <option value="approval">Perlu Approval</option>
+        </select>
+        <select id="collectorStatusFilter" class="fs" style="max-width:180px">
+          <option value="all">Semua Status Akun</option>
+          <option value="active"><%= t('common.active','Aktif') %></option>
+          <option value="inactive"><%= t('common.inactive','Nonaktif') %></option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('pwa.field.name','Nama') %></th>
+              <th>Username</th>
+              <th>Password</th>
+              <th>No. HP</th>
+              <th>Area Tugas</th>
+              <th><%= t('common.status','Status') %></th>
+              <th>Mode Pembayaran</th>
+              <th><%= t('common.actions','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!collectors || collectors.length === 0) { %>
+              <tr><td colspan="8" class="text-center text-muted" style="padding:20px">Belum ada data kolektor.</td></tr>
+            <% } else { %>
+              <% collectors.forEach(c => { %>
+                <tr data-mode="<%= c.auto_approve ? 'direct' : 'approval' %>" data-status="<%= c.is_active ? 'active' : 'inactive' %>">
+                  <td><strong><%= c.name %></strong></td>
+                  <td><code><%= c.username %></code></td>
+                  <td><span class="text-muted"><%= c.password %></span></td>
+                  <td><%= c.phone || '-' %></td>
+                  <td><span class="badge" style="background:rgba(99,102,241,0.15);color:#818cf8"><%= c.area || '-' %></span></td>
+                  <td>
+                    <span class="badge <%= c.is_active ? 'bs' : 'bd' %>"><%= c.is_active ? t('common.active','Aktif') : t('common.inactive','Nonaktif') %></span>
+                  </td>
+                  <td>
+                    <span class="badge <%= c.auto_approve ? 'bs' : 'bm' %>">
+                      <%= c.auto_approve ? 'Langsung Lunas' : 'Perlu Approval' %>
+                    </span>
+                  </td>
+                  <td style="white-space:nowrap">
+                    <form id="cdel-<%= c.id %>" action="/admin/collectors/<%= c.id %>/delete" method="POST" style="display:none" onsubmit="return confirm('Hapus kolektor ini?')"></form>
+                    <div class="act">
+                      <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                      <div class="act-menu">
+                        <button type="button" class="act-item" onclick='editCollector(<%- JSON.stringify(c).split('<').join('\\u003c') %>)'><i class="bi bi-pencil"></i> Edit Kolektor</button>
+                        <div class="act-sep"></div>
+                        <button type="submit" form="cdel-<%= c.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus Kolektor</button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="addCollectorModal">
+  <div class="mb">
+    <form action="/admin/collectors" method="POST">
+      <div class="mh"><span class="mt">Tambah Kolektor Baru</span><button type="button" class="mc" onclick="closeModal('addCollectorModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl">Nama Lengkap</label><input type="text" name="name" class="fc" required></div>
+        <div class="fg"><label class="fl">Username Login</label><input type="text" name="username" class="fc" required></div>
+        <div class="fg"><label class="fl">Password</label><input type="text" name="password" class="fc" required></div>
+        <div class="fg"><label class="fl">No. HP</label><input type="text" name="phone" class="fc" placeholder="08123456789"></div>
+        <div class="fg">
+          <label class="fl">Area / Wilayah Tugas</label>
+          <select name="area" class="fs">
+            <option value="">-- Semua Area / Bebas --</option>
+            <% if (typeof masterAreas !== 'undefined' && masterAreas && masterAreas.length > 0) { %>
+              <% masterAreas.forEach(a => { %>
+                <option value="<%= a.name %>"><%= a.name %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">
+            <i class="bi bi-check-circle"></i> Auto-Approve Pembayaran
+          </label>
+          <select name="auto_approve" id="add-auto-approve" class="fs" onchange="updateCollectorModeBadge('add')">
+            <option value="0">Nonaktif (Perlu Approval Admin)</option>
+            <option value="1">Aktif (Langsung Lunas)</option>
+          </select>
+          <div id="add-mode-badge" class="hint" style="margin-top:8px;font-size:12px;color:#fbbf24">
+            Mode saat ini: Menunggu approval admin/kasir sebelum invoice menjadi lunas.
+          </div>
+          <div class="hint" style="margin-top:6px;font-size:11px;color:var(--muted)">
+            Jika aktif, pembayaran yang dilaporkan kolektor ini akan langsung diproses tanpa perlu approval admin/kasir.
+          </div>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addCollectorModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('common.save','Simpan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="mo" id="editCollectorModal">
+  <div class="mb">
+    <form id="editForm" method="POST">
+      <div class="mh"><span class="mt">Edit Data Kolektor</span><button type="button" class="mc" onclick="closeModal('editCollectorModal')">&times;</button></div>
+      <div class="mbody">
+        <div class="fg"><label class="fl">Nama Lengkap</label><input type="text" name="name" id="e-name" class="fc" required></div>
+        <div class="fg"><label class="fl">Username Login</label><input type="text" name="username" id="e-username" class="fc" required></div>
+        <div class="fg"><label class="fl">Password</label><input type="text" name="password" id="e-password" class="fc" required></div>
+        <div class="fg"><label class="fl">No. HP</label><input type="text" name="phone" id="e-phone" class="fc"></div>
+        <div class="fg">
+          <label class="fl">Area / Wilayah Tugas</label>
+          <select name="area" id="e-area" class="fs">
+            <option value="">-- Semua Area / Bebas --</option>
+            <% if (typeof masterAreas !== 'undefined' && masterAreas && masterAreas.length > 0) { %>
+              <% masterAreas.forEach(a => { %>
+                <option value="<%= a.name %>"><%= a.name %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Status Akun</label>
+          <select name="is_active" id="e-status" class="fs">
+            <option value="1"><%= t('common.active','Aktif') %></option>
+            <option value="0"><%= t('common.inactive','Nonaktif') %></option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">
+            <i class="bi bi-check-circle"></i> Auto-Approve Pembayaran
+          </label>
+          <select name="auto_approve" id="e-auto-approve" class="fs" onchange="updateCollectorModeBadge('edit')">
+            <option value="0">Nonaktif (Perlu Approval Admin)</option>
+            <option value="1">Aktif (Langsung Lunas)</option>
+          </select>
+          <div id="edit-mode-badge" class="hint" style="margin-top:8px;font-size:12px;color:#fbbf24">
+            Mode saat ini: Menunggu approval admin/kasir sebelum invoice menjadi lunas.
+          </div>
+          <div class="hint" style="margin-top:6px;font-size:11px;color:var(--muted)">
+            Jika aktif, pembayaran yang dilaporkan kolektor ini akan langsung diproses tanpa perlu approval admin/kasir.
+          </div>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('editCollectorModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><%= t('tech.mon.save','Simpan Perubahan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function updateCollectorModeBadge(mode){
+  const isEdit = mode === 'edit';
+  const select = document.getElementById(isEdit ? 'e-auto-approve' : 'add-auto-approve');
+  const badge = document.getElementById(isEdit ? 'edit-mode-badge' : 'add-mode-badge');
+  if(!select || !badge) return;
+  const enabled = String(select.value) === '1';
+  badge.style.color = enabled ? '#22c55e' : '#fbbf24';
+  badge.innerHTML = enabled
+    ? 'Mode saat ini: Pembayaran kolektor akan langsung membuat invoice lunas.'
+    : 'Mode saat ini: Pembayaran kolektor akan menunggu approval admin/kasir.';
+}
+function applyCollectorFilters(){
+  const mode = document.getElementById('collectorModeFilter')?.value || 'all';
+  const status = document.getElementById('collectorStatusFilter')?.value || 'all';
+  document.querySelectorAll('table.dtbl tbody tr[data-mode]').forEach((row) => {
+    const rowMode = row.getAttribute('data-mode') || '';
+    const rowStatus = row.getAttribute('data-status') || '';
+    const modeOk = mode === 'all' || rowMode === mode;
+    const statusOk = status === 'all' || rowStatus === status;
+    row.style.display = (modeOk && statusOk) ? '' : 'none';
+  });
+}
+function editCollector(c){
+  document.getElementById('editForm').action='/admin/collectors/'+c.id+'/update';
+  document.getElementById('e-name').value=c.name||'';
+  document.getElementById('e-username').value=c.username||'';
+  document.getElementById('e-password').value=c.password||'';
+  document.getElementById('e-phone').value=c.phone||'';
+  document.getElementById('e-area').value=c.area||'';
+  document.getElementById('e-status').value=String(c.is_active ? 1 : 0);
+  document.getElementById('e-auto-approve').value=String(c.auto_approve ? 1 : 0);
+  updateCollectorModeBadge('edit');
+  openModal('editCollectorModal');
+}
+document.getElementById('collectorModeFilter')?.addEventListener('change', applyCollectorFilters);
+document.getElementById('collectorStatusFilter')?.addEventListener('change', applyCollectorFilters);
+updateCollectorModeBadge('add');
+updateCollectorModeBadge('edit');
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.nav.finance_report', 'Laporan Keuangan') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    details.card > summary { cursor: pointer; list-style: none; }
+    details.card > summary::-webkit-details-marker { display: none; }
+    details.card > summary::after { content: '\F282'; font-family: 'bootstrap-icons'; color: var(--muted); }
+    details.card[open] > summary::after { content: '\F286'; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'reports', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-bar-chart-line"></i> <%= t('admin.nav.finance_report', 'Laporan Keuangan') %></div>
+    <div class="tb-right" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select class="fs" id="yearSelect" style="width:90px" onchange="window.location='/admin/reports?year='+this.value">
+        <% for(let y=new Date().getFullYear(); y>=2023; y--){ %>
+        <option value="<%= y %>" <%= filterYear==y?'selected':'' %>><%= y %></option>
+        <% } %>
+      </select>
+      <a href="/admin/reports/export-csv?year=<%= filterYear %>" class="btn btn-g btn-sm" title="Export Excel (CSV)"><i class="bi bi-file-earmark-excel" style="color:#10b981"></i> Excel</a>
+      <a href="/admin/reports/pdf?year=<%= filterYear %>&mode=before" target="_blank" class="btn btn-g btn-sm" title="PDF — Laba Sebelum Pajak"><i class="bi bi-file-earmark-pdf" style="color:#ef4444"></i> PDF (Sblm Pajak)</a>
+      <a href="/admin/reports/pdf?year=<%= filterYear %>&mode=after" target="_blank" class="btn btn-g btn-sm" title="PDF — Laba Sesudah Pajak"><i class="bi bi-file-earmark-pdf" style="color:#ef4444"></i> PDF (Sstlh Pajak)</a>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <!-- ═══ A. RINGKASAN ═══ -->
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr))">
+      <div class="sc i"><i class="bi bi-cash-stack sc-icon"></i>
+        <div class="sc-label"><%= t('admin.fin.gross','Pemasukan (Bruto)') %> <%= filterYear %></div>
+        <div class="sc-val" style="font-size:20px">Rp <%= (cashInYear||0).toLocaleString('id-ID') %></div>
+        <div class="sc-sub">Bulan ini: Rp <%= (cashInThisMonth||0).toLocaleString('id-ID') %></div>
+      </div>
+      <div class="sc d"><i class="bi bi-wallet2 sc-icon"></i>
+        <div class="sc-label">Pengeluaran <%= filterYear %></div>
+        <div class="sc-val" style="font-size:20px">- Rp <%= (expensesYear||0).toLocaleString('id-ID') %></div>
+        <div class="sc-sub">Bulan ini: Rp <%= (expensesMonth||0).toLocaleString('id-ID') %></div>
+      </div>
+      <div class="sc w"><i class="bi bi-receipt sc-icon"></i>
+        <div class="sc-label">PPh Badan (<%= finance.pph %>%)</div>
+        <div class="sc-val" style="font-size:20px">- Rp <%= Math.round(ply.pph).toLocaleString('id-ID') %></div>
+        <div class="sc-sub">Laba sblm pajak: Rp <%= Math.round(ply.sebelumPph).toLocaleString('id-ID') %></div>
+      </div>
+      <div class="sc s" style="background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.3)"><i class="bi bi-piggy-bank-fill sc-icon" style="color:#10b981"></i>
+        <div class="sc-label" style="color:#10b981"><%= t('admin.fin.net','Laba Bersih') %> <%= filterYear %></div>
+        <div style="font-size:11.5px;color:var(--muted);margin-bottom:2px">Sebelum Pajak: <b style="color:var(--text)">Rp <%= Math.round(ply.sebelumPph).toLocaleString('id-ID') %></b></div>
+        <div style="font-size:11.5px;color:var(--muted);margin-bottom:4px">Sesudah Pajak: <b style="color:#10b981">Rp <%= Math.round(ply.bersih).toLocaleString('id-ID') %></b></div>
+        <div class="sc-sub" style="color:#10b981">Bulan ini (sstlh): Rp <%= Math.round(pm.bersih).toLocaleString('id-ID') %></div>
+      </div>
+      <div class="sc p"><i class="bi bi-hourglass sc-icon"></i>
+        <div class="sc-label">Piutang Belum Bayar</div>
+        <div class="sc-val" style="font-size:20px">Rp <%= (pendingAmount||0).toLocaleString('id-ID') %></div>
+        <div class="sc-sub">Pelanggan aktif: <%= activeCustomers %></div>
+      </div>
+    </div>
+
+    <!-- ═══ B. LAPORAN LABA / RUGI ═══ -->
+    <div class="card mb16">
+      <div class="card-hd">
+        <h6><i class="bi bi-receipt-cutoff"></i> Laporan Laba / Rugi — Pajak &amp; Retribusi <%= filterYear %></h6>
+      </div>
+      <div class="card-bd" style="padding:0">
+        <table class="dtbl">
+          <tbody>
+            <tr><td><%= t('admin.fin.gross','Pemasukan (Bruto)') %></td><td class="num fw6">Rp <%= Math.round(ply.bruto).toLocaleString('id-ID') %></td></tr>
+            <tr><td>DPP — Dasar Pengenaan Pajak</td><td class="num">Rp <%= Math.round(ply.dpp).toLocaleString('id-ID') %></td></tr>
+            <tr><td>PPN Keluaran (<%= finance.ppn %>%) <span class="badge bm">disetor, bukan pendapatan</span></td><td class="num" style="color:var(--info)">Rp <%= Math.round(ply.ppn).toLocaleString('id-ID') %></td></tr>
+            <tr><td>Pengeluaran</td><td class="num" style="color:var(--danger)">- Rp <%= Math.round(ply.keluar).toLocaleString('id-ID') %></td></tr>
+            <tr><td>USO (<%= finance.uso %>%)</td><td class="num" style="color:var(--warning)">- Rp <%= Math.round(ply.uso).toLocaleString('id-ID') %></td></tr>
+            <tr><td>BHP (<%= finance.bhp %>%)</td><td class="num" style="color:var(--warning)">- Rp <%= Math.round(ply.bhp).toLocaleString('id-ID') %></td></tr>
+            <tr><td class="fw6">Laba Bersih Sebelum Pajak</td><td class="num fw6">Rp <%= Math.round(ply.sebelumPph).toLocaleString('id-ID') %></td></tr>
+            <tr><td>PPh Badan (<%= finance.pph %>%)</td><td class="num" style="color:var(--danger)">- Rp <%= Math.round(ply.pph).toLocaleString('id-ID') %></td></tr>
+            <tr style="background:rgba(16,185,129,.08)"><td class="fw6" style="color:#10b981">Laba Bersih Sesudah Pajak</td><td class="num fw6" style="color:#10b981;font-size:16px">Rp <%= Math.round(ply.bersih).toLocaleString('id-ID') %></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-bd" style="padding-top:10px">
+        <div class="hint">
+          <i class="bi bi-info-circle"></i> Tagihan hangus (void) tahun ini: <b><%= voidedYearCount||0 %></b> tagihan · Rp <%= (voidedYearAmount||0).toLocaleString('id-ID') %>
+          — <span class="text-muted">dikecualikan dari pendapatan (audit).</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ C. REKAP PER BULAN (AUDIT) ═══ -->
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-calendar3"></i> Rekap Laba / Rugi per Bulan <%= filterYear %> <span class="text-muted" style="font-weight:400;font-size:11.5px">— export &amp; cetak tiap bulan</span></h6></div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>Bulan</th>
+              <th class="num">Pemasukan</th>
+              <th class="num">Pengeluaran</th>
+              <th class="num">PPN</th>
+              <th class="num">USO</th>
+              <th class="num">BHP</th>
+              <th class="num">Laba Sblm Pajak</th>
+              <th class="num">PPh Badan</th>
+              <th class="num">Laba Sstlh Pajak</th>
+              <th><%= t('common.actions','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% const _mn = (lang === 'en') ? ['January','February','March','April','May','June','July','August','September','October','November','December'] : ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+               let _tBruto=0,_tKeluar=0,_tPpn=0,_tUso=0,_tBhp=0,_tSebelum=0,_tPph=0,_tBersih=0; %>
+            <% monthlyFinance.forEach(r => { _tBruto+=r.bruto; _tKeluar+=r.keluar; _tPpn+=r.ppn; _tUso+=r.uso; _tBhp+=r.bhp; _tSebelum+=r.sebelumPph; _tPph+=r.pph; _tBersih+=r.bersih; %>
+            <tr>
+              <td class="fw6"><%= _mn[r.month-1] %></td>
+              <td class="num">Rp <%= Math.round(r.bruto).toLocaleString('id-ID') %></td>
+              <td class="num" style="color:var(--danger)">Rp <%= Math.round(r.keluar).toLocaleString('id-ID') %></td>
+              <td class="num" style="color:var(--info)">Rp <%= Math.round(r.ppn).toLocaleString('id-ID') %></td>
+              <td class="num" style="color:var(--warning)">Rp <%= Math.round(r.uso).toLocaleString('id-ID') %></td>
+              <td class="num" style="color:var(--warning)">Rp <%= Math.round(r.bhp).toLocaleString('id-ID') %></td>
+              <td class="num" style="color:var(--muted)">Rp <%= Math.round(r.sebelumPph).toLocaleString('id-ID') %></td>
+              <td class="num" style="color:var(--danger)">Rp <%= Math.round(r.pph).toLocaleString('id-ID') %></td>
+              <td class="num fw6" style="color:#10b981">Rp <%= Math.round(r.bersih).toLocaleString('id-ID') %></td>
+              <td style="white-space:nowrap">
+                <div class="act">
+                  <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                  <div class="act-menu">
+                    <a class="act-item" href="/admin/reports/export-csv?year=<%= filterYear %>&amp;month=<%= r.month %>"><i class="bi bi-file-earmark-excel"></i> Export Excel (CSV)</a>
+                    <a class="act-item" target="_blank" href="/admin/reports/pdf?year=<%= filterYear %>&amp;month=<%= r.month %>&amp;mode=after"><i class="bi bi-file-earmark-pdf"></i> PDF Bulan Ini</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <% }) %>
+            <tr style="background:var(--bg3)">
+              <td class="fw6">TOTAL <%= filterYear %></td>
+              <td class="num fw6">Rp <%= Math.round(_tBruto).toLocaleString('id-ID') %></td>
+              <td class="num fw6" style="color:var(--danger)">Rp <%= Math.round(_tKeluar).toLocaleString('id-ID') %></td>
+              <td class="num fw6" style="color:var(--info)">Rp <%= Math.round(_tPpn).toLocaleString('id-ID') %></td>
+              <td class="num fw6" style="color:var(--warning)">Rp <%= Math.round(_tUso).toLocaleString('id-ID') %></td>
+              <td class="num fw6" style="color:var(--warning)">Rp <%= Math.round(_tBhp).toLocaleString('id-ID') %></td>
+              <td class="num fw6" style="color:var(--muted)">Rp <%= Math.round(_tSebelum).toLocaleString('id-ID') %></td>
+              <td class="num fw6" style="color:var(--danger)">Rp <%= Math.round(_tPph).toLocaleString('id-ID') %></td>
+              <td class="num fw6" style="color:#10b981">Rp <%= Math.round(_tBersih).toLocaleString('id-ID') %></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-bd" style="padding-top:0">
+        <div class="hint"><i class="bi bi-info-circle"></i> Baris <b>TOTAL</b> = penjumlahan tiap bulan; cocokkan dengan <b>Laporan Laba / Rugi</b> (tahun) di atas untuk audit.</div>
+      </div>
+    </div>
+
+    <!-- ═══ D. GRAFIK ═══ -->
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-bar-chart"></i> <%= t('admin.reports.monthly_revenue', 'Pendapatan Bulanan') %> <%= filterYear %></h6></div>
+      <div class="card-bd"><canvas id="revenueChart" height="200"></canvas></div>
+    </div>
+
+    <!-- ═══ E. DETAIL AUDIT ═══ -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
+      <div class="card">
+        <div class="card-hd"><h6><i class="bi bi-pie-chart"></i> Rincian Pengeluaran (<%= filterYear %>)</h6></div>
+        <div class="card-bd" style="padding:0">
+          <% if (typeof expensesByCategory === 'undefined' || expensesByCategory.length===0) { %>
+            <div class="text-center text-muted" style="padding:24px;font-size:13px">Belum ada pengeluaran dicatat</div>
+          <% } %>
+          <% if(typeof expensesByCategory !== 'undefined') expensesByCategory.forEach(c=>{ %>
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="font-size:13px;font-weight:600;min-width:0;overflow-wrap:anywhere"><i class="bi bi-tag" style="color:var(--muted);margin-right:6px"></i> <%= c.category %></div>
+            <span class="badge" style="background:rgba(239,68,68,.1);color:#ef4444;white-space:nowrap">Rp <%= Number(c.total).toLocaleString('id-ID') %></span>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h6><i class="bi bi-exclamation-triangle"></i> <%= t('admin.reports.top_unpaid', 'Piutang Tertinggi') %></h6></div>
+        <div class="card-bd" style="padding:0">
+          <% if (topUnpaid.length===0) { %><div class="text-center text-muted" style="padding:24px;font-size:13px"><%= t('admin.reports.all_paid', 'Semua pelanggan sudah lunas') %></div><% } %>
+          <% topUnpaid.slice(0,5).forEach(u=>{ %>
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="min-width:0"><div style="font-size:13px;font-weight:600;overflow-wrap:anywhere"><%= u.name %></div><div style="font-size:11px;color:var(--muted)"><%= u.phone %></div></div>
+            <span class="badge bd" style="white-space:nowrap">Rp <%= Number(u.total_unpaid).toLocaleString('id-ID') %></span>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ F. PEMBAYARAN TERAKHIR ═══ -->
+    <div class="card mb16" style="margin-top:18px">
+      <div class="card-hd"><h6><i class="bi bi-clock-history"></i> <%= t('admin.reports.recent_payments', 'Pembayaran Terakhir') %></h6></div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead><tr><th><%= t('admin.reports.table.customer','Pelanggan') %></th><th><%= t('admin.reports.table.period','Periode') %></th><th class="num"><%= t('admin.reports.table.amount','Jumlah') %></th><th><%= t('admin.reports.table.recorded_by','Dicatat Oleh') %></th><th><%= t('admin.reports.table.time','Waktu') %></th></tr></thead>
+          <tbody>
+          <% const mn2 = (lang === 'en') ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] : ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des']; %>
+          <% if(recentPayments.length===0){%><tr><td colspan="5" class="text-center text-muted" style="padding:24px"><%= t('admin.reports.no_payments','Belum ada pembayaran') %></td></tr><%}%>
+          <% recentPayments.forEach(p=>{ %>
+            <tr>
+              <td class="fw6"><%= p.customer_name %></td>
+              <td><span class="badge bm"><%= mn2[p.period_month-1] %> <%= p.period_year %></span></td>
+              <td class="num fw6" style="color:var(--success)">Rp <%= Number(p.amount).toLocaleString('id-ID') %></td>
+              <td style="font-size:12px"><%= p.paid_by_name||'-' %></td>
+              <td style="font-size:11px;color:var(--muted)"><%= p.paid_at ? new Date(p.paid_at).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-' %></td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ G. PENGATURAN PAJAK & RETRIBUSI (collapsible) ═══ -->
+    <details class="card">
+      <summary class="card-hd"><h6 style="margin:0"><i class="bi bi-percent"></i> Pengaturan Pajak &amp; Retribusi <span class="text-muted" style="font-weight:400;font-size:11.5px">— dihitung otomatis</span></h6></summary>
+      <div class="card-bd">
+        <form method="POST" action="/admin/reports/finance">
+          <div class="form-row" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+            <div class="fg"><label class="fl">PPN (%)</label><input class="fc" type="number" step="0.01" min="0" name="finance_ppn_pct" value="<%= finance.ppn %>"></div>
+            <div class="fg"><label class="fl">PPh Badan (%)</label><input class="fc" type="number" step="0.01" min="0" name="finance_pph_pct" value="<%= finance.pph %>"></div>
+            <div class="fg"><label class="fl">USO (%)</label><input class="fc" type="number" step="0.01" min="0" name="finance_uso_pct" value="<%= finance.uso %>"></div>
+            <div class="fg"><label class="fl">BHP (%)</label><input class="fc" type="number" step="0.01" min="0" name="finance_bhp_pct" value="<%= finance.bhp %>"></div>
+            <div class="fg"><label class="fl">PPN di dalam harga?</label>
+              <select class="fs" name="finance_revenue_includes_ppn">
+                <option value="0" <%= finance.inclPpn ? '' : 'selected' %>>Tidak — PPN ditambahkan</option>
+                <option value="1" <%= finance.inclPpn ? 'selected' : '' %>>Ya — PPN sudah termasuk</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-p btn-sm"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+          <span class="hint" style="margin-left:10px">PPh Badan, PPN, USO &amp; BHP dihitung otomatis dari nilai ini.</span>
+        </form>
+      </div>
+    </details>
+
+  </div>
+</div>
+
+<script>
+const monthLabels = JSON.parse(`<%- JSON.stringify((lang === 'en') 
+  ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] 
+  : ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des']).split('<').join('\\u003c') %>`);
+const revenueData = JSON.parse(`<%- JSON.stringify(chartData).split('<').join('\\u003c') %>`);
+const labels = monthLabels;
+const values = Array(12).fill(0);
+revenueData.forEach(d=>{ values[d.month-1] = d.revenue; });
+
+new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{
+      label: "<%= t('admin.reports.chart.revenue_label', 'Pendapatan (Rp)') %>",
+      data: values,
+      backgroundColor: 'rgba(173,255,47,0.35)',
+      borderColor: '#ADFF2F',
+      borderWidth: 2,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => 'Rp ' + ctx.raw.toLocaleString('id-ID') } } },
+    scales: {
+      x: { ticks: { color: '#7d8590' }, grid: { color: 'rgba(240,246,252,0.05)' } },
+      y: { ticks: { color: '#7d8590', callback: v => 'Rp ' + (v/1000).toFixed(0)+'k' }, grid: { color: 'rgba(240,246,252,0.05)' } }
+    }
+  }
+});
+</script>
+</body>
+</html>

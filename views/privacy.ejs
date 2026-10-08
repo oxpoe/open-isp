@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.pages.privacy.meta_title', 'Kebijakan Privasi') %> | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/pages.css?v=3">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>document.documentElement.classList.add('js');(function(){try{var s=localStorage.getItem('landing-theme')||'dark';document.documentElement.setAttribute('data-theme',s);}catch(e){}})();</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/" aria-label="Beranda"><img class="bmark" src="<%= brandLogo %>" alt="<%= company %>"><span class="bname"><%= brandName %></span></a>
+    <div class="header-actions" style="margin-left:auto">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema"><i class="bi bi-moon-stars-fill"></i></button>
+      <a class="lbtn lbtn-ghost lbtn-sm" href="<%= isLoggedIn ? '/customer/dashboard' : '/customer/login' %>"><i class="bi bi-box-arrow-in-right"></i> <%= isLoggedIn ? 'Dashboard' : 'Masuk' %></a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="page-hero">
+    <h1><%= t('customer.pages.privacy.title', 'Kebijakan Privasi') %></h1>
+    <p><%= t('customer.pages.privacy.subtitle', 'Bagaimana kami menjaga dan melindungi data pribadi Anda.') %></p>
+  </section>
+
+  <div class="prose">
+    <p><%- String(t('customer.pages.privacy.p1', 'Di <strong>{company}</strong>, privasi pelanggan kami adalah prioritas utama. Dokumen Kebijakan Privasi ini menjelaskan jenis informasi pribadi yang kami kumpulkan dan bagaimana kami menggunakannya.')).replace('{company}', company) %></p>
+
+    <h4><i class="bi bi-database-check"></i> 1. <%= t('customer.pages.privacy.s1_title', 'Informasi yang Kami Kumpulkan') %></h4>
+    <p><%= t('customer.pages.privacy.s1_body', 'Kami mengumpulkan informasi terbatas yang diperlukan untuk penyediaan layanan, termasuk:') %></p>
+    <ul>
+      <li><strong>Data Akun & Kontak:</strong> Nama lengkap, nomor telepon/WhatsApp, dan alamat pemasangan layanan internet.</li>
+      <li><strong>Izin Akses Lokasi (GPS):</strong> Data titik koordinat digunakan saat absensi kehadiran karyawan berbasis radius kantor (Geofencing), pemetaan lokasi ODP/tiang jaringan, dan navigasi penagihan kolektor lapangan.</li>
+      <li><strong>Izin Kamera & Foto:</strong> Digunakan untuk pengambilan foto selfie presensi kerja ber-watermark Geo-Tagging, pemindaian QR Code voucher/QRIS, serta lampiran foto bukti kendala pada pelaporan tiket gangguan pelanggan.</li>
+      <li><strong>Izin Bluetooth:</strong> Digunakan untuk menghubungkan aplikasi ke printer thermal Bluetooth portabel saat pencetakan struk pembayaran oleh petugas kolektor dan kasir.</li>
+      <li><strong>Data Transaksi:</strong> Rincian tagihan bulanan dan status pembayaran melalui saluran payment gateway resmi.</li>
+    </ul>
+
+    <h4><i class="bi bi-gear-wide-connected"></i> 2. <%= t('customer.pages.privacy.s2_title', 'Penggunaan Informasi') %></h4>
+    <p><%= t('customer.pages.privacy.s2_body', 'Informasi yang kami kumpulkan digunakan untuk:') %></p>
+    <ul>
+      <li><%= t('customer.pages.privacy.s2_li1', 'Memproses pendaftaran dan aktivasi layanan internet Anda.') %></li>
+      <li><%= t('customer.pages.privacy.s2_li2', 'Mengirimkan informasi tagihan dan pengingat pembayaran otomatis.') %></li>
+      <li><%= t('customer.pages.privacy.s2_li3', 'Memberikan dukungan teknis dan menanggapi keluhan Anda.') %></li>
+      <li>Memvalidasi presensi kerja resmi karyawan dan penugasan lapangan.</li>
+      <li><%= t('customer.pages.privacy.s2_li4', 'Meningkatkan kualitas jaringan dan pengalaman pengguna.') %></li>
+    </ul>
+
+    <h4><i class="bi bi-shield-check"></i> 3. <%= t('customer.pages.privacy.s3_title', 'Keamanan Data') %></h4>
+    <p><%= t('customer.pages.privacy.s3_body', 'Kami menerapkan standar keamanan teknis dan enkripsi HTTPS/TLS untuk melindungi data Anda dari akses yang tidak sah. Data sensitif seperti kata sandi WiFi dan detail login disimpan dengan enkripsi di server kami.') %></p>
+
+    <h4><i class="bi bi-people"></i> 4. <%= t('customer.pages.privacy.s4_title', 'Pihak Ketiga') %></h4>
+    <p><%= t('customer.pages.privacy.s4_body', 'Kami tidak menjual atau menyewakan data pribadi Anda kepada pihak ketiga mana pun. Kami hanya berbagi data transaksi dengan mitra payment gateway resmi (seperti Tripay/Xendit/Midtrans/Duitku) untuk memproses pembayaran Anda secara aman.') %></p>
+
+    <h4><i class="bi bi-person-x"></i> 5. Hak Pengguna & Penghapusan Data</h4>
+    <p>Pengguna berhak meminta informasi mengenai data pribadi yang tersimpan atau mengajukan permohonan penghapusan akun beserta riwayat datanya dengan menghubungi kontak customer support resmi kami.</p>
+
+    <h4><i class="bi bi-patch-check"></i> 6. <%= t('customer.pages.privacy.s5_title', 'Persetujuan') %></h4>
+    <p><%= t('customer.pages.privacy.s5_body', 'Dengan menggunakan layanan kami, Anda dengan ini menyetujui Kebijakan Privasi kami dan menyetujui ketentuan-ketentuannya.') %></p>
+
+    <div style="text-align:center;margin-top:30px">
+      <a class="lbtn lbtn-primary" href="<%= isLoggedIn ? '/customer/dashboard' : '/customer/login' %>"><i class="bi bi-arrow-left"></i> <%= t('common.back_to', 'Kembali ke') %> <%= isLoggedIn ? t('customer.dashboard_title', 'Dashboard Pelanggan') : t('common.portal', 'Portal') %></a>
+    </div>
+  </div>
+
+  <div class="page-foot">&copy; <%= new Date().getFullYear() %> <%= company %> • <%= t('customer.pages.privacy.footer_tagline', 'Keamanan Data Anda adalah Komitmen Kami') %></div>
+</main>
+
+<script>
+  function toggleTheme(){ var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); try{localStorage.setItem('landing-theme',t);}catch(e){} }
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js',{scope:'/customer/'}).then(function(r){try{r.update();}catch(e){}}).catch(function(){}); }
+</script>
+<%- include('partials/customer_bottom_nav', { activeNav: 'none' }) %>
+</body>
+</html>

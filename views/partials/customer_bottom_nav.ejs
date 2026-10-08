@@ -1,0 +1,90 @@
+<!-- views/partials/customer_bottom_nav.ejs -->
+<% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
+<style>
+  .customer-bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 68px;
+    background: var(--glass, rgba(17,22,34,0.95));
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-top: 1px solid var(--border, rgba(242,245,241,0.1));
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1050;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -12px 35px rgba(0, 0, 0, 0.45);
+  }
+  .customer-bottom-nav .nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--muted, #8A96A6);
+    text-decoration: none; font-size: 11px; font-weight: 700;
+    transition: color .25s ease, transform .2s ease;
+    flex: 1; height: 100%; cursor: pointer; position: relative;
+  }
+  .customer-bottom-nav .nav-item i { font-size: 20px; margin-bottom: 2px; transition: transform .2s ease, color .2s ease; }
+  .customer-bottom-nav .nav-item:hover { color: var(--text, #F2F5F1); }
+  .customer-bottom-nav .nav-item.active { color: var(--primary, #ADFF2F); }
+  .customer-bottom-nav .nav-item.active i { transform: translateY(-2px); color: var(--primary, #ADFF2F); }
+  .customer-bottom-nav .nav-item.active::after {
+    content: ''; position: absolute; bottom: 6px; width: 5px; height: 5px;
+    background: var(--primary, #ADFF2F); border-radius: 50%; box-shadow: 0 0 8px var(--primary, #ADFF2F);
+  }
+  @media (min-width: 992px) {
+    .customer-bottom-nav { display: none; }
+    body { padding-bottom: 0 !important; }
+  }
+</style>
+
+<nav class="customer-bottom-nav">
+  <a href="/customer/dashboard#home-section" class="nav-item <%= activeNav === 'home' ? 'active' : '' %>">
+    <i class="bi bi-house-door-fill"></i><span><%= t('customer.nav.home','Beranda') %></span>
+  </a>
+  <div class="nav-item" onclick="triggerEditSsidNav()" title="<%= t('customer.nav.edit_wifi_name','Ubah Nama WiFi') %>">
+    <i class="bi bi-wifi"></i><span><%= t('customer.nav.wifi_name','Nama WiFi') %></span>
+  </div>
+  <div class="nav-item" onclick="triggerEditPasswordNav()" title="<%= t('customer.nav.edit_wifi_pass','Ubah Sandi WiFi') %>">
+    <i class="bi bi-key-fill"></i><span><%= t('customer.nav.wifi_pass','Sandi WiFi') %></span>
+  </div>
+  <a href="/customer/dashboard#billing-section" class="nav-item <%= activeNav === 'billing' ? 'active' : '' %>">
+    <i class="bi bi-receipt-cutoff"></i><span><%= t('customer.nav.billing','Tagihan') %></span>
+  </a>
+  <div class="nav-item" onclick="triggerTicketNav()" title="<%= t('customer.nav.help_ticket','Bantuan Keluhan') %>">
+    <i class="bi bi-headset"></i><span><%= t('customer.nav.help','Bantuan') %></span>
+  </div>
+</nav>
+
+<script>
+  function triggerEditSsidNav() {
+    if (typeof editSsid === 'function') {
+      var devId = (typeof customer !== 'undefined' && customer && customer.id) ? customer.id : '';
+      var ssid = (typeof customer !== 'undefined' && customer && customer.ssid) ? customer.ssid : '';
+      editSsid(devId, ssid);
+    } else { window.location.href = '/customer/dashboard#home-section'; }
+  }
+  function triggerEditPasswordNav() {
+    if (typeof editPassword === 'function') {
+      var devId = (typeof customer !== 'undefined' && customer && customer.id) ? customer.id : '';
+      editPassword(devId);
+    } else { window.location.href = '/customer/dashboard#home-section'; }
+  }
+  function triggerTicketNav() {
+    if (typeof window.showModal === 'function') { window.showModal('ticketModal'); }
+    else { window.location.href = '/customer/dashboard#ticket-section'; }
+  }
+  function updateActiveNav() {
+    var hash = window.location.hash;
+    document.querySelectorAll('.customer-bottom-nav .nav-item').forEach(function(item){
+      item.classList.remove('active');
+      if (item.getAttribute('href') && item.getAttribute('href').indexOf(hash) !== -1 && hash !== '') item.classList.add('active');
+    });
+    if (hash === '' || hash === '#home-section') {
+      var homeNav = document.querySelector('.customer-bottom-nav a[href*="home-section"]');
+      if (homeNav) homeNav.classList.add('active');
+    }
+  }
+  window.addEventListener('hashchange', updateActiveNav);
+  window.addEventListener('load', updateActiveNav);
+</script>
+<% } %>

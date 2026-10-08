@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Diskon Tagihan | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .disc-filter{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .cust-row.suspended td{opacity:.6}
+    .disc-badge{background:rgba(173,255,47,.16);color:#ADFF2F;border:1px solid rgba(173,255,47,.35);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700}
+    .disc-badge.amount{background:rgba(56,189,248,.14);color:#38BDF8;border-color:rgba(56,189,248,.35)}
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'discounts', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-percent"></i> Diskon Tagihan</div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? 'Kasir' : 'Admin' %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <form method="POST" action="/admin/discounts/apply" id="discForm">
+      <!-- Konfigurasi diskon -->
+      <div class="card mb16">
+        <div class="card-hd"><h6><i class="bi bi-sliders"></i> Pengaturan Diskon</h6></div>
+        <div class="card-bd">
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Target</label>
+              <select class="fs" name="apply_mode" id="applyMode">
+                <option value="selected" selected>Pelanggan terpilih (batch)</option>
+                <option value="single">Satu pelanggan (1 per 1)</option>
+                <option value="all">Semua pelanggan aktif</option>
+              </select>
+            </div>
+            <div class="fg" id="singleWrap" style="display:none">
+              <label class="fl">Pilih Pelanggan</label>
+              <select class="fs" name="customer_id">
+                <option value="">-- pilih pelanggan --</option>
+                <% customers.forEach(function(c){ %>
+                  <option value="<%= c.id %>"><%= c.customer_code || c.id %> — <%= c.name %><%= c.area ? ' ('+c.area+')' : '' %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Tipe Diskon</label>
+              <select class="fs" name="discount_type" id="discType">
+                <option value="percent">Persen (%)</option>
+                <option value="amount">Nominal (Rp)</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Nilai Diskon</label>
+              <input class="fc" type="number" name="discount_value" id="discValue" min="1" step="1" placeholder="mis. 10 (persen) / 20000 (Rp)" required>
+              <div class="hint" id="discHint">Persen dihitung dari harga dasar (sebelum PPN/USO).</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Periode Tagihan — Bulan</label>
+              <select class="fs" name="period_month">
+                <% const mNames=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                   for(let m=1;m<=12;m++){ %>
+                  <option value="<%= m %>" <%= (timeInfo.month===m)?'selected':'' %>><%= mNames[m-1] %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Tahun</label>
+              <select class="fs" name="period_year">
+                <% for(let y=(timeInfo.year||new Date().getFullYear())+1; y>=2023; y--){ %>
+                  <option value="<%= y %>" <%= (timeInfo.year===y)?'selected':'' %>><%= y %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="fg" style="flex:2">
+              <label class="fl">Catatan (opsional)</label>
+              <input class="fc" name="note" placeholder="mis. promo bulan kemerdekaan">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px">
+            <div class="hint"><i class="bi bi-info-circle"></i> Diskon berlaku ke tagihan <b>belum bayar</b> pada periode terpilih. Tagihan lunas/hangus tidak diubah. Kode unik QRIS akan digenerate ulang dari nominal baru.</div>
+            <button type="submit" class="btn btn-p" id="applyBtn"><i class="bi bi-percent"></i> Terapkan Diskon</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pilih pelanggan (batch) -->
+      <div class="card mb16" id="custCard">
+        <div class="card-hd">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;width:100%">
+            <h6 style="margin:0"><i class="bi bi-people"></i> Pilih Pelanggan (<%= customers.length %>)</h6>
+            <div class="disc-filter">
+              <span class="disc-badge" id="selCount" title="Jumlah pelanggan terpilih">0 dipilih</span>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+                <input type="checkbox" id="selectAll" style="width:16px;height:16px"> Pilih semua yang tampil
+              </label>
+              <input class="fc" id="custSearch" placeholder="Cari nama / ID / HP..." style="max-width:220px">
+            </div>
+          </div>
+        </div>
+        <div class="tbl-wrap" style="max-height:460px;overflow:auto">
+          <table class="dtbl" id="custTable">
+            <thead>
+              <tr>
+                <th style="width:34px"></th>
+                <th style="width:110px">ID Pelanggan</th>
+                <th><%= t('pwa.field.name','Nama') %></th>
+                <th style="width:130px">No. HP</th>
+                <th style="width:110px">Area</th>
+                <th style="width:90px"><%= t('common.status','Status') %></th>
+                <th style="width:70px">Tunggakan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (customers.length===0) { %>
+                <tr><td colspan="7" class="text-center text-muted" style="padding:24px">Tidak ada pelanggan.</td></tr>
+              <% } %>
+              <% customers.forEach(function(c){ %>
+                <tr class="cust-row <%= c.status==='suspended'?'suspended':'' %>">
+                  <td><input type="checkbox" class="cust-sel" name="customer_ids" value="<%= c.id %>" style="width:16px;height:16px"></td>
+                  <td class="mono" style="font-size:12px"><%= c.customer_code || ('#'+c.id) %></td>
+                  <td><div class="fw6"><%= c.name %></div><div style="font-size:11px;color:var(--muted)"><%= c.pppoe_username||'' %></div></td>
+                  <td style="font-size:12px"><%= c.phone||'-' %></td>
+                  <td style="font-size:12px"><%= c.area||'-' %></td>
+                  <td><span class="badge <%= c.status==='active'?'bs':(c.status==='suspended'?'bd':'bm') %>"><%= c.status %></span></td>
+                  <td style="font-size:12px"><%= Number(c.unpaid_count||0) %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </form>
+
+    <!-- Riwayat -->
+    <div class="card">
+      <div class="card-hd"><h6><i class="bi bi-clock-history"></i> Riwayat Diskon (100 terakhir)</h6></div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th style="width:150px"><%= t('collector.col_time','Waktu') %></th>
+              <th><%= t('common.customer','Pelanggan') %></th>
+              <th style="width:110px"><%= t('pwa.field.period','Periode') %></th>
+              <th style="width:100px"><%= t('common.type','Tipe') %></th>
+              <th class="num" style="width:120px">Potongan</th>
+              <th class="num" style="width:120px">Awal → Akhir</th>
+              <th style="width:110px">Oleh</th>
+              <th>Catatan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!logs || logs.length===0) { %>
+              <tr><td colspan="8" class="text-center text-muted" style="padding:24px">Belum ada riwayat diskon.</td></tr>
+            <% } %>
+            <% (logs||[]).forEach(function(l){ %>
+              <tr>
+                <td style="font-size:11px;color:var(--muted)"><%= l.created_at %></td>
+                <td style="font-size:12px"><%= l.customer_name || ('#'+l.customer_id) %><div style="font-size:10px;color:var(--muted)"><%= l.customer_code||'' %></div></td>
+                <td style="font-size:12px"><%= l.period_month %>/<%= l.period_year %></td>
+                <td><span class="disc-badge <%= l.discount_type==='amount'?'amount':'' %>"><%= l.discount_type==='percent' ? (l.discount_value+'%') : 'Rp' %></span></td>
+                <td class="num" style="color:var(--danger);font-weight:700">- Rp <%= Number(l.discount_amount||0).toLocaleString('id-ID') %></td>
+                <td class="num" style="font-size:12px">Rp <%= Number(l.amount_before||0).toLocaleString('id-ID') %> → <b>Rp <%= Number(l.amount_after||0).toLocaleString('id-ID') %></b></td>
+                <td style="font-size:12px"><%= l.applied_by||'-' %></td>
+                <td style="font-size:11px;color:var(--muted)"><%= l.note||'' %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function(){
+    var mode = document.getElementById('applyMode');
+    var singleWrap = document.getElementById('singleWrap');
+    var custCard = document.getElementById('custCard');
+    var type = document.getElementById('discType');
+    var hint = document.getElementById('discHint');
+    function syncMode(){
+      var m = mode.value;
+      singleWrap.style.display = (m === 'single') ? '' : 'none';
+      custCard.style.display = (m === 'selected') ? '' : 'none';
+    }
+    mode.addEventListener('change', function(){ syncMode(); updateSelCount(); }); syncMode();
+
+    function syncHint(){
+      hint.textContent = (type.value === 'percent')
+        ? 'Persen dihitung dari harga dasar (sebelum PPN/USO). Contoh: 10 = potong 10%.'
+        : 'Nominal potongan langsung dalam Rupiah. Contoh: 20000 = potong Rp 20.000.';
+    }
+    type.addEventListener('change', syncHint); syncHint();
+
+    var all = document.getElementById('selectAll');
+    function visibleBoxes(){
+      var rows = document.querySelectorAll('#custTable tbody tr');
+      var out = [];
+      rows.forEach(function(tr){ if (tr.style.display !== 'none') { var b = tr.querySelector('.cust-sel'); if (b) out.push(b); } });
+      return out;
+    }
+    var selCount = document.getElementById('selCount');
+    var applyBtn = document.getElementById('applyBtn');
+    function updateSelCount(){
+      var n = document.querySelectorAll('#custTable .cust-sel:checked').length;
+      if (selCount) selCount.textContent = n + ' dipilih';
+      if (applyBtn) applyBtn.innerHTML = '<i class="bi bi-percent"></i> Terapkan Diskon' + ((mode.value === 'selected' && n) ? ' (' + n + ')' : '');
+    }
+    all.addEventListener('change', function(){ visibleBoxes().forEach(function(b){ b.checked = all.checked; }); updateSelCount(); });
+    document.getElementById('custTable').addEventListener('change', function(e){ if (e.target && e.target.classList.contains('cust-sel')) updateSelCount(); });
+
+    var search = document.getElementById('custSearch');
+    search.addEventListener('input', function(){
+      var s = search.value.toLowerCase();
+      document.querySelectorAll('#custTable tbody tr').forEach(function(tr){
+        if (!tr.querySelector('.cust-sel')) return;
+        tr.style.display = tr.textContent.toLowerCase().indexOf(s) !== -1 ? '' : 'none';
+      });
+      all.checked = false;
+    });
+
+    document.getElementById('discForm').addEventListener('submit', function(e){
+      var m = mode.value;
+      if (m === 'selected') {
+        var n = document.querySelectorAll('#custTable .cust-sel:checked').length;
+        if (n === 0) { e.preventDefault(); alert('Pilih minimal 1 pelanggan (atau pilih mode Semua/Satu).'); }
+      } else if (m === 'single') {
+        var sel = document.querySelector('select[name="customer_id"]');
+        if (!sel || !sel.value) { e.preventDefault(); alert('Pilih pelanggan terlebih dahulu.'); }
+      }
+    });
+    updateSelCount();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.radius.title', 'Pengaturan RADIUS') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .mtabs { display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .mtab { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--muted); background: var(--bg2); border: 1px solid var(--border); cursor: pointer; transition: all .2s; }
+    .mtab:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .mtab.active { color: #ffffff !important; background: var(--primary) !important; border-color: var(--primary) !important; box-shadow: 0 4px 12px var(--pdim); }
+    
+    html[data-theme="light"] .mtab { background: #ffffff !important; color: #64748b !important; border-color: #cbd5e1 !important; }
+    html[data-theme="light"] .mtab:hover { color: #0f172a !important; background: #f1f5f9 !important; }
+    html[data-theme="light"] .mtab.active { color: #ffffff !important; background: #4f46e5 !important; border-color: #4f46e5 !important; }
+
+    .settings-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; }
+
+    /* Mobile Responsive Optimizations */
+    @media (max-width: 768px) {
+      .settings-form-grid { grid-template-columns: 1fr; }
+      .mtabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+        margin-bottom: 14px;
+        scrollbar-width: thin;
+      }
+      .mtab {
+        padding: 8px 14px;
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+      .stat-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+      }
+      .tbl-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        margin-bottom: 0;
+      }
+      .dtbl {
+        min-width: 600px;
+      }
+      .topbar .tb-title span {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+      }
+      /* modal mengikuti style global */
+      .mf {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+      }
+      .mf button, .mf a {
+        flex: 1 1 100% !important;
+        justify-content: center !important;
+      }
+    }
+    @media (max-width: 480px) {
+      .stat-grid {
+        grid-template-columns: 1fr !important;
+      }
+      .topbar .tb-title span {
+        max-width: 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: activePage || 'radius_settings', company }) %>
+
+<div class="mw">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-broadcast"></i>
+      <span><%= t('admin.radius.title', 'Pengaturan RADIUS') %> &amp; Monitoring</span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i> 
+        <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
+      </span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type === 'danger' || msg.type === 'error' ? 'd' : msg.type === 'success' ? 's' : 'w' %> mb16" data-flash="1" id="autoAlert">
+      <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-triangle' %>"></i>
+      <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- SUMMARY STAT CARDS -->
+    <div class="stat-grid mb16">
+      <div class="sc p">
+        <i class="bi bi-broadcast sc-icon"></i>
+        <div class="sc-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <span>Status RADIUS Server</span>
+          <form action="/admin/radius/restart" method="POST" style="margin:0;">
+            <button type="submit" class="btn btn-w btn-sm" style="font-size:10px;padding:2px 8px;height:auto;" title="Restart Service UDP RADIUS (1812/1813)">
+              <i class="bi bi-arrow-clockwise"></i> Restart
+            </button>
+          </form>
+        </div>
+        <div class="sc-val">
+          <% if (radiusStatus.running) { %>
+            <span class="badge bs"><i class="bi bi-play-circle-fill"></i> Running</span>
+          <% } else { %>
+            <span class="badge bd"><i class="bi bi-stop-circle-fill"></i> Stopped</span>
+          <% } %>
+        </div>
+        <div class="sc-sub">UDP Auth: <%= radiusStatus.authPort %> | Acct: <%= radiusStatus.acctPort %></div>
+      </div>
+
+      <div class="sc s">
+        <i class="bi bi-wifi sc-icon"></i>
+        <div class="sc-label">User RADIUS Online</div>
+        <div class="sc-val"><%= onlineSessions.length %></div>
+        <div class="sc-sub">Sesi Aktif Terhubung Saat Ini</div>
+      </div>
+
+      <div class="sc i">
+        <i class="bi bi-router sc-icon"></i>
+        <div class="sc-label">NAS Router Client</div>
+        <div class="sc-val"><%= nasList.length %></div>
+        <div class="sc-sub">Router NAS Terdaftar di Server</div>
+      </div>
+
+      <div class="sc w">
+        <i class="bi bi-activity sc-icon"></i>
+        <div class="sc-label">Trafik RADIUS Hari Ini</div>
+        <div class="sc-val"><%= typeof todayTrafficMB !== 'undefined' ? todayTrafficMB : '0.0' %><span style="font-size:14px;"> MB</span></div>
+        <div class="sc-sub"><%= typeof todayEvents !== 'undefined' ? todayEvents : 0 %> Log Accounting Hari Ini</div>
+      </div>
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <div class="mtabs mb16">
+      <button type="button" class="mtab active" id="tab-btn-online" onclick="switchTab('online')">
+        <i class="bi bi-wifi"></i> Sesi Active RADIUS (<%= onlineSessions.length %>)
+      </button>
+      <button type="button" class="mtab" id="tab-btn-settings" onclick="switchTab('settings')">
+        <i class="bi bi-sliders"></i> Pengaturan RADIUS
+      </button>
+      <button type="button" class="mtab" id="tab-btn-nas" onclick="switchTab('nas')">
+        <i class="bi bi-router"></i> Daftar NAS Router (<%= nasList.length %>)
+      </button>
+      <button type="button" class="mtab" id="tab-btn-accounting" onclick="switchTab('accounting')">
+        <i class="bi bi-journal-text"></i> Log Accounting
+      </button>
+    </div>
+
+    <!-- TAB 1: PENGATURAN RADIUS -->
+    <div id="tab-content-settings" class="tab-pane" style="display:none;">
+      <form action="/admin/radius-settings" method="POST">
+        <div class="settings-form-grid mb16">
+          
+          <!-- Card 1: Core Service Settings -->
+          <div class="card mb16">
+            <div class="card-hd">
+              <h6><i class="bi bi-cpu"></i> Layanan RADIUS Server</h6>
+            </div>
+            <div class="card-bd">
+              <div class="fg">
+                <label class="fl">Status Service RADIUS</label>
+                <select name="radius_enabled" class="fs">
+                  <option value="1" <%= radiusStatus.enabled ? 'selected' : '' %>>Aktif (Running Background UDP Service)</option>
+                  <option value="0" <%= !radiusStatus.enabled ? 'selected' : '' %>>Non-Aktif (Disabled)</option>
+                </select>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
+                  Mendengarkan request autentikasi & accounting dari Router NAS MikroTik.
+                </small>
+              </div>
+
+              <div class="fg">
+                <label class="fl">Global Shared Secret RADIUS</label>
+                <input type="text" name="radius_secret" class="fc" value="<%= radiusStatus.secret %>" required>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
+                  Secret default yang digunakan jika IP NAS tidak didaftarkan secara khusus.
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Port UDP & Protocol -->
+          <div class="card mb16">
+            <div class="card-hd">
+              <h6><i class="bi bi-ethernet"></i> Port Jaringan UDP</h6>
+            </div>
+            <div class="card-bd">
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Port Auth (UDP)</label>
+                  <input type="number" name="radius_auth_port" class="fc" value="<%= radiusStatus.authPort %>" required>
+                  <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Default: 1812</small>
+                </div>
+
+                <div class="fg">
+                  <label class="fl">Port Acct (UDP)</label>
+                  <input type="number" name="radius_acct_port" class="fc" value="<%= radiusStatus.acctPort %>" required>
+                  <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Default: 1813</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Limitasi Koneksi & Sesi -->
+          <div class="card mb16">
+            <div class="card-hd">
+              <h6><i class="bi bi-speedometer2"></i> Limitasi Kecepatan & Sesi Aktif</h6>
+            </div>
+            <div class="card-bd">
+              <div class="fg">
+                <label class="fl">Pembatasan Sesi Aktif Ganda (Simultaneous-Use)</label>
+                <select name="radius_limit_simultaneous" class="fs">
+                  <option value="1" <%= (typeof radiusStatus.limitSimultaneous === 'undefined' || radiusStatus.limitSimultaneous) ? 'selected' : '' %>>Aktif - Batasi 1 Akun 1 Sesi Online (Rejek Login Ganda)</option>
+                  <option value="0" <%= (typeof radiusStatus.limitSimultaneous !== 'undefined' && !radiusStatus.limitSimultaneous) ? 'selected' : '' %>>Non-Aktif - Bebas Multi-Login</option>
+                </select>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
+                  Mencegah 1 akun dipakai secara bersamaan di banyak perangkat.
+                </small>
+              </div>
+
+              <div class="fg">
+                <label class="fl">Default Rate Limit (Fallback Kecepatan)</label>
+                <input type="text" name="radius_default_rate_limit" class="fc" value="<%= typeof radiusStatus.defaultRateLimit !== 'undefined' ? radiusStatus.defaultRateLimit : '5M/10M' %>" placeholder="Contoh: 5M/10M">
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
+                  Digunakan jika pengguna/pelanggan tidak terikat pada Paket Internet khusus. (Format: <code>Upload/Download</code>).
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Isolir Settings -->
+          <div class="card mb16">
+            <div class="card-hd">
+              <h6><i class="bi bi-shield-slash"></i> Isolir & Suspended Policy RADIUS</h6>
+            </div>
+            <div class="card-bd">
+              <div class="fg">
+                <label class="fl">Aksi Pelanggan Terisolir</label>
+                <select name="radius_isolir_action" class="fs">
+                  <option value="pool" <%= radiusStatus.isolirAction === 'pool' ? 'selected' : '' %>>Access-Accept dengan Dynamic IP Pool Isolir (Rekomendasi)</option>
+                  <option value="reject" <%= radiusStatus.isolirAction === 'reject' ? 'selected' : '' %>>Access-Reject (Koneksi Ditolak Total)</option>
+                </select>
+              </div>
+
+              <div class="fg">
+                <label class="fl">Alokasi IP Pool Isolir oleh RADIUS Server</label>
+                <select name="radius_isolir_ip_pool_enabled" class="fs">
+                  <option value="1" <%= (typeof radiusStatus.isolirIpPoolEnabled === 'undefined' || radiusStatus.isolirIpPoolEnabled) ? 'selected' : '' %>>Aktif - RADIUS Alokasikan IP Isolir Khusus Secara Otomatis</option>
+                  <option value="0" <%= (typeof radiusStatus.isolirIpPoolEnabled !== 'undefined' && !radiusStatus.isolirIpPoolEnabled) ? 'selected' : '' %>>Non-Aktif - Hanya Kirim Mikrotik-Group / Framed-Pool</option>
+                </select>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Pelanggan terisolir akan mendapatkan IP khusus dari subnet isolir RADIUS tanpa perlu user/pool di MikroTik.</small>
+              </div>
+
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Rentang IP Pool Isolir (Awal)</label>
+                  <input type="text" name="radius_isolir_ip_pool_start" class="fc" value="<%= typeof radiusStatus.isolirIpPoolStart !== 'undefined' ? radiusStatus.isolirIpPoolStart : '10.10.99.2' %>" placeholder="10.10.99.2" required>
+                </div>
+                <div class="fg">
+                  <label class="fl">Rentang IP Pool Isolir (Akhir)</label>
+                  <input type="text" name="radius_isolir_ip_pool_end" class="fc" value="<%= typeof radiusStatus.isolirIpPoolEnd !== 'undefined' ? radiusStatus.isolirIpPoolEnd : '10.10.99.254' %>" placeholder="10.10.99.254" required>
+                </div>
+              </div>
+
+              <div class="fg">
+                <label class="fl">Kecepatan Limit Pelanggan Terisolir (Rate-Limit)</label>
+                <input type="text" name="radius_isolir_rate_limit" class="fc" value="<%= typeof radiusStatus.isolirRateLimit !== 'undefined' ? radiusStatus.isolirRateLimit : '512k/512k' %>" placeholder="Contoh: 512k/512k atau 1M/1M" required>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Format: <code>Upload/Download</code> (misal: 512k/512k, 1M/1M, 256k/512k). Dikirimkan langsung ke MikroTik saat pelanggan terisolir.</small>
+              </div>
+
+              <div class="fg">
+                <label class="fl">Nama Pool / Group Isolir RADIUS (Attribute)</label>
+                <input type="text" name="radius_isolir_pool" class="fc" value="<%= radiusStatus.isolirPool %>" required>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Atribut Mikrotik-Group / Framed-Pool tambahan untuk pelanggan terisolir.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Dynamic IP Pool RADIUS -->
+          <div class="card mb16">
+            <div class="card-hd">
+              <h6><i class="bi bi-diagram-3-fill"></i> Pembagian IP Pool RADIUS Otomatis</h6>
+            </div>
+            <div class="card-bd">
+              <div class="fg">
+                <label class="fl">Alokasi IP Dinamis oleh RADIUS Server</label>
+                <select name="radius_ip_pool_enabled" class="fs">
+                  <option value="1" <%= (typeof radiusStatus.ipPoolEnabled === 'undefined' || radiusStatus.ipPoolEnabled) ? 'selected' : '' %>>Aktif - RADIUS Bagikan IP Otomatis dari Rentang IP Pool (Rekomendasi)</option>
+                  <option value="0" <%= (typeof radiusStatus.ipPoolEnabled !== 'undefined' && !radiusStatus.ipPoolEnabled) ? 'selected' : '' %>>Non-Aktif - Gunakan Dynamic Pool dari MikroTik (Framed-Pool)</option>
+                </select>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
+                  Jika aktif, RADIUS akan membagikan IP dinamis otomatis ke pelanggan tanpa IP statis sehingga tidak tergantung pada pool lokal MikroTik.
+                </small>
+              </div>
+
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Rentang IP Pool Normal (Awal)</label>
+                  <input type="text" name="radius_ip_pool_start" class="fc" value="<%= typeof radiusStatus.ipPoolStart !== 'undefined' ? radiusStatus.ipPoolStart : '10.10.10.2' %>" placeholder="10.10.10.2" required>
+                </div>
+                <div class="fg">
+                  <label class="fl">Rentang IP Pool Normal (Akhir)</label>
+                  <input type="text" name="radius_ip_pool_end" class="fc" value="<%= typeof radiusStatus.ipPoolEnd !== 'undefined' ? radiusStatus.ipPoolEnd : '10.10.10.254' %>" placeholder="10.10.10.254" required>
+                </div>
+              </div>
+
+              <div class="fg">
+                <label class="fl">Nama Framed Pool Default (Fallback)</label>
+                <input type="text" name="radius_framed_pool" class="fc" value="<%= radiusStatus.framedPool %>" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Auto-Generate PPPoE -->
+          <div class="card mb16">
+            <div class="card-hd">
+              <h6><i class="bi bi-key-fill"></i> Auto-Generate Akun PPPoE (Pelanggan Baru)</h6>
+            </div>
+            <div class="card-bd">
+              <div class="hint" style="margin-bottom:10px">Dipakai saat admin <b>menyetujui pendaftar</b> atau menekan <b>Generate Akun PPPoE</b>. Berlaku untuk mode MikroTik maupun RADIUS.</div>
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Otomatis buat akun PPPoE</label>
+                  <select name="pppoe_auto_generate" class="fs">
+                    <option value="1" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_auto_generate)||'1')==='1')?'selected':'' %>>Ya (otomatis)</option>
+                    <option value="0" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_auto_generate)||'1')==='0')?'selected':'' %>>Tidak (isi manual)</option>
+                  </select>
+                </div>
+                <div class="fg">
+                  <label class="fl">Pola Username</label>
+                  <select name="pppoe_username_pattern" class="fs">
+                    <option value="name" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_username_pattern)||'name')==='name')?'selected':'' %>><%= t('iso.cust_name','Nama Pelanggan') %></option>
+                    <option value="customer_code" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_username_pattern)||'name')==='customer_code')?'selected':'' %>>ID Pelanggan (SKY-xxxxx)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Domain / Realm</label>
+                  <input type="text" name="pppoe_domain" class="fc" value="<%= (typeof settings!=='undefined'&&settings&&settings.pppoe_domain)||'sky.id' %>" placeholder="sky.id">
+                  <div class="hint">Username = pola + @ + domain. Contoh: <span class="mono">budi_santoso@sky.id</span></div>
+                </div>
+                <div class="fg">
+                  <label class="fl">Password Default</label>
+                  <input type="text" name="pppoe_default_password" class="fc" value="<%= (typeof settings!=='undefined'&&settings&&settings.pppoe_default_password)||'openisp' %>" placeholder="openisp">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Mode Profil MikroTik -->
+          <div class="card mb16">
+            <div class="card-hd"><h6><i class="bi bi-sliders"></i> Mode Profil MikroTik (RADIUS)</h6></div>
+            <div class="card-bd">
+              <div class="hint" style="margin-bottom:10px">Jika <b>Ya</b>: RADIUS hanya mengautentikasi & mengirim <b>Mikrotik-Group</b> (nama paket) — <b>rate-limit & IP diambil dari profil PPP di MikroTik</b> (RADIUS tidak mengirim atribut Rate-Limit maupun IP). Pastikan nama profil di MikroTik = nama paket.</div>
+              <div class="fg">
+                <label class="fl">Gunakan Profil &amp; IP dari MikroTik</label>
+                <select name="radius_use_profile" class="fs">
+                  <option value="0" <%= (String((typeof settings!=='undefined'&&settings&&settings.radius_use_profile)||'0')==='0')?'selected':'' %>>Tidak (RADIUS atur rate-limit &amp; IP)</option>
+                  <option value="1" <%= (String((typeof settings!=='undefined'&&settings&&settings.radius_use_profile)||'0')==='1')?'selected':'' %>>Ya (ambil dari profil PPP MikroTik)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5: Panduan Firewall Linux UFW & Script MikroTik -->
+          <div class="card mb16">
+            <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <h6 style="margin:0;"><i class="bi bi-terminal-fill"></i> Script Setup Otomatis MikroTik (RADIUS & Isolir)</h6>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label style="font-size:12px;margin:0;color:var(--muted);white-space:nowrap;">IP Server Billing:</label>
+                <input type="text" id="billing-ip-input" class="fc" value="<%= typeof serverIp !== 'undefined' ? serverIp : '192.168.8.88' %>" oninput="updateScriptIp(this.value)" style="width:140px;height:30px;font-size:12px;padding:3px 8px;" title="Ubah IP server jika router mengakses lewat IP lain/VPS">
+                <button type="button" class="btn btn-s btn-sm" onclick="copyMikrotikScript()"><i class="bi bi-clipboard-check"></i> Salin Script MikroTik</button>
+              </div>
+            </div>
+            <div class="card-bd">
+              <div class="fg" style="margin-bottom:14px;">
+                <label class="fl">1. Perintah Firewall Linux Server (UFW)</label>
+                <small class="text-muted" style="font-size:11px;display:block;margin-bottom:6px;">Jalankan perintah ini di terminal server Linux (VPS / Server Produksi) agar router dapat menghubungi server:</small>
+                <div style="background:var(--bg3);padding:10px 12px;border-radius:8px;border:1px solid var(--border);font-family:monospace;font-size:12px;color:var(--info);">
+                  sudo ufw allow <%= radiusStatus.authPort %>/udp<br>
+                  sudo ufw allow <%= radiusStatus.acctPort %>/udp
+                </div>
+              </div>
+
+              <div class="fg" style="margin-bottom:0;">
+                <label class="fl">2. Script Integrasi RADIUS & Isolir di MikroTik (RouterOS Terminal)</label>
+                <small class="text-muted" style="font-size:11px;display:block;margin-bottom:6px;">Copy dan pastekan seluruh script di bawah ini ke <strong>Terminal MikroTik</strong> (IP server otomatis terisi dari IP di atas):</small>
+                <textarea id="mikrotik-script-area" class="fc" rows="14" style="font-family:monospace;font-size:11px;background:var(--bg3);color:#10b981;line-height:1.4;white-space:pre;" readonly># =========================================================
+# SCRIPT SETUP OTOMATIS RADIUS BILLING & ISOLIR MIKROTIK
+# =========================================================
+
+# 1. Aktifkan Fitur RADIUS pada PPP MikroTik
+/ppp aaa set use-radius=yes accounting=yes interim-update=1m
+
+# 2. Buka Akses Disconnect / CoA RADIUS MikroTik (Port UDP 3799)
+/radius incoming set accept=yes port=3799
+
+# 3. Tambahkan Server RADIUS Billing ke MikroTik
+/radius remove [find comment="RTRW-Billing-RADIUS"]
+/radius add service=ppp address=<%= typeof serverIp !== 'undefined' ? serverIp : '192.168.8.88' %> secret="<%= radiusStatus.secret %>" authentication-port=<%= radiusStatus.authPort %> accounting-port=<%= radiusStatus.acctPort %> timeout=3000ms comment="RTRW-Billing-RADIUS"
+
+# 4. Tambahkan IP Address Gateway Subnet Isolir RADIUS
+/ip address remove [find comment="Gateway-Isolir-RADIUS"]
+:do { /ip address add address=<%= (typeof radiusStatus.isolirIpPoolStart !== 'undefined' ? radiusStatus.isolirIpPoolStart.replace(/\.\d+$/, '.1') : '10.10.99.1') %>/24 interface=([/interface find type=bridge]->0) comment="Gateway-Isolir-RADIUS" } on-error={ /ip address add address=<%= (typeof radiusStatus.isolirIpPoolStart !== 'undefined' ? radiusStatus.isolirIpPoolStart.replace(/\.\d+$/, '.1') : '10.10.99.1') %>/24 interface=([/interface find]->0) comment="Gateway-Isolir-RADIUS" }
+
+# 5. Filter Drop Akses Internet Pelanggan Terisolir RADIUS (Universal)
+/ip firewall filter remove [find comment="Isolir-RADIUS-Block-Internet"]
+/ip firewall filter add chain=forward src-address=<%= (typeof radiusStatus.isolirIpPoolStart !== 'undefined' ? radiusStatus.isolirIpPoolStart.replace(/\.\d+$/, '.0') : '10.10.99.0') %>/24 action=drop comment="Isolir-RADIUS-Block-Internet"</textarea>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div>
+          <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Konfigurasi RADIUS</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- TAB 2: DAFTAR NAS CLIENTS -->
+    <div id="tab-content-nas" class="tab-pane" style="display:none;">
+      <div class="card mb16">
+        <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;">
+          <h6 style="margin:0;"><i class="bi bi-router"></i> Daftar Router NAS (Network Access Server)</h6>
+          <button type="button" class="btn btn-p btn-sm" onclick="showModal('addNasModal')"><i class="bi bi-plus-lg"></i> Tambah NAS Client</button>
+        </div>
+        <div class="card-bd" style="padding:0;">
+          <div class="tbl-wrap">
+            <table class="dtbl">
+              <thead>
+                <tr>
+                  <th>IP Address NAS</th>
+                  <th>Nama Shortname</th>
+                  <th>Shared Secret</th>
+                  <th>Keterangan</th>
+                  <th><%= t('common.status','Status') %></th>
+                  <th style="width:140px;text-align:right;"><%= t('common.actions','Aksi') %></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (nasList && nasList.length > 0) { %>
+                  <% nasList.forEach(nas => { %>
+                    <tr>
+                      <td><strong><%= nas.nasname %></strong></td>
+                      <td><%= nas.shortname || '-' %></td>
+                      <td><code><%= nas.secret %></code></td>
+                      <td><%= nas.description || '-' %></td>
+                      <td>
+                        <% if (nas.is_active) { %>
+                          <span class="badge bs"><%= t('common.active','Aktif') %></span>
+                        <% } else { %>
+                          <span class="badge bd"><%= t('admin.common.non_active','Non-Aktif') %></span>
+                        <% } %>
+                      </td>
+                      <td style="text-align:right;white-space:nowrap;">
+                        <form id="ntg-<%= nas.id %>" action="/admin/radius/nas/toggle" method="POST" style="display:none;"><input type="hidden" name="id" value="<%= nas.id %>"></form>
+                        <form id="ndl-<%= nas.id %>" action="/admin/radius/nas/delete" method="POST" style="display:none;" onsubmit="return confirm('Hapus NAS <%= nas.nasname %>?')"><input type="hidden" name="id" value="<%= nas.id %>"></form>
+                        <div class="act">
+                          <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                          <div class="act-menu">
+                            <button type="submit" form="ntg-<%= nas.id %>" class="act-item <%= nas.is_active ? 'warn' : 'success' %>"><i class="bi bi-<%= nas.is_active ? 'pause-circle' : 'play-circle' %>"></i> <%= nas.is_active ? 'Non-aktifkan' : 'Aktifkan' %></button>
+                            <button type="button" class="act-item primary" onclick='openEditNasModal(<%- JSON.stringify(nas).split('<').join('\\u003c') %>)'><i class="bi bi-pencil"></i> Edit NAS</button>
+                            <div class="act-sep"></div>
+                            <button type="submit" form="ndl-<%= nas.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus NAS</button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center text-muted" style="padding:24px;">
+                      Belum ada NAS khusus terdaftar. Server akan menggunakan <strong>Global Shared Secret</strong> untuk semua request router.
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SESI ONLINE RADIUS -->
+    <div id="tab-content-online" class="tab-pane">
+      <div class="card mb16">
+        <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;">
+          <h6 style="margin:0;"><i class="bi bi-wifi"></i> Sesi Aktif RADIUS (Active Connections)</h6>
+          <% if (onlineSessions && onlineSessions.length > 0) { %>
+            <form action="/admin/radius/clear-stale" method="POST" onsubmit="return confirm('Bersihkan semua sesi aktif yang tidak ada pembaruan lebih dari 2 jam?')" style="margin:0;">
+              <button type="submit" class="btn btn-w btn-sm" title="Tandai sesi yang sudah tidak ada pembaruan > 2 jam sebagai stopped">
+                <i class="bi bi-clock-history"></i> Bersihkan Sesi Usang
+              </button>
+            </form>
+          <% } %>
+        </div>
+        <div class="card-bd" style="padding:0;">
+          <div class="tbl-wrap">
+            <table class="dtbl">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th><%= t('iso.cust_name','Nama Pelanggan') %></th>
+                  <th>Framed IP</th>
+                  <th>NAS IP</th>
+                  <th>Upload (In)</th>
+                  <th>Download (Out)</th>
+                  <th>Durasi Sesi</th>
+                  <th>Waktu Update</th>
+                  <th style="width:110px;text-align:right;"><%= t('common.actions','Aksi') %></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (onlineSessions && onlineSessions.length > 0) { %>
+                  <% onlineSessions.forEach(s => { %>
+                    <%
+                      const totalIn = ((s.input_gigawords || 0) * 4294967296) + (s.input_octets || 0);
+                      const totalOut = ((s.output_gigawords || 0) * 4294967296) + (s.output_octets || 0);
+                      const inMB = totalIn >= 1073741824 ? (totalIn / 1073741824).toFixed(2) + ' GB' : (totalIn / 1048576).toFixed(2) + ' MB';
+                      const outMB = totalOut >= 1073741824 ? (totalOut / 1073741824).toFixed(2) + ' GB' : (totalOut / 1048576).toFixed(2) + ' MB';
+                      const st = s.session_time || 0;
+                      const h = Math.floor(st / 3600);
+                      const m = Math.floor((st % 3600) / 60);
+                      const sec = st % 60;
+                      const stStr = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+                    %>
+                    <tr>
+                      <td><strong><%= s.username %></strong></td>
+                      <td><%= s.customer_name || '<span class="text-muted">-</span>' %></td>
+                      <td><%= s.framed_ip || '-' %></td>
+                      <td><%= s.nas_ip || '-' %></td>
+                      <td><%= inMB %></td>
+                      <td><%= outMB %></td>
+                      <td><code><%= stStr %></code></td>
+                      <td><%= s.updated_at %></td>
+                      <td style="text-align:right;white-space:nowrap;">
+                        <form action="/admin/radius/disconnect" method="POST" onsubmit="return confirm('Putuskan sesi aktif RADIUS untuk user \'<%= s.username %>\'?')" style="display:inline;">
+                          <input type="hidden" name="username" value="<%= s.username %>">
+                          <input type="hidden" name="session_id" value="<%= s.session_id %>">
+                          <input type="hidden" name="nas_ip" value="<%= s.nas_ip %>">
+                          <button type="submit" class="btn btn-d btn-sm" title="Putuskan Sesi Active RADIUS">
+                            <i class="bi bi-power"></i> Putuskan
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="9" class="text-center text-muted" style="padding:24px;">Belum ada sesi online RADIUS yang terhubung.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: LOG ACCOUNTING -->
+    <div id="tab-content-accounting" class="tab-pane" style="display:none;">
+      <div class="card mb16">
+        <div class="card-hd">
+          <h6><i class="bi bi-journal-text"></i> Log Accounting RADIUS (100 Terakhir)</h6>
+        </div>
+        <div class="card-bd" style="padding:0;">
+          <div class="tbl-wrap">
+            <table class="dtbl">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Session ID</th>
+                  <th>NAS IP</th>
+                  <th>Status Type</th>
+                  <th>Upload</th>
+                  <th>Download</th>
+                  <th><%= t('admin.common.uptime','Uptime') %></th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (acctLogs && acctLogs.length > 0) { %>
+                  <% acctLogs.forEach(log => { %>
+                    <%
+                      const logIn = ((log.input_gigawords || 0) * 4294967296) + (log.input_octets || 0);
+                      const logOut = ((log.output_gigawords || 0) * 4294967296) + (log.output_octets || 0);
+                      const logInStr = logIn >= 1073741824 ? (logIn / 1073741824).toFixed(2) + ' GB' : (logIn / 1048576).toFixed(2) + ' MB';
+                      const logOutStr = logOut >= 1073741824 ? (logOut / 1073741824).toFixed(2) + ' GB' : (logOut / 1048576).toFixed(2) + ' MB';
+                      const lst = log.session_time || 0;
+                      const lh = Math.floor(lst / 3600);
+                      const lm = Math.floor((lst % 3600) / 60);
+                      const ls = lst % 60;
+                      const lstStr = `${String(lh).padStart(2,'0')}:${String(lm).padStart(2,'0')}:${String(ls).padStart(2,'0')}`;
+                    %>
+                    <tr>
+                      <td>#<%= log.id %></td>
+                      <td><strong><%= log.username %></strong></td>
+                      <td><code><%= log.session_id %></code></td>
+                      <td><%= log.nas_ip %></td>
+                      <td>
+                        <% if (log.status_type === 1) { %>
+                          <span class="badge bs">Start</span>
+                        <% } else if (log.status_type === 2) { %>
+                          <span class="badge bd">Stop</span>
+                        <% } else { %>
+                          <span class="badge bp">Interim</span>
+                        <% } %>
+                      </td>
+                      <td><%= logInStr %></td>
+                      <td><%= logOutStr %></td>
+                      <td><code><%= lstStr %></code></td>
+                      <td><%= log.created_at %></td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="9" class="text-center text-muted" style="padding:24px;">Belum ada data log accounting RADIUS.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL TAMBAH NAS -->
+<div class="mo" id="addNasModal">
+  <div class="mb">
+    <div class="mh">
+      <div class="mt"><i class="bi bi-plus-circle"></i> Tambah NAS Client RADIUS</div>
+      <button type="button" class="mc" onclick="closeModal('addNasModal')">&times;</button>
+    </div>
+    <form action="/admin/radius/nas/add" method="POST">
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">IP Address Router NAS</label>
+          <input type="text" name="nasname" class="fc" placeholder="Contoh: 192.168.88.1 atau 0.0.0.0" required>
+        </div>
+        <div class="fg">
+          <label class="fl">Nama Singkat Router (Shortname)</label>
+          <input type="text" name="shortname" class="fc" placeholder="Contoh: Router-Utama">
+        </div>
+        <div class="fg">
+          <label class="fl">Shared Secret Router</label>
+          <input type="text" name="secret" class="fc" placeholder="Contoh: secret123" required>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('common.note_optional','Keterangan (Opsional)') %></label>
+          <input type="text" name="description" class="fc" placeholder="Lokasi / Catatan">
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addNasModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> Simpan NAS Client</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL EDIT NAS -->
+<div class="mo" id="editNasModal">
+  <div class="mb">
+    <div class="mh">
+      <div class="mt"><i class="bi bi-pencil-square"></i> Edit NAS Client RADIUS</div>
+      <button type="button" class="mc" onclick="closeModal('editNasModal')">&times;</button>
+    </div>
+    <form action="/admin/radius/nas/edit" method="POST">
+      <input type="hidden" name="id" id="edit_nas_id">
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">IP Address Router NAS</label>
+          <input type="text" name="nasname" id="edit_nas_nasname" class="fc" placeholder="Contoh: 192.168.88.1" required>
+        </div>
+        <div class="fg">
+          <label class="fl">Nama Singkat Router (Shortname)</label>
+          <input type="text" name="shortname" id="edit_nas_shortname" class="fc" placeholder="Contoh: Router-Utama">
+        </div>
+        <div class="fg">
+          <label class="fl">Shared Secret Router</label>
+          <input type="text" name="secret" id="edit_nas_secret" class="fc" placeholder="Contoh: secret123" required>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('common.note_optional','Keterangan (Opsional)') %></label>
+          <input type="text" name="description" id="edit_nas_description" class="fc" placeholder="Lokasi / Catatan">
+        </div>
+        <div class="fg">
+          <label class="fl">Status NAS Client</label>
+          <select name="is_active" id="edit_nas_is_active" class="fs">
+            <option value="1"><%= t('common.active','Aktif') %></option>
+            <option value="0"><%= t('admin.common.non_active','Non-Aktif') %></option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('editNasModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> <%= t('tech.mon.save','Simpan Perubahan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function switchTab(tabId) {
+    document.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(c => c.style.display = 'none');
+    
+    const targetBtn = document.getElementById('tab-btn-' + tabId);
+    const targetPane = document.getElementById('tab-content-' + tabId);
+    
+    if (targetBtn) targetBtn.classList.add('active');
+    if (targetPane) targetPane.style.display = 'block';
+  }
+
+  function showModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('show');
+  }
+
+  function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  }
+
+  function openEditNasModal(nas) {
+    if (!nas) return;
+    document.getElementById('edit_nas_id').value = nas.id || '';
+    document.getElementById('edit_nas_nasname').value = nas.nasname || '';
+    document.getElementById('edit_nas_shortname').value = nas.shortname || '';
+    document.getElementById('edit_nas_secret').value = nas.secret || '';
+    document.getElementById('edit_nas_description').value = nas.description || '';
+    document.getElementById('edit_nas_is_active').value = nas.is_active ? '1' : '0';
+    showModal('editNasModal');
+  }
+
+  function updateScriptIp(newIp) {
+    const el = document.getElementById('mikrotik-script-area');
+    if (!el) return;
+    const cleanIp = String(newIp || '').trim() || '192.168.8.88';
+    el.value = el.value.replace(/address=\S+ secret=/, 'address=' + cleanIp + ' secret=');
+  }
+
+  function copyMikrotikScript() {
+    const el = document.getElementById('mikrotik-script-area');
+    if (!el) return;
+    el.select();
+    navigator.clipboard.writeText(el.value).then(() => {
+      alert('Script setup MikroTik & Isolir RADIUS berhasil disalin! Silakan tempelkan (paste) di Terminal MikroTik Anda.');
+    }).catch(() => {
+      document.execCommand('copy');
+      alert('Script MikroTik berhasil disalin!');
+    });
+  }
+
+  // Auto dismiss notification alert after 4 seconds
+  setTimeout(() => {
+    const alertEl = document.getElementById('autoAlert');
+    if (alertEl) {
+      alertEl.style.transition = 'opacity 0.5s ease, max-height 0.5s ease, margin 0.5s ease, padding 0.5s ease';
+      alertEl.style.opacity = '0';
+      alertEl.style.maxHeight = '0';
+      alertEl.style.margin = '0';
+      alertEl.style.padding = '0';
+      alertEl.style.overflow = 'hidden';
+      setTimeout(() => alertEl.remove(), 500);
+    }
+  }, 4000);
+</script>
+</body>
+</html>

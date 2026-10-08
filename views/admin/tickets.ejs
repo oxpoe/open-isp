@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.nav.customer_tickets', 'Keluhan Pelanggan') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'tickets', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-headset"></i> <%= t('admin.nav.customer_tickets', 'Keluhan Pelanggan') %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- Summary Cards -->
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="sc p"><i class="bi bi-ticket-detailed sc-icon"></i><div class="sc-label"><%= t('admin.tickets.stats.total', 'Total Tiket') %></div><div class="sc-val"><%= stats.total %></div></div>
+      <div class="sc d"><i class="bi bi-exclamation-circle sc-icon"></i><div class="sc-label"><%= t('admin.tickets.status.open', 'Belum Ditangani') %></div><div class="sc-val"><%= stats.open %></div></div>
+      <div class="sc w"><i class="bi bi-tools sc-icon"></i><div class="sc-label"><%= t('admin.tickets.status.in_progress', 'Sedang Dikerjakan') %></div><div class="sc-val"><%= stats.inProgress %></div></div>
+      <div class="sc s"><i class="bi bi-check-circle sc-icon"></i><div class="sc-label"><%= t('admin.tickets.status.resolved', 'Selesai') %></div><div class="sc-val"><%= stats.resolved %></div></div>
+    </div>
+
+    <!-- Print Header (Only visible on paper print) -->
+    <div class="print-only" style="margin-bottom:14px;border-bottom:2px solid #0f172a;padding-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <h2 style="font-size:16pt;font-weight:800;text-transform:uppercase;margin:0"><%= company %></h2>
+          <div style="font-size:10pt;color:#334155"><%= t('admin.nav.customer_tickets', 'Daftar Tiket Gangguan & Tugas Teknisi') %> &bull; Status: <%= filterStatus ? filterStatus.toUpperCase() : 'SEMUA' %></div>
+        </div>
+        <div style="text-align:right;font-size:8.5pt;color:#475569">
+          <div>Dicetak: <%= typeof getNowLocal === 'function' ? getNowLocal() : (typeof formatDateLocal === 'function' ? formatDateLocal(new Date()) : new Date().toLocaleString('id-ID')) %></div>
+          <div>Total Tiket: <strong><%= tickets.length %> Kasus</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card">
+      <div class="card-hd" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h6><i class="bi bi-list-ul"></i> <%= t('admin.tickets.list_title', 'Daftar Keluhan & Tugas') %> (<%= tickets.length %>)</h6>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-g btn-sm" onclick="window.print()" title="Cetak Rekap Tiket"><i class="bi bi-printer"></i> Cetak</button>
+          <button class="btn btn-p btn-sm" onclick="openModal('createTicketModal')">
+            <i class="bi bi-plus-circle me-1"></i> + Buat Tiket / Tugas Baru
+          </button>
+        </div>
+      </div>
+      <div class="card-bd" style="padding-bottom:0">
+        <form method="GET" action="/admin/tickets" class="srow" style="margin-bottom:18px">
+          <div class="sinput" style="max-width:340px">
+            <i class="bi bi-search"></i>
+            <input class="fc" name="search" placeholder="Cari pelanggan / subjek / pesan..." value="<%= (typeof filterSearch!=='undefined'?filterSearch:'') %>">
+          </div>
+          <select class="fs" name="tech_id" style="width:180px" onchange="this.form.submit()">
+            <option value="">Semua Teknisi</option>
+            <% (typeof technicians!=='undefined'?technicians:[]).forEach(t => { %><option value="<%= t.id %>" <%= (typeof filterTech!=='undefined' && String(filterTech)===String(t.id))?'selected':'' %>><%= t.name %></option><% }) %>
+          </select>
+          <select class="fs" name="status" style="width:160px" onchange="this.form.submit()">
+            <option value="all" <%= filterStatus==='all'?'selected':'' %>><%= t('common.all_status', 'Semua Status') %></option>
+            <option value="open" <%= filterStatus==='open'?'selected':'' %>><%= t('admin.tickets.status.open', 'Belum Ditangani') %></option>
+            <option value="in_progress" <%= filterStatus==='in_progress'?'selected':'' %>><%= t('admin.tickets.status.in_progress', 'Sedang Dikerjakan') %></option>
+            <option value="resolved" <%= filterStatus==='resolved'?'selected':'' %>><%= t('admin.tickets.status.resolved', 'Selesai') %></option>
+          </select>
+          <button class="btn btn-g btn-sm" type="submit"><i class="bi bi-search"></i> Cari</button>
+          <% if ((typeof filterSearch!=='undefined' && filterSearch) || (typeof filterTech!=='undefined' && filterTech) || (filterStatus && filterStatus!=='all')) { %><a href="/admin/tickets" class="btn btn-g btn-sm"><i class="bi bi-x"></i> Reset</a><% } %>
+        </form>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>#ID</th>
+              <th><%= t('admin.tickets.table.time', 'Waktu') %></th>
+              <th><%= t('admin.tickets.table.customer', 'Pelanggan') %></th>
+              <th><%= t('admin.tickets.table.issue', 'Kendala') %></th>
+              <th><%= t('admin.tickets.table.technician', 'Teknisi') %></th>
+              <th><%= t('admin.tickets.table.status', 'Status') %></th>
+              <th><%= t('common.actions', 'Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+          <% if (tickets.length===0) { %>
+            <tr><td colspan="7" class="text-center text-muted" style="padding:32px"><%= t('admin.tickets.empty', 'Tidak ada tiket keluhan') %></td></tr>
+          <% } %>
+          <% tickets.forEach((ticket) => { %>
+            <tr>
+              <td class="text-muted">#<%= ticket.id %></td>
+              <td style="font-size:12px;color:var(--muted)">
+                <%= typeof formatDateLocal === 'function' ? formatDateLocal(ticket.created_at) : (ticket.created_at ? new Date(ticket.created_at).toLocaleString('id-ID', {dateStyle:'short', timeStyle:'short'}) : '-') %>
+              </td>
+              <td>
+                <div class="fw6"><%= ticket.customer_name %></div>
+                <div style="font-size:11px;color:var(--muted)"><%= ticket.customer_phone || '-' %></div>
+              </td>
+              <td style="color:var(--primary)"><%= ticket.subject %></td>
+              <td>
+                <% if (ticket.technician_name) { %>
+                  <div class="fw6" style="font-size:12px"><i class="bi bi-person-badge me-1"></i><%= ticket.technician_name %></div>
+                <% } else { %>
+                  <span class="text-muted small"><%= t('admin.tickets.no_technician', 'Belum ada') %></span>
+                <% } %>
+              </td>
+              <td>
+                <% if(ticket.status==='open'){%><span class="badge bd"><%= t('admin.tickets.status.open', 'Belum Ditangani') %></span>
+                <%}else if(ticket.status==='in_progress'){%><span class="badge bw"><%= t('admin.tickets.status.working_short', 'Dikerjakan') %></span>
+                <%}else{%><span class="badge bs"><%= t('admin.tickets.status.resolved', 'Selesai') %></span><%}%>
+              </td>
+              <td style="white-space:nowrap">
+                <form id="tdel-<%= ticket.id %>" method="POST" action="/admin/tickets/<%= ticket.id %>/delete" style="display:none" onsubmit="return confirm('<%= t('admin.tickets.confirm.delete', 'Hapus keluhan ini?') %>')"></form>
+                <div class="act">
+                  <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                  <div class="act-menu">
+                    <button class="btn act-item update-btn" title="<%= t('admin.tickets.actions.update_status', 'Update Status') %>"
+                      data-id="<%= ticket.id %>" data-status="<%= ticket.status %>" data-message="<%= ticket.message %>"
+                      data-subject="<%= ticket.subject %>" data-customer="<%= ticket.customer_name %>"
+                      data-notes="<%= ticket.technician_notes || '' %>" data-photos="<%= ticket.photos || '' %>"
+                      data-customer-photos="<%= ticket.customer_photos || '' %>" data-tech-id="<%= ticket.technician_id || '' %>"
+                      data-tech="<%= ticket.technician_name || t('admin.tickets.no_technician', 'Belum ada') %>"><i class="bi bi-pencil"></i> Update Status</button>
+                    <% if ((ticket.photos && ticket.photos !== '' && ticket.photos !== '[]') || (ticket.customer_photos && ticket.customer_photos !== '' && ticket.customer_photos !== '[]')) { %>
+                    <button class="btn act-item primary view-photos-btn" title="Lihat Foto"
+                      data-id="<%= ticket.id %>" data-photos="<%= ticket.photos || '' %>"
+                      data-customer-photos="<%= ticket.customer_photos || '' %>"
+                      data-customer="<%= ticket.customer_name %>" data-subject="<%= ticket.subject %>"><i class="bi bi-images"></i> <%= t('admin.common.view_photo','Lihat Foto') %></button>
+                    <% } %>
+                    <div class="act-sep"></div>
+                    <button type="submit" form="tdel-<%= ticket.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus Keluhan</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Buat Tiket / Tugas Baru -->
+<div class="mo" id="createTicketModal">
+  <div class="mb">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-plus-circle me-1"></i> Buat Tiket / Tugas Teknisi Baru</span>
+      <button class="mc" onclick="closeModal('createTicketModal')">&times;</button>
+    </div>
+    <form method="POST" action="/admin/tickets/create">
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">Pilih Pelanggan (Opsional)</label>
+          <select class="fs" name="customer_id" id="createCustomerId">
+            <option value="0">-- Tugas Umum / Non-Pelanggan (Maintenance) --</option>
+            <% if (typeof customers !== 'undefined' && customers) { %>
+              <% customers.forEach(c => { %>
+                <option value="<%= c.id %>"><%= c.name %> (<%= c.phone || '-' %>) - <%= c.address || '' %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Judul / Subjek Kendala</label>
+          <input class="fc" name="subject" placeholder="Contoh: Perbaikan ODP 02, Tarik Kabel Baru, Sinyal High Drop" required>
+        </div>
+        <div class="fg">
+          <label class="fl">Detail Pesan / Instruksi Tugas</label>
+          <textarea class="fc" name="message" rows="3" placeholder="Tuliskan detail pekerjaan atau instruksi teknisi secara jelas..." required></textarea>
+        </div>
+        <div class="fg">
+          <label class="fl">Tugaskan ke Teknisi (Opsional)</label>
+          <select class="fs" name="technician_id">
+            <option value="">-- Belum Ditugaskan (Bebas) --</option>
+            <% if (typeof technicians !== 'undefined' && technicians) { %>
+              <% technicians.forEach(t => { %>
+                <option value="<%= t.id %>"><%= t.name %> (<%= t.phone || '-' %>)</option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Status Awal</label>
+          <select class="fs" name="status">
+            <option value="open">Belum Ditangani (Open)</option>
+            <option value="in_progress">Sedang Dikerjakan (In Progress)</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('createTicketModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-send me-1"></i> Simpan & Tugaskan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Update -->
+<div class="mo" id="updateModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-pencil"></i> <%= t('admin.tickets.modal.title', 'Update Status Keluhan') %></span><button class="mc" onclick="closeModal('updateModal')">&times;</button></div>
+    <form method="POST" id="updateForm">
+      <div class="mbody">
+        <div class="fg"><label class="fl"><%= t('admin.tickets.table.customer', 'Pelanggan') %></label><input class="fc" id="upCustomer" readonly></div>
+        <div class="fg"><label class="fl"><%= t('admin.tickets.table.issue', 'Kendala') %></label><input class="fc" id="upSubject" readonly></div>
+        <div class="fg">
+          <label class="fl"><i class="bi bi-person-badge me-1"></i><%= t('admin.tickets.table.technician', 'Tugaskan ke Teknisi') %></label>
+          <select class="fs" name="technician_id" id="upTechnicianId">
+            <option value="">-- Belum Ditugaskan (Bebas) --</option>
+            <% if (typeof technicians !== 'undefined' && technicians) { %>
+              <% technicians.forEach(t => { %>
+                <option value="<%= t.id %>"><%= t.name %> (<%= t.phone || '-' %>)</option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+        <div class="fg"><label class="fl"><%= t('admin.tickets.modal.message', 'Detail Pesan') %></label><textarea class="fc" id="upMessage" rows="3" readonly></textarea></div>
+        <div class="fg" id="techNotesContainer" style="display:none;">
+          <label class="fl"><i class="bi bi-pencil-square me-1"></i>Catatan Teknisi</label>
+          <textarea class="fc" id="upNotes" rows="3" readonly style="background:#f8f9fa"></textarea>
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('admin.tickets.actions.update_status', 'Update Status') %></label>
+          <select class="fs" name="status" id="upStatus">
+            <option value="open"><%= t('admin.tickets.status.open', 'Belum Ditangani') %></option>
+            <option value="in_progress"><%= t('admin.tickets.status.in_progress', 'Sedang Dikerjakan') %></option>
+            <option value="resolved"><%= t('admin.tickets.status.resolved', 'Selesai') %></option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('updateModal')"><%= t('common.cancel', 'Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> <%= t('admin.tickets.actions.save_changes', 'Simpan Perubahan') %></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Photo Gallery -->
+<div class="mo" id="photoModal">
+  <div class="mb" style="max-width:900px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-images"></i> Foto Pekerjaan</span>
+      <button class="mc" onclick="closeModal('photoModal')">&times;</button>
+    </div>
+    <div class="mbody">
+      <div class="mb-3">
+        <div class="fw-bold" id="photoCustomer"></div>
+        <div class="text-muted small" id="photoSubject"></div>
+      </div>
+      <div id="photoGallery" class="row g-2"></div>
+    </div>
+    <div class="mf">
+      <button type="button" class="btn btn-g" onclick="closeModal('photoModal')"><%= t('common.close','Tutup') %></button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.update-btn');
+  if (!btn) return;
+  
+  document.getElementById('updateForm').action = '/admin/tickets/' + btn.dataset.id + '/update';
+  document.getElementById('upStatus').value = btn.dataset.status;
+  document.getElementById('upMessage').value = btn.dataset.message;
+  document.getElementById('upSubject').value = btn.dataset.subject;
+  document.getElementById('upCustomer').value = btn.dataset.customer;
+  const upTechSelect = document.getElementById('upTechnicianId');
+  if (upTechSelect) upTechSelect.value = btn.dataset.techId || '';
+  
+  // Show technician notes if available
+  const notes = btn.dataset.notes || '';
+  const notesContainer = document.getElementById('techNotesContainer');
+  if (notes && notes.trim() !== '') {
+    document.getElementById('upNotes').value = notes;
+    notesContainer.style.display = 'block';
+  } else {
+    notesContainer.style.display = 'none';
+  }
+  
+  openModal('updateModal');
+});
+
+// View photos
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.view-photos-btn');
+  if (!btn) return;
+  
+  const _mp = (p) => String(p || '').replace('/uploads/tickets/', '/admin/media/ticket/').replace('/uploads/payment_proofs/', '/admin/media/payment-proof/');
+  const techPhotos = JSON.parse(btn.dataset.photos || '[]').map(_mp);
+  const customerPhotos = JSON.parse(btn.dataset.customerPhotos || '[]').map(_mp);
+  const customer = btn.dataset.customer;
+  const subject = btn.dataset.subject;
+  
+  document.getElementById('photoCustomer').textContent = customer;
+  document.getElementById('photoSubject').textContent = subject;
+  
+  const gallery = document.getElementById('photoGallery');
+  gallery.innerHTML = '';
+  
+  const allPhotos = [...customerPhotos, ...techPhotos];
+  
+  if (allPhotos.length === 0) {
+    gallery.innerHTML = '<div class="col-12 text-center text-muted">Tidak ada foto</div>';
+  } else {
+    // Customer photos first
+    if (customerPhotos.length > 0) {
+      const customerSection = document.createElement('div');
+      customerSection.className = 'col-12 mb-3';
+      customerSection.innerHTML = '<h6 class="text-primary mb-2"><i class="bi bi-person-circle me-1"></i>Foto dari Pelanggan</h6>';
+      gallery.appendChild(customerSection);
+      
+      customerPhotos.forEach((photo, index) => {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 col-6';
+        col.innerHTML = `
+          <div class="position-relative">
+            <a href="${photo}" target="_blank">
+              <img src="${photo}" class="img-fluid rounded" style="width:100%; height:200px; object-fit:cover; border:2px solid #3b82f6; cursor:pointer;">
+            </a>
+            <span class="position-absolute top-0 start-0 badge bg-primary m-2">P${index + 1}</span>
+          </div>
+        `;
+        gallery.appendChild(col);
+      });
+    }
+    
+    // Technician photos
+    if (techPhotos.length > 0) {
+      const techSection = document.createElement('div');
+      techSection.className = 'col-12 mb-3 mt-3';
+      techSection.innerHTML = '<h6 class="text-success mb-2"><i class="bi bi-tools me-1"></i>Foto dari Teknisi</h6>';
+      gallery.appendChild(techSection);
+      
+      techPhotos.forEach((photo, index) => {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 col-6';
+        col.innerHTML = `
+          <div class="position-relative">
+            <a href="${photo}" target="_blank">
+              <img src="${photo}" class="img-fluid rounded" style="width:100%; height:200px; object-fit:cover; border:2px solid #10b981; cursor:pointer;">
+            </a>
+            <span class="position-absolute top-0 start-0 badge bg-success m-2">T${index + 1}</span>
+          </div>
+        `;
+        gallery.appendChild(col);
+      });
+    }
+  }
+  
+  openModal('photoModal');
+});
+
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),5000);
+</script>
+</body>
+</html>

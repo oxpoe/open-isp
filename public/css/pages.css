@@ -1,0 +1,28 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   pages.css — Halaman konten (Tentang, Kontak, Privasi, S&K)
+   Dipakai setelah landing.css + auth.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.page-hero{padding:clamp(30px,5.5vw,64px) 0 8px;text-align:center}
+.page-hero h1{font-size:clamp(27px,4.4vw,44px)}
+.page-hero p{color:var(--muted);font-size:16px;margin-top:12px;max-width:60ch;margin-inline:auto}
+.prose{max-width:900px;margin:22px auto 0;background:var(--glass-2);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-2);padding:clamp(22px,4vw,46px)}
+.prose h2,.prose h3,.prose h4{color:var(--primary);display:flex;align-items:center;gap:10px;margin:28px 0 8px;font-size:20px}
+.prose h2:first-child,.prose h3:first-child,.prose h4:first-child{margin-top:0}
+.prose p,.prose li{font-size:15.5px;line-height:1.75;color:var(--text)}
+.prose p{margin:12px 0}
+.prose ul{margin:12px 0 12px 20px;padding:0}
+.prose ul li{margin-bottom:8px}
+.prose strong{color:var(--text);font-weight:700}
+.prose .lead{font-size:17px}
+.prose-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:22px 0}
+.pcard{background:var(--ghost);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center}
+.pcard i{font-size:30px;color:var(--primary);display:block;margin-bottom:12px}
+.pcard h5{font-size:15px;font-weight:700;margin-bottom:6px}
+.pcard p{color:var(--muted);font-size:13.5px;margin:0}
+.contact-list{display:grid;gap:14px;margin-top:8px}
+.contact-item{display:flex;align-items:center;gap:16px;padding:18px;border-radius:14px;background:var(--ghost);border:1px solid var(--border);text-decoration:none;color:inherit;transition:transform .18s var(--ease),border-color .18s var(--ease)}
+.contact-item:hover{transform:translateY(-2px);border-color:var(--primary-glow)}
+.contact-ic{width:52px;height:52px;border-radius:13px;display:grid;place-items:center;font-size:22px;background:var(--pdim);color:var(--primary);flex:0 0 auto}
+.contact-item h6{font-size:15px;font-weight:700;margin:0 0 2px}
+.contact-item p{color:var(--muted);font-size:13.5px;margin:0;word-break:break-word}
+.page-foot{text-align:center;color:var(--muted);font-size:13px;padding:28px 0 10px}

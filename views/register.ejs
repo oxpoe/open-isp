@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.register.title', 'Pendaftaran Pelanggan Baru') %> | <%= settings.company_header || 'OPEN-ISP' %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/" aria-label="<%= t('customer.register.aria_home', 'Beranda') %>">
+      <img class="bmark" src="<%= brandLogo %>" alt="<%= brandName %>"><span class="bname"><%= brandName %></span>
+    </a>
+    <div class="header-actions" style="margin-left:auto;display:flex;align-items:center;gap:6px">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="<%= t('customer.register.aria_theme', 'Ganti tema') %>"><i class="bi bi-moon-stars-fill"></i></button>
+      <% (typeof availableLangs !== 'undefined' && availableLangs ? availableLangs : ['id','en']).forEach(function(L){ %>
+        <a href="/lang/<%= L %>" class="lbtn lbtn-ghost lbtn-sm" style="padding:4px 8px;<%= (lang === L) ? 'font-weight:800;color:var(--primary);opacity:1' : 'opacity:.65' %>"><%= String(L).toUpperCase() %></a>
+      <% }); %>
+      <a class="lbtn lbtn-ghost lbtn-sm" href="/customer/login"><i class="bi bi-box-arrow-in-right"></i> <%= t('customer.register.header_login', 'Masuk') %></a>
+    </div>
+  </div>
+</header>
+
+<main class="reg-wrap">
+  <div class="form-card reveal">
+    <div class="reg-head">
+      <div class="auth-logo"><img src="<%= brandLogo %>" alt="Logo" onerror="this.style.display='none'"></div>
+      <h1><%= t('customer.register.title', 'Pendaftaran Pelanggan Baru') %></h1>
+      <p><%= settings.company_header || 'OPEN-ISP' %> — <%= t('customer.register.subtitle', 'Isi data di bawah, tim kami akan menghubungi Anda.') %></p>
+    </div>
+
+    <% if (error) { %>
+      <div class="auth-alert err"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+    <% } %>
+
+    <% if (success) { %>
+      <div class="auth-alert ok" style="flex-direction:column;align-items:flex-start;text-align:left">
+        <div style="display:flex;gap:9px;align-items:center"><i class="bi bi-check-circle-fill" style="font-size:18px"></i> <strong><%= success %></strong></div>
+        <% if (typeof newCustomer !== 'undefined' && newCustomer) { var _np = (typeof packages !== 'undefined' && packages) ? packages.find(function(p){return String(p.id)===String(newCustomer.package_id);}) : null; %>
+        <div style="margin-top:12px;width:100%;font-size:13.5px;line-height:1.8">
+          <div><%= t('customer.register.succ_id', 'ID Pelanggan') %>: <b style="color:var(--primary);font-size:16px"><%= newCustomer.customer_code %></b></div>
+          <div><%= t('customer.register.succ_pkg', 'Paket') %>: <b><%= _np ? _np.name : (newCustomer.package_name || '-') %></b></div>
+          <% if (typeof bill !== 'undefined' && bill) { %>
+          <div><%= t('customer.register.succ_estimate', 'Estimasi Biaya Awal') %>: <b>Rp <%= Number(bill.total||0).toLocaleString('id-ID') %></b></div>
+          <div class="muted" style="font-size:12px">(<%= t('customer.register.succ_install', 'Biaya pasang') %> Rp <%= Number(bill.installFee||0).toLocaleString('id-ID') %> + <%= t('customer.register.succ_prorata', 'Prorata') %> Rp <%= Number(bill.prorata||0).toLocaleString('id-ID') %><% if (bill.discount) { %> &minus; <%= t('customer.register.succ_discount', 'Diskon') %> Rp <%= Number(bill.discount||0).toLocaleString('id-ID') %><% } %>)</div>
+          <% } %>
+          <div class="muted" style="font-size:12px;margin-top:4px"><i class="bi bi-info-circle"></i> <%= t('customer.register.succ_note', 'Simpan ID Pelanggan Anda. Nominal final ditetapkan admin saat pemasangan.') %></div>
+        </div>
+        <% } %>
+        <a class="lbtn lbtn-primary lbtn-sm" href="/customer/login" style="margin-top:12px"><i class="bi bi-box-arrow-in-right"></i> <%= t('customer.register.back_login', 'Kembali ke Login') %></a>
+      </div>
+    <% } else { %>
+
+    <form method="POST" action="/customer/register" id="regForm" novalidate>
+      <div id="regStep1">
+      <div class="field">
+        <label for="name"><i class="bi bi-person"></i> <%= t('customer.register.form_name', 'Nama Lengkap') %></label>
+        <div class="wrap"><i class="bi bi-person lead-ic"></i>
+          <input type="text" class="inp" id="name" name="name" placeholder="<%= t('customer.register.form_name_ph', 'Contoh: Budi Santoso') %>" required autofocus autocomplete="name"></div>
+      </div>
+
+      <div class="field">
+        <label for="phone"><i class="bi bi-whatsapp"></i> <%= t('customer.register.form_phone', 'Nomor WhatsApp Aktif') %></label>
+        <div class="wrap"><i class="bi bi-whatsapp lead-ic"></i>
+          <input type="text" class="inp" id="phone" name="phone" placeholder="<%= t('customer.register.form_phone_ph', 'Contoh: 081234567890') %>" required inputmode="tel" autocomplete="tel"></div>
+      </div>
+
+      <div class="field">
+        <label for="email"><i class="bi bi-envelope"></i> <%= t('customer.register.form_email', 'Email (Opsional)') %></label>
+        <div class="wrap"><i class="bi bi-envelope lead-ic"></i>
+          <input type="email" class="inp" id="email" name="email" placeholder="<%= t('customer.register.form_email_ph', 'Contoh: budi@gmail.com') %>" autocomplete="email"></div>
+        <div class="form-note"><%= t('customer.register.form_email_note', 'Email digunakan untuk pengiriman invoice otomatis.') %></div>
+      </div>
+
+      <div class="field">
+        <label for="nik"><i class="bi bi-person-vcard"></i> <%= t('customer.register.form_nik', 'No. Identitas — KTP/SIM/Paspor (Opsional)') %></label>
+        <div class="wrap"><i class="bi bi-person-vcard lead-ic"></i>
+          <input type="text" class="inp" id="nik" name="nik" placeholder="<%= t('customer.register.form_nik_ph', 'Contoh: 3201xxxxxxxxxxxx') %>" oninput="this.value=this.value.toUpperCase()" autocapitalize="characters" autocomplete="off"></div>
+        <div class="form-note"><%= t('customer.register.form_nik_note', 'Opsional, seperti email. Untuk kelengkapan data identitas.') %></div>
+      </div>
+
+      <div class="field">
+        <label for="address"><i class="bi bi-geo-alt"></i> <%= t('customer.register.form_address', 'Alamat Pemasangan') %></label>
+        <textarea class="inp inp-plain" id="address" name="address" rows="2" placeholder="<%= t('customer.register.form_address_ph', 'Sertakan RT/RW, Desa, Kecamatan') %>" required></textarea>
+      </div>
+
+      <div class="field">
+        <label><i class="bi bi-map"></i> <%= t('customer.register.form_location', 'Lokasi di Peta (Opsional)') %></label>
+        <div class="loc-btns">
+          <button type="button" class="lbtn lbtn-ghost lbtn-sm" onclick="openPicker()"><i class="bi bi-geo-alt-fill"></i> <%= t('customer.register.btn_pick_map', 'Pilih di Peta') %></button>
+          <button type="button" class="lbtn lbtn-ghost lbtn-sm" onclick="getLocation()"><i class="bi bi-crosshair"></i> <%= t('customer.register.btn_use_gps', 'Gunakan GPS') %></button>
+        </div>
+        <input type="hidden" name="lat" id="reg_lat">
+        <input type="hidden" name="lng" id="reg_lng">
+        <div class="chip-note" id="coordText"><%= t('customer.register.coord_none', 'Koordinat belum dipilih.') %></div>
+      </div>
+
+      <div class="field">
+        <label for="voucher"><i class="bi bi-ticket-perforated"></i> <%= t('customer.register.form_voucher', 'Kode Voucher (Opsional)') %></label>
+        <div class="wrap"><i class="bi bi-ticket-perforated lead-ic"></i>
+          <input type="text" class="inp" id="voucher" name="voucher" placeholder="<%= t('customer.register.form_voucher_ph', 'mis. HEMAT50') %>" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" autocapitalize="characters" autocomplete="off"></div>
+        <div class="form-note" id="voucherNote"><%= t('customer.register.voucher_note', 'Punya kode promo? Masukkan untuk potongan biaya awal.') %></div>
+      </div>
+
+      <button type="button" class="lbtn lbtn-primary btn-auth" onclick="regNext()"><i class="bi bi-arrow-right"></i> <%= t('customer.register.btn_next', 'Lanjut Pilih Paket') %></button>
+      </div><!-- /step1 -->
+
+      <div id="regStep2" style="display:none">
+        <button type="button" class="lbtn lbtn-ghost lbtn-sm" onclick="regBack()" style="margin-bottom:12px"><i class="bi bi-arrow-left"></i> <%= t('customer.register.btn_back', 'Kembali') %></button>
+        <div class="field">
+          <label for="package_id"><i class="bi bi-box-seam"></i> <%= t('customer.register.form_package', 'Pilih Paket Layanan') %></label>
+          <select class="inp inp-plain" id="package_id" name="package_id" required>
+            <option value="" disabled selected><%= t('customer.register.package_ph', 'Pilih salah satu paket…') %></option>
+            <% (packages || []).forEach(function(pkg) { %>
+              <option value="<%= pkg.id %>" data-price="<%= Number(pkg.price||0) %>"><%= pkg.name %> — Rp <%= Number(pkg.price||0).toLocaleString('id-ID') %>/<%= t('customer.register.per_month', 'bulan') %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div id="regEstimate" style="display:none;border:1px solid var(--border);border-radius:14px;padding:14px;margin:6px 0 14px;background:var(--glass-2,rgba(17,22,34,.72))">
+          <div style="font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px"><i class="bi bi-calculator" style="color:var(--primary)"></i> <%= t('customer.register.est_title', 'Estimasi Biaya Awal') %></div>
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0"><span><%= t('customer.register.est_install', 'Biaya Pasang') %></span><span id="reInstall">Rp 0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0"><span><%= t('customer.register.est_prorata', 'Paket Prorata') %> (<span id="reDays">0</span> <%= t('customer.register.est_days', 'hari') %>)</span><span id="reProrata">Rp 0</span></div>
+          <div id="reDiscRow" style="display:none;justify-content:space-between;font-size:13.5px;padding:4px 0;color:var(--danger,#fb7185)"><span><%= t('customer.register.est_discount', 'Diskon Voucher') %> <span id="reVoucherCode"></span></span><span id="reDiscount">- Rp 0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:800;padding:8px 0 2px;border-top:1px solid var(--border);margin-top:6px"><span><%= t('customer.register.est_total', 'Total Bayar Awal') %></span><span id="reTotal" style="color:var(--primary)">Rp 0</span></div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:6px"><%= t('customer.register.est_note_pre', 'Paket dihitung prorata s/d') %> <b id="reDue">-</b> <%= t('customer.register.est_note_post', '(acuan tanggal 5). Ini estimasi; nominal final ditetapkan admin.') %></div>
+        </div>
+
+        <button type="submit" class="lbtn lbtn-primary btn-auth"><i class="bi bi-send-fill"></i> <%= t('customer.register.btn_submit', 'Kirim Pendaftaran') %></button>
+      </div><!-- /step2 -->
+    </form>
+    <% } %>
+
+    <div class="auth-foot">
+      <%= t('customer.register.have_account', 'Sudah punya akun?') %> <a href="/customer/login"><%= t('customer.register.login_here', 'Login di sini') %></a>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;font-size:12px">
+        <a href="/customer/about" class="muted"><%= t('customer.register.link_about', 'Tentang Kami') %></a>
+        <a href="/customer/tos" class="muted"><%= t('customer.register.link_tos', 'Ketentuan') %></a>
+        <a href="/customer/privacy" class="muted"><%= t('customer.register.link_privacy', 'Privasi') %></a>
+        <a href="/customer/contact" class="muted"><%= t('customer.register.link_contact', 'Kontak') %></a>
+      </div>
+      <div style="margin-top:12px;font-size:11.5px" class="muted">&copy; <%= new Date().getFullYear() %> <%= settings.company_header || 'OPEN-ISP' %> · v<%= appVersion %> (<%= appVersionName %>)</div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal peta (lazy) -->
+<div class="mo" id="mapPickerModal">
+  <div class="mb">
+    <div class="mh"><h3><i class="bi bi-geo-alt-fill" style="color:var(--primary)"></i> <%= t('customer.register.modal_title', 'Pilih Lokasi Pemasangan') %></h3>
+      <button class="mc" onclick="closePicker()" aria-label="<%= t('customer.register.modal_close', 'Tutup') %>"><i class="bi bi-x-lg"></i></button></div>
+    <div class="mbody">
+      <div id="picker-map"></div>
+      <div class="form-note"><%= t('customer.register.modal_tip', 'Geser pin atau klik peta untuk menentukan titik lokasi.') %></div>
+    </div>
+    <div class="mf"><button class="lbtn lbtn-primary lbtn-sm" onclick="closePicker()"><%= t('customer.register.btn_done', 'Selesai') %></button></div>
+  </div>
+</div>
+
+<script>
+  var I18N = {
+    fillRequired: "<%= t('customer.register.js_fill_required', 'Lengkapi Nama, No. WhatsApp, dan Alamat dulu.') %>",
+    fillRequired2: "<%= t('customer.register.js_fill_required2', 'Lengkapi Nama, No. WhatsApp, dan Alamat terlebih dahulu.') %>",
+    pickPackage: "<%= t('customer.register.js_pick_package', 'Pilih paket layanan terlebih dahulu.') %>",
+    gpsUnsupported: "<%= t('customer.register.js_gps_unsupported', 'GPS tidak didukung di perangkat ini.') %>",
+    gpsFail: "<%= t('customer.register.js_gps_fail', 'Gagal mengambil lokasi: ') %>",
+    voucherEnter: "<%= t('customer.register.voucher_note', 'Punya kode promo? Masukkan untuk potongan biaya awal.') %>",
+    voucherPickPkg: "<%= t('customer.register.voucher_pick_pkg', 'Pilih paket dulu untuk cek voucher.') %>"
+  };
+  (function(){ var s = localStorage.getItem('landing-theme') || 'dark'; document.documentElement.setAttribute('data-theme', s); })();
+  function toggleTheme(){ var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); localStorage.setItem('landing-theme',t); }
+  (function(){ var els=document.querySelectorAll('.reveal'); if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;} var io=new IntersectionObserver(function(en){en.forEach(function(x){if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}});},{threshold:.12}); els.forEach(function(e){io.observe(e);}); })();
+
+  // ── Peta (Leaflet dimuat saat dibutuhkan) ──
+  var officeLat = Number('<%= settings.office_lat || "" %>') || -6.200000;
+  var officeLng = Number('<%= settings.office_lng || "" %>') || 106.816666;
+  var pickerMap, pickerMarker, leafletReady = false, leafletLoading = false;
+
+  function loadLeaflet(cb){
+    if(window.L){ cb(); return; }
+    if(leafletLoading){ var t=setInterval(function(){ if(window.L){ clearInterval(t); cb(); } },60); return; }
+    leafletLoading = true;
+    var css=document.createElement('link'); css.rel='stylesheet'; css.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css);
+    var js=document.createElement('script'); js.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.onload=function(){ leafletReady=true; cb(); };
+    document.body.appendChild(js);
+  }
+
+  function setCoords(lat, lng){
+    var latStr=Number(lat).toFixed(8), lngStr=Number(lng).toFixed(8);
+    document.getElementById('reg_lat').value=latStr;
+    document.getElementById('reg_lng').value=lngStr;
+    document.getElementById('coordText').innerText='Lat: '+latStr+' • Lng: '+lngStr;
+  }
+  function openPicker(){
+    document.getElementById('mapPickerModal').classList.add('show');
+    var latVal=parseFloat(document.getElementById('reg_lat').value)||officeLat;
+    var lngVal=parseFloat(document.getElementById('reg_lng').value)||officeLng;
+    loadLeaflet(function(){
+      setTimeout(function(){
+        if(!pickerMap){
+          pickerMap=L.map('picker-map').setView([latVal,lngVal],16);
+          L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']}).addTo(pickerMap);
+          pickerMarker=L.marker([latVal,lngVal],{draggable:true}).addTo(pickerMap);
+          pickerMarker.on('dragend',function(){var p=pickerMarker.getLatLng();setCoords(p.lat,p.lng);});
+          pickerMap.on('click',function(e){pickerMarker.setLatLng(e.latlng);setCoords(e.latlng.lat,e.latlng.lng);});
+        } else {
+          pickerMap.setView([latVal,lngVal],16); pickerMarker.setLatLng([latVal,lngVal]); pickerMap.invalidateSize();
+        }
+      },200);
+    });
+  }
+  function closePicker(){ document.getElementById('mapPickerModal').classList.remove('show'); }
+  function getLocation(){
+    if(!navigator.geolocation) return alert(I18N.gpsUnsupported);
+    navigator.geolocation.getCurrentPosition(function(pos){ setCoords(pos.coords.latitude,pos.coords.longitude); },
+      function(err){ alert(I18N.gpsFail+(err.message||err)); }, {enableHighAccuracy:true,timeout:8000});
+  }
+
+  // ── Alur daftar: 2 langkah + estimasi prorata (acuan tgl 5) ──
+  var REG = {
+    startDate: '<%= (typeof regCalc !== "undefined" && regCalc) ? regCalc.startDate : "" %>',
+    dueDate: '<%= (typeof regCalc !== "undefined" && regCalc) ? regCalc.dueDate : "" %>',
+    diffDays: <%= (typeof regCalc !== "undefined" && regCalc) ? regCalc.diffDays : 0 %>,
+    daysInMonth: <%= (typeof regCalc !== "undefined" && regCalc) ? regCalc.daysInMonth : 30 %>,
+    installFee: <%= (typeof installFee !== "undefined") ? installFee : 0 %>
+  };
+  var _voucherDiscount = 0;
+  function fmtRp(n){ return 'Rp ' + Math.round(Number(n)||0).toLocaleString('id-ID'); }
+  function fmtTgl(s){ try { var d=new Date(s); return isNaN(d.getTime())?s:d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); } catch(e){ return s; } }
+  function regNext(){
+    var name=(document.getElementById('name')||{}).value||'';
+    var phone=(document.getElementById('phone')||{}).value||'';
+    var address=(document.getElementById('address')||{}).value||'';
+    if(!name.trim()||!phone.trim()||!address.trim()){ alert(I18N.fillRequired); return; }
+    document.getElementById('regStep1').style.display='none';
+    document.getElementById('regStep2').style.display='block';
+    checkVoucher();
+    try { window.scrollTo({top:0,behavior:'smooth'}); } catch(e){ window.scrollTo(0,0); }
+  }
+  function regBack(){ document.getElementById('regStep2').style.display='none'; document.getElementById('regStep1').style.display='block'; }
+  function currentPrice(){ var s=document.getElementById('package_id'); if(!s) return 0; var o=s.options[s.selectedIndex]; return (o && o.dataset)?Number(o.dataset.price||0):0; }
+  function renderEstimate(){
+    var box=document.getElementById('regEstimate'); if(!box) return;
+    var price=currentPrice(); if(!price){ box.style.display='none'; return; }
+    var perDay = price / (REG.daysInMonth||30);
+    var prorata = Math.round(perDay * (REG.diffDays||0));
+    var gross = prorata + (REG.installFee||0);
+    var disc = Math.min(_voucherDiscount||0, gross);
+    var total = Math.max(0, gross - disc);
+    box.style.display='block';
+    document.getElementById('reInstall').textContent = fmtRp(REG.installFee);
+    document.getElementById('reDays').textContent = REG.diffDays;
+    document.getElementById('reProrata').textContent = fmtRp(prorata);
+    document.getElementById('reDue').textContent = fmtTgl(REG.dueDate);
+    if(disc>0){ document.getElementById('reDiscRow').style.display='flex'; document.getElementById('reDiscount').textContent='- '+fmtRp(disc); document.getElementById('reVoucherCode').textContent='( '+((document.getElementById('voucher')||{}).value||'').toUpperCase()+' )'; }
+    else { document.getElementById('reDiscRow').style.display='none'; }
+    document.getElementById('reTotal').textContent = fmtRp(total);
+  }
+  function checkVoucher(){
+    var vEl=document.getElementById('voucher'); var note=document.getElementById('voucherNote');
+    var code=(vEl?String(vEl.value||'').trim():'');
+    var pEl=document.getElementById('package_id'); var pid=pEl?pEl.value:'';
+    if(!code){ _voucherDiscount=0; if(note){note.textContent=I18N.voucherEnter;note.style.color='';} renderEstimate(); return; }
+    if(!pid){ _voucherDiscount=0; if(note){note.textContent=I18N.voucherPickPkg;note.style.color='var(--muted)';} renderEstimate(); return; }
+    fetch('/customer/register/validate-voucher',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,package_id:pid})})
+      .then(function(r){return r.json();}).then(function(d){ _voucherDiscount=(d&&d.ok)?(d.discount||0):0; if(note){note.textContent=(d&&d.message)||''; note.style.color=(d&&d.ok)?'var(--success)':'var(--danger,#fb7185)';} renderEstimate(); })
+      .catch(function(){ _voucherDiscount=0; renderEstimate(); });
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var s=document.getElementById('package_id'); if(s) s.addEventListener('change', function(){ checkVoucher(); renderEstimate(); });
+    var v=document.getElementById('voucher'); if(v) v.addEventListener('change', checkVoucher);
+    var f=document.getElementById('regForm');
+    if(f) f.addEventListener('submit', function(e){
+      var name=(document.getElementById('name')||{}).value||'';
+      var phone=(document.getElementById('phone')||{}).value||'';
+      var addr=(document.getElementById('address')||{}).value||'';
+      var pid=(document.getElementById('package_id')||{}).value||'';
+      if(!name.trim()||!phone.trim()||!addr.trim()){
+        e.preventDefault();
+        alert(I18N.fillRequired2);
+        var s2=document.getElementById('regStep2'); var s1=document.getElementById('regStep1');
+        if(s2) s2.style.display='none'; if(s1) s1.style.display='block';
+        return;
+      }
+      if(!pid){ e.preventDefault(); alert(I18N.pickPackage); return; }
+    });
+    ['name','phone','email','nik','voucher'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); regNext(); } });
+    });
+  });
+
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/sw.js',{scope:'/customer/'}).then(function(r){try{r.update();}catch(e){}}).catch(function(){});
+  }
+</script>
+</body>
+</html>

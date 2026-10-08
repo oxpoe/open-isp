@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .attendance-card {
+      background: var(--bg2);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .status-checked-in {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+    .status-checked-out {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+    .status-not-checked-in {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .info-value {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .note-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 14px;
+      background: var(--bg3);
+      color: var(--text);
+    }
+    .location-info {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+      padding: 8px;
+      background: var(--bg3);
+      border-radius: 4px;
+    }
+    .photo-help {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'cashier_attendance', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-calendar-check"></i> <%= title %>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i> Kasir
+      </span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type === 'success' ? 's' : 'd' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type === 'success' ? 'check-circle' : 'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <!-- Today's Status -->
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-calendar-day"></i> Status Hari Ini</h6>
+      </div>
+      <div class="card-bd">
+        <% if (todayAttendance) { %>
+          <% if (todayAttendance.status === 'checked_in') { %>
+            <span class="status-badge status-checked-in"><i class="bi bi-check-lg"></i> Sudah Check-in</span>
+          <% } else { %>
+            <span class="status-badge status-checked-out"><i class="bi bi-check-lg"></i> Sudah Check-out</span>
+          <% } %>
+
+          <div class="info-row">
+            <span class="info-label">Check-in</span>
+            <span class="info-value"><%= formatDateLocal(todayAttendance.check_in_time) %></span>
+          </div>
+
+          <% if (todayAttendance.check_out_time) { %>
+            <div class="info-row">
+              <span class="info-label">Check-out</span>
+              <span class="info-value"><%= formatDateLocal(todayAttendance.check_out_time) %></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Durasi Kerja</span>
+              <span class="info-value">
+                <%= Math.floor(todayAttendance.work_duration_minutes / 60) %> jam 
+                <%= todayAttendance.work_duration_minutes % 60 %> menit
+              </span>
+            </div>
+          <% } %>
+
+          <% if (todayAttendance.check_in_note) { %>
+            <div class="info-row">
+              <span class="info-label">Catatan Check-in</span>
+              <span class="info-value"><%= todayAttendance.check_in_note %></span>
+            </div>
+          <% } %>
+
+          <% if (todayAttendance.check_out_note) { %>
+            <div class="info-row">
+              <span class="info-label">Catatan Check-out</span>
+              <span class="info-value"><%= todayAttendance.check_out_note %></span>
+            </div>
+          <% } %>
+
+          <% if (todayAttendance.check_in_photo || todayAttendance.check_out_photo) { %>
+            <div class="info-row" style="align-items:flex-start">
+              <span class="info-label">Foto Absensi</span>
+              <span class="info-value" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+                <% if (todayAttendance.check_in_photo) { %>
+                  <a href="<%= todayAttendance.check_in_photo %>" target="_blank" style="text-decoration:none;color:var(--text);font-size:12px;text-align:center">
+                    <img src="<%= todayAttendance.check_in_photo %>" alt="Foto check-in" style="width:72px;height:72px;object-fit:cover;border-radius:10px;display:block;margin-bottom:4px">
+                    Check-in
+                  </a>
+                <% } %>
+                <% if (todayAttendance.check_out_photo) { %>
+                  <a href="<%= todayAttendance.check_out_photo %>" target="_blank" style="text-decoration:none;color:var(--text);font-size:12px;text-align:center">
+                    <img src="<%= todayAttendance.check_out_photo %>" alt="Foto check-out" style="width:72px;height:72px;object-fit:cover;border-radius:10px;display:block;margin-bottom:4px">
+                    Check-out
+                  </a>
+                <% } %>
+              </span>
+            </div>
+          <% } %>
+
+          <% if (todayAttendance.status === 'checked_in') { %>
+            <textarea id="checkoutNote" class="note-input" placeholder="Catatan check-out (opsional)"></textarea>
+            <input id="checkoutPhoto" type="file" accept="image/*" capture="user" style="display: none;" onchange="updatePhotoInfo('checkoutPhoto', 'checkoutPhotoInfo', 'checkoutPhotoPreviewWrap', 'checkoutPhotoPreview')">
+            
+            <div style="text-align: center; margin: 16px 0;">
+              <button type="button" onclick="document.getElementById('checkoutPhoto').click()" class="btn btn-p d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4); border: none; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'">
+                <i class="bi bi-camera-fill"></i>
+              </button>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;"><%= t('collector.tap_camera','Ketuk tombol kamera untuk mengambil foto selfie') %></div>
+            </div>
+
+            <div id="checkoutPhotoInfo" class="photo-help text-center">Belum ada foto diambil. Foto wajib untuk check-out.</div>
+            <div style="text-align: center; margin-top: 4px;">
+              <div id="checkoutPhotoStatus" class="photo-help" style="display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(239,68,68,0.18);color:#fecaca"><%= t('collector.selfie_required','Foto wajib') %></div>
+            </div>
+            
+            <div style="display:flex;gap:8px;margin-top:8px;justify-content:center">
+              <button type="button" onclick="clearSelectedPhoto('checkoutPhoto')" class="btn btn-d btn-sm" id="checkoutPhotoClearBtn" style="display: none; border-radius: 8px; font-size: 11px;"><%= t('collector.delete_photo','Hapus Foto') %></button>
+            </div>
+            <div id="checkoutPhotoPreviewWrap" style="display:none;margin-top:8px">
+              <div class="photo-help" style="margin-bottom:6px">Preview foto final yang akan dikirim:</div>
+              <img id="checkoutPhotoPreview" alt="Preview foto check-out" style="width:100%;max-width:240px;border-radius:12px;border:1px solid var(--border);object-fit:cover">
+            </div>
+            <button id="checkoutSubmitBtn" class="btn btn-d btn-sm" style="width:100%;margin-top:12px;opacity:0.55;cursor:not-allowed" onclick="checkout(event)" disabled>
+              <i class="bi bi-door-open"></i> Check-out Sekarang
+            </button>
+          <% } %>
+
+        <% } else { %>
+          <span class="status-badge status-not-checked-in"><i class="bi bi-x-lg"></i> Belum Check-in</span>
+          <p style="color: var(--muted); margin: 16px 0;">Silakan lakukan check-in untuk memulai hari kerja Anda.</p>
+          
+          <textarea id="checkinNote" class="note-input" placeholder="Catatan check-in (opsional)"></textarea>
+          <input id="checkinPhoto" type="file" accept="image/*" capture="user" style="display: none;" onchange="updatePhotoInfo('checkinPhoto', 'checkinPhotoInfo', 'checkinPhotoPreviewWrap', 'checkinPhotoPreview')">
+          
+          <div style="text-align: center; margin: 16px 0;">
+            <button type="button" onclick="document.getElementById('checkinPhoto').click()" class="btn btn-s d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px; border-radius: 50%; font-size: 24px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); border: none; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.92)'" onmouseup="this.style.transform='scale(1)'">
+              <i class="bi bi-camera-fill"></i>
+            </button>
+            <div style="font-size: 11px; color: var(--muted); margin-top: 6px;"><%= t('collector.tap_camera','Ketuk tombol kamera untuk mengambil foto selfie') %></div>
+          </div>
+
+          <div id="checkinPhotoInfo" class="photo-help text-center">Belum ada foto diambil. Foto wajib untuk check-in.</div>
+          <div style="text-align: center; margin-top: 4px;">
+            <div id="checkinPhotoStatus" class="photo-help" style="display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(239,68,68,0.18);color:#fecaca"><%= t('collector.selfie_required','Foto wajib') %></div>
+          </div>
+          
+          <div style="display:flex;gap:8px;margin-top:8px;justify-content:center">
+            <button type="button" onclick="clearSelectedPhoto('checkinPhoto')" class="btn btn-d btn-sm" id="checkinPhotoClearBtn" style="display: none; border-radius: 8px; font-size: 11px;"><%= t('collector.delete_photo','Hapus Foto') %></button>
+          </div>
+          <div id="checkinPhotoPreviewWrap" style="display:none;margin-top:8px">
+            <div class="photo-help" style="margin-bottom:6px">Preview foto final yang akan dikirim:</div>
+            <img id="checkinPhotoPreview" alt="Preview foto check-in" style="width:100%;max-width:240px;border-radius:12px;border:1px solid var(--border);object-fit:cover">
+          </div>
+          <button id="checkinSubmitBtn" class="btn btn-s btn-sm" style="width:100%;margin-top:12px;opacity:0.55;cursor:not-allowed" onclick="checkin(event)" disabled>
+            <i class="bi bi-check-circle"></i> Check-in Sekarang
+          </button>
+        <% } %>
+
+        <div id="locationInfo" class="location-info" style="display: none;">
+          <i class="bi bi-geo-alt-fill"></i> Mengambil lokasi GPS...
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Summary -->
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="sc p">
+        <i class="bi bi-calendar-month sc-icon"></i>
+        <div class="sc-label">Total Hari</div>
+        <div class="sc-val"><%= summary.total_days || 0 %></div>
+        <div class="sc-sub">Bulan ini</div>
+      </div>
+      <div class="sc s">
+        <i class="bi bi-check-circle sc-icon"></i>
+        <div class="sc-label">Hari Lengkap</div>
+        <div class="sc-val"><%= summary.completed_days || 0 %></div>
+        <div class="sc-sub">Check-in & out</div>
+      </div>
+      <div class="sc p">
+        <i class="bi bi-clock sc-icon"></i>
+        <div class="sc-label">Total Jam</div>
+        <div class="sc-val">
+          <%= summary.total_minutes ? Math.floor(summary.total_minutes / 60) : 0 %>
+        </div>
+        <div class="sc-sub">Jam kerja</div>
+      </div>
+      <div class="sc s">
+        <i class="bi bi-graph-up sc-icon"></i>
+        <div class="sc-label">Rata-rata</div>
+        <div class="sc-val">
+          <%= summary.avg_minutes ? Math.floor(summary.avg_minutes / 60) : 0 %>
+        </div>
+        <div class="sc-sub">Jam/hari</div>
+      </div>
+    </div>
+
+    <!-- Recent History -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-hd">
+        <h6><i class="bi bi-clock-history"></i> Riwayat Terakhir</h6>
+      </div>
+      <% if (history && history.length > 0) { %>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('common.date','Tanggal') %></th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Durasi</th>
+              <th><%= t('common.status','Status') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% history.forEach(item => { %>
+              <tr>
+                <td class="fw6">
+                  <%= parseDateInTimezone(item.check_in_time).toLocaleDateString('id-ID', { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                  }) %>
+                </td>
+                <td>
+                  <%= formatTimeLocal(item.check_in_time) %>
+                </td>
+                <td>
+                  <%= item.check_out_time ? formatTimeLocal(item.check_out_time) : '-' %>
+                </td>
+                <td>
+                  <% if (item.work_duration_minutes > 0) { %>
+                    <%= Math.floor(item.work_duration_minutes / 60) %>j <%= item.work_duration_minutes % 60 %>m
+                  <% } else { %>
+                    <span class="text-muted">-</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (item.status === 'checked_in') { %>
+                    <span class="badge badge-w">Belum selesai</span>
+                  <% } else { %>
+                    <span class="badge badge-s">Selesai</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } else { %>
+      <div class="card-bd" style="text-align:center;padding:40px 20px">
+        <p style="color:var(--muted)">Belum ada riwayat absensi</p>
+      </div>
+      <% } %>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let currentLocation = null;
+  const processedAttendancePhotos = {};
+  const photoFieldConfig = {
+    checkinPhoto: { infoId: 'checkinPhotoInfo', previewWrapId: 'checkinPhotoPreviewWrap', previewImgId: 'checkinPhotoPreview', statusId: 'checkinPhotoStatus', submitBtnId: 'checkinSubmitBtn' },
+    checkoutPhoto: { infoId: 'checkoutPhotoInfo', previewWrapId: 'checkoutPhotoPreviewWrap', previewImgId: 'checkoutPhotoPreview', statusId: 'checkoutPhotoStatus', submitBtnId: 'checkoutSubmitBtn' }
+  };
+
+  function setPhotoStatus(statusId, text, mode = 'idle') {
+    const el = document.getElementById(statusId);
+    if (!el) return;
+    const palette = {
+      idle: ['rgba(239, 68, 68, 0.18)', '#fecaca'],
+      waiting: ['rgba(245, 158, 11, 0.18)', '#fde68a'],
+      processing: ['rgba(59, 130, 246, 0.18)', '#bfdbfe'],
+      ready: ['rgba(16, 185, 129, 0.18)', '#bbf7d0'],
+      error: ['rgba(239, 68, 68, 0.18)', '#fecaca']
+    };
+    const [bg, color] = palette[mode] || palette.idle;
+    el.style.background = bg;
+    el.style.color = color;
+    el.textContent = text;
+  }
+
+  function setSubmitButtonState(buttonId, enabled) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+    button.disabled = !enabled;
+    button.style.opacity = enabled ? '1' : '0.55';
+    button.style.cursor = enabled ? 'pointer' : 'not-allowed';
+  }
+
+  function resetPhotoPreview(previewWrapId, previewImgId) {
+    const previewWrap = document.getElementById(previewWrapId);
+    const previewImg = document.getElementById(previewImgId);
+    if (previewImg && previewImg.dataset.objectUrl) {
+      URL.revokeObjectURL(previewImg.dataset.objectUrl);
+      delete previewImg.dataset.objectUrl;
+    }
+    if (previewImg) previewImg.removeAttribute('src');
+    if (previewWrap) previewWrap.style.display = 'none';
+  }
+
+  function setPhotoPreview(previewWrapId, previewImgId, file) {
+    const previewWrap = document.getElementById(previewWrapId);
+    const previewImg = document.getElementById(previewImgId);
+    if (!previewWrap || !previewImg) return;
+
+    resetPhotoPreview(previewWrapId, previewImgId);
+    const objectUrl = URL.createObjectURL(file);
+    previewImg.src = objectUrl;
+    previewImg.dataset.objectUrl = objectUrl;
+    previewWrap.style.display = 'block';
+  }
+
+  function updatePhotoInfo(inputId, infoId, previewWrapId, previewImgId) {
+    const input = document.getElementById(inputId);
+    const info = document.getElementById(infoId);
+    const config = getPhotoState(inputId);
+    if (!input || !info) return;
+    const file = input.files && input.files[0];
+    delete processedAttendancePhotos[inputId];
+    if (!file) {
+      info.textContent = 'Belum ada foto dipilih.';
+      resetPhotoPreview(previewWrapId, previewImgId);
+      if (config) setPhotoStatus(config.statusId, 'Foto wajib', 'idle');
+      if (config) setSubmitButtonState(config.submitBtnId, false);
+      const clearBtn = document.getElementById(inputId + 'ClearBtn');
+      if (clearBtn) clearBtn.style.display = 'none';
+      return;
+    }
+    info.textContent = `Foto dipilih: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+    if (config) setPhotoStatus(config.statusId, 'Menyiapkan preview', 'processing');
+    const clearBtn = document.getElementById(inputId + 'ClearBtn');
+    if (clearBtn) clearBtn.style.display = 'inline-block';
+    refreshPhotoPreview(inputId).catch((error) => {
+      info.textContent = error.message;
+      resetPhotoPreview(previewWrapId, previewImgId);
+      if (config) setPhotoStatus(config.statusId, 'Preview gagal', 'error');
+    });
+  }
+
+  function getPhotoState(inputId) {
+    return photoFieldConfig[inputId];
+  }
+
+  function clearSelectedPhoto(inputId) {
+    const config = getPhotoState(inputId);
+    const input = document.getElementById(inputId);
+    if (!config || !input) return;
+    input.value = '';
+    delete processedAttendancePhotos[inputId];
+    const info = document.getElementById(config.infoId);
+    if (info) info.textContent = 'Belum ada foto dipilih. Foto wajib untuk absensi.';
+    resetPhotoPreview(config.previewWrapId, config.previewImgId);
+    setPhotoStatus(config.statusId, 'Foto wajib', 'idle');
+    setSubmitButtonState(config.submitBtnId, false);
+    const clearBtn = document.getElementById(inputId + 'ClearBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+
+  async function refreshPhotoPreview(inputId, force = false) {
+    const config = getPhotoState(inputId);
+    const input = document.getElementById(inputId);
+    const info = config ? document.getElementById(config.infoId) : null;
+    const file = input && input.files && input.files[0];
+    if (!config || !info) return null;
+
+    if (!file) {
+      info.textContent = 'Belum ada foto dipilih. Foto wajib untuk absensi.';
+      resetPhotoPreview(config.previewWrapId, config.previewImgId);
+      delete processedAttendancePhotos[inputId];
+      setPhotoStatus(config.statusId, 'Foto wajib', 'idle');
+      setSubmitButtonState(config.submitBtnId, false);
+      return null;
+    }
+
+    if (!currentLocation) {
+      info.textContent = `Foto dipilih: ${file.name} (${Math.round(file.size / 1024)} KB). Preview menunggu lokasi GPS.`;
+      resetPhotoPreview(config.previewWrapId, config.previewImgId);
+      setPhotoStatus(config.statusId, 'Menunggu GPS', 'waiting');
+      setSubmitButtonState(config.submitBtnId, false);
+      return null;
+    }
+
+    const cacheKey = [file.name, file.size, file.lastModified, currentLocation.lat, currentLocation.lng].join('|');
+    const cached = processedAttendancePhotos[inputId];
+    if (!force && cached && cached.cacheKey === cacheKey && cached.file) {
+      setPhotoPreview(config.previewWrapId, config.previewImgId, cached.file);
+      info.textContent = `Preview siap: ${cached.file.name} (${Math.round(cached.file.size / 1024)} KB).`;
+      setPhotoStatus(config.statusId, 'Preview siap dikirim', 'ready');
+      setSubmitButtonState(config.submitBtnId, true);
+      return cached.file;
+    }
+
+    info.textContent = 'Memproses foto untuk preview...';
+    setPhotoStatus(config.statusId, 'Memproses foto', 'processing');
+    setSubmitButtonState(config.submitBtnId, false);
+    const processedFile = await processAttendancePhotoFile(file, currentLocation);
+    processedAttendancePhotos[inputId] = { cacheKey, file: processedFile };
+    setPhotoPreview(config.previewWrapId, config.previewImgId, processedFile);
+    info.textContent = `Preview siap: ${processedFile.name} (${Math.round(processedFile.size / 1024)} KB).`;
+    setPhotoStatus(config.statusId, 'Preview siap dikirim', 'ready');
+    setSubmitButtonState(config.submitBtnId, true);
+    return processedFile;
+  }
+
+  function refreshAllPhotoPreviews() {
+    Object.keys(photoFieldConfig).forEach((inputId) => {
+      refreshPhotoPreview(inputId, true).catch(() => {});
+    });
+  }
+
+  function buildAttendanceFormData(location, note, photoInputId) {
+    const formData = new FormData();
+    formData.append('lat', location.lat);
+    formData.append('lng', location.lng);
+    formData.append('note', note);
+
+    return getProcessedAttendancePhoto(photoInputId, location).then((processedPhoto) => {
+      if (processedPhoto) {
+        formData.append('photo', processedPhoto);
+      }
+      return formData;
+    });
+  }
+
+  function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Gagal membaca foto yang dipilih'));
+      };
+      img.src = objectUrl;
+    });
+  }
+
+  function canvasToBlob(canvas, type, quality) {
+    return new Promise((resolve, reject) => {
+      const fallback = () => {
+        try {
+          const dataUrl = canvas.toDataURL(type, quality);
+          const parts = dataUrl.split(',');
+          if (parts.length < 2) throw new Error('Gagal memproses foto absensi');
+          const mime = (parts[0].match(/data:(.*?);base64/) || [])[1] || type || 'image/jpeg';
+          const binary = atob(parts[1]);
+          const len = binary.length;
+          const bytes = new Uint8Array(len);
+          for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+          resolve(new Blob([bytes], { type: mime }));
+        } catch (e) {
+          reject(new Error('Gagal memproses foto absensi'));
+        }
+      };
+
+      if (typeof canvas.toBlob !== 'function') return fallback();
+
+      canvas.toBlob((blob) => {
+        if (blob) return resolve(blob);
+        fallback();
+      }, type, quality);
+    });
+  }
+
+  function buildWatermarkLines(location) {
+    const timestamp = new Date().toLocaleString('id-ID', {
+      timeZone: '<%= settings.timezone %>',
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    return [
+      '<%= settings.companyName %>'.toUpperCase(),
+      'KASIR PORTAL - ABSENSI',
+      `WAKTU: ${timestamp}`,
+      `KOORDINAT: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`
+    ];
+  }
+
+  async function processAttendancePhotoFile(file, location) {
+    const img = await loadImageFromFile(file);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Gagal memproses foto absensi (Canvas Context)');
+
+    const maxDim = 1200;
+    let { width, height } = img;
+    if (width > maxDim || height > maxDim) {
+      if (width > height) {
+        height = Math.round((height * maxDim) / width);
+        width = maxDim;
+      } else {
+        width = Math.round((width * maxDim) / height);
+        height = maxDim;
+      }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const pad = Math.round(width * 0.03);
+    const fontSize = Math.max(12, Math.round(width * 0.024));
+    ctx.font = `bold ${fontSize}px sans-serif`;
+
+    const lines = buildWatermarkLines(location);
+    let maxTextWidth = 0;
+    lines.forEach((line) => {
+      const w = ctx.measureText(line).width;
+      if (w > maxTextWidth) maxTextWidth = w;
+    });
+
+    const boxW = maxTextWidth + pad * 2;
+    const boxH = lines.length * fontSize * 1.45 + pad * 1.5;
+    const boxX = pad;
+    const boxY = height - boxH - pad;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxW, boxH, fontSize * 0.5);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+
+    lines.forEach((line, idx) => {
+      ctx.fillText(line, boxX + pad, boxY + pad + idx * fontSize * 1.45);
+    });
+
+    const blob = await canvasToBlob(canvas, 'image/jpeg', 0.82);
+    return new File([blob], file.name || 'attendance.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+  }
+
+  function getProcessedAttendancePhoto(photoInputId, location) {
+    const input = document.getElementById(photoInputId);
+    const file = input && input.files && input.files[0];
+    if (!file) return Promise.resolve(null);
+
+    const config = getPhotoState(photoInputId);
+    const cached = processedAttendancePhotos[photoInputId];
+    const cacheKey = [file.name, file.size, file.lastModified, location.lat, location.lng].join('|');
+
+    if (cached && cached.cacheKey === cacheKey && cached.file) {
+      return Promise.resolve(cached.file);
+    }
+
+    return processAttendancePhotoFile(file, location).then((processedFile) => {
+      processedAttendancePhotos[photoInputId] = { cacheKey, file: processedFile };
+      return processedFile;
+    });
+  }
+
+  function checkin(event) {
+    event.preventDefault();
+    if (!currentLocation) {
+      alert('Lokasi GPS belum tersedia. Silakan izinkan akses lokasi.');
+      return;
+    }
+
+    const note = document.getElementById('checkinNote').value;
+    const submitBtn = document.getElementById('checkinSubmitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+
+    buildAttendanceFormData(currentLocation, note, 'checkinPhoto')
+      .then((formData) => {
+        return fetch('/admin/cashiers/attendance/checkin', {
+          method: 'POST',
+          body: formData
+        });
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Gagal melakukan check-in');
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      })
+      .catch((err) => {
+        alert('Terjadi kesalahan koneksi saat check-in');
+        console.error(err);
+        if (submitBtn) submitBtn.disabled = false;
+      });
+  }
+
+  function checkout(event) {
+    event.preventDefault();
+    if (!currentLocation) {
+      alert('Lokasi GPS belum tersedia. Silakan izinkan akses lokasi.');
+      return;
+    }
+
+    const note = document.getElementById('checkoutNote').value;
+    const submitBtn = document.getElementById('checkoutSubmitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+
+    buildAttendanceFormData(currentLocation, note, 'checkoutPhoto')
+      .then((formData) => {
+        return fetch('/admin/cashiers/attendance/checkout', {
+          method: 'POST',
+          body: formData
+        });
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Gagal melakukan check-out');
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      })
+      .catch((err) => {
+        alert('Terjadi kesalahan koneksi saat check-out');
+        console.error(err);
+        if (submitBtn) submitBtn.disabled = false;
+      });
+  }
+
+  // Request GPS Location
+  window.addEventListener('DOMContentLoaded', () => {
+    const locInfo = document.getElementById('locationInfo');
+    if (locInfo) locInfo.style.display = 'block';
+
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        (position) => {
+          currentLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          if (locInfo) {
+            locInfo.className = 'location-info';
+            locInfo.innerHTML = `<i class="bi bi-geo-alt-fill"></i> GPS Aktif: ${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}`;
+          }
+          refreshAllPhotoPreviews();
+        },
+        (error) => {
+          let msg = 'Gagal mengakses GPS.';
+          if (error.code === error.PERMISSION_DENIED) {
+            msg = 'Akses GPS ditolak. Silakan izinkan lokasi di pengaturan browser Anda.';
+          }
+          if (locInfo) {
+            locInfo.style.background = 'rgba(239, 68, 68, 0.15)';
+            locInfo.style.color = '#ef4444';
+            locInfo.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${msg}`;
+          }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      if (locInfo) {
+        locInfo.style.background = 'rgba(239, 68, 68, 0.15)';
+        locInfo.style.color = '#ef4444';
+        locInfo.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Browser Anda tidak mendukung GPS Geolocation.';
+      }
+    }
+  });
+</script>
+</body>
+</html>

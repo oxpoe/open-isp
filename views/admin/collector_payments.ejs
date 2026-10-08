@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Approval Pembayaran Kolektor | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'collector_payments', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-check2-square"></i>
+      <span>Approval Pembayaran Kolektor</span>
+    </div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/collector-payments?status=pending" class="btn btn-g btn-sm <%= status==='pending'?'btn-p':'' %>">Pending</a>
+      <a href="/admin/collector-payments?status=approved" class="btn btn-g btn-sm <%= status==='approved'?'btn-p':'' %>">Approved</a>
+      <a href="/admin/collector-payments?status=rejected" class="btn btn-g btn-sm <%= status==='rejected'?'btn-p':'' %>">Rejected</a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='error'?'d':'s' %>" data-flash="1"><%= msg.text %></div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-ul"></i> Daftar Request (<%= (rows || []).length %>)</h6>
+      </div>
+      <div class="hint" style="padding:12px 16px 0 16px;font-size:12px;color:var(--muted)">
+        Label proses membantu membedakan request yang memang menunggu approval, request yang otomatis langsung lunas oleh kolektor, dan request yang sudah diproses admin atau kasir.
+      </div>
+      <div style="padding:12px 16px 0 16px;display:flex;gap:10px;flex-wrap:wrap">
+        <select id="processFilter" class="fs" style="max-width:220px">
+          <option value="all">Semua Proses</option>
+          <option value="pending">Butuh Approval</option>
+          <option value="auto">Auto Kolektor</option>
+          <option value="admin">Disetujui Admin</option>
+          <option value="cashier">Disetujui Kasir</option>
+          <option value="rejected">Ditolak Manual</option>
+          <option value="manual">Diproses Manual</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('collector.col_time','Waktu') %></th>
+              <th><%= t('collector.role','Kolektor') %></th>
+              <th><%= t('common.customer','Pelanggan') %></th>
+              <th>Tagihan</th>
+              <th class="num"><%= t('collector.col_amount','Nominal') %></th>
+              <th>Proses</th>
+              <th><%= t('common.status','Status') %></th>
+              <th><%= t('common.actions','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!rows || rows.length === 0) { %>
+              <tr><td colspan="8" class="text-center text-muted" style="padding:24px">Tidak ada request.</td></tr>
+            <% } else { %>
+              <% rows.forEach(r => { %>
+                <% 
+                  const decidedRole = String(r.decided_by_role || '').toLowerCase();
+                  const processLabel =
+                    r.status === 'pending' ? 'Butuh Approval' :
+                    decidedRole === 'system' ? 'Auto Kolektor' :
+                    decidedRole === 'cashier' ? 'Disetujui Kasir' :
+                    decidedRole === 'admin' ? 'Disetujui Admin' :
+                    r.status === 'rejected' ? 'Ditolak Manual' :
+                    'Diproses Manual';
+                  const processBadge =
+                    r.status === 'pending' ? 'bm' :
+                    decidedRole === 'system' ? 'bs' :
+                    decidedRole === 'cashier' || decidedRole === 'admin' ? 'bp' :
+                    r.status === 'rejected' ? 'bd' :
+                    'bm';
+                %>
+                <tr data-process="<%= r.status === 'pending' ? 'pending' : (decidedRole === 'system' ? 'auto' : (decidedRole === 'admin' ? 'admin' : (decidedRole === 'cashier' ? 'cashier' : (r.status === 'rejected' ? 'rejected' : 'manual')))) %>">
+                  <td style="font-size:11px;color:var(--muted)"><%= r.created_at ? new Date(r.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-' %></td>
+                  <td class="fw6"><%= r.collector_name %> <span class="text-muted" style="font-size:11px"><%= r.collector_username ? '(@'+r.collector_username+')' : '' %></span></td>
+                  <td>
+                    <div class="fw6"><%= r.customer_name %></div>
+                    <div style="font-size:11px;color:var(--muted)"><%= r.customer_phone || '' %></div>
+                  </td>
+                  <td style="font-size:12px">
+                    <div>Invoice <code>#<%= r.invoice_id %></code> • <span class="badge bm"><%= r.period_month %>/<%= r.period_year %></span></div>
+                    <div style="font-size:11px;color:var(--muted)"><%= r.invoice_status %> • Rp <%= Number(r.invoice_amount||0).toLocaleString('id-ID') %></div>
+                    <% if (r.customer_address) { %><div style="font-size:11px;color:var(--muted)"><%= r.customer_address %></div><% } %>
+                    <% if (r.lat && r.lng) { %><div><a target="_blank" href="https://www.google.com/maps?q=<%= encodeURIComponent(r.lat + ',' + r.lng) %>">Map</a></div><% } %>
+                  </td>
+                  <td class="num fw6">Rp <%= Number(r.amount||0).toLocaleString('id-ID') %></td>
+                  <td>
+                    <span class="badge <%= processBadge %>"><%= processLabel %></span>
+                    <% if (decidedRole === 'system') { %>
+                      <div style="font-size:10px;color:var(--muted)">Kolektor auto-approve aktif</div>
+                    <% } else if (r.status === 'pending') { %>
+                      <div style="font-size:10px;color:var(--muted)">Menunggu admin atau kasir</div>
+                    <% } else if (r.decided_by_name) { %>
+                      <div style="font-size:10px;color:var(--muted)">Oleh: <%= r.decided_by_name %></div>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="badge <%= r.status==='approved'?'bs':(r.status==='rejected'?'bd':'bm') %>"><%= String(r.status||'').toUpperCase() %></span>
+                    <% if (r.note) { %><div style="font-size:10px;color:var(--muted)"><%= r.note %></div><% } %>
+                    <% if (r.decided_by_name) { %><div style="font-size:10px;color:var(--muted)">Diproses: <%= r.decided_by_name %></div><% } %>
+                    <% if (r.decided_note) { %><div style="font-size:10px;color:var(--muted)"><%= r.decided_note %></div><% } %>
+                  </td>
+                  <td style="white-space:nowrap">
+                    <% if (status === 'pending') { %>
+                      <div class="act">
+                        <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
+                        <div class="act-menu" style="min-width:270px">
+                          <form method="POST" action="/admin/collector-payments/<%= r.id %>/approve" style="display:flex;gap:6px;padding:4px 4px 6px">
+                            <input class="fc" name="decided_note" placeholder="Catatan (opsional)" style="font-size:12px">
+                            <button class="btn btn-s btn-sm" type="submit" title="Approve"><i class="bi bi-check-lg"></i> Setujui</button>
+                          </form>
+                          <div class="act-sep"></div>
+                          <form method="POST" action="/admin/collector-payments/<%= r.id %>/reject" style="display:flex;gap:6px;padding:4px">
+                            <input class="fc" name="decided_note" placeholder="Alasan (opsional)" style="font-size:12px">
+                            <button class="btn btn-d btn-sm" type="submit" title="Reject"><i class="bi bi-x-lg"></i> Tolak</button>
+                          </form>
+                        </div>
+                      </div>
+                    <% } else { %>
+                      <code>#<%= r.id %></code>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function applyProcessFilter() {
+  const val = document.getElementById('processFilter')?.value || 'all';
+  document.querySelectorAll('table.dtbl tbody tr[data-process]').forEach((row) => {
+    const rowVal = row.getAttribute('data-process') || '';
+    row.style.display = (val === 'all' || rowVal === val) ? '' : 'none';
+  });
+}
+document.getElementById('processFilter')?.addEventListener('change', applyProcessFilter);
+</script>
+</body>
+</html>

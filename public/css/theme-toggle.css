@@ -1,0 +1,16 @@
+/* theme-toggle.css — tombol switch tema global (floating) */
+.theme-fab{
+  position:fixed;right:16px;bottom:84px;z-index:2200;
+  width:48px;height:48px;border-radius:50%;
+  display:grid;place-items:center;
+  border:1px solid var(--primary-glow, rgba(173,255,47,.35));
+  background:var(--glass-2, rgba(17,22,34,.9));
+  color:var(--primary, #ADFF2F);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 6px 20px rgba(0,0,0,.35);
+  cursor:pointer;font-size:20px;line-height:1;
+  transition:transform .18s ease, box-shadow .2s ease;
+}
+.theme-fab:hover{transform:translateY(-2px);box-shadow:0 10px 26px var(--primary-glow, rgba(173,255,47,.35))}
+.theme-fab:active{transform:translateY(0)}
+@media(min-width:992px){.theme-fab{bottom:20px}}

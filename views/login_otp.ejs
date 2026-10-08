@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.otp_title', 'Verifikasi OTP') %> | <%= settings.company_header || 'OPEN-ISP' %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/" aria-label="Beranda">
+      <img class="bmark" src="<%= brandLogo %>" alt="<%= brandName %>"><span class="bname"><%= brandName %></span>
+    </a>
+    <div class="header-actions" style="margin-left:auto">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema"><i class="bi bi-moon-stars-fill"></i></button>
+      <a class="lbtn lbtn-ghost lbtn-sm" href="/customer/login"><i class="bi bi-arrow-left"></i> Login</a>
+    </div>
+  </div>
+</header>
+
+<main class="otp-wrap">
+  <div class="otp-card reveal">
+    <div class="otp-icon"><i class="bi bi-shield-lock-fill"></i></div>
+    <h1><%= t('customer.otp_title', 'Verifikasi OTP') %></h1>
+    <p class="sub">
+      <%= t('customer.otp_sent_to', 'Kode verifikasi telah dikirim ke WhatsApp Anda') %>:<br>
+      <strong style="color:var(--text)"><%= phone %></strong>
+    </p>
+
+    <% if (error) { %>
+      <div class="auth-alert err" style="justify-content:center"><i class="bi bi-exclamation-triangle"></i> <%= error %></div>
+    <% } %>
+
+    <form action="/customer/login-otp" method="POST">
+      <div class="field" style="text-align:left">
+        <label for="otp" style="justify-content:center"><i class="bi bi-123"></i> <%= t('customer.otp_label', 'Masukkan Kode OTP') %></label>
+        <input type="text" class="inp otp-input" id="otp" name="otp" maxlength="4" inputmode="numeric"
+               pattern="\d{4}" required autocomplete="one-time-code" autofocus placeholder="0000">
+      </div>
+      <button type="submit" class="lbtn lbtn-primary btn-auth"><i class="bi bi-check-circle-fill"></i> <%= t('customer.otp_verify', 'Verifikasi & Masuk') %></button>
+    </form>
+
+    <div class="otp-back">
+      <a href="/customer/login" class="muted"><i class="bi bi-arrow-left"></i> <%= t('customer.back_to_login', 'Kembali ke Login') %></a>
+    </div>
+  </div>
+</main>
+
+<script>
+  (function(){ var s = localStorage.getItem('landing-theme') || 'dark'; document.documentElement.setAttribute('data-theme', s); })();
+  function toggleTheme(){ var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); el.setAttribute('data-bs-theme',t==='light'?'light':'dark'); el.classList.toggle('light-theme',t==='light'); localStorage.setItem('landing-theme',t); }
+  (function(){ var els=document.querySelectorAll('.reveal'); if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;} var io=new IntersectionObserver(function(en){en.forEach(function(x){if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target);}});},{threshold:.1}); els.forEach(function(e){io.observe(e);}); })();
+
+  // Angka saja + auto-submit saat 4 digit (SEKALI saja, anti submit-ganda)
+  (function(){
+    var inp = document.getElementById('otp');
+    if(!inp) return;
+    var submitted = false;
+    function submitOnce(){
+      if (submitted) return;
+      submitted = true;
+      try {
+        var b = inp.form.querySelector('button[type=submit]');
+        if (b) { b.disabled = true; b.innerHTML = '<i class="bi bi-hourglass-split"></i> Memverifikasi…'; }
+        inp.readOnly = true;
+      } catch(e){}
+      inp.form.submit();
+    }
+    inp.addEventListener('input', function(){
+      inp.value = inp.value.replace(/\D/g,'').slice(0,4);
+      if(inp.value.length === 4) setTimeout(submitOnce, 90);
+    });
+    inp.form.addEventListener('submit', function(e){ if (submitted) { e.preventDefault(); return; } submitted = true; });
+  })();
+
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js',{scope:'/customer/'}).then(function(r){try{r.update();}catch(e){}}).catch(function(){}); }
+</script>
+<script>
+/* Pembersih sekali per versi: hapus cache lama + paksa update Service Worker */
+function hardResetApp(){
+  try {
+    if ('caches' in window) { caches.keys().then(function(ks){ ks.forEach(function(k){ try{ caches.delete(k); }catch(e){} }); }); }
+    if (navigator.serviceWorker) { navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ try{ r.unregister(); }catch(e){} }); }); }
+    try { localStorage.removeItem('pwaVer'); } catch(e){}
+  } catch (e) {}
+  setTimeout(function(){ window.location.href = '/customer/login'; }, 600);
+}
+(function(){
+  try {
+    var V = 'customer-pwa-v5';
+    if (localStorage.getItem('pwaVer') !== V) {
+      if ('caches' in window) { caches.keys().then(function(ks){ ks.forEach(function(k){ try{ caches.delete(k); }catch(e){} }); }); }
+      if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ try{ r.update(); }catch(e){} }); }); }
+      localStorage.setItem('pwaVer', V);
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

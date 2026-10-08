@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .log-details { font-family: monospace; font-size: 11px; background: rgba(0,0,0,0.1); padding: 8px; border-radius: 4px; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; }
+    .badge-action { padding: 3px 8px; border-radius: 4px; font-weight: 600; font-size: 10px; }
+    .badge-CREATE { background: var(--sdim); color: var(--success); }
+    .badge-UPDATE { background: var(--wdim); color: var(--warning); }
+    .badge-DELETE { background: var(--ddim); color: var(--danger); }
+    .badge-LOGIN { background: var(--pdim); color: var(--primary); }
+    .badge-LOGOUT { background: var(--bg3); color: var(--muted); }
+    .stat-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'audit_logs', company }) %>
+
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-shield-lock"></i>
+      <span><%= title %></span>
+    </div>
+    <div class="tb-right">
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="stat-grid stat-grid-4">
+      <div class="sc p">
+        <div class="sc-label"><%= t('admin.audit.total', 'Total Log') %></div>
+        <div class="sc-val"><%= stats.total %></div>
+      </div>
+      <div class="sc s">
+        <div class="sc-label"><%= t('admin.audit.recent24', 'Aktivitas 24 Jam') %></div>
+        <div class="sc-val"><%= stats.recent_24h %></div>
+      </div>
+      <div class="sc w">
+        <div class="sc-label"><%= t('admin.audit.updates', 'Update Data') %></div>
+        <div class="sc-val"><%= stats.by_action.find(a => a.action === 'UPDATE')?.count || 0 %></div>
+      </div>
+      <div class="sc d">
+        <div class="sc-label"><%= t('admin.audit.deletes', 'Penghapusan') %></div>
+        <div class="sc-val"><%= stats.by_action.find(a => a.action === 'DELETE')?.count || 0 %></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd">
+        <h6><i class="bi bi-list-columns-reverse"></i> <%= t('admin.audit.table_title', 'Log Aktivitas Sistem') %></h6>
+        <div class="flex gap">
+          <form class="flex gap" method="GET">
+            <select class="fs fs-sm" name="action" onchange="this.form.submit()">
+              <option value=""><%= t('admin.audit.all_actions', '-- Semua Aksi --') %></option>
+              <% stats.by_action.forEach(a => { %>
+                <option value="<%= a.action %>" <%= filters.action === a.action ? 'selected' : '' %>><%= a.action %></option>
+              <% }) %>
+            </select>
+            <select class="fs fs-sm" name="entity_type" onchange="this.form.submit()">
+              <option value=""><%= t('admin.audit.all_modules', '-- Semua Modul --') %></option>
+              <% stats.by_entity_type.forEach(e => { %>
+                <option value="<%= e.entity_type %>" <%= filters.entity_type === e.entity_type ? 'selected' : '' %>><%= e.entity_type %></option>
+              <% }) %>
+            </select>
+          </form>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('admin.audit.th_time', 'Waktu') %></th>
+              <th><%= t('admin.audit.th_action', 'Aksi') %></th>
+              <th><%= t('admin.audit.th_module', 'Modul') %></th>
+              <th><%= t('admin.audit.th_entity', 'ID Entity') %></th>
+              <th><%= t('admin.audit.th_actor', 'Pelaku') %></th>
+              <th><%= t('admin.audit.th_detail', 'Detail') %></th>
+              <th><%= t('admin.audit.th_ip', 'IP / Device') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% logs.forEach(log => { %>
+              <tr>
+                <td class="text-muted" style="font-size:11px">
+                  <%= typeof formatDateLocal === 'function' ? formatDateLocal(log.created_at) : (log.created_at ? new Date(log.created_at).toLocaleString('id-ID') : '-') %>
+                </td>
+                <td>
+                  <span class="badge-action badge-<%= log.action %>"><%= log.action %></span>
+                </td>
+                <td><span class="badge bm"><%= log.entity_type %></span></td>
+                <td class="text-muted"><%= log.entity_id || '-' %></td>
+                <td>
+                  <div class="fw6"><%= log.actor_name %></div>
+                  <div class="text-muted" style="font-size:10px"><%= log.actor_type %> (ID: <%= log.actor_id %>)</div>
+                </td>
+                <td>
+                  <% if (log.details) { %>
+                    <button class="btn btn-g btn-sm" onclick="toggleDetails('det-<%= log.id %>')"><%= t('admin.audit.view_detail', 'Lihat Detail') %></button>
+                    <div id="det-<%= log.id %>" class="log-details mt-2" style="display:none">
+                      <%= JSON.stringify(log.details, null, 2) %>
+                    </div>
+                  <% } else { %>
+                    <span class="text-muted">-</span>
+                  <% } %>
+                </td>
+                <td class="text-muted" style="font-size:10px">
+                  <div><%= log.ip_address || '-' %></div>
+                  <div style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<%= log.user_agent %>">
+                    <%= log.user_agent || '-' %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleDetails(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+  function toggleSidebar() {
+    var sb = document.getElementById('sidebar') || document.querySelector('.sidebar');
+    var ov = document.getElementById('sidebarOverlay');
+    if (sb) sb.classList.toggle('open');
+    if (ov) ov.classList.toggle('show');
+  }
+</script>
+</body>
+</html>

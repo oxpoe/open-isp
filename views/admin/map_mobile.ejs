@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #0A0D14; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #F2F5F1; }
+    
+    #map { width: 100%; height: 100%; z-index: 1; background: #080A0F; }
+    
+    /* Floating Header Card */
+    .top-controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid #1F293D;
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    
+    .stats-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .stat-chip {
+      flex: 1;
+      background: #111622;
+      border: 1px solid #1F293D;
+      border-radius: 10px;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .stat-chip .val { display: block; font-size: 15px; font-weight: 800; line-height: 1.2; }
+    .stat-chip .lbl { display: block; font-size: 9.5px; color: #8A96A6; font-weight: 700; text-transform: uppercase; }
+    .sc-odp .val { color: #F59E0B; }
+    .sc-active .val { color: #ADFF2F; }
+    .sc-iso .val { color: #EF4444; }
+    .sc-total .val { color: #4ADE80; }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .search-wrap i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8A96A6;
+      font-size: 13px;
+    }
+    .search-input {
+      width: 100%;
+      background: #111622;
+      border: 1px solid #1F293D;
+      color: #F2F5F1;
+      border-radius: 10px;
+      padding: 8px 12px 8px 32px;
+      font-size: 13px;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: #ADFF2F;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .filter-pills::-webkit-scrollbar { display: none; }
+    .pill-btn {
+      padding: 4px 10px;
+      background: #111622;
+      border: 1px solid #1F293D;
+      border-radius: 20px;
+      color: #8A96A6;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .pill-btn.active {
+      background: #ADFF2F;
+      border-color: #3B82F6;
+      color: #FFFFFF;
+    }
+
+    /* GPS Locate Button */
+    .btn-gps {
+      position: absolute;
+      bottom: 24px;
+      right: 14px;
+      z-index: 1000;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: #ADFF2F;
+      color: #FFFFFF;
+      border: none;
+      box-shadow: 0 4px 15px rgba(37,99,235,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .btn-gps:active {
+      background: #1D4ED8;
+      transform: scale(0.95);
+    }
+
+    /* Map Custom Marker Icons */
+    .odp-marker {
+      background: #F59E0B;
+      color: #000;
+      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      border: 2px solid #FFFFFF;
+    }
+    .onu-marker-active {
+      background: #ADFF2F;
+      color: #FFF;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.7);
+      border: 2px solid #FFFFFF;
+    }
+    .onu-marker-iso {
+      background: #DC2626;
+      color: #FFF;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      box-shadow: 0 2px 8px rgba(220,38,38,0.7);
+      border: 2px solid #FFFFFF;
+    }
+    .marker-label-text {
+      background: rgba(15,23,42,0.85);
+      color: #F2F5F1;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+      border: 1px solid #1F293D;
+      margin-top: 2px;
+      display: inline-block;
+      text-shadow: 0 1px 2px #000;
+    }
+
+    /* Cable Line Flowing Animation */
+    @keyframes cableFlow {
+      from { stroke-dashoffset: 30; }
+      to { stroke-dashoffset: 0; }
+    }
+    .flowing-cable {
+      stroke-dasharray: 8, 8;
+      animation: cableFlow 1.2s linear infinite;
+    }
+
+    /* Popups */
+    .leaflet-popup-content-wrapper {
+      background: #111622 !important;
+      color: #F2F5F1 !important;
+      border-radius: 16px !important;
+      border: 1px solid #1F293D !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6) !important;
+      padding: 0 !important;
+    }
+    .leaflet-popup-content {
+      margin: 14px !important;
+      line-height: 1.4 !important;
+      font-size: 12.5px !important;
+      min-width: 220px;
+      max-width: 280px;
+    }
+    .leaflet-popup-tip {
+      background: #111622 !important;
+    }
+    .pop-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ADFF2F;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pop-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .pop-badge.active { background: #15803D; color: #DCFCE7; }
+    .pop-badge.iso { background: #991B1B; color: #FEE2E2; }
+    .pop-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid #1F293D;
+      font-size: 11.5px;
+    }
+    .pop-row .lbl { color: #8A96A6; }
+    .pop-row .val { color: #F2F5F1; font-weight: 600; }
+    .pop-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .pop-btn {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-wa { background: #16A34A; color: #FFF; }
+    .btn-dir { background: #ADFF2F; color: #FFF; }
+  </style>
+</head>
+<body>
+
+  <div class="top-controls">
+    <div class="stats-bar">
+      <div class="stat-chip sc-odp">
+        <span class="val" id="cntOdp"><%= odps.length %></span>
+        <span class="lbl">ODP</span>
+      </div>
+      <div class="stat-chip sc-total">
+        <span class="val" id="cntTotal"><%= customers.length %></span>
+        <span class="lbl">Total ONU</span>
+      </div>
+      <div class="stat-chip sc-active">
+        <span class="val" id="cntActive"><%= customers.filter(c => c.status === 'active').length %></span>
+        <span class="lbl"><%= t('common.active','Aktif') %></span>
+      </div>
+      <div class="stat-chip sc-iso">
+        <span class="val" id="cntIso"><%= customers.filter(c => c.status !== 'active').length %></span>
+        <span class="lbl">Isolir</span>
+      </div>
+    </div>
+
+    <div class="search-row">
+      <div class="search-wrap">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Cari nama, PPPoE, ODP, atau alamat...">
+      </div>
+    </div>
+
+    <div class="filter-pills">
+      <button class="pill-btn active" data-filter="all"><%= t('collector.filter_all','Semua') %></button>
+      <button class="pill-btn" data-filter="active"><i class="bi bi-circle-fill" style="color:#22c55e"></i> Aktif (<%= customers.filter(c => c.status === 'active').length %>)</button>
+      <button class="pill-btn" data-filter="isolated"><i class="bi bi-circle-fill" style="color:#ef4444"></i> Isolir (<%= customers.filter(c => c.status !== 'active').length %>)</button>
+      <button class="pill-btn" data-filter="odp"><i class="bi bi-archive-fill"></i> ODP Saja (<%= odps.length %>)</button>
+    </div>
+  </div>
+
+  <button class="btn-gps" id="btnGps" title="Lokasi Saya">
+    <i class="bi bi-crosshair"></i>
+  </button>
+
+  <div id="map"></div>
+
+  <script id="cust-data" type="application/json"><%- JSON.stringify(customers).replace(/<\/script/g, '<\\/script') %></script>
+  <script id="odp-data" type="application/json"><%- JSON.stringify(odps).replace(/<\/script/g, '<\\/script') %></script>
+  <script id="settings-data" type="application/json"><%- JSON.stringify(settings).replace(/<\/script/g, '<\\/script') %></script>
+
+  <script>
+    const customers = JSON.parse(document.getElementById('cust-data').textContent || '[]');
+    const odps = JSON.parse(document.getElementById('odp-data').textContent || '[]');
+    const settings = JSON.parse(document.getElementById('settings-data').textContent || '{}');
+
+    // Default center
+    let centerLat = parseFloat(settings.office_lat) || -6.200000;
+    let centerLng = parseFloat(settings.office_lng) || 106.816666;
+    let defaultZoom = 13;
+
+    // Center to first valid customer or ODP if available
+    const firstPoint = customers.find(c => c.lat && c.lng) || odps.find(o => o.lat && o.lng);
+    if (firstPoint && firstPoint.lat && firstPoint.lng) {
+      centerLat = parseFloat(firstPoint.lat);
+      centerLng = parseFloat(firstPoint.lng);
+      defaultZoom = 14;
+    }
+
+    const map = L.map('map', { zoomControl: false }).setView([centerLat, centerLng], defaultZoom);
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+    // Google Satellite (Hybrid) Layer
+    const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '© Google Satellite'
+    });
+
+    // OSM Layer
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    });
+
+    googleHybrid.addTo(map);
+
+    L.control.layers({
+      " Satelit (Google)": googleHybrid,
+      " Standar (OSM)": osm
+    }, null, { position: 'topright' }).addTo(map);
+
+    const odpLayers = L.layerGroup().addTo(map);
+    const customerLayers = L.layerGroup().addTo(map);
+    const cableLayers = L.layerGroup().addTo(map);
+
+    const odpMap = {};
+    odps.forEach(odp => {
+      if (odp.lat && odp.lng) {
+        const lat = parseFloat(odp.lat);
+        const lng = parseFloat(odp.lng);
+        odpMap[odp.id] = { coord: [lat, lng], name: odp.name };
+
+        const icon = L.divIcon({
+          className: 'custom-div',
+          html: `
+            <div style="text-align:center;">
+              <div class="odp-marker"><i class="bi bi-box-seam-fill"></i></div>
+              <span class="marker-label-text">${escapeHtml(odp.name)}</span>
+            </div>
+          `,
+          iconSize: [60, 44],
+          iconAnchor: [30, 22]
+        });
+
+        const marker = L.marker([lat, lng], { icon });
+        const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+        marker.bindPopup(`
+          <div class="pop-title"><i class="bi bi-box-seam-fill" style="color:#F59E0B"></i> ${escapeHtml(odp.name)}</div>
+          <span class="pop-badge" style="background:#B45309;color:#FEF3C7">ODP DISTRIBUSI</span>
+          <div class="pop-row"><span class="lbl">OLT:</span><span class="val">${escapeHtml(odp.olt_name || '-')}</span></div>
+          <div class="pop-row"><span class="lbl">PON Port:</span><span class="val">${escapeHtml(odp.pon_port || '-')}</span></div>
+          <div class="pop-row"><span class="lbl">Kapasitas:</span><span class="val">${odp.port_capacity || 16} Port</span></div>
+          <div class="pop-row"><span class="lbl">Deskripsi:</span><span class="val">${escapeHtml(odp.description || '-')}</span></div>
+          <div class="pop-actions">
+            <a href="${dirUrl}" target="_blank" class="pop-btn btn-dir"><i class="bi bi-signpost-2-fill"></i> Petunjuk Arah</a>
+          </div>
+        `);
+
+        odp.marker = marker;
+        odpLayers.addLayer(marker);
+      }
+    });
+
+    customers.forEach(cust => {
+      if (cust.lat && cust.lng) {
+        const lat = parseFloat(cust.lat);
+        const lng = parseFloat(cust.lng);
+        const isActive = cust.status === 'active';
+
+        // Draw cable to ODP
+        if (cust.odp_id && odpMap[cust.odp_id]) {
+          let pathCoords = [[lat, lng], odpMap[cust.odp_id].coord];
+          if (cust.cable_path) {
+            try {
+              const parsed = JSON.parse(cust.cable_path);
+              if (Array.isArray(parsed) && parsed.length >= 2) pathCoords = parsed;
+            } catch (_) {}
+          }
+          const polyline = L.polyline(pathCoords, {
+            color: isActive ? '#ADFF2F' : '#EF4444',
+            weight: 3,
+            opacity: 0.85,
+            className: 'flowing-cable'
+          });
+          cust.cablePolyline = polyline;
+          cableLayers.addLayer(polyline);
+        }
+
+        const markerClass = isActive ? 'onu-marker-active' : 'onu-marker-iso';
+        const iconSymbol = isActive ? 'bi-router' : 'bi-x-circle';
+
+        const icon = L.divIcon({
+          className: 'custom-div',
+          html: `
+            <div style="text-align:center;">
+              <div class="${markerClass}"><i class="bi ${iconSymbol}"></i></div>
+              <span class="marker-label-text">${escapeHtml(cust.name)}</span>
+            </div>
+          `,
+          iconSize: [60, 42],
+          iconAnchor: [30, 21]
+        });
+
+        const marker = L.marker([lat, lng], { icon });
+        const cleanPhone = String(cust.phone || '').replace(/\D/g, '').replace(/^0/, '62');
+        const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Halo ' + cust.name + ', info dari admin jaringan:')}` : '#';
+        const dirUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+        marker.bindPopup(`
+          <div class="pop-title"><i class="bi bi-person-circle"></i> ${escapeHtml(cust.name)}</div>
+          <span class="pop-badge ${isActive ? 'active' : 'iso'}">${isActive ? '<i class="bi bi-circle-fill" style="color:#22c55e"></i> AKTIF' : '<i class="bi bi-circle-fill" style="color:#ef4444"></i> TERISOLIR'}</span>
+          <div class="pop-row"><span class="lbl">PPPoE User:</span><span class="val">${escapeHtml(cust.pppoe_username || '-')}</span></div>
+          <div class="pop-row"><span class="lbl">No. WA / HP:</span><span class="val">${escapeHtml(cust.phone || '-')}</span></div>
+          <div class="pop-row"><span class="lbl">Paket:</span><span class="val">${escapeHtml(cust.package_name || '-')}</span></div>
+          <div class="pop-row"><span class="lbl">ODP Terhubung:</span><span class="val">${escapeHtml(cust.odp_name || (cust.odp_id && odpMap[cust.odp_id] ? odpMap[cust.odp_id].name : '-'))}</span></div>
+          <div class="pop-row"><span class="lbl">Alamat:</span><span class="val">${escapeHtml(cust.address || '-')}</span></div>
+          <div class="pop-actions">
+            ${cleanPhone ? `<a href="${waUrl}" target="_blank" class="pop-btn btn-wa"><i class="bi bi-whatsapp"></i> Chat WA</a>` : ''}
+            <a href="${dirUrl}" target="_blank" class="pop-btn btn-dir"><i class="bi bi-signpost-2-fill"></i> Navigasi</a>
+          </div>
+        `);
+
+        cust.marker = marker;
+        customerLayers.addLayer(marker);
+      }
+    });
+
+    // Fit Bounds to all markers if exist
+    const allCoords = [];
+    customers.forEach(c => { if (c.lat && c.lng) allCoords.push([parseFloat(c.lat), parseFloat(c.lng)]); });
+    odps.forEach(o => { if (o.lat && o.lng) allCoords.push([parseFloat(o.lat), parseFloat(o.lng)]); });
+    if (allCoords.length > 0) {
+      map.fitBounds(allCoords, { padding: [100, 40] });
+    }
+
+    // Search and Filter Logic
+    let activeFilter = 'all';
+    const searchInput = document.getElementById('searchInput');
+
+    function applyFilterAndSearch() {
+      const q = searchInput.value.trim().toLowerCase();
+
+      let visibleCustCount = 0;
+      let visibleOdpCount = 0;
+
+      // Filter ODP
+      odps.forEach(odp => {
+        if (!odp.marker) return;
+        const matchesQuery = !q || (odp.name && odp.name.toLowerCase().includes(q)) || (odp.description && odp.description.toLowerCase().includes(q));
+        const matchesFilter = activeFilter === 'all' || activeFilter === 'odp';
+
+        if (matchesQuery && matchesFilter) {
+          if (!odpLayers.hasLayer(odp.marker)) odpLayers.addLayer(odp.marker);
+          visibleOdpCount++;
+        } else {
+          if (odpLayers.hasLayer(odp.marker)) odpLayers.removeLayer(odp.marker);
+        }
+      });
+
+      // Filter Customers
+      customers.forEach(cust => {
+        if (!cust.marker) return;
+        const matchesQuery = !q ||
+          (cust.name && cust.name.toLowerCase().includes(q)) ||
+          (cust.pppoe_username && cust.pppoe_username.toLowerCase().includes(q)) ||
+          (cust.phone && cust.phone.includes(q)) ||
+          (cust.address && cust.address.toLowerCase().includes(q));
+
+        const isActive = cust.status === 'active';
+        let matchesFilter = false;
+        if (activeFilter === 'all') matchesFilter = true;
+        else if (activeFilter === 'active' && isActive) matchesFilter = true;
+        else if (activeFilter === 'isolated' && !isActive) matchesFilter = true;
+        else if (activeFilter === 'odp') matchesFilter = false;
+
+        if (matchesQuery && matchesFilter) {
+          if (!customerLayers.hasLayer(cust.marker)) customerLayers.addLayer(cust.marker);
+          if (cust.cablePolyline && !cableLayers.hasLayer(cust.cablePolyline)) cableLayers.addLayer(cust.cablePolyline);
+          visibleCustCount++;
+        } else {
+          if (customerLayers.hasLayer(cust.marker)) customerLayers.removeLayer(cust.marker);
+          if (cust.cablePolyline && cableLayers.hasLayer(cust.cablePolyline)) cableLayers.removeLayer(cust.cablePolyline);
+        }
+      });
+    }
+
+    searchInput.addEventListener('input', applyFilterAndSearch);
+
+    document.querySelectorAll('.pill-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.getAttribute('data-filter');
+        applyFilterAndSearch();
+      });
+    });
+
+    // GPS User Location
+    let userLocMarker = null;
+    document.getElementById('btnGps').addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert("Perangkat tidak mendukung geolokasi.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          if (userLocMarker) map.removeLayer(userLocMarker);
+          userLocMarker = L.circleMarker([lat, lng], {
+            radius: 9,
+            color: '#FFFFFF',
+            weight: 3,
+            fillColor: '#ADFF2F',
+            fillOpacity: 1
+          }).addTo(map);
+          userLocMarker.bindPopup("<b><i class='bi bi-geo-alt-fill'></i> Lokasi Anda Saat Ini</b>").openPopup();
+          map.setView([lat, lng], 17);
+        },
+        err => {
+          alert("Gagal membaca sinyal GPS: " + err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

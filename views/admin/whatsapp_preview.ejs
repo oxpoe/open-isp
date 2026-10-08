@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Preview Pesan WhatsApp | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .wa-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    .wa-tab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; flex-shrink: 0; }
+    .wa-tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .wa-tab.active { background: var(--primary); color: #0A0D14; }
+    @media (max-width: 768px) { .wa-tabs { font-size: 13px; } .wa-tab { padding: 6px 10px; font-size: 12px; } }
+    .wp-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(340px,1fr)); gap: 14px; }
+    .wp-card { border: 1px solid var(--border); border-radius: 14px; background: var(--bg2); overflow: hidden; display: flex; flex-direction: column; }
+    .wp-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    .wp-title { font-weight: 800; font-size: 13.5px; }
+    .wp-src { font-size: 10.5px; color: var(--muted); font-family: monospace; }
+    .wp-body { padding: 14px; background: #0b141a; flex: 1; }
+    .wp-bubble { background: #005c4b; color: #e9edef; border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+    .wp-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'whatsapp', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-eye"></i> Preview Pesan WhatsApp
+    </div>
+    <div class="tb-right">
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <div class="page">
+    <% const waTab = 'preview'; %>
+    <div class="wa-tabs">
+      <a href="/admin/whatsapp" class="wa-tab <%= waTab==='status' ? 'active' : '' %>"><i class="bi bi-phone"></i> <%= t('admin.wa.tab_status','Status WhatsApp') %></a>
+      <a href="/admin/whatsapp/broadcast" class="wa-tab <%= waTab==='broadcast' ? 'active' : '' %>"><i class="bi bi-megaphone"></i> <%= t('admin.wa.tab_broadcast','Broadcast & Pengingat') %></a>
+      <a href="/admin/whatsapp/templates" class="wa-tab <%= waTab==='templates' ? 'active' : '' %>"><i class="bi bi-chat-left-quote"></i> <%= t('admin.wa.tab_templates','Template Pesan') %></a>
+      <a href="/admin/whatsapp/preview" class="wa-tab active"><i class="bi bi-eye"></i> <%= t('admin.wa.tab_preview','Preview Pesan') %></a>
+      <a href="/admin/whatsapp/live-chat" class="wa-tab <%= waTab==='livechat' ? 'active' : '' %>"><i class="bi bi-chat-dots-fill"></i> <%= t('admin.wa.tab_livechat','Live Chat') %></a>
+    </div>
+
+    <div class="alert alert-s" style="margin-bottom:14px">
+      <i class="bi bi-info-circle"></i> Preview semua <b>pesan otomatis</b> dengan data contoh — <b><%= sample.nama %></b> (<%= sample.id %>), paket <%= sample.paket %>. Variabel <span class="mono">{{...}}</span> diisi otomatis saat benar-benar dikirim.
+    </div>
+
+    <div class="wp-grid">
+      <% messages.forEach(function(m, i){ %>
+      <div class="wp-card">
+        <div class="wp-head">
+          <div class="wp-title"><i class="bi bi-chat-left-text"></i> <%= m.title %></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div class="wp-src"><%= m.key %></div>
+            <button type="button" class="btn btn-g btn-sm wp-send" data-idx="<%= i %>" title="Kirim contoh ke WA admin"><i class="bi bi-send"></i> Kirim contoh</button>
+          </div>
+        </div>
+        <div class="wp-body">
+          <div class="wp-bubble"><%= m.text %></div>
+          <% if (m.note) { %><div class="wp-note"><i class="bi bi-info-circle"></i> <%= m.note %></div><% } %>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('.wp-send').forEach(function(b){
+    b.addEventListener('click', async function(){
+      var old = b.innerHTML; b.disabled = true; b.innerHTML = '<i class="bi bi-hourglass-split"></i> Mengirim...';
+      try {
+        var r = await fetch('/admin/whatsapp/preview/send', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'index=' + encodeURIComponent(b.getAttribute('data-idx')) });
+        var j = await r.json().catch(function(){ return {}; });
+        alert(j.message || 'Selesai.');
+      } catch(e){ alert('Gagal: ' + e.message); }
+      finally { b.disabled = false; b.innerHTML = old; }
+    });
+  });
+</script>
+</body>
+</html>

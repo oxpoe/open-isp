@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.automation.title', 'Otomatisasi') %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .au-tabs{display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+    .au-tab{padding:8px 14px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:700;flex-shrink:0;transition:all .2s}
+    .au-tab:hover{background:rgba(255,255,255,.06);color:var(--text)}
+    .au-tab.active{background:var(--primary);color:#0A0D14}
+    .au-panel{display:none}
+    .au-panel.active{display:block}
+    .au-savebar{position:sticky;bottom:0;z-index:5;background:var(--bg2);border:1px solid var(--border);border-top:1px solid var(--border);padding:12px;display:flex;justify-content:flex-end;gap:10px;border-radius:12px;margin-top:6px}
+    .au-map td{padding:8px 10px;vertical-align:middle}
+    .ew-badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;white-space:nowrap}
+    .ew-green{background:rgba(34,197,94,.16);color:#22c55e}
+    .ew-amber{background:rgba(245,158,11,.18);color:#f59e0b}
+    .ew-gray{background:rgba(148,163,184,.16);color:#94a3b8}
+    .ew-svc{background:rgba(173,255,47,.12);color:#ADFF2F;border-radius:6px;padding:1px 8px;font-size:11.5px;font-weight:700}
+    @media(max-width:768px){.au-tab{padding:6px 10px;font-size:12px}}
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'automation', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-robot"></i> <%= t('admin.automation.title', 'Otomatisasi') %></div>
+    <div class="tb-right">
+      <a href="/admin/whatsapp/templates" class="btn btn-g btn-sm"><i class="bi bi-chat-left-quote"></i> <%= t('admin.automation.edit_templates', 'Template Pesan') %></a>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1"><i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %></div>
+    <% } %>
+
+    <div class="alert alert-s" style="margin-bottom:14px">
+      <i class="bi bi-info-circle"></i> <%= t('admin.automation.intro', 'Semua pengaturan otomatis (pengingat tagihan, tunggakan/isolir, auto-lunas) beserta pemilihan template ada di halaman ini.') %>
+    </div>
+
+    <div class="au-tabs">
+      <div class="au-tab active" data-tab="reminder" onclick="auTab('reminder')"><i class="bi bi-alarm"></i> <%= t('admin.automation.tab_reminder', 'Pengingat Tagihan') %></div>
+      <div class="au-tab" data-tab="manual" onclick="auTab('manual')"><i class="bi bi-send"></i> <%= t('admin.automation.tab_manual', 'Kirim Manual') %></div>
+      <div class="au-tab" data-tab="arrears" onclick="auTab('arrears')"><i class="bi bi-person-x"></i> <%= t('admin.automation.tab_arrears', 'Tunggakan &amp; Isolir') %></div>
+      <div class="au-tab" data-tab="lunas" onclick="auTab('lunas')"><i class="bi bi-check2-circle"></i> <%= t('admin.automation.tab_lunas', 'Auto-Lunas') %></div>
+      <div class="au-tab" data-tab="riwayat" onclick="auTab('riwayat')"><i class="bi bi-clock-history"></i> <%= t('admin.automation.tab_history', 'Riwayat') %></div>
+      <div class="au-tab" data-tab="templates" onclick="auTab('templates')"><i class="bi bi-chat-left-quote"></i> <%= t('admin.automation.tab_templates', 'Template &amp; Preview') %></div>
+    </div>
+
+    <form method="POST" action="/admin/automation">
+
+      <!-- ===================== PENINGAT TAGIHAN ===================== -->
+      <div class="au-panel active" id="au-reminder">
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-alarm"></i> <%= t('admin.automation.reminder_title', 'Pengingat Tagihan Otomatis') %></h6></div>
+          <div class="card-bd">
+            <div class="fg" style="width:100%">
+              <label class="fl"><%= t('admin.automation.allow_billing', 'Kirim Tagihan via WhatsApp (Global)') %></label>
+              <label style="display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text)">
+                <input type="checkbox" name="billing_enabled" value="1" <%= getSetting('whatsapp_billing_to_customer_enabled', true) ? 'checked' : '' %>>
+                <%= t('admin.automation.allow_billing_hint', 'Izinkan pengiriman tagihan ke pelanggan (semua fitur)') %>
+              </label>
+            </div>
+
+            <div class="fg" style="width:100%;margin-top:14px">
+              <label class="fl"><%= t('admin.automation.cron_enable', 'Pengingat Otomatis (Jadwal / CRON)') %></label>
+              <label style="display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text)">
+                <input type="checkbox" name="enabled" value="1" <%= getSetting('whatsapp_auto_billing_enabled', false) ? 'checked' : '' %>>
+                <%= t('admin.automation.cron_enable_hint', 'Jalankan pengingat tagihan otomatis') %>
+              </label>
+              <div class="hint"><%= t('admin.automation.cron_hint', 'Dikirim pada hari ke-H sebelum tanggal isolir. Contoh: 3,1 = H-3 dan H-1.') %></div>
+            </div>
+
+            <div class="form-row" style="margin-top:12px">
+              <div class="fg">
+                <label class="fl"><%= t('admin.automation.days_before', 'Hari pengingat (H sebelum isolir)') %></label>
+                <input class="fc" name="reminder_days_before" value="<%= getSetting('reminder_days_before', '2') %>" placeholder="2">
+              </div>
+              <div class="fg" style="flex:2">
+                <label class="fl"><i class="bi bi-chat-left-quote"></i> <%= t('admin.automation.auto_template', 'Template Pengingat Otomatis') %></label>
+                <select class="fs" id="au_tpl" name="auto_billing_template_key" onchange="auLoadTemplate()">
+                  <% Object.keys(billingTemplates||{}).forEach(function(k){ %>
+                    <option value="<%= k %>" <%= (getSetting('auto_billing_template_key','whatsapp_auto_billing_message')===k) ? 'selected' : '' %>><%= billingTemplates[k] %></option>
+                  <% }); %>
+                </select>
+                <div class="hint"><%= t('admin.automation.auto_template_hint', 'Pilih "Tagihan QRIS" bila ingin lampiran gambar QR.') %></div>
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.automation.delay', 'Jeda Antar Pesan (detik)') %></label>
+                <input class="fc" type="number" name="delay" value="<%= getSetting('whatsapp_broadcast_delay', 2) %>" min="1" max="60">
+              </div>
+            </div>
+
+            <div class="fg" style="width:100%;margin-top:12px">
+              <label class="fl"><%= t('admin.automation.billing_message', 'Isi Pesan Pengingat') %> — <span id="au_msg_label" style="color:var(--primary)"><%= (billingTemplates||{})[selectedTplKey] || selectedTplKey %></span></label>
+              <textarea class="fc" id="au_msg" name="message" data-dirty="0" rows="8" required style="width:100%"><%= autoBillingMsg %></textarea>
+              <div class="hint"><i class="bi bi-info-circle"></i> <%= t('admin.automation.vars', 'Variabel') %>: <b>{{nama}}</b>, <b>{{tagihan}}</b>, <b>{{rincian}}</b>, <b>{{paket}}</b>, <b>{{link}}</b>. <%= t('admin.automation.msg_follow_hint', 'Isi ini otomatis mengikuti template yang dipilih di atas.') %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== TUNGGAKAN & ISOLIR ===================== -->
+      <div class="au-panel" id="au-arrears">
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-person-x"></i> <%= t('admin.automation.arrears_title', 'Tunggakan &amp; Isolir Otomatis') %></h6></div>
+          <div class="card-bd">
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl"><i class="bi bi-person-x"></i> <%= t('admin.automation.auto_deactivate', 'Auto-Nonaktif Pelanggan Menunggak') %></label>
+                <select class="fs" name="auto_deactivate_enabled">
+                  <option value="true" <%= (settings.auto_deactivate_enabled === undefined ? true : settings.auto_deactivate_enabled) ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+                  <option value="false" <%= (settings.auto_deactivate_enabled === undefined ? true : settings.auto_deactivate_enabled) ? '' : 'selected' %>><%= t('common.inactive', 'Nonaktif') %></option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.automation.deactivate_months', 'Batas Tunggakan (bulan)') %></label>
+                <input class="fc" type="number" min="1" max="24" name="auto_deactivate_months" value="<%= settings.auto_deactivate_months || 3 %>">
+                <div class="hint"><%= t('admin.automation.deactivate_months_hint', 'Pelanggan dinonaktif (isolir) bila menunggak sebanyak ini (3 = 3x tagihan baru belum lunas).') %></div>
+              </div>
+              <div class="fg">
+                <label class="fl"><i class="bi bi-trash3"></i> <%= t('admin.automation.auto_delete', 'Auto-Hapus Pelanggan (lewat batas)') %></label>
+                <select class="fs" name="auto_delete_overdue_enabled">
+                  <option value="true" <%= (settings.auto_delete_overdue_enabled === undefined ? true : settings.auto_delete_overdue_enabled) ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+                  <option value="false" <%= (settings.auto_delete_overdue_enabled === undefined ? true : settings.auto_delete_overdue_enabled) ? '' : 'selected' %>><%= t('common.inactive', 'Nonaktif') %></option>
+                </select>
+                <div class="hint"><%= t('admin.automation.auto_delete_hint', 'Jika Aktif: pelanggan menunggak lebih dari batas (mis. bulan ke-4) dihapus otomatis — harus daftar ulang.') %></div>
+              </div>
+              <div class="fg">
+                <label class="fl"><i class="bi bi-exclamation-triangle"></i> <%= t('admin.automation.arrears_notice', 'Auto-Peringatan Tunggakan') %></label>
+                <select class="fs" name="arrears_notice_enabled">
+                  <option value="true" <%= (settings.arrears_notice_enabled === undefined ? true : settings.arrears_notice_enabled) ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+                  <option value="false" <%= (settings.arrears_notice_enabled === undefined ? true : settings.arrears_notice_enabled) ? '' : 'selected' %>><%= t('common.inactive', 'Nonaktif') %></option>
+                </select>
+                <div class="hint"><%= t('admin.automation.arrears_notice_hint', 'Kirim WA peringatan saat menunggak mendekati batas. Template di tab Template &amp; Preview.') %></div>
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.automation.manual_action', 'Aksi Manual') %></label>
+                <button type="button" class="btn btn-w btn-sm" onclick="runAutoDeactivate()"><i class="bi bi-play-fill"></i> <%= t('admin.automation.run_now', 'Jalankan sekarang') %></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== AUTO-LUNAS ===================== -->
+      <div class="au-panel" id="au-lunas">
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-check2-circle"></i> <%= t('admin.automation.lunas_title', 'Auto-Lunas (Tagihan Rp 0 / auto_isolate=0)') %></h6></div>
+          <div class="card-bd">
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl"><i class="bi bi-check2-circle"></i> <%= t('admin.automation.lunas_notify', 'Notifikasi ke Pelanggan') %></label>
+                <select class="fs" name="autolunas_notify_enabled">
+                  <option value="true" <%= (settings.autolunas_notify_enabled === undefined ? true : settings.autolunas_notify_enabled) ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+                  <option value="false" <%= (settings.autolunas_notify_enabled === undefined ? true : settings.autolunas_notify_enabled) ? '' : 'selected' %>><%= t('common.inactive', 'Nonaktif') %></option>
+                </select>
+                <div class="hint"><%= t('admin.automation.lunas_notify_hint', 'Kirim WA "Tagihan LUNAS" ke pelanggan saat tagihan Rp 0 / auto_isolate=0 dilunaskan otomatis.') %></div>
+              </div>
+              <div class="fg">
+                <label class="fl"><i class="bi bi-clipboard-data"></i> <%= t('admin.automation.lunas_recap', 'Rekap Bulanan ke Admin') %></label>
+                <select class="fs" name="autolunas_recap_enabled">
+                  <option value="true" <%= (settings.autolunas_recap_enabled === undefined ? true : settings.autolunas_recap_enabled) ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+                  <option value="false" <%= (settings.autolunas_recap_enabled === undefined ? true : settings.autolunas_recap_enabled) ? '' : 'selected' %>><%= t('common.inactive', 'Nonaktif') %></option>
+                </select>
+                <div class="hint"><%= t('admin.automation.lunas_recap_hint', 'Rekap (jumlah + daftar mitra Rp 0) dikirim ke admin tiap tanggal 1.') %></div>
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.automation.view_recap', 'Lihat Rekap') %></label>
+                <a class="btn btn-g btn-sm" href="/admin/ewallet-logs"><i class="bi bi-list-check"></i> <%= t('admin.automation.open_recap', 'Buka Log &amp; Rekap') %></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="au-savebar">
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> <%= t('common.save', 'Simpan') %></button>
+      </div>
+    </form>
+
+    <!-- ===================== KIRIM MANUAL ===================== -->
+    <div class="au-panel" id="au-manual">
+      <div class="card mb16">
+        <div class="card-hd"><h6><i class="bi bi-send"></i> <%= t('admin.automation.manual_title', 'Kirim Tagihan Manual (berdasarkan tanggal isolir)') %></h6></div>
+        <div class="card-bd">
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <div class="fg"><label class="fl"><i class="bi bi-calendar-event"></i> <%= t('admin.automation.manual_isolate', 'Tanggal Isolir') %></label>
+              <select class="fs" id="as_isolate">
+                <option value="0"><%= t('admin.automation.all_dates', 'Semua') %></option>
+                <% (isolateDays||[]).forEach(function(d){ %><option value="<%= d %>">Tgl <%= d %></option><% }); %>
+              </select>
+            </div>
+            <div class="fg"><label class="fl"><i class="bi bi-chat-left-quote"></i> <%= t('admin.automation.manual_template', 'Template') %></label>
+              <select class="fs" id="as_tpl">
+                <% Object.keys(billingTemplates||{}).forEach(function(k){ %><option value="<%= k %>"><%= billingTemplates[k] %></option><% }); %>
+              </select>
+            </div>
+            <div class="fg"><label class="fl"><i class="bi bi-clock-history"></i> <%= t('admin.automation.manual_interval', 'Interval') %></label>
+              <select class="fs" id="as_mode" onchange="asToggle()">
+                <option value="static"><%= t('admin.automation.interval_static', 'Statis') %></option>
+                <option value="random"><%= t('admin.automation.interval_random', 'Random (anti-ban)') %></option>
+              </select>
+            </div>
+            <div class="fg" id="asStatic"><label class="fl"><%= t('admin.automation.delay_short', 'Jeda (detik)') %></label>
+              <input class="fc" type="number" id="as_val" value="15" min="3" max="600">
+            </div>
+            <div class="fg" id="asRandom" style="display:none"><label class="fl"><%= t('admin.automation.delay_random', 'Jeda acak (min–max detik)') %></label>
+              <div style="display:flex;gap:6px">
+                <input class="fc" type="number" id="as_min" value="15" min="3" max="600">
+                <input class="fc" type="number" id="as_max" value="40" min="3" max="900">
+              </div>
+            </div>
+          </div>
+          <div class="hint"><i class="bi bi-info-circle"></i> <%= t('admin.automation.manual_hint', 'Kirim ke pelanggan belum bayar pada tanggal isolir terpilih. Bisa dipakai meski pengingat otomatis OFF. Gunakan Random agar tidak dianggap spam.') %></div>
+        </div>
+        <div class="card-bd" style="border-top:1px solid var(--border);background:var(--bg2);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div id="as_result" style="font-size:12px" class="text-muted"></div>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn btn-g" onclick="asStop()"><i class="bi bi-stop-circle"></i> <%= t('admin.automation.stop', 'Hentikan') %></button>
+            <button type="button" class="btn btn-p" onclick="asStart(this)"><i class="bi bi-send"></i> <%= t('admin.automation.manual_send', 'Kirim Tagihan Sekarang') %></button>
+          </div>
+        </div>
+        <div class="card-bd" id="as_progress" style="display:none;border-top:1px solid var(--border)">
+          <div style="font-weight:700;font-size:13px" id="as_progress_text"></div>
+          <div style="height:8px;background:var(--bg);border-radius:999px;overflow:hidden;margin-top:8px"><div id="as_bar" style="height:100%;width:0;background:var(--primary);transition:width .3s"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== RIWAYAT ===================== -->
+    <div class="au-panel" id="au-riwayat">
+      <div class="card mb16">
+        <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h6 style="margin:0"><i class="bi bi-clock-history"></i> <%= t('admin.automation.history_title', 'Riwayat Otomatisasi') %></h6>
+          <a class="btn btn-g btn-sm" href="/admin/automation"><i class="bi bi-arrow-clockwise"></i> <%= t('common.refresh', 'Refresh') %></a>
+        </div>
+        <div class="card-bd">
+          <div class="tbl-wrap">
+            <table class="dtbl">
+              <thead><tr>
+                <th><%= t('common.time', 'Waktu') %></th>
+                <th><%= t('admin.automation.col_type', 'Tipe') %></th>
+                <th><%= t('admin.automation.col_template', 'Template') %></th>
+                <th><%= t('admin.automation.col_isolate', 'Isolir') %></th>
+                <th><%= t('admin.automation.col_interval', 'Jeda') %></th>
+                <th><%= t('admin.automation.col_target', 'Target') %></th>
+                <th><%= t('admin.automation.col_sent', 'Kirim') %></th>
+                <th><%= t('admin.automation.col_failed', 'Gagal') %></th>
+                <th><%= t('admin.automation.col_status', 'Status') %></th>
+              </tr></thead>
+              <tbody>
+                <% (runs||[]).forEach(function(r){ %>
+                <tr>
+                  <td class="muted" style="font-size:12px"><%= r.started_at || '-' %></td>
+                  <td><span class="ew-svc"><%= r.type==='auto_reminder' ? t('admin.automation.type_auto','Otomatis') : t('admin.automation.type_manual','Manual') %></span></td>
+                  <td class="mono" style="font-size:11px"><%= r.template_key || '-' %></td>
+                  <td><%= r.isolate_day ? ('Tgl ' + r.isolate_day) : t('admin.automation.all_dates','Semua') %></td>
+                  <td style="font-size:11.5px"><%= r.interval_label || '-' %></td>
+                  <td><%= r.target||0 %></td>
+                  <td style="color:var(--success);font-weight:800"><%= r.sent||0 %></td>
+                  <td style="color:var(--danger);font-weight:800"><%= r.failed||0 %></td>
+                  <td><span class="ew-badge <%= r.status==='done'?'ew-green':(r.status==='running'?'ew-amber':'ew-gray') %>"><%= r.status %></span></td>
+                </tr>
+                <% }); %>
+                <% if(!runs || !runs.length){ %><tr><td colspan="9" class="text-center text-muted"><%= t('admin.automation.no_history', 'Belum ada riwayat otomatisasi.') %></td></tr><% } %>
+              </tbody>
+            </table>
+          </div>
+          <div class="hint" style="margin-top:10px"><i class="bi bi-info-circle"></i> <%= t('admin.automation.history_hint', 'Riwayat 30 aktivitas terakhir (manual & otomatis): template, jumlah terkirim, gagal, dan status.') %></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== TEMPLATE & PREVIEW ===================== -->
+    <div class="au-panel" id="au-templates">
+      <div class="card mb16">
+        <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h6 style="margin:0"><i class="bi bi-chat-left-quote"></i> <%= t('admin.automation.mapping_title', 'Template yang Dipakai Tiap Otomatisasi') %></h6>
+          <div style="display:flex;gap:8px">
+            <a class="btn btn-g btn-sm" href="/admin/whatsapp/templates"><i class="bi bi-pencil-square"></i> <%= t('admin.automation.edit_templates', 'Edit Template') %></a>
+            <a class="btn btn-p btn-sm" href="/admin/whatsapp/preview"><i class="bi bi-eye"></i> <%= t('admin.automation.preview', 'Preview') %></a>
+          </div>
+        </div>
+        <div class="card-bd">
+          <div class="tbl-wrap">
+            <table class="dtbl au-map">
+              <thead><tr><th><%= t('admin.automation.col_event', 'Otomatisasi') %></th><th><%= t('admin.automation.col_template', 'Template') %></th><th style="width:150px"></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><i class="bi bi-alarm"></i> <%= t('admin.automation.map_reminder', 'Pengingat tagihan (CRON)') %></td>
+                  <td class="mono" style="font-size:11.5px"><%= getSetting('auto_billing_template_key', 'whatsapp_auto_billing_message') %></td>
+                  <td><a class="btn btn-g btn-sm" href="/admin/whatsapp/templates"><i class="bi bi-pencil"></i> <%= t('common.edit','Edit') %></a></td>
+                </tr>
+                <tr>
+                  <td><i class="bi bi-exclamation-triangle"></i> <%= t('admin.automation.map_arrears', 'Peringatan tunggakan') %></td>
+                  <td class="mono" style="font-size:11.5px">whatsapp_arrears_warning_message</td>
+                  <td><a class="btn btn-g btn-sm" href="/admin/whatsapp/templates"><i class="bi bi-pencil"></i> <%= t('common.edit','Edit') %></a></td>
+                </tr>
+                <tr>
+                  <td><i class="bi bi-person-x"></i> <%= t('admin.automation.map_deactivated', 'Auto-Nonaktif pelanggan') %></td>
+                  <td class="mono" style="font-size:11.5px">whatsapp_deactivated_message</td>
+                  <td><a class="btn btn-g btn-sm" href="/admin/whatsapp/templates"><i class="bi bi-pencil"></i> <%= t('common.edit','Edit') %></a></td>
+                </tr>
+                <tr>
+                  <td><i class="bi bi-trash3"></i> <%= t('admin.automation.map_deleted', 'Auto-Hapus pelanggan') %></td>
+                  <td class="mono" style="font-size:11.5px">whatsapp_deleted_message</td>
+                  <td><a class="btn btn-g btn-sm" href="/admin/whatsapp/templates"><i class="bi bi-pencil"></i> <%= t('common.edit','Edit') %></a></td>
+                </tr>
+                <tr>
+                  <td><i class="bi bi-check2-circle"></i> <%= t('admin.automation.map_lunas', 'Auto-Lunas') %></td>
+                  <td class="mono" style="font-size:11.5px">whatsapp_autolunas_message</td>
+                  <td><a class="btn btn-g btn-sm" href="/admin/whatsapp/templates"><i class="bi bi-pencil"></i> <%= t('common.edit','Edit') %></a></td>
+                </tr>
+                <tr>
+                  <td><i class="bi bi-qr-code"></i> <%= t('admin.automation.map_qris', 'Tagihan QRIS (lampiran QR)') %></td>
+                  <td class="mono" style="font-size:11.5px">whatsapp_billing_qris_message</td>
+                  <td><a class="btn btn-g btn-sm" href="/admin/whatsapp/templates"><i class="bi bi-pencil"></i> <%= t('common.edit','Edit') %></a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="hint" style="margin-top:10px"><i class="bi bi-info-circle"></i> <%= t('admin.automation.mapping_hint', 'Ganti isi pesan di menu template, lalu cek hasilnya di Preview Pesan.') %></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<script>
+  function auTab(name){
+    document.querySelectorAll('.au-panel').forEach(function(p){ p.classList.toggle('active', p.id === 'au-' + name); });
+    document.querySelectorAll('.au-tab').forEach(function(t){ t.classList.toggle('active', t.getAttribute('data-tab') === name); });
+  }
+  async function runReminderNow(btn){
+    if (!confirm('Jalankan pengingat tagihan sekarang?')) return;
+    var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menjalankan...';
+    try {
+      var r = await fetch('/admin/whatsapp/run-reminder-now', { method: 'POST' });
+      var j = await r.json().catch(function(){ return {}; });
+      alert(j.message || j.text || 'Selesai.');
+    } catch (e) { alert('Gagal: ' + e.message); }
+    finally { btn.disabled = false; btn.innerHTML = old; }
+  }
+  var auTplPrev = null;
+  document.addEventListener('DOMContentLoaded', function(){
+    var s = document.getElementById('au_tpl');
+    if (s) auTplPrev = s.value;
+    var ta = document.getElementById('au_msg');
+    if (ta) ta.addEventListener('input', function(){ ta.dataset.dirty = '1'; });
+  });
+  async function auLoadTemplate(){
+    var sel = document.getElementById('au_tpl');
+    var ta = document.getElementById('au_msg');
+    var lbl = document.getElementById('au_msg_label');
+    if (!sel || !ta) return;
+    if (auTplPrev === null) auTplPrev = sel.value;
+    if (sel.value === auTplPrev) return;
+    if (ta.dataset.dirty === '1' && !confirm('Muat template terpilih dan buang perubahan yang belum disimpan?')) {
+      sel.value = auTplPrev;
+      return;
+    }
+    try {
+      var r = await fetch('/admin/automation/template?key=' + encodeURIComponent(sel.value));
+      var j = await r.json();
+      ta.value = j.text || '';
+      ta.dataset.dirty = '0';
+      if (lbl) lbl.textContent = j.label || sel.value;
+    } catch (e) { /* diamkan */ }
+    auTplPrev = sel.value;
+  }
+  window.runAutoDeactivate = function () {
+    if (!confirm('Jalankan auto-nonaktif sekarang? Pelanggan yang menunggak sesuai batas akan diisolir.')) return;
+    fetch('/admin/customers/auto-deactivate-now', { method: 'POST' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { alert(d.message || 'Selesai'); if (d.processed > 0) location.reload(); })
+      .catch(function () { alert('Gagal menjalankan auto-nonaktif'); });
+  };
+
+  function asToggle(){
+    var m = (document.getElementById('as_mode') || {}).value;
+    document.getElementById('asStatic').style.display = m === 'static' ? '' : 'none';
+    document.getElementById('asRandom').style.display = m === 'random' ? '' : 'none';
+  }
+  async function asStart(btn){
+    if (!confirm('Kirim tagihan sekarang ke pelanggan belum bayar pada tanggal isolir terpilih?')) return;
+    var res = document.getElementById('as_result');
+    var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Memulai...';
+    if (res) { res.textContent = 'Memulai pengiriman…'; res.style.color = 'var(--muted)'; }
+    try {
+      var body = new URLSearchParams({
+        isolate_day: document.getElementById('as_isolate').value,
+        template_key: document.getElementById('as_tpl').value,
+        interval_mode: document.getElementById('as_mode').value,
+        interval_value: document.getElementById('as_val').value,
+        interval_min: document.getElementById('as_min').value,
+        interval_max: document.getElementById('as_max').value
+      });
+      var r = await fetch('/admin/automation/send-now', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() });
+      var j = await r.json().catch(function(){ return {}; });
+      if (res) { res.textContent = j.ok ? (j.message || 'Berhasil.') : ('Gagal — ' + (j.message || 'Terjadi kesalahan.')); res.style.color = j.ok ? 'var(--success)' : 'var(--danger)'; }
+      if (j.ok) { document.getElementById('as_progress').style.display = 'block'; asPoll(); }
+    } catch (e) {
+      if (res) { res.textContent = 'Gagal — ' + e.message; res.style.color = 'var(--danger)'; }
+    } finally { btn.disabled = false; btn.innerHTML = old; }
+  }
+  async function asStop(){ try { await fetch('/admin/api/whatsapp/billing-send-stop', { method: 'POST' }); } catch (e) {} }
+  async function asPoll(){
+    try {
+      var r = await fetch('/admin/api/whatsapp/billing-send-status');
+      var s = await r.json();
+      if (!s || (!s.running && !s.total)) return;
+      document.getElementById('as_progress').style.display = 'block';
+      var pct = s.total ? Math.round(((s.sent + s.failed) / s.total) * 100) : 0;
+      document.getElementById('as_bar').style.width = pct + '%';
+      document.getElementById('as_progress_text').textContent = (s.running ? 'Mengirim…' : 'Selesai') + ' ' + s.sent + '/' + s.total + ' terkirim, ' + s.failed + ' gagal' + (s.last ? (' • terakhir: ' + s.last) : '') + (s.label ? (' • ' + s.label) : '');
+    } catch (e) {}
+  }
+  setInterval(function(){ if (document.getElementById('au-manual') && document.getElementById('au-manual').classList.contains('active')) asPoll(); }, 3000);
+</script>
+</body>
+</html>

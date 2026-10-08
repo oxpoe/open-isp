@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= settings.company_header || 'OPEN-ISP' %> — <%= t('customer.login_title', 'Portal Pelanggan') %></title>
+  <meta name="description" content="Portal pelanggan internet fiber optic — masuk, cek tagihan, bayar, dan kelola WiFi Anda.">
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    // Mode aplikasi (PWA/standalone) → tandai <html class="is-pwa">
+    (function(){
+      try {
+        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        var p = new URLSearchParams(location.search);
+        if (standalone || p.get('source') === 'pwa') { document.documentElement.classList.add('is-pwa'); }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/" aria-label="Beranda">
+      <img class="bmark" src="<%= brandLogo %>" alt="<%= brandName %>"><span class="bname"><%= brandName %></span>
+    </a>
+    <nav class="nav" aria-label="Navigasi">
+      <a href="#packages">Paket</a>
+      <a href="#features"><%= t('landing.nav.features','Keunggulan') %></a>
+      <a href="/customer/check-billing"><%= t('landing.hero.check','Cek Tagihan') %></a>
+      <a href="/customer/voucher"><%= t('login.voucher_nav','Voucher') %></a>
+      <% if (typeof settings !== 'undefined' && settings && settings.status_url) { %><a href="<%= settings.status_url %>" target="_blank" rel="noopener">Status</a><% } %>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema"><i class="bi bi-moon-stars-fill" id="themeIcon"></i></button>
+      <button class="lbtn lbtn-primary lbtn-sm" id="btnInstall" style="display:none" onclick="triggerPwaInstall()"><i class="bi bi-download"></i> Instal</button>
+      <a class="lbtn lbtn-ghost lbtn-sm" href="/customer/register"><i class="bi bi-person-plus"></i> <%= t('landing.nav.register','Daftar') %></a>
+      <button class="icon-btn hamburger" onclick="toggleMenu()" aria-label="Menu"><i class="bi bi-list"></i></button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="container inner">
+      <a href="#packages" onclick="toggleMenu()"><%= t('landing.nav.packages_full','Paket & Harga') %></a>
+      <a href="#features" onclick="toggleMenu()"><%= t('landing.nav.features','Keunggulan') %></a>
+      <a href="/customer/check-billing" onclick="toggleMenu()"><i class="bi bi-receipt"></i> <%= t('landing.hero.check','Cek Tagihan') %></a>
+      <a href="/customer/voucher" onclick="toggleMenu()"><i class="bi bi-ticket-perforated"></i> <%= t('login.voucher_short','Beli Voucher') %></a>
+      <a href="/customer/register" onclick="toggleMenu()"><i class="bi bi-person-plus"></i> <%= t('login.register_new','Daftar Baru') %></a>
+      <% if (typeof settings !== 'undefined' && settings && settings.status_url) { %><a href="<%= settings.status_url %>" target="_blank" rel="noopener" onclick="toggleMenu()"><i class="bi bi-activity"></i> Status Server</a><% } %>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ HERO + LOGIN ═══ -->
+<section class="auth-hero">
+  <div class="container auth-grid">
+    <div class="auth-copy reveal">
+      <span class="eyebrow"><i class="bi bi-shield-lock-fill"></i> <%= t('landing.footer.portal','Portal Pelanggan') %></span>
+      <h1><%= t('login.manage','Kelola layanan internet Anda') %> <span class="hl"><%= t('login.manage_hl','dalam satu tempat') %></span></h1>
+      <p class="lead"><%= t('login.manage_desc','Masuk untuk melihat tagihan, melakukan pembayaran, memantau koneksi, dan mengatur WiFi perangkat Anda.') %></p>
+      <ul class="auth-points">
+        <li><i class="bi bi-check-circle-fill"></i> <%= t('login.chk_desc','Cek & bayar tagihan kapan saja') %></li>
+        <li><i class="bi bi-check-circle-fill"></i> <%= t('login.mon_desc','Pantau trafik dan status koneksi') %></li>
+        <li><i class="bi bi-check-circle-fill"></i> <%= t('login.wifi_desc','Ubah SSID & password WiFi') %></li>
+        <li><i class="bi bi-check-circle-fill"></i> <%= t('login.rbt_desc','Reboot perangkat & buat laporan gangguan') %></li>
+      </ul>
+      <div class="auth-stats">
+        <div class="st"><b><%= (typeof packages !== 'undefined' ? packages.length : 0) %></b><span><%= t('landing.hero.stat_packages','Pilihan Paket') %></span></div>
+        <div class="st"><b>24/7</b><span><%= t('login.f4t','Dukungan') %></span></div>
+        <div class="st"><b>Fiber</b><span>Optic</span></div>
+      </div>
+    </div>
+
+    <!-- Kartu Login -->
+    <div class="auth-card reveal" id="login-section">
+      <div class="auth-logo"><img src="<%= brandLogo %>" alt="Logo" onerror="this.style.display='none'"></div>
+      <h2><%= t('customer.portal_title', 'Portal Pelanggan') %></h2>
+      <p class="sub"><%= settings.company_header || 'OPEN-ISP' %></p>
+
+      <form method="POST" action="/customer/login" style="margin-top:6px">
+        <div class="field">
+          <label for="phone"><i class="bi bi-person-badge"></i> <%= t('customer.id_tag', 'ID Pelanggan / Nomor WhatsApp') %></label>
+          <div class="wrap">
+            <i class="bi bi-person-badge lead-ic"></i>
+            <input type="text" class="inp" id="phone" name="phone"
+                   placeholder="<%= t('customer.id_tag_placeholder', 'cth: SKY-48213 atau 08xxxxxxxxxx') %>"
+                   oninput="this.value=this.value.toUpperCase()" autocapitalize="characters"
+                   required autofocus autocomplete="username">
+          </div>
+        </div>
+        <div class="hint-line"><i class="bi bi-info-circle"></i> <%= t('login.hint','Hanya ID Pelanggan (SKY-xxxxx) atau Nomor WhatsApp terdaftar') %></div>
+
+        <% if (settings.login_otp_enabled) { %>
+          <div class="auth-alert info"><i class="bi bi-whatsapp"></i> <%= t('customer.otp_sent_via_wa', 'Kode OTP akan dikirim via WhatsApp') %></div>
+        <% } %>
+
+        <button type="submit" class="lbtn lbtn-primary btn-auth">
+          <i class="bi bi-box-arrow-in-right"></i> <%= t('customer.sign_in', 'Masuk Ke Portal') %>
+        </button>
+      </form>
+
+      <% if (error) { %>
+        <div class="auth-alert err">
+          <i class="bi bi-exclamation-triangle"></i>
+          <%= error === 'Nomor HP tidak valid atau belum terdaftar.' ? 'ID Pelanggan / Nomor tidak valid atau belum terdaftar.' : error %>
+        </div>
+      <% } %>
+
+      <div class="quick-tools">
+        <a href="/customer/check-billing" class="qtool"><i class="bi bi-receipt"></i> <%= t('landing.hero.check','Cek Tagihan') %></a>
+        <a href="/customer/voucher" class="qtool"><i class="bi bi-ticket-perforated"></i> <%= t('login.voucher_short','Beli Voucher') %></a>
+      </div>
+
+      <div class="auth-foot">
+        <%= t('customer.not_subscribed', 'Belum berlangganan?') %>
+        <a href="/customer/register"><%= t('customer.register_new', 'Daftar Pemasangan Baru') %> <i class="bi bi-arrow-right"></i></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PAKET ═══ -->
+<section class="section" id="packages" style="padding-top:10px">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow"><i class="bi bi-tags"></i> <%= t('landing.hero.stat_packages','Pilihan Paket') %></span>
+      <h2><%= t('login.pkg_title','Paket & tarif layanan') %></h2>
+      <p><%= t('login.pkg_sub','Pilih kecepatan yang sesuai kebutuhan Anda, dari rumah hingga kantor.') %></p>
+    </div>
+    <% const pkgs = (typeof packages !== 'undefined' && Array.isArray(packages)) ? packages : []; %>
+    <% if (pkgs.length === 0) { %>
+      <div class="card-surface" style="padding:26px;text-align:center">
+        <i class="bi bi-info-circle" style="font-size:26px;color:var(--info)"></i>
+        <h3 style="margin:10px 0 4px"><%= t('login.pkg_empty_title','Belum ada paket dipublikasikan') %></h3>
+        <p class="muted"><%= t('login.pkg_empty','Silakan hubungi customer service untuk informasi paket terkini.') %></p>
+      </div>
+    <% } else { %>
+      <% const list = pkgs.slice().sort((a,b) => Number(a.price||0) - Number(b.price||0)); %>
+      <div class="pricing-grid">
+        <% list.forEach(function(p, index){ %>
+          <div class="price-card reveal <%= index === Math.floor(list.length/2) ? 'featured' : '' %>">
+            <% if (index === Math.floor(list.length/2)) { %><span class="tag">Terpopuler</span><% } %>
+            <h3><%= p.name %></h3>
+            <div class="speed">
+              <% if (Number(p.speed_down||0) > 0) { %>
+                <%= (Math.round(Number(p.speed_down||0)/1000) >= 1) ? Math.round(Number(p.speed_down||0)/1000) : Number(p.speed_down||0) %>
+              <% } else { %>—<% } %>
+              <small>Mbps</small>
+            </div>
+            <div class="price"><b>Rp <%= Number(p.price||0).toLocaleString('id-ID') %></b> / bulan</div>
+            <ul>
+              <li><i class="bi bi-check-circle-fill"></i> Unlimited tanpa FUP</li>
+              <li><i class="bi bi-check-circle-fill"></i> <%= t('login.f1d','Fiber optic dedicated') %></li>
+              <li><i class="bi bi-check-circle-fill"></i> Gratis sewa modem WiFi</li>
+              <li><i class="bi bi-check-circle-fill"></i> <%= t('login.support247','Dukungan teknisi 24/7') %></li>
+              <% if (p.description) { %><li><i class="bi bi-info-circle-fill"></i> <%= p.description %></li><% } %>
+            </ul>
+            <a class="lbtn <%= index === Math.floor(list.length/2) ? 'lbtn-primary' : 'lbtn-ghost' %> lbtn-block" href="/customer/register?package=<%= encodeURIComponent(p.name) %>">
+              <i class="bi bi-cart-plus"></i> <%= t('login.pkg_choose','Pilih Paket Ini') %>
+            </a>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- ═══ KEUNGGULAN ═══ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow"><i class="bi bi-star"></i> <%= t('landing.nav.features','Keunggulan') %></span>
+      <h2>Layanan yang bisa Anda andalkan</h2>
+    </div>
+    <div class="feature-grid">
+      <div class="feature reveal"><div class="ficon"><i class="bi bi-speedometer2"></i></div><h3><%= t('login.f1t','Fiber Simetris') %></h3><p>Unggah dan unduh sama cepat untuk kerja, streaming, dan gaming.</p></div>
+      <div class="feature reveal"><div class="ficon"><i class="bi bi-infinity"></i></div><h3><%= t('login.f2t','Tanpa Batas') %></h3><p><%= t('login.f2d','Nikmati internet tanpa FUP tersembunyi sepanjang bulan.') %></p></div>
+      <div class="feature reveal"><div class="ficon"><i class="bi bi-headset"></i></div><h3>Support 24/7</h3><p><%= t('login.f4d','Tim teknis siap membantu melalui WhatsApp dan tiket.') %></p></div>
+      <div class="feature reveal"><div class="ficon"><i class="bi bi-shield-check"></i></div><h3><%= t('login.f3t','Stabil') %></h3><p><%= t('login.f3d','Latensi rendah dengan jaringan yang dipantau 24 jam.') %></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="/" style="margin-bottom:14px">
+          <img class="bmark" src="<%= brandLogo %>" alt="<%= brandName %>"><span class="bname"><%= brandName %></span>
+        </a>
+        <p class="muted" style="font-size:14px;max-width:40ch">Micro Internet Provider dan Server Platform.</p>
+        <p class="muted" style="font-size:13px;margin-top:8px">Internet Freedom — We Are Open-Source.</p>
+        <p class="muted" style="font-size:12.5px;margin-top:12px"><i class="bi bi-building"></i> PT Artha Mega Data</p>
+      </div>
+      <div>
+        <h4>Portal</h4>
+        <div class="foot-links">
+          <a href="/customer/check-billing"><%= t('login.check_full','Cek & Bayar Tagihan') %></a>
+          <a href="/customer/voucher"><%= t('login.voucher','Beli Voucher Wi-Fi') %></a>
+          <a href="/customer/register"><%= t('login.new_install','Pasang Baru') %></a>
+          <a href="/customer/dashboard"><%= t('login.dashboard','Dashboard Pelanggan') %></a>
+        </div>
+      </div>
+      <div>
+        <h4><%= t('login.info','Informasi') %></h4>
+        <div class="foot-links">
+          <a href="/customer/about"><%= t('customer.footer.about', 'Tentang Kami') %></a>
+          <a href="/customer/contact"><%= t('customer.footer.contact', 'Kontak Kami') %></a>
+          <a href="/customer/tos"><%= t('customer.footer.tos', 'Syarat & Ketentuan') %></a>
+          <a href="/customer/privacy"><%= t('customer.footer.privacy', 'Kebijakan Privasi') %></a>
+          <a href="/customer/tos#refund"><%= t('customer.footer.refund', 'Kebijakan Refund') %></a>
+          <% if (typeof settings !== 'undefined' && settings && settings.status_url) { %><a href="<%= settings.status_url %>" target="_blank" rel="noopener"><%= t('login.status_full','Status Server & Uptime') %></a><% } %>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; <span id="year"></span> <%= settings.company_header || 'OPEN-ISP' %>. Seluruh hak cipta dilindungi. <span style="opacity:.6">· v<%= appVersion %> (<%= appVersionName %>)</span></span>
+      <span class="mono">Fiber Optic Internet Service &middot; <a href="/blackhole" style="opacity:.32;color:inherit;text-decoration:none" title="Staff access">blackhole</a> &middot; <a href="#" onclick="hardResetApp();return false" style="opacity:.32;color:inherit;text-decoration:none" title="Bersihkan cache aplikasi">muat ulang aplikasi</a></span>
+    </div>
+  </div>
+</footer>
+
+<!-- PWA install banner -->
+<div class="pwa-banner" id="pwaBanner">
+  <img src="<%= brandLogo %>" alt="icon" style="width:40px;height:40px;border-radius:10px">
+  <div class="txt"><b><%= t('login.install_app','Pasang aplikasi') %> <%= brandName %></b><span><%= t('login.pwa_desc','Akses lebih cepat dari layar utama') %></span></div>
+  <button class="lbtn lbtn-primary lbtn-sm" onclick="triggerPwaInstall()"><%= t('login.install','Pasang') %></button>
+  <button class="icon-btn" onclick="dismissPwaBanner()" aria-label="Tutup"><i class="bi bi-x-lg"></i></button>
+</div>
+
+<script>
+  // Tema
+  (function(){ var s = localStorage.getItem('landing-theme') || 'dark'; document.documentElement.setAttribute('data-theme', s); })();
+  function toggleTheme(){ var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); el.setAttribute('data-bs-theme', t==='light'?'light':'dark'); localStorage.setItem('landing-theme',t); var ic=document.getElementById('themeIcon'); if(ic) ic.className = t==='light'?'bi bi-sun-fill':'bi bi-moon-stars-fill'; }
+  function toggleMenu(){ document.getElementById('mobileMenu').classList.toggle('open'); }
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Reveal
+  (function(){
+    var els=document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in')}); return; }
+    var io=new IntersectionObserver(function(en){ en.forEach(function(x){ if(x.isIntersecting){ x.target.classList.add('in'); io.unobserve(x.target); } }); },{threshold:.12});
+    els.forEach(function(e){ io.observe(e); });
+  })();
+
+  // ── PWA install ──
+  var deferredPrompt = null;
+  var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('btnInstall').style.display = 'inline-flex';
+    if(!localStorage.getItem('pwaBannerDismissed_v2')) document.getElementById('pwaBanner').classList.add('show');
+  });
+  function triggerPwaInstall(){
+    if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.then(function(){ deferredPrompt=null; }); }
+    else { alert('Buka menu browser (⋮) lalu pilih "Instal aplikasi" / "Tambahkan ke Layar utama".'); }
+  }
+  function dismissPwaBanner(){ localStorage.setItem('pwaBannerDismissed_v2','1'); document.getElementById('pwaBanner').classList.remove('show'); }
+  window.addEventListener('appinstalled', function(){ document.getElementById('pwaBanner').classList.remove('show'); });
+
+  // Service Worker (scope pelanggan) — update + auto-reload saat berganti
+  if('serviceWorker' in navigator){
+    var swRefreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(swRefreshing) return; swRefreshing = true; window.location.reload();
+    });
+    navigator.serviceWorker.register('/sw.js', { scope: '/customer/' })
+      .then(function(reg){ try { reg.update(); } catch(e){} })
+      .catch(function(){});
+  }
+</script>
+<script>
+/* Pembersih sekali per versi: hapus cache lama + paksa update Service Worker */
+function hardResetApp(){
+  try {
+    if ('caches' in window) { caches.keys().then(function(ks){ ks.forEach(function(k){ try{ caches.delete(k); }catch(e){} }); }); }
+    if (navigator.serviceWorker) { navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ try{ r.unregister(); }catch(e){} }); }); }
+    try { localStorage.removeItem('pwaVer'); } catch(e){}
+  } catch (e) {}
+  setTimeout(function(){ window.location.href = '/customer/login'; }, 600);
+}
+(function(){
+  try {
+    var V = 'customer-pwa-v5';
+    if (localStorage.getItem('pwaVer') !== V) {
+      if ('caches' in window) { caches.keys().then(function(ks){ ks.forEach(function(k){ try{ caches.delete(k); }catch(e){} }); }); }
+      if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ try{ r.update(); }catch(e){} }); }); }
+      localStorage.setItem('pwaVer', V);
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

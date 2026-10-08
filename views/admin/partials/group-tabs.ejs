@@ -1,0 +1,33 @@
+<%
+  // ── Section switcher untuk grup menu (bukan tab bar, agar tidak "tab dalam tab") ──
+  // Halaman-halaman anggota sudah punya tab internal masing-masing; jadi navigasi
+  // antar-halaman grup pakai dropdown ringkas berlabel.
+  var _isCashierOnly = (typeof session !== 'undefined' && session && session.isCashier && !session.isAdmin);
+  var _groups = {
+    network: {
+      label: t('admin.nav.network', 'Jaringan'),
+      icon: 'bi bi-diagram-3',
+      items: [
+        { key: 'mikrotik',   href: '/admin/mikrotik',        label: t('admin.nav.mikrotik', 'MikroTik'),           roles: ['admin', 'cashier'] },
+        { key: 'radius',     href: '/admin/radius-settings',  label: t('admin.nav.radius_server', 'RADIUS Server'), roles: ['admin'] },
+        { key: 'acs',        href: '/admin/acs',              label: t('admin.nav.acs_pro', 'GenieACS Pro'),        roles: ['admin'] },
+        { key: 'onu',        href: '/admin/onu-provision',    label: t('admin.nav.onu_provision', 'ONU Provision'), roles: ['admin'] },
+        { key: 'monitoring', href: '/admin/monitoring',       label: t('admin.nav.monitoring', 'Monitoring Sistem'), roles: ['admin'] }
+      ]
+    }
+  };
+  var _gkey = (typeof group !== 'undefined' && group && _groups[group]) ? group : 'network';
+  var _g = _groups[_gkey];
+  var _items = (_g.items || []).filter(function (it) {
+    if (_isCashierOnly && it.roles && it.roles.indexOf('cashier') === -1) return false;
+    return true;
+  });
+%>
+<div class="grp-nav">
+  <span class="grp-nav-title"><i class="<%= _g.icon %>"></i> <%= _g.label %></span>
+  <select class="grp-nav-select" onchange="if(this.value){window.location.href=this.value;}" aria-label="<%= _g.label %>">
+    <% _items.forEach(function (it) { %>
+      <option value="<%= it.href %>" <%= (typeof active !== 'undefined' && active === it.key) ? 'selected' : '' %>><%= it.label %></option>
+    <% }); %>
+  </select>
+</div>

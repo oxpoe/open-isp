@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.pages.about.meta_title', 'Tentang Kami') %> | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/pages.css?v=3">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>document.documentElement.classList.add('js');(function(){try{var s=localStorage.getItem('landing-theme')||'dark';document.documentElement.setAttribute('data-theme',s);}catch(e){}})();</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/" aria-label="Beranda">
+      <img class="bmark" src="<%= brandLogo %>" alt="<%= company %>"><span class="bname"><%= brandName %></span>
+    </a>
+    <div class="header-actions" style="margin-left:auto">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema"><i class="bi bi-moon-stars-fill"></i></button>
+      <a class="lbtn lbtn-ghost lbtn-sm" href="<%= isLoggedIn ? '/customer/dashboard' : '/customer/login' %>"><i class="bi bi-box-arrow-in-right"></i> <%= isLoggedIn ? 'Dashboard' : 'Masuk' %></a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="page-hero">
+    <h1><%= t('customer.pages.about.hero_title_prefix', 'Tentang') %> <%= company %></h1>
+    <p><%= t('customer.pages.about.hero_subtitle', 'Solusi internet cepat dan terjangkau untuk masyarakat.') %></p>
+  </section>
+
+  <div class="prose">
+    <p class="lead"><%- String(t('customer.pages.about.p1', '<strong>{company}</strong> adalah penyedia layanan internet (ISP) yang berfokus pada penyediaan akses broadband berkualitas tinggi untuk perumahan dan bisnis kecil.')).replace('{company}', company) %></p>
+    <p><%= t('customer.pages.about.p2', 'Kami percaya bahwa di era digital saat ini, akses internet yang stabil dan cepat bukan lagi kemewahan, melainkan kebutuhan dasar untuk mendukung pendidikan, ekonomi kreatif, dan komunikasi tanpa batas.') %></p>
+
+    <div class="prose-grid">
+      <div class="pcard"><i class="bi bi-rocket-takeoff"></i><h5><%= t('customer.pages.about.stats.speed_title', 'Kecepatan Tinggi') %></h5><p><%= t('customer.pages.about.stats.speed_desc', 'Jaringan serat optik untuk pengalaman internet tanpa hambatan.') %></p></div>
+      <div class="pcard"><i class="bi bi-shield-check"></i><h5><%= t('customer.pages.about.stats.stable_title', 'Stabil & Aman') %></h5><p><%= t('customer.pages.about.stats.stable_desc', 'Infrastruktur yang dirancang untuk keandalan maksimal 24/7.') %></p></div>
+      <div class="pcard"><i class="bi bi-headset"></i><h5><%= t('customer.pages.about.stats.support_title', 'Dukungan Lokal') %></h5><p><%= t('customer.pages.about.stats.support_desc', 'Tim teknis yang siap membantu Anda kapan saja.') %></p></div>
+    </div>
+
+    <h4><i class="bi bi-eye"></i> <%= t('customer.pages.about.vision_title', 'Visi Kami') %></h4>
+    <p><%= t('customer.pages.about.vision_body', 'Menjadi mitra konektivitas digital terpercaya yang mampu menjangkau hingga pelosok, memberikan dampak positif bagi perkembangan ekonomi dan sosial masyarakat.') %></p>
+
+    <h4><i class="bi bi-bullseye"></i> <%= t('customer.pages.about.mission_title', 'Misi Kami') %></h4>
+    <ul>
+      <li><%= t('customer.pages.about.mission_1', 'Menyediakan layanan internet dengan harga yang kompetitif namun berkualitas premium.') %></li>
+      <li><%= t('customer.pages.about.mission_2', 'Terus berinovasi dalam infrastruktur jaringan untuk mengikuti perkembangan teknologi.') %></li>
+      <li><%= t('customer.pages.about.mission_3', 'Memberikan layanan pelanggan yang responsif dan solutif.') %></li>
+    </ul>
+
+    <div style="text-align:center;margin-top:30px">
+      <a class="lbtn lbtn-primary" href="<%= isLoggedIn ? '/customer/dashboard' : '/customer/login' %>"><i class="bi bi-arrow-left"></i> <%= t('common.back_to', 'Kembali ke') %> <%= isLoggedIn ? t('customer.dashboard_title', 'Dashboard Pelanggan') : t('common.portal', 'Portal') %></a>
+    </div>
+  </div>
+
+  <div class="page-foot">&copy; <%= new Date().getFullYear() %> <%= company %> • <%= t('customer.pages.about.footer_tagline', 'Menghubungkan Anda ke Masa Depan') %></div>
+</main>
+
+<script>
+  function toggleTheme(){ var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); try{localStorage.setItem('landing-theme',t);}catch(e){} }
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js',{scope:'/customer/'}).then(function(r){try{r.update();}catch(e){}}).catch(function(){}); }
+</script>
+<%- include('partials/customer_bottom_nav', { activeNav: 'none' }) %>
+</body>
+</html>

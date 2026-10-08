@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.pages.contact.meta_title', 'Kontak Support') %> | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/pages.css?v=3">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>document.documentElement.classList.add('js');(function(){try{var s=localStorage.getItem('landing-theme')||'dark';document.documentElement.setAttribute('data-theme',s);}catch(e){}})();</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/" aria-label="Beranda"><img class="bmark" src="<%= brandLogo %>" alt="<%= company %>"><span class="bname"><%= brandName %></span></a>
+    <div class="header-actions" style="margin-left:auto">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema"><i class="bi bi-moon-stars-fill"></i></button>
+      <a class="lbtn lbtn-ghost lbtn-sm" href="<%= isLoggedIn ? '/customer/dashboard' : '/customer/login' %>"><i class="bi bi-box-arrow-in-right"></i> <%= isLoggedIn ? 'Dashboard' : 'Masuk' %></a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="page-hero">
+    <h1><%= t('customer.pages.contact.title', 'Hubungi Kami') %></h1>
+    <p><%= t('customer.pages.contact.subtitle', 'Kami siap membantu setiap kendala internet Anda.') %></p>
+  </section>
+
+  <div class="prose">
+    <p class="lead" style="text-align:center"><%= t('customer.pages.contact.p1', 'Tim support kami tersedia untuk melayani pertanyaan teknis, bantuan pembayaran, atau informasi pemasangan baru.') %></p>
+
+    <% let waContact = settings.company_phone || (settings.whatsapp_admin_numbers ? settings.whatsapp_admin_numbers[0] : ''); let waLink = waContact ? `https://wa.me/${waContact.replace(/\D/g, '')}` : '#'; %>
+
+    <div class="contact-list">
+      <a href="<%= waLink %>" class="contact-item">
+        <div class="contact-ic" style="background:rgba(37,211,102,.15);color:#25D366"><i class="bi bi-whatsapp"></i></div>
+        <div><h6><%= t('customer.pages.contact.whatsapp_title', 'WhatsApp Support') %></h6><p><%= waContact || t('customer.pages.contact.whatsapp_fallback', 'Hubungi WhatsApp Kami') %> (<%= t('customer.pages.contact.fast_response', 'Respon Cepat') %>)</p></div>
+      </a>
+
+      <div class="contact-item">
+        <div class="contact-ic"><i class="bi bi-envelope"></i></div>
+        <div><h6><%= t('customer.pages.contact.email_title', 'Email Support') %></h6><p><%= settings.company_email || `support@${company.toLowerCase().replace(/\s+/g, '')}.com` %></p></div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-ic" style="background:rgba(192,132,252,.15);color:#c084fc"><i class="bi bi-clock"></i></div>
+        <div><h6><%= t('customer.pages.contact.hours_title', 'Jam Operasional') %></h6><p><%= settings.operational_hours || 'Setiap Hari: 08.00 - 22.00 WIB' %></p></div>
+      </div>
+
+      <div class="contact-item">
+        <div class="contact-ic" style="background:var(--idim);color:var(--info)"><i class="bi bi-geo-alt"></i></div>
+        <div><h6><%= t('customer.pages.contact.address_title', 'Alamat Kantor') %></h6><p><%= settings.company_address || 'Jl. Utama ISP No. 123, Indonesia' %></p></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:30px">
+      <a class="lbtn lbtn-primary" href="<%= isLoggedIn ? '/customer/dashboard' : '/customer/login' %>"><i class="bi bi-arrow-left"></i> <%= t('common.back_to', 'Kembali ke') %> <%= isLoggedIn ? t('customer.dashboard_title', 'Dashboard Pelanggan') : t('common.portal', 'Portal') %></a>
+    </div>
+  </div>
+
+  <div class="page-foot">&copy; <%= new Date().getFullYear() %> <%= company %> • <%= t('customer.pages.contact.footer_tagline', 'Kepuasan Pelanggan adalah Kebanggaan Kami') %></div>
+</main>
+
+<script>
+  function toggleTheme(){ var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); try{localStorage.setItem('landing-theme',t);}catch(e){} }
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js',{scope:'/customer/'}).then(function(r){try{r.update();}catch(e){}}).catch(function(){}); }
+</script>
+<%- include('partials/customer_bottom_nav', { activeNav: 'ticket' }) %>
+</body>
+</html>

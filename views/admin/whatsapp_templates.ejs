@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .wa-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    .wa-tab { padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--muted); transition: all 0.2s; font-weight: 700; text-decoration: none; flex-shrink: 0; }
+    .wa-tab:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .wa-tab.active { background: var(--primary); color: white; }
+    .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 768px) {
+      .template-grid { grid-template-columns: 1fr; }
+      .wa-tab { padding: 6px 10px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'whatsapp', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-whatsapp"></i> <%= title %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+  <div class="page">
+    <% const waTab = 'templates'; %>
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+        <div class="wa-tabs">
+      <a href="/admin/whatsapp" class="wa-tab <%= waTab==='status' ? 'active' : '' %>"><i class="bi bi-phone"></i> <%= t('admin.wa.tab_status','Status WhatsApp') %></a>
+      <a href="/admin/whatsapp/broadcast" class="wa-tab <%= waTab==='broadcast' ? 'active' : '' %>"><i class="bi bi-megaphone"></i> <%= t('admin.wa.tab_broadcast','Broadcast & Pengingat') %></a>
+      <a href="/admin/whatsapp/templates" class="wa-tab <%= waTab==='templates' ? 'active' : '' %>"><i class="bi bi-chat-left-quote"></i> <%= t('admin.wa.tab_templates','Template Pesan') %></a>
+      <a href="/admin/whatsapp/preview" class="wa-tab <%= waTab==='preview' ? 'active' : '' %>"><i class="bi bi-eye"></i> <%= t('admin.wa.tab_preview','Preview Pesan') %></a>
+      <a href="/admin/whatsapp/live-chat" class="wa-tab <%= waTab==='livechat' ? 'active' : '' %>"><i class="bi bi-chat-dots-fill"></i> <%= t('admin.wa.tab_livechat','Live Chat') %></a>
+    </div>
+
+    <form method="POST" action="/admin/whatsapp/templates">
+      <div class="card mb16">
+        <div class="card-hd">
+          <h6><i class="bi bi-chat-left-quote-fill"></i> Pengaturan Template Notifikasi WhatsApp</h6>
+        </div>
+        <div class="card-bd template-grid">
+          <div>
+            <div class="fg">
+              <label class="fl">Template Pengingat Tagihan (Bulanan / Manual)</label>
+              <textarea class="fc" id="tmpl_auto_billing" name="whatsapp_auto_billing_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_auto_billing_message %></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px; display:flex; justify-between; align-items:center;">
+                <span><i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)">(Username PPPoE, opsional)</span>, <b>{{nama}}</b>, <b>{{tagihan}}</b>, <b>{{rincian}}</b>, <b>{{paket}}</b>, <b>{{link}}</b>.</span>
+              </div>
+            </div>
+            
+            <div class="fg" style="margin-top: 20px;">
+              <label class="fl">Template Tagihan QRIS (Manual)</label>
+              <textarea class="fc" id="tmpl_billing_qris" name="whatsapp_billing_qris_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_billing_qris_message %></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
+                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)">(Username PPPoE, opsional)</span>, <b>{{nama}}</b>, <b>{{periode}}</b>, <b>{{paket}}</b>, <b>{{qris_nominal}}</b>, <b>{{qris_kode}}</b>, <b>{{qris_qr}}</b>.
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="fg">
+              <label class="fl">Template Pembayaran Sukses (Lunas)</label>
+              <textarea class="fc" id="tmpl_payment_success" name="whatsapp_payment_success_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_payment_success_message %></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
+                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)">(Username PPPoE, opsional)</span>, <b>{{nama}}</b>, <b>{{no_invoice}}</b>, <b>{{paket}}</b>, <b>{{periode}}</b>, <b>{{waktu}}</b>, <b>{{metode}}</b>, <b>{{total}}</b>, <b>{{company}}</b>, <b>{{company_phone}}</b>, <b>{{link_portal}}</b>, <b>{{link_pdf}}</b> (link PDF invoice).
+              </div>
+            </div>
+
+            <div class="fg" style="margin-top: 20px;">
+              <label class="fl">Template Pemberitahuan Isolir (Otomatis / Manual)</label>
+              <textarea class="fc" id="tmpl_isolir" name="whatsapp_isolir_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_isolir_message %></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
+                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)">(Username PPPoE, opsional)</span>, <b>{{nama}}</b>, <b>{{paket}}</b>, <b>{{tagihan}}</b>, <b>{{link}}</b>.
+              </div>
+            </div>
+
+            <div class="fg" style="margin-top: 20px;">
+              <label class="fl">Template Peringatan Tunggakan (menuju nonaktif)</label>
+            <div class="fg" style="margin-top: 20px;">
+              <label class="fl">Template Auto-Lunas (Rp 0 / auto_isolate=0)</label>
+              <textarea class="fc" id="tmpl_autolunas" name="whatsapp_autolunas_message" rows="7" required style="width: 100%;"><%= templates.whatsapp_autolunas_message %></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;"><i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b>, <b>{{nama}}</b>, <b>{{tagihan}}</b>, <b>{{rincian}}</b>, <b>{{company}}</b>.</div>
+            </div>
+            <div class="fg" style="margin-top: 20px;">
+              <label class="fl">Template Auto-Nonaktif (menunggak)</label>
+              <textarea class="fc" id="tmpl_deactivated" name="whatsapp_deactivated_message" rows="7" required style="width: 100%;"><%= templates.whatsapp_deactivated_message %></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;"><i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b>, <b>{{nama}}</b>, <b>{{bulan_nunggak}}</b>, <b>{{batas}}</b>, <b>{{link}}</b>, <b>{{company}}</b>.</div>
+            </div>
+            <div class="fg" style="margin-top: 20px;">
+              <label class="fl">Template Auto-Hapus (bulan ke-4)</label>
+              <textarea class="fc" id="tmpl_deleted" name="whatsapp_deleted_message" rows="7" required style="width: 100%;"><%= templates.whatsapp_deleted_message %></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;"><i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b>, <b>{{nama}}</b>, <b>{{bulan_nunggak}}</b>, <b>{{company}}</b>.</div>
+            </div>
+              <textarea class="fc" id="tmpl_arrears" name="whatsapp_arrears_warning_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_arrears_warning_message %></textarea>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
+                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b>{{nama}}</b>, <b>{{paket}}</b>, <b>{{tagihan}}</b>, <b>{{rincian}}</b>, <b>{{bulan_nunggak}}</b>, <b>{{batas}}</b>, <b>{{link}}</b>, <b>{{company}}</b>.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-bd" style="border-top: 1px solid var(--border); background: var(--bg2); display: flex; flex-wrap:wrap; gap:10px; justify-content: space-between; align-items: center;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="fillOfficialReceiptPreset()"><i class="bi bi-receipt-cutoff"></i> Muat Template Struk Resmi Lengkap</button>
+            <button type="button" class="btn btn-g btn-sm" onclick="fillSpintaxPreset()"><i class="bi bi-magic"></i> Muat Template Ringkas (Spintax Anti-Ban)</button>
+            <button type="button" class="btn btn-w btn-sm" onclick="showMetaConverter()"><i class="bi bi-meta"></i> <i class="bi bi-magic"></i> Konversi Format Meta Cloud API</button>
+            <div style="flex-basis:100%; font-size:11.5px; color:var(--muted); margin-top:4px"><i class="bi bi-exclamation-circle" style="color:var(--primary)"></i> Setiap template <b>wajib menyertakan variabel ID Pelanggan</b> <b style="color:var(--primary)">{{id_pelanggan}}</b>.</div>
+            <div id="presetStatus" style="flex-basis:100%; font-size:12px; display:none"></div>
+          </div>
+          <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Template</button>
+        </div>
+      </div>
+    </form>
+
+    <!-- MODAL META CONVERTER -->
+    <div class="mo" id="metaConverterModal">
+      <div class="mb" style="max-width: 680px;">
+        <div class="mh">
+          <span class="mt"><i class="bi bi-meta"></i> Tool Konversi Template Meta WhatsApp Cloud API</span>
+          <button type="button" class="mc" onclick="closeModal('metaConverterModal')">&times;</button>
+        </div>
+        <div class="mbody" style="max-height:70vh; overflow-y:auto;">
+          <div class="fg mb12">
+            <label class="fl">Pilih Template yang Akan Dikonversi ke Format Meta:</label>
+            <select class="fs" id="metaSourceSelect" onchange="convertCurrentTemplate()">
+              <option value="tmpl_auto_billing">Template Pengingat Tagihan</option>
+              <option value="tmpl_billing_qris">Template Tagihan QRIS</option>
+              <option value="tmpl_payment_success">Template Pembayaran Sukses</option>
+              <option value="tmpl_isolir">Template Pemberitahuan Isolir</option>
+            </select>
+          </div>
+
+          <div class="fg mb12">
+            <label class="fl">Hasil Format Teks Template untuk Meta Business Manager (Placeholder {{1}}, {{2}}...):</label>
+            <textarea class="fc" id="metaFormattedResult" rows="6" readonly style="background:var(--bg3); font-family:monospace;"></textarea>
+          </div>
+
+          <div class="fg mb12">
+            <label class="fl">Daftar Variabel Urutan Parameter (Components Payload):</label>
+            <div id="metaParamMapping" style="background:var(--bg3); padding:10px 14px; border-radius:8px; font-size:12px; font-family:monospace;"></div>
+          </div>
+        </div>
+        <div class="mf">
+          <button type="button" class="btn btn-g" onclick="closeModal('metaConverterModal')"><%= t('common.close','Tutup') %></button>
+          <button type="button" class="btn btn-p" onclick="copyMetaTemplateResult()"><i class="bi bi-clipboard-check"></i> Salin Teks Meta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function setPresetStatus(msg, ok) {
+  var el = document.getElementById('presetStatus');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.color = ok === false ? 'var(--danger)' : 'var(--success, #10b981)';
+  el.innerHTML = (ok === false ? '<i class="bi bi-x-circle-fill"></i> ' : '<i class="bi bi-check-circle-fill"></i> ') + msg;
+}
+function highlightField(el) {
+  if (!el) return;
+  try {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.style.transition = 'box-shadow .2s ease';
+    el.style.boxShadow = '0 0 0 3px var(--primary-glow)';
+    setTimeout(function () { el.style.boxShadow = ''; }, 1600);
+  } catch (e) {}
+}
+function openModal(id){ var el = document.getElementById(id); if (el) el.classList.add('show'); }
+function closeModal(id){ var el = document.getElementById(id); if (el) el.classList.remove('show'); }
+
+/* ===== VERSI LENGKAP (Profesional) ===== */
+var TMPL_AB_LENGKAP = '👋 Yth. *{{nama}}*,\n\n📢 Berikut kami sampaikan rincian tagihan internet Anda.\n\n📋 *RINCIAN TAGIHAN*\n• 🆔 ID Pelanggan  : *{{id_pelanggan}}*\n• 📦 Paket         : {{paket}}\n• 💰 Total Tagihan : *Rp {{tagihan}}*\n• 🗓️ Periode       : {{rincian}}\n\n💳 Mohon melakukan pembayaran sebelum tanggal jatuh tempo melalui portal pelanggan:\n🔗 {{link}}\n\n🙏 Terima kasih atas kepercayaan Anda.\n🏢 {{company}}';
+var TMPL_QR_LENGKAP = '👋 Yth. *{{nama}}*,\n\n📢 Berikut tagihan internet Anda beserta kode pembayaran QRIS.\n\n📋 *RINCIAN TAGIHAN*\n• 🆔 ID Pelanggan  : *{{id_pelanggan}}*\n• 📦 Paket         : {{paket}}\n• 💰 Total Tagihan : *Rp {{tagihan}}*\n• 🗓️ Periode       : {{rincian}}\n\n📱 Silakan scan QRIS terlampir untuk melakukan pembayaran:\n🔗 {{link}}\n\n🙏 Terima kasih.\n🏢 {{company}}';
+var TMPL_PS_LENGKAP = '🧾 *BUKTI PEMBAYARAN RESMI — LUNAS* ✅\n🏢 *{{company}}*\n────────────────────────────\n👋 Yth. *{{nama}}*,\n\n✅ Pembayaran tagihan internet Anda telah kami terima & verifikasi.\n\n📋 *RINCIAN PEMBAYARAN*\n• 🆔 ID Pelanggan   : *{{id_pelanggan}}*\n• 🧾 No. Invoice    : #INV-{{no_invoice}}\n• 📦 Paket Layanan  : {{paket}}\n• 🗓️ Periode        : {{periode}}\n• 🕒 Waktu Bayar    : {{waktu}}\n• 💳 Metode Bayar   : {{metode}}\n• 💰 Total Bayar    : *Rp {{total}}*\n• 📌 Status         : *LUNAS* ✅\n\n🌐 Status layanan: *AKTIF* dan dapat digunakan dengan nyaman.\n\n────────────────────────────\n📄 Unduh Invoice (PDF): {{link_pdf}}\n\n────────────────────────────\n🔗 Cek Tagihan / Riwayat:\n{{link_portal}}\n\n📞 Bantuan: WhatsApp {{company_phone}}\n_Simpan pesan ini sebagai bukti pembayaran yang sah dari {{company}}._';
+var TMPL_IS_LENGKAP = '⚠️ Yth. *{{nama}}*,\n\n🚫 Layanan internet Anda (📦 Paket {{paket}}) saat ini *DITANGGUHKAN* karena tagihan belum dilunasi.\n\n📋 *RINCIAN TAGIHAN*\n• 🆔 ID Pelanggan  : *{{id_pelanggan}}*\n• 💰 Total Tagihan : *Rp {{tagihan}}*\n\n💳 Mohon segera melakukan pembayaran melalui portal pelanggan:\n🔗 {{link}}\n\n✅ Setelah pembayaran diterima, layanan akan aktif kembali otomatis.\n\n🙏 Terima kasih.\n🏢 {{company}}';
+/* ===== VERSI SPINTAX ANTI-BAN ===== */
+var TMPL_AB_SPINTAX = '{Halo|Hai|Salam} *{{nama}}*,\n\n{Ini adalah|Berikut} pengingat tagihan internet Anda.\n\n📋 *RINGKASAN TAGIHAN*\n• ID Pelanggan  : *{{id_pelanggan}}*\n• Paket         : {{paket}}\n• Total Tagihan : *Rp {{tagihan}}*\n• Periode       : {{rincian}}\n\n{Mohon|Silakan} {segera|lakukan} pembayaran melalui portal pelanggan:\n{{link}}\n\n{Terima kasih atas perhatian & kerja samanya.|Terima kasih.}\n— Admin {{company}}';
+var TMPL_QR_SPINTAX = '{Halo|Hai|Salam} *{{nama}}*,\n\n{Berikut|Ini adalah} tagihan internet Anda:\n\n📋 *RINGKASAN TAGIHAN*\n• ID Pelanggan  : *{{id_pelanggan}}*\n• Paket         : {{paket}}\n• Total Tagihan : *Rp {{tagihan}}*\n• Periode       : {{rincian}}\n\n{Silakan scan|Mohon scan} QRIS terlampir (atau buka link): {{link}}\n\nTerima kasih.\n— {{company}}';
+var TMPL_PS_SPINTAX = '{Halo|Hai|Salam} *{{nama}}*,\n\n{Terima kasih|Terima kasih banyak}, pembayaran tagihan internet Anda telah kami terima.\n\n📋 *RINCIAN PEMBAYARAN*\n• ID Pelanggan   : *{{id_pelanggan}}*\n• No. Invoice    : #INV-{{no_invoice}}\n• Paket Layanan  : {{paket}}\n• Periode        : {{periode}}\n• Waktu Bayar    : {{waktu}}\n• Metode Bayar   : {{metode}}\n• Total Bayar    : *Rp {{total}}*\n• Status         : *LUNAS* ✅\n\n📄 Unduh Invoice (PDF): {{link_pdf}}\n🔗 Cek Tagihan: {{link_portal}}\n— {{company}}';
+var TMPL_IS_SPINTAX = '{Halo|Hai|Salam} *{{nama}}*,\n\nLayanan internet Anda (Paket {{paket}}) {ditangguhkan|terisolir sementara} karena belum melunasi tagihan.\n\n📋 *RINGKASAN TAGIHAN*\n• ID Pelanggan  : *{{id_pelanggan}}*\n• Total Tagihan : *Rp {{tagihan}}*\n\n{Mohon segera|Silakan} lakukan pembayaran via portal pelanggan:\n{{link}}\n\nTerima kasih.\n— {{company}}';
+var TMPL_AL_LENGKAP = '✅ *Tagihan LUNAS*\n\nYth. Bapak/Ibu *{{nama}}* (ID Pelanggan: {{id_pelanggan}}),\n\nTerima kasih, tagihan layanan internet Anda telah kami tandai *LUNAS* secara otomatis.\n\n💵 Nominal: *Rp {{tagihan}}*\n📅 Periode: {{rincian}}\n\nPesan ini kami kirim sebagai validasi & pencatatan. Terima kasih 🙏\n— {{company}}';
+var TMPL_DE_LENGKAP = '⚠️ *Layanan Dinonaktifkan*\n\nYth. Bapak/Ibu *{{nama}}* (ID Pelanggan: {{id_pelanggan}}),\n\nLayanan internet Anda untuk sementara kami *nonaktifkan* karena tagihan belum diselesaikan selama *{{bulan_nunggak}} bulan berturut-turut*.\n\nApabila bulan depan masih belum dibayar, akun Anda akan *DIHAPUS OTOMATIS* dan untuk berlangganan kembali harus *mendaftar dari awal*.\n\nBayar: {{link}}\n— {{company}}';
+var TMPL_DL_LENGKAP = '🗑️ *Akun Dihapus*\n\nYth. *{{nama}}*,\n\nAkun layanan internet Anda telah *DIHAPUS OTOMATIS* karena tagihan tidak dibayar *{{bulan_nunggak}} bulan berturut-turut*.\n\nUntuk berlangganan kembali, silakan *mendaftar dari awal*. Terima kasih.\n— {{company}}';
+var TMPL_AL_SPINTAX = '{Halo|Salam} *{{nama}}*,\n\n{Terima kasih|Alhamdulillah}, tagihan internet Anda *LUNAS* otomatis.\n\n💰 Nominal: *Rp {{tagihan}}*\n📅 Periode: {{rincian}}\n\n{Terima kasih atas kerja samanya.|Terima kasih.}\n— {{company}}';
+var TMPL_DE_SPINTAX = '{Halo|Salam} *{{nama}}*,\n\nLayanan internet Anda {dinonaktifkan|kami nonaktifkan sementara} karena menunggak *{{bulan_nunggak}} bulan* berturut-turut.\n\n{Mohon segera|Silakan} lunasi, jika tidak akun akan *DIHAPUS OTOMATIS* dan harus daftar ulang:\n{{link}}\n— {{company}}';
+var TMPL_DL_SPINTAX = '{Halo|Salam} *{{nama}}*,\n\nAkun Anda *DIHAPUS OTOMATIS* karena menunggak *{{bulan_nunggak}} bulan* berturut-turut. {Silakan|Mohon} mendaftar dari awal untuk berlangganan kembali.\n— {{company}}';
+
+
+function applyPreset(set, msg) {
+  var ok = 0;
+  set.forEach(function (pair) {
+    var el = document.querySelector('[name="' + pair[0] + '"]');
+    if (el) { el.value = pair[1]; ok++; }
+  });
+  highlightField(document.querySelector('[name="whatsapp_auto_billing_message"]'));
+  var names = set.map(function (p) { return p[2]; }).join(' / ');
+  setPresetStatus('Dimuat ' + ok + ' template (' + names + '). Klik "Simpan Template" untuk menyimpan.\n' + (msg || ''));
+}
+function fillOfficialReceiptPreset() {
+  applyPreset([
+    ['whatsapp_auto_billing_message', TMPL_AB_LENGKAP, 'Pengingat'],
+    ['whatsapp_billing_qris_message', TMPL_QR_LENGKAP, 'QRIS'],
+    ['whatsapp_payment_success_message', TMPL_PS_LENGKAP, 'Pembayaran Sukses'],
+    ['whatsapp_isolir_message', TMPL_IS_LENGKAP, 'Isolir'],
+    ['whatsapp_autolunas_message', TMPL_AL_LENGKAP, 'Auto-Lunas'],
+    ['whatsapp_deactivated_message', TMPL_DE_LENGKAP, 'Auto-Nonaktif'],
+    ['whatsapp_deleted_message', TMPL_DL_LENGKAP, 'Auto-Hapus']
+  ], 'Versi: LENGKAP (profesional).');
+}
+function fillSpintaxPreset() {
+  applyPreset([
+    ['whatsapp_auto_billing_message', TMPL_AB_SPINTAX, 'Pengingat'],
+    ['whatsapp_billing_qris_message', TMPL_QR_SPINTAX, 'QRIS'],
+    ['whatsapp_payment_success_message', TMPL_PS_SPINTAX, 'Pembayaran Sukses'],
+    ['whatsapp_isolir_message', TMPL_IS_SPINTAX, 'Isolir'],
+    ['whatsapp_autolunas_message', TMPL_AL_SPINTAX, 'Auto-Lunas'],
+    ['whatsapp_deactivated_message', TMPL_DE_SPINTAX, 'Auto-Nonaktif'],
+    ['whatsapp_deleted_message', TMPL_DL_SPINTAX, 'Auto-Hapus']
+  ], 'Versi: SPINTAX ANTI-BAN.');
+}
+function showMetaConverter() { openModal('metaConverterModal'); convertCurrentTemplate(); }
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal('metaConverterModal'); });
+(function () { var m = document.getElementById('metaConverterModal'); if (m) m.addEventListener('click', function (e) { if (e.target === m) closeModal('metaConverterModal'); }); })();
+
+function convertCurrentTemplate() {
+  var selEl = document.getElementById('metaSourceSelect');
+  var selectId = selEl ? selEl.value : 'tmpl_auto_billing';
+  var srcEl = document.getElementById(selectId);
+  var sourceText = srcEl ? (srcEl.value || '') : '';
+
+  // Strip spintax hanya grup ber-pipe {A|B} (aman, tidak menyentuh {{variabel}})
+  var convertedText = sourceText.replace(/\{[^{}]*\|[^{}]*\}/g, function (full) {
+    return full.slice(1, -1).split('|')[0];
+  });
+  var varMatches = [];
+  var mapping = {};
+  var regex = /\{\{([^}]+)\}\}/g;
+  var match, counter = 1;
+  while ((match = regex.exec(sourceText)) !== null) {
+    var varName = match[1].trim();
+    if (!mapping[varName]) { mapping[varName] = '{{' + counter + '}}'; varMatches.push({ index: counter, name: varName }); counter++; }
+  }
+  var keys = Object.keys(mapping);
+  for (var k = 0; k < keys.length; k++) {
+    convertedText = convertedText.split('{{' + keys[k] + '}}').join(mapping[keys[k]]);
+  }
+  var res = document.getElementById('metaFormattedResult');
+  if (res) res.value = convertedText;
+  var map2 = document.getElementById('metaParamMapping');
+  if (map2) {
+    if (!varMatches.length) {
+      map2.innerHTML = '<span class="text-muted">Tidak ada variabel {{variabel}} dalam template ini.</span>';
+    } else {
+      map2.innerHTML = varMatches.map(function (v) {
+        return '<b>{{' + v.index + '}}</b> <i class="bi bi-arrow-right"></i> ' + v.name + (v.name === 'id_pelanggan' ? ' <span style="color:var(--primary)">(ID Pelanggan)</span>' : '');
+      }).join('<br>');
+    }
+  }
+}
+function copyMetaTemplateResult() {
+  var resultEl = document.getElementById('metaFormattedResult');
+  if (!resultEl) return;
+  resultEl.select();
+  navigator.clipboard.writeText(resultEl.value).then(function () {
+    alert('Teks format Meta API berhasil disalin! Silakan paste di Meta Business Manager untuk pengajuan template.');
+  }).catch(function () { try { document.execCommand('copy'); } catch (e) {} });
+}
+</script>
+</body>
+</html>

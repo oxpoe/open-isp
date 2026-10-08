@@ -1,0 +1,215 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   auth.css — Halaman autentikasi & publik (login, register, OTP, cek tagihan)
+   Memakai token/warna dari landing.css (dimuat lebih dulu).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── LAYOUT LOGIN ── */
+.auth-hero{padding:clamp(18px,3vw,42px) 0;min-height:calc(100vh - var(--nav-h));min-height:calc(100dvh - var(--nav-h));display:flex;align-items:center}
+.auth-hero > .container{width:min(1180px,92vw);margin-inline:auto}
+.auth-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);align-items:center}
+.auth-copy h1{font-size:clamp(30px,4.6vw,50px);margin:16px 0 12px}
+.auth-copy h1 .hl{color:var(--primary)}
+.auth-copy p.lead{color:var(--muted);font-size:clamp(15px,1.6vw,17px);max-width:52ch}
+.auth-points{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:11px}
+.auth-points li{display:flex;gap:10px;color:var(--muted);font-size:14.5px}
+.auth-points li i{color:var(--primary);margin-top:3px}
+.auth-stats{display:flex;flex-wrap:wrap;gap:26px;margin-top:30px;padding-top:24px;border-top:1px solid var(--border)}
+.auth-stats .st b{display:block;font-family:var(--font-display);font-size:22px;line-height:1}
+.auth-stats .st span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+/* ── KARTU LOGIN ── */
+.auth-card{background:var(--glass-2);backdrop-filter:blur(14px);border:1px solid var(--border);border-radius:var(--radius);
+  padding:clamp(20px,2.6vw,28px);box-shadow:var(--shadow-3);position:relative;overflow:hidden;max-width:430px;margin:0 auto;width:100%}
+.auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--primary),transparent 70%)}
+.auth-logo{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;margin:0 auto 10px;
+  background:var(--pdim);border:1px solid var(--primary-glow)}
+.auth-logo img{width:32px;height:32px;object-fit:contain}
+.auth-card h2{font-size:19px;text-align:center}
+.auth-card .sub{text-align:center;color:var(--muted);font-size:13px;margin-top:3px}
+
+/* ── FORM ── */
+.field{margin-top:14px}
+.field label{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
+.field .wrap{position:relative;display:flex;align-items:center}
+.field .wrap > i.lead-ic{position:absolute;left:14px;color:var(--muted);font-size:16px;pointer-events:none}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px 12px 42px;
+  color:var(--text);font:inherit;font-size:15px;outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease),background .18s var(--ease)}
+.inp::placeholder{color:var(--muted)}
+.inp:hover{border-color:var(--primary-glow)}
+.inp:focus{border-color:var(--primary);box-shadow:var(--ring);background:var(--bg2)}
+.hint-line{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;margin-top:8px;justify-content:center}
+
+.btn-auth{width:100%;margin-top:16px;padding:13px;font-size:15px;border-radius:12px}
+
+/* ── ALERT ── */
+.auth-alert{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:11px;font-size:13px;margin-top:14px;border:1px solid transparent;font-weight:600}
+.auth-alert.err{background:var(--ddim);color:var(--danger);border-color:var(--danger-glow)}
+.auth-alert.ok{background:var(--sdim);color:var(--success);border-color:var(--success-glow)}
+.auth-alert.info{background:var(--idim);color:var(--info);border-color:rgba(56,189,248,.3)}
+
+/* ── QUICK TOOLS ── */
+.quick-tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.qtool{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;border-radius:12px;
+  background:var(--ghost);border:1px solid var(--border);color:var(--text);font-size:12.5px;font-weight:600;
+  text-decoration:none;transition:transform .18s var(--ease),border-color .18s var(--ease),background .18s var(--ease)}
+.qtool:hover{transform:translateY(-2px);border-color:var(--primary-glow);background:var(--ghost-h)}
+.qtool i{font-size:20px;color:var(--primary)}
+
+.auth-foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted)}
+.auth-foot a{font-weight:700}
+
+/* anchor di halaman ini jangan tertutup header */
+#packages,#features,#login-section{scroll-margin-top:84px}
+
+/* ── Sembunyikan statistik pada mode aplikasi (PWA/standalone) ── */
+html.is-pwa .auth-stats{display:none!important}
+@media(display-mode:standalone){ .auth-stats{display:none!important} }
+
+/* ── FORM UMUM (register, dll) ── */
+.form-card{background:var(--glass-2);border:1px solid var(--border);border-radius:var(--radius);padding:clamp(20px,3vw,30px);box-shadow:var(--shadow-2)}
+.form-grid{display:grid;gap:14px}
+.form-grid.cols-2{grid-template-columns:1fr 1fr}
+.inp-plain{border-radius:12px;padding:12px 14px}
+textarea.inp,textarea.inp-plain{padding-left:14px;min-height:84px;resize:vertical}
+select.inp,select.inp-plain{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16' fill='%238A96A6'%3E%3Cpath d='M1.5 5.5 8 12l6.5-6.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px}
+.form-note{font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.4}
+.reg-wrap{padding:clamp(24px,4vw,52px) 0;display:flex;justify-content:center}
+.reg-wrap .form-card{width:100%;max-width:560px}
+.reg-head{text-align:center;margin-bottom:20px}
+.reg-head .auth-logo{margin-bottom:12px}
+.reg-head h1{font-size:22px}
+.reg-head p{color:var(--muted);font-size:13px;margin-top:3px}
+.loc-btns{display:flex;gap:8px;flex-wrap:wrap}
+.chip-note{font-size:11.5px;color:var(--muted);margin-top:8px}
+
+/* ── MODAL (auth) ── */
+.mo{display:none;position:fixed;inset:0;background:var(--overlay-bg);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:16px}
+.mo.show{display:flex;animation:fadein .18s var(--ease)}
+.mb{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:660px;max-height:90vh;overflow:auto;color:var(--text);box-shadow:var(--shadow-3)}
+.mh{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.mh h3{font-size:15px;font-family:var(--font-display)}
+.mc{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1}
+.mc:hover{color:var(--danger)}
+.mbody{padding:18px}
+.mf{padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+#picker-map{height:320px;width:100%;border-radius:12px;overflow:hidden;background:var(--bg3)}
+
+/* ── CEK TAGIHAN / PEMBAYARAN ── */
+.bill-wrap{padding:clamp(20px,3vw,40px) 0;display:flex;justify-content:center}
+.bill-card{width:100%;max-width:800px;background:var(--glass-2);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden}
+.bill-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--ghost)}
+.bill-head h1{font-size:17px}
+.bill-head .sub{color:var(--muted);font-size:12.5px}
+.bill-body{padding:20px}
+.search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.search-row .field{flex:1;min-width:220px;margin-top:0}
+.btbl{width:100%;border-collapse:collapse;font-size:13px;color:var(--text)}
+.btbl th{padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--ghost);border-bottom:1px solid var(--border);white-space:nowrap}
+.btbl td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.btbl tr:hover td{background:var(--ghost)}
+.btbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.btbl tr:last-child td{border-bottom:none}
+.bill-sub{color:var(--muted);font-size:12px}
+.sec-title{font-weight:700;margin:18px 0 4px;display:flex;align-items:center;gap:8px}
+.sec-title i{color:var(--primary)}
+.srch-wrap{overflow-x:auto}
+.inv-radio{width:18px;height:18px;accent-color:var(--primary);cursor:pointer}
+.pay-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+@media(max-width:430px){.pay-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pay-scroll{max-height:230px;overflow:auto;padding-right:4px}
+.pay-radio{position:absolute;opacity:0;pointer-events:none}
+.pay-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--ghost);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:transform .2s var(--ease),border-color .2s var(--ease),box-shadow .2s var(--ease);height:100%;min-width:0;overflow:hidden}
+.pay-item:hover{transform:translateY(-1px);border-color:var(--primary-glow)}
+.pay-radio:checked + .pay-item{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary-glow)}
+.pay-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--bg);border:1px solid var(--border);flex:0 0 auto;overflow:hidden;font-size:19px;color:var(--primary)}
+.pay-logo{width:100%;height:100%;object-fit:contain;padding:7px;background:#fff}
+.pay-info{display:flex;flex-direction:column;min-width:0;flex:1}
+.pay-name{font-size:13.5px;font-weight:700;color:var(--text);word-break:break-word;line-height:1.25}
+.pay-sub{display:flex;flex-wrap:wrap;gap:5px;font-size:11px;color:var(--muted);margin-top:4px;min-width:0}
+.pay-chip{padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:11px;font-weight:600;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.pay-chip.off{background:var(--ddim);color:var(--danger);border-color:var(--danger-glow)}
+@media(max-width:576px){
+  .pay-item{flex-direction:column;align-items:center;text-align:center;gap:8px}
+  .pay-info{align-items:center}
+  .pay-sub{justify-content:center}
+  .pay-name{font-size:13px}
+}
+.chk{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--muted);margin:14px 0}
+.chk input{width:18px;height:18px;accent-color:var(--primary);margin-top:2px;flex:0 0 auto}
+.stack{display:grid;gap:10px}
+.auth-alert.warn{background:var(--wdim);color:var(--warning);border-color:var(--warning-glow)}
+.bill-foot{margin-top:20px;padding-top:14px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
+
+/* ── OTP ── */
+.otp-wrap{padding:clamp(24px,4vw,52px) 0;display:flex;justify-content:center}
+.otp-card{width:100%;max-width:420px;background:var(--glass-2);backdrop-filter:blur(14px);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-3);padding:clamp(22px,3vw,32px);text-align:center}
+.otp-icon{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;margin:0 auto 14px;background:var(--pdim);border:1px solid var(--primary-glow);color:var(--primary);font-size:28px}
+.otp-card h1{font-size:20px}
+.otp-card .sub{color:var(--muted);font-size:13.5px;margin-top:6px}
+.otp-input{letter-spacing:16px;font-size:28px;font-weight:800;text-align:center;font-family:var(--font-mono);padding-left:16px;padding-right:6px}
+.otp-card form{margin-top:18px}
+.otp-back{margin-top:16px;font-size:13px}
+
+/* ── VOUCHER ── */
+.vform{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+@media(max-width:820px){.vform{grid-template-columns:1fr}}
+.voucher-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+@media(max-width:576px){.voucher-grid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}}
+.voucher-radio{position:absolute;opacity:0;pointer-events:none}
+.voucher-card{display:block;border:1px solid var(--border);background:var(--ghost);border-radius:14px;padding:12px;cursor:pointer;transition:transform .18s var(--ease),border-color .18s var(--ease),box-shadow .18s var(--ease)}
+.voucher-card:hover{transform:translateY(-1px);border-color:var(--primary-glow)}
+.voucher-radio:checked + .voucher-card{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary-glow)}
+.voucher-title{font-weight:800;font-size:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.voucher-price{color:var(--primary);font-weight:800;white-space:nowrap}
+.voucher-meta{color:var(--muted);font-size:12px;margin-top:5px}
+.voucher-code{background:var(--bg);border:1px dashed var(--primary-glow);border-radius:12px;padding:12px;margin-top:12px}
+.voucher-code .row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:14px}
+.voucher-code .row b{font-family:var(--font-mono);color:var(--text);letter-spacing:.5px}
+.label-cap{display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:7px}
+
+/* ── PWA BANNER / MODAL ── */
+.pwa-banner{position:fixed;left:14px;right:14px;bottom:14px;z-index:200;display:none;align-items:center;gap:12px;
+  background:var(--glass-2);backdrop-filter:blur(14px);border:1px solid var(--primary-glow);border-radius:14px;
+  padding:12px 14px;box-shadow:var(--shadow-3)}
+.pwa-banner.show{display:flex}
+.pwa-banner .txt{flex:1;font-size:13px}
+.pwa-banner .txt b{display:block;font-size:13.5px}
+.pwa-banner .txt span{color:var(--muted);font-size:12px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .auth-grid{grid-template-columns:1fr}
+  .auth-hero{min-height:auto;display:block}
+  .auth-card{order:-1;margin-bottom:16px}
+  .auth-copy{padding-top:0;display:flex;flex-direction:column}
+  /* statistik (Pilihan Paket · Dukungan · Fiber Optic) tampil tepat di bawah kartu */
+  .auth-stats{order:-1;margin:0 0 22px;padding:0;border-top:none;justify-content:center;gap:24px}
+  .auth-stats .st{text-align:center}
+  .auth-card{margin-inline:auto}
+}
+@media(max-width:560px){
+  .form-grid.cols-2{grid-template-columns:1fr}
+  .quick-tools{grid-template-columns:1fr 1fr}
+}
+
+/* ── Rapatkan teks (line-height) agar tidak terlalu renggang ── */
+body{line-height:1.42}
+.auth-copy h1{line-height:1.12;margin:14px 0 10px}
+.auth-copy p.lead{line-height:1.5;font-size:clamp(14.5px,1.55vw,16.5px)}
+.auth-points{gap:8px;margin-top:18px}
+.auth-points li{line-height:1.4}
+.auth-stats{margin-top:24px;padding-top:18px}
+.auth-card .sub{line-height:1.35}
+.hint-line{line-height:1.35}
+.section-head{max-width:620px;margin-bottom:clamp(22px,3vw,34px)}
+.section-head p{line-height:1.5;margin-top:9px}
+.feature h3{margin-bottom:5px}
+.feature p{line-height:1.45}
+.price-card li{line-height:1.4}
+.foot-links{gap:7px}
+.foot-links a{line-height:1.4}
+
+/* == UI HARDENING (audit ui-ux.md) - jangan hapus marker == */
+img { max-width: 100%; height: auto; }

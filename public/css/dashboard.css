@@ -1,0 +1,209 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   dashboard.css — Dashboard Pelanggan (PWA)
+   Dipakai setelah landing.css + auth.css (token & komponen dasar dari sana).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── APP BAR ── */
+.app-bar{position:sticky;top:0;z-index:100;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.app-bar .inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;flex-wrap:wrap}
+.app-brand{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:700;font-size:16px}
+.app-brand img{width:28px;height:28px;border-radius:8px}
+.app-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.chip-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:10px;border:1px solid var(--border);background:var(--ghost);color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:none;transition:.18s var(--ease)}
+.chip-btn:hover{border-color:var(--primary-glow);transform:translateY(-1px)}
+.chip-btn.ok{border-color:var(--success-glow);color:var(--success)}
+.chip-btn.danger{border-color:var(--danger-glow);color:var(--danger)}
+.chip-btn.wallet{border-color:var(--success-glow);color:var(--success)}
+
+.status-pill{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font-size:11.5px;font-weight:700;border:1px solid var(--border)}
+.status-pill.online{background:var(--sdim);color:var(--success);border-color:var(--success-glow)}
+.status-pill.offline,.status-pill.suspended{background:var(--ddim);color:var(--danger);border-color:var(--danger-glow)}
+.pulse-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.pulse-dot.green{background:var(--success);animation:pulse-dot 1.8s infinite}
+.pulse-dot.red{background:var(--danger);animation:pulse-dot2 1.8s infinite}
+@keyframes pulse-dot2{0%{box-shadow:0 0 0 0 rgba(251,113,133,.55)}70%{box-shadow:0 0 0 7px rgba(251,113,133,0)}100%{box-shadow:0 0 0 0 rgba(251,113,133,0)}}
+
+.notif-bell-btn{position:relative;width:38px;height:38px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--border);background:var(--ghost);color:var(--text);cursor:pointer;font-size:16px}
+.notif-bell-btn:hover{border-color:var(--primary-glow);color:var(--primary)}
+.notif-badge-count{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:999px;background:var(--danger);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+/* ── LAYOUT ── */
+.dash-wrap{padding:18px 0 96px}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:860px){.dash-grid{grid-template-columns:1fr}}
+
+/* ── PROMO (auto-rotate) ── */
+.promo-rot{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-2);background:var(--glass-2);margin-bottom:18px;min-height:130px}
+.promo-rot img{width:100%;aspect-ratio:16/6;object-fit:cover;display:block}
+.promo-rot a{display:block}
+.promo-rot .welcome{aspect-ratio:16/6;min-height:130px;display:flex;align-items:center;justify-content:center;gap:10px;color:#0A0D14;font-family:var(--font-display);font-weight:700;font-size:clamp(15px,2.4vw,20px);background:linear-gradient(135deg,var(--primary),#7BC21F)}
+.promo-rot .dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.promo-rot .dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5)}
+.promo-rot .dots span.on{background:var(--primary)}
+
+/* ── HERO ── */
+.hero-banner{position:relative;border-radius:var(--radius);padding:18px;margin-bottom:16px;background:linear-gradient(135deg,var(--pdim),transparent 60%),var(--glass-2);border:1px solid var(--border);overflow:hidden}
+.hero-banner h3{font-size:clamp(17px,2.6vw,22px)}
+.id-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:var(--pdim);border:1px solid var(--primary-glow);color:var(--primary);font-size:11px;font-weight:700}
+
+/* ── BILL HERO ── */
+.bill-hero-card{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;border:1px solid var(--danger-glow);background:linear-gradient(135deg,var(--ddim),transparent 65%),var(--glass-2)}
+.bill-hero-card.paid{border-color:var(--success-glow);background:linear-gradient(135deg,var(--sdim),transparent 65%),var(--glass-2)}
+.bill-hero-card .bico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:24px;flex:0 0 auto}
+.bill-hero-card.unpaid .bico{background:var(--wdim);color:var(--warning);border:1px solid var(--warning-glow)}
+.bill-hero-card .bico{background:var(--sdim);color:var(--success);border:1px solid var(--success-glow)}
+.bill-hero-card h5{font-family:var(--font-display);font-size:20px;margin:0}
+
+/* ── ACTION GRID ── */
+.action-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
+@media(max-width:760px){.action-grid{grid-template-columns:repeat(3,1fr)}}
+.action-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;border-radius:14px;background:var(--glass-2);border:1px solid var(--border);cursor:pointer;text-decoration:none;transition:transform .18s var(--ease),border-color .18s var(--ease)}
+.action-item:hover{transform:translateY(-3px);border-color:var(--primary-glow)}
+.action-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:20px;background:var(--ghost);color:var(--primary)}
+.action-icon.ai-ssid{color:var(--info)} .action-icon.ai-pass{color:var(--success)}
+.action-icon.ai-reboot{color:var(--warning)} .action-icon.ai-pay{color:var(--primary)}
+.action-icon.ai-ppob{color:#c084fc} .action-icon.ai-ticket{color:var(--danger)}
+.action-label{font-size:11.5px;font-weight:600;color:var(--text);text-align:center;line-height:1.25}
+
+/* ── CARD (glass) ── */
+.glass-card{background:var(--glass-2);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-1);overflow:hidden;height:100%}
+.glass-header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--card-hd-bg)}
+.glass-header h5{font-size:14px;display:flex;align-items:center;gap:8px}
+.glass-body{padding:16px}
+.badge-soft{display:inline-flex;align-items:center;padding:3px 9px;border-radius:8px;font-size:10.5px;font-weight:700;background:var(--pdim);color:var(--primary);border:1px solid var(--primary-glow)}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat-card{background:var(--ghost);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.stat-icon{width:38px;height:38px;margin:0 auto 8px;border-radius:11px;display:grid;place-items:center;font-size:17px;background:var(--pdim);color:var(--primary)}
+.stat-icon.online{background:var(--sdim);color:var(--success)} .stat-icon.offline{background:var(--ddim);color:var(--danger)}
+.stat-icon.activity{background:var(--idim);color:var(--info)} .stat-icon.people{background:rgba(192,132,252,.14);color:#c084fc}
+.stat-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.stat-value{font-weight:800;font-size:14px;color:var(--text);margin-top:2px;word-break:break-word}
+
+/* ── WIFI BOX ── */
+.wifi-box{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:14px}
+.wifi-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.wifi-label{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.wifi-val{font-weight:800;font-size:15px;color:var(--text);word-break:break-word}
+.link-btn{background:none;border:none;color:var(--primary);font-weight:700;font-size:12px;cursor:pointer;padding:2px 4px}
+.link-btn:hover{text-decoration:underline}
+
+/* ── DEVICE LIST ── */
+.dev-list{display:flex;flex-direction:column;gap:8px;max-height:190px;overflow-y:auto}
+.dev-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 11px;border-radius:10px;background:var(--ghost);border:1px solid var(--border);font-size:12px}
+.dev-empty{text-align:center;padding:12px;border-radius:10px;background:var(--ghost);color:var(--muted);font-size:12px}
+
+/* ── TRAFFIC GAUGE ── */
+.traffic-gauge{position:relative;display:inline-block;margin-top:8px}
+.traffic-gauge canvas{max-width:100%}
+.traffic-gauge-center{position:absolute;left:0;right:0;bottom:18px;text-align:center}
+.traffic-gauge-value{font-family:var(--font-display);font-weight:700;font-size:22px;line-height:1}
+.traffic-gauge-unit{font-size:11px;color:var(--muted)}
+.traffic-gauge-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:-6px}
+
+/* ── SECTION TITLE ── */
+.sec-title{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-weight:700;font-size:15px;margin:0 0 12px}
+.sec-title i{color:var(--primary)}
+
+/* ── INVOICE CARD (mobile) ── */
+.inv-card{background:var(--ghost);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px}
+.inv-card .inv-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.inv-card .inv-name{font-weight:700;color:var(--text)}
+.inv-card .inv-amt{font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--primary)}
+.inv-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+/* ── NOTIF ITEM ── */
+.notif-item{padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--ghost);margin-bottom:10px}
+.notif-item.unread{border-color:var(--primary-glow);background:var(--pdim)}
+.notif-item .n-title{font-weight:700;font-size:13px}
+.notif-item .n-msg{color:var(--muted);font-size:12px;margin-top:3px}
+.notif-item .n-time{color:var(--muted);font-size:10.5px;margin-top:5px}
+
+/* ── ACCORDION (details) ── */
+.acc{background:var(--glass-2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+.acc summary{list-style:none;cursor:pointer;padding:15px 16px;font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary .chev{transition:transform .25s var(--ease);color:var(--primary)}
+.acc[open] summary .chev{transform:rotate(180deg)}
+.acc .acc-body{padding:0 16px 16px}
+
+/* ── BOTTOM NAV (partial kompatibel) ── */
+.customer-bottom-nav{display:none} /* diatur partial */
+
+/* ── INFO LAYANAN ── */
+.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:860px){.svc-grid{grid-template-columns:repeat(2,1fr)}}
+.svc-card{display:flex;gap:12px;align-items:center;padding:14px;border-radius:14px;background:var(--glass-2);border:1px solid var(--border);min-width:0}
+.svc-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:19px;background:var(--pdim);color:var(--primary);flex:0 0 auto}
+.svc-tx{min-width:0}
+.svc-tx > span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.svc-tx b{display:block;font-size:14.5px;color:var(--text);margin-top:2px}
+.svc-tx b.ok{color:var(--success)} .svc-tx b.warn{color:var(--warning)} .svc-tx b.off{color:var(--danger)}
+.svc-tx small{display:block;font-size:11px;color:var(--muted);margin-top:2px;word-break:break-word}
+
+/* ── ONU TIDAK DITEMUKAN ── */
+.onu-missing{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;margin-bottom:16px;background:var(--wdim);border:1px solid var(--warning-glow);color:var(--text)}
+.onu-missing i{color:var(--warning);font-size:20px;margin-top:2px}
+.onu-missing b{display:block;font-size:14px}
+.onu-missing span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+
+/* ── FLOATING THEME TOGGLE ── */
+.theme-fab{position:fixed;right:16px;bottom:84px;z-index:1060;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--primary-glow);background:var(--glass-2);color:var(--primary);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--shadow-2);cursor:pointer;font-size:20px;transition:transform .18s var(--ease),box-shadow .2s var(--ease)}
+.theme-fab:hover{transform:translateY(-2px);box-shadow:0 10px 26px var(--primary-glow)}
+@media(min-width:992px){.theme-fab{bottom:20px}}
+
+/* ── BILL HERO MENCOLOK ── */
+.bill-hero-card{position:relative;overflow:hidden}
+.bill-hero-card.unpaid{border-color:rgba(251,191,36,0.55);background:linear-gradient(135deg,rgba(251,191,36,0.20),rgba(251,191,36,0.04) 62%),var(--bg2);box-shadow:0 0 0 1px rgba(251,191,36,0.30),0 16px 38px rgba(251,191,36,0.16)}
+.bill-hero-card.unpaid::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--warning),#FDE68A)}
+.bill-hero-card.paid{border-color:var(--success-glow);background:linear-gradient(135deg,rgba(52,211,153,0.14),rgba(52,211,153,0.03) 62%),var(--bg2)}
+.bill-hero-card.paid::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--success),#6EE7B7)}
+.bill-hero-card h5{font-size:clamp(21px,3.2vw,28px);letter-spacing:-0.01em}
+.bill-hero-card.unpaid .bico{background:var(--wdim);color:var(--warning);border:1px solid var(--warning-glow)}
+.lbtn-lg{padding:14px 22px;font-size:15px;border-radius:12px}
+
+/* ── POPUP ONU ── */
+.onu-pop-ic{width:66px;height:66px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:30px;background:var(--wdim);color:var(--warning);border:1px solid var(--warning-glow)}
+
+/* ── NOTIFIKASI (desain lebih jelas) ── */
+.notif-item{position:relative;padding:14px 14px 14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg);margin-bottom:10px;border-left:4px solid var(--info)}
+.notif-item.unread{border-color:var(--primary-glow);background:var(--pdim);border-left-color:var(--primary)}
+.notif-item .n-title{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:8px;color:var(--text)}
+.notif-item .n-msg{color:var(--muted);font-size:12.5px;margin-top:6px;line-height:1.5}
+.notif-item .n-time{color:var(--muted);font-size:10.5px;margin-top:8px;display:inline-flex;align-items:center;gap:5px}
+
+/* ── COPY ID & CHIP ONU ── */
+.copy-mini{background:none;border:none;color:var(--primary);cursor:pointer;padding:1px 4px;font-size:12px;line-height:1;border-radius:6px}
+.copy-mini:hover{color:var(--primary-dark);background:var(--ghost)}
+.onu-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--wdim);border:1px solid var(--warning-glow);color:var(--warning);font-size:11.5px;font-weight:700;cursor:pointer}
+.onu-chip:hover{filter:brightness(1.08)}
+
+/* ── POPUP STATUS WIFI ── */
+.wifi-status-ic{width:66px;height:66px;border-radius:50%;margin:6px auto 12px;display:grid;place-items:center;font-size:30px}
+.wifi-status-ic.loading{background:var(--pdim);color:var(--primary)}
+.wifi-status-ic.success{background:var(--sdim);color:var(--success)}
+.wifi-status-ic.error{background:var(--ddim);color:var(--danger)}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1200;display:flex;flex-direction:column;gap:8px;width:min(420px,92vw);pointer-events:none}
+.toast{display:flex;align-items:center;gap:9px;padding:12px 14px;border-radius:12px;background:var(--glass-2);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border);box-shadow:var(--shadow-2);font-size:13px;font-weight:600;color:var(--text);animation:toastin .25s var(--ease);pointer-events:auto}
+.toast i{font-size:17px}
+.toast.success{border-color:var(--success-glow)} .toast.success i{color:var(--success)}
+.toast.error{border-color:var(--danger-glow)} .toast.error i{color:var(--danger)}
+.toast.info i{color:var(--info)}
+.toast.out{opacity:0;transform:translateY(-6px)}
+@keyframes toastin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+
+/* ── PEMBEDA: KARTU/INFO ↔ TOMBOL/TOGGLE ── */
+/* Kartu/info: permukaan tenang, bukan tombol */
+.glass-card, .svc-card, .stat-card{ box-shadow: var(--shadow-1); }
+.svc-card{ border-left: 3px solid var(--primary-glow); }
+/* Tombol/toggle/tile aksi: tegas, aksen lime, jelas bisa ditekan */
+.action-item{ background: var(--ghost); border: 1px solid var(--primary-glow); }
+.action-item .action-icon{ background: var(--pdim); color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary-glow); }
+.action-item:hover{ background: var(--pdim); border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 12px 26px rgba(0,0,0,.28); }
+.chip-btn, .lbtn{ cursor: pointer; }
+.chip-btn:active, .lbtn:active, .action-item:active{ transform: translateY(0) scale(.98); }

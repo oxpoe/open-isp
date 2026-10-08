@@ -1,0 +1,134 @@
+/* portal-theme.css — override Bootstrap ke design system (dark + lime)
+   Dipakai pada portal teknisi (dan halaman lama yang masih memakai Bootstrap). */
+[data-bs-theme="dark"]{
+  color-scheme: dark;
+  --bs-body-bg: var(--bg);
+  --bs-body-color: var(--text);
+  --bs-border-color: var(--border);
+  --bs-secondary-color: var(--muted);
+  --bs-emphasis-color: var(--text);
+  --bs-link-color: var(--primary);
+  --bs-link-hover-color: var(--primary-dark);
+}
+body{ background-color: var(--bg) !important; color: var(--text) !important; }
+
+.card, .offcanvas, .list-group-item, .accordion-item, .dropdown-menu{
+  background: var(--bg2, #111622) !important; border-color: var(--border) !important; color: var(--text) !important;
+}
+.modal-header, .modal-footer, .accordion-button{ border-color: var(--border) !important; background: transparent !important; color: var(--text) !important; }
+.accordion-button:not(.collapsed){ background: var(--pdim) !important; color: var(--primary) !important; }
+
+.form-control, .form-select{
+  background: var(--bg) !important; border-color: var(--border) !important; color: var(--text) !important;
+}
+.form-control::placeholder{ color: var(--muted) !important; }
+.form-control:focus, .form-select:focus{ border-color: var(--primary) !important; box-shadow: var(--ring) !important; }
+.form-select option{ background: var(--bg2); color: var(--text); }
+.input-group-text{ background: var(--bg) !important; border-color: var(--border) !important; color: var(--muted) !important; }
+
+.btn-primary{ --bs-btn-bg: var(--primary); --bs-btn-border-color: var(--primary); --bs-btn-color: var(--on-primary); --bs-btn-hover-bg: var(--primary-dark); --bs-btn-hover-border-color: var(--primary-dark); --bs-btn-hover-color: var(--on-primary); --bs-btn-active-bg: var(--primary-dark); --bs-btn-disabled-bg: var(--bg3); --bs-btn-disabled-border-color: var(--border); }
+.btn-success{ --bs-btn-bg: var(--success); --bs-btn-border-color: var(--success); --bs-btn-color: #04231a; --bs-btn-hover-bg: #2bb988; --bs-btn-hover-border-color: #2bb988; --bs-btn-hover-color: #04231a; }
+.btn-outline-light{ --bs-btn-color: var(--text); --bs-btn-border-color: var(--border); --bs-btn-hover-bg: var(--ghost); --bs-btn-hover-border-color: var(--primary-glow); --bs-btn-hover-color: var(--text); }
+.btn-outline-primary{ --bs-btn-color: var(--primary); --bs-btn-border-color: var(--primary-glow); --bs-btn-hover-bg: var(--pdim); --bs-btn-hover-color: var(--primary); --bs-btn-hover-border-color: var(--primary); }
+.btn-outline-info{ --bs-btn-color: var(--info); --bs-btn-border-color: var(--info); --bs-btn-hover-bg: var(--idim); --bs-btn-hover-color: var(--info); }
+.btn-outline-warning{ --bs-btn-color: var(--warning); --bs-btn-border-color: var(--warning); --bs-btn-hover-bg: var(--wdim); --bs-btn-hover-color: var(--warning); }
+.btn-outline-success{ --bs-btn-color: var(--success); --bs-btn-border-color: var(--success); --bs-btn-hover-bg: var(--sdim); --bs-btn-hover-color: var(--success); }
+.btn-secondary{ --bs-btn-bg: var(--bg3); --bs-btn-border-color: var(--border); --bs-btn-color: var(--text); }
+
+.badge.bg-primary{ background: var(--primary) !important; color: var(--on-primary) !important; }
+.badge.bg-success{ background: var(--success) !important; color: #04231a !important; }
+.badge.bg-danger{ background: var(--danger) !important; color: #2b0714 !important; }
+.badge.bg-warning{ background: var(--warning) !important; color: #2b1c00 !important; }
+.badge.bg-info{ background: var(--info) !important; color: #04222e !important; }
+.badge.bg-secondary{ background: var(--bg3) !important; color: var(--muted) !important; }
+
+.text-secondary{ color: var(--muted) !important; }
+.text-muted{ color: var(--muted) !important; }
+.text-primary{ color: var(--primary) !important; }
+.text-success{ color: var(--success) !important; }
+.text-warning{ color: var(--warning) !important; }
+.text-danger{ color: var(--danger) !important; }
+.text-info{ color: var(--info) !important; }
+.text-light, .text-white{ color: var(--text) !important; }
+.bg-dark{ background: var(--bg) !important; }
+.bg-primary{ background: var(--primary) !important; }
+.border-secondary, .border-top, .border-bottom, .border{ border-color: var(--border) !important; }
+.table{ --bs-table-bg: transparent; --bs-table-color: var(--text); --bs-table-border-color: var(--border); color: var(--text); }
+.table thead th{ color: var(--muted) !important; border-color: var(--border) !important; }
+.table td, .table th{ border-color: var(--border) !important; }
+
+.alert{ border-radius: 12px; border: 1px solid transparent !important; }
+.alert-danger{ background: var(--ddim) !important; color: var(--danger) !important; border-color: var(--danger-glow) !important; }
+.alert-success{ background: var(--sdim) !important; color: var(--success) !important; border-color: var(--success-glow) !important; }
+.alert-info{ background: var(--idim) !important; color: var(--info) !important; border-color: rgba(56,189,248,.3) !important; }
+.alert-warning{ background: var(--wdim) !important; color: var(--warning) !important; border-color: var(--warning-glow) !important; }
+
+.modal-backdrop{ background: rgba(0,0,0,.6); }
+.nav-tabs, .nav-pills{ border-color: var(--border); }
+.nav-tabs .nav-link{ color: var(--muted); }
+.nav-tabs .nav-link.active{ color: var(--primary) !important; background: transparent !important; border-color: var(--border) var(--border) transparent !important; }
+
+/* ── LIGHT MODE ── */
+html[data-theme="light"]{
+  --bg:#E8EDE5; --bg2:#FFFFFF; --bg3:#DEE4DA;
+  --panel:#FFFFFF; --panel2:#F6F8F4; --panel2b:#F6F8F4;
+  --text:#141A12; --muted:#52604C; --border:rgba(16,20,15,.15);
+  --glass-2:linear-gradient(180deg,#FFFFFF,#FFFFFF);
+}
+html[data-theme="light"] body{ background-color: var(--bg) !important; color: var(--text) !important; }
+html[data-theme="light"] .card,
+html[data-theme="light"] .t-card,
+html[data-theme="light"] .p-card,
+html[data-theme="light"] .cardx,
+html[data-theme="light"] .accordion-item,
+html[data-theme="light"] .list-group-item,
+html[data-theme="light"] .dropdown-menu{ background: var(--bg2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+html[data-theme="light"] .form-control,
+html[data-theme="light"] .form-select{ background: var(--bg) !important; color: var(--text) !important; border-color: var(--border) !important; }
+html[data-theme="light"] .input-group-text{ background: var(--bg3) !important; color: var(--muted) !important; }
+html[data-theme="light"] .text-secondary,
+html[data-theme="light"] .text-muted{ color: var(--muted) !important; }
+html[data-theme="light"] .bg-dark{ background: var(--bg3) !important; }
+html[data-theme="light"] .border-secondary,
+html[data-theme="light"] .border-top,
+html[data-theme="light"] .border-bottom,
+html[data-theme="light"] .border{ border-color: var(--border) !important; }
+html[data-theme="light"] .leaflet-popup-content-wrapper,
+html[data-theme="light"] .leaflet-popup-tip{ background: var(--bg2) !important; color: var(--text) !important; }
+
+/* collector: topbar sticky + bottom nav light + chip/pill agen */
+.collector-top{position:sticky;top:0;z-index:950;background:var(--bg);border-bottom:1px solid var(--border);padding:8px 0;margin-bottom:12px}
+html[data-theme="light"] .bn{ background: rgba(255,255,255,.95) !important; border-top-color: var(--border) !important; }
+html[data-theme="light"] .bni{ background: rgba(0,0,0,.03) !important; color: var(--muted) !important; border-color: var(--border) !important; }
+html[data-theme="light"] .bni.active{ background: var(--pdim) !important; color: var(--primary) !important; border-color: var(--primary-glow) !important; }
+html[data-theme="light"] .bni.active i{ color: var(--primary) !important; }
+html[data-theme="light"] .chip.b{ color:#4338ca !important; }
+html[data-theme="light"] .chip.r{ color:#b91c1c !important; }
+html[data-theme="light"] .chip.g{ color:#15803d !important; }
+html[data-theme="light"] .pill{ color: var(--text) !important; }
+
+/* agent: warna berbeda tiap KPI Ringkasan */
+.kpi .k:nth-child(1) .val{ color: var(--primary); }
+.kpi .k:nth-child(2) .val{ color: var(--info); }
+.kpi .k:nth-child(3) .val{ color: var(--success); }
+.kpi .k:nth-child(4) .val{ color: var(--warning); }
+
+/* agent: bottom nav (5 item) — susun vertikal agar tidak terpotong */
+.bn-wrap{ gap: 6px !important; }
+.bn-item{ flex-direction: column !important; gap: 3px !important; font-size: 10px !important; padding: 8px 4px !important; min-height: 46px; }
+.bn-item i{ font-size: 17px !important; }
+
+/* agent/collector: topbar & bottom-nav mengikuti tema */
+html[data-theme="light"] .topbar{ background: rgba(255,255,255,.9) !important; border-bottom-color: var(--border) !important; }
+html[data-theme="light"] .bottom-nav{ background: rgba(255,255,255,.95) !important; border-top-color: var(--border) !important; }
+html[data-theme="light"] .bn-item{ border-color: var(--border) !important; color: var(--muted) !important; }
+html[data-theme="light"] .bn-item.active{ border-color: var(--primary-glow) !important; background: var(--pdim) !important; color: var(--primary) !important; }
+html[data-theme="light"] .bn-item.active i, html[data-theme="light"] .bn-item i{ color: var(--muted) !important; }
+html[data-theme="light"] .bn-item.active i{ color: var(--primary) !important; }
+html[data-theme="light"] .brand .icon{ background: var(--pdim) !important; border-color: var(--primary-glow) !important; color: var(--primary) !important; }
+
+/* agent: kartu metode pembayaran (QRIS/Transfer) di light mode */
+html[data-theme="light"] .payment-name-agent{ color: var(--text) !important; }
+html[data-theme="light"] .payment-card-agent{ background: var(--bg) !important; border-color: var(--border) !important; }
+html[data-theme="light"] .payment-radio-agent:checked + .payment-card-agent{ background: var(--pdim) !important; border-color: var(--primary) !important; }
+html[data-theme="light"] .payment-fee-agent{ color: var(--muted) !important; }

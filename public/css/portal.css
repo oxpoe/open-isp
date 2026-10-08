@@ -1,0 +1,61 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   portal.css — Portal Teknisi / Agen / Kolektor (tema baru)
+   Dipakai setelah landing.css + auth.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.portal-body{background-color:var(--bg);color:var(--text);padding-top:64px;padding-bottom:84px;min-height:100vh;min-height:100dvh}
+
+.portal-topnav{position:fixed;top:0;left:0;right:0;height:60px;background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 16px;z-index:1000}
+.portal-topnav .t{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--text);display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.portal-topnav .actions{display:flex;gap:6px;align-items:center}
+.portal-topnav .nav-btn{background:none;border:none;color:var(--text);font-size:19px;padding:7px;cursor:pointer;border-radius:9px;text-decoration:none;line-height:1;display:inline-flex;align-items:center}
+.portal-topnav .nav-btn:hover{background:var(--ghost);color:var(--primary)}
+.portal-topnav .lang-btn{font-size:12px;font-weight:700;padding:5px 8px}
+
+.portal-bottomnav{position:fixed;bottom:0;left:0;right:0;height:66px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;z-index:1000;padding-bottom:env(safe-area-inset-bottom)}
+.portal-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);text-decoration:none;font-size:10.5px;font-weight:600;flex:1}
+.portal-nav-item i{font-size:21px}
+.portal-nav-item.active{color:var(--primary)}
+
+.p-card{background:var(--bg2, #111622);border:1px solid var(--border);border-radius:16px;padding:15px;margin-bottom:14px}
+/* alias kompatibilitas halaman lama */
+.t-card{background:var(--bg2, #111622);border:1px solid var(--border);border-radius:16px;padding:15px;margin-bottom:14px;color:var(--text)}
+.p-card h6{font-size:14px;font-weight:700}
+.p-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.p-stat{background:var(--glass-2);border:1px solid var(--border);border-radius:16px;padding:15px;text-align:center}
+.p-stat .val{font-family:var(--font-display);font-size:27px;font-weight:800;margin-top:5px}
+.p-stat .lbl{font-size:12px;color:var(--muted)}
+.p-sec{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px;display:flex;align-items:center;gap:7px}
+.p-sec i{color:var(--primary)}
+
+.badge-status{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid transparent}
+.badge-status.badge-open{background:var(--ddim);color:var(--danger);border-color:var(--danger-glow)}
+.badge-status.badge-in_progress{background:var(--wdim);color:var(--warning);border-color:var(--warning-glow)}
+.badge-status.badge-resolved{background:var(--sdim);color:var(--success);border-color:var(--success-glow)}
+
+.ticket-msg{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px;margin:10px 0}
+.ticket-msg .subj{font-weight:700;color:var(--primary)}
+.p-img{width:100%;height:56px;object-fit:cover;border:1px solid var(--primary-glow);border-radius:8px}
+.p-empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.p-empty i{font-size:40px;display:block;margin-bottom:10px;opacity:.5}
+.p-list{display:flex;flex-direction:column;gap:10px}
+
+.p-field{margin-bottom:14px}
+.p-field label{display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
+.p-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:12px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none}
+.p-input:focus{border-color:var(--primary);box-shadow:var(--ring)}
+.p-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;border:1px solid transparent;text-decoration:none;transition:.16s var(--ease)}
+.p-btn.primary{background:var(--primary);color:var(--on-primary)}
+.p-btn.success{background:var(--success);color:#04231a}
+.p-btn.ghost{background:var(--ghost);color:var(--text);border-color:var(--border)}
+.p-btn.sm{padding:8px 12px;font-size:12.5px;width:auto}
+.p-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.p-grid2{grid-template-columns:1fr}}
+.p-sub{font-size:13px;font-weight:700;margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+.p-sub i{color:var(--primary)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.stat-box{background:var(--bg2, #111622);border:1px solid var(--border);border-radius:16px;padding:15px}
+.stat-box .val{font-family:var(--font-display);font-size:24px;font-weight:800}
+.stat-box .lbl{font-size:11.5px;color:var(--muted)}
+
+/* == UI HARDENING (audit ui-ux.md) - jangan hapus marker == */
+img { max-width: 100%; height: auto; }

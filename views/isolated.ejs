@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('iso.suspended','Layanan Terisolir') %> | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/isolated.css?v=3">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <script>document.documentElement.classList.add('js');(function(){try{var s=localStorage.getItem('landing-theme')||'dark';document.documentElement.setAttribute('data-theme',s);}catch(e){}})();</script>
+  <link rel="stylesheet" href="/css/theme-toggle.css">
+</head>
+<body>
+
+<main class="iso-wrap">
+
+  <div class="iso-brand">
+    <img src="/img/icons/icon-192.png" alt="Logo">
+    <div class="t"><%= company %></div>
+  </div>
+
+  <!-- KONDISI 1: LUNAS -->
+  <% if (customer && !hasUnpaidInvoices) { %>
+    <div class="iso-card iso-success">
+      <span class="iso-badge success"><i class="bi bi-check-circle-fill"></i> <%= t('iso.no_bill','Tidak Ada Tagihan') %></span>
+      <h1><%= t('iso.all_paid','Semua Tagihan Lunas') %></h1>
+      <p class="iso-sub"><%= t('iso.no_bill_desc','Tidak ada tagihan tertunggak atas nama akun Anda. Jika koneksi belum normal, pulihkan koneksi di bawah.') %></p>
+
+      <div class="iso-info">
+        <div class="row"><span class="label"><%= t('iso.cust_name','Nama Pelanggan') %></span><span class="val"><%= customer.name %></span></div>
+        <div class="row"><span class="label"><%= t('iso.phone','No. Telepon') %></span><span class="val"><%= customer.phone %></span></div>
+        <% if (customer.package_name) { %><div class="row"><span class="label"><%= t('iso.pkg_net','Paket Internet') %></span><span class="val"><%= customer.package_name %></span></div><% } %>
+      </div>
+
+      <form action="/customer/reconnect" method="POST">
+        <button type="submit" class="iso-btn success"><i class="bi bi-arrow-repeat"></i> <%= t('iso.restore','Pulihkan & Refresh Koneksi') %></button>
+      </form>
+      <a href="/customer/dashboard" class="iso-btn ghost iso-space"><i class="bi bi-house-door"></i> <%= t('iso.open_portal','Buka Portal Pelanggan') %></a>
+    </div>
+
+  <!-- KONDISI 2: TERTUNGGAK -->
+  <% } else if (customer && hasUnpaidInvoices) { %>
+    <div class="iso-card iso-danger">
+      <span class="iso-badge danger"><i class="bi bi-exclamation-triangle-fill"></i> <%= t('iso.suspended','Layanan Terisolir') %></span>
+      <h1><%= t('iso.redirected','Akses Dialihkan') %></h1>
+      <p class="iso-sub"><%= t('iso.notice','Koneksi internet Anda dialihkan sementara karena tagihan telah melewati jatuh tempo. Bayar instan via QRIS agar layanan langsung aktif kembali.') %></p>
+
+      <div class="iso-info">
+        <div class="row"><span class="label"><%= t('iso.cust_name','Nama Pelanggan') %></span><span class="val"><%= customer.name %></span></div>
+        <div class="row"><span class="label">ID Pelanggan</span><span class="val mono"><%= customer.customer_code || ('SKY-' + customer.id) %></span></div>
+        <div class="row"><span class="label">Status</span><span class="val" style="color:var(--danger);font-weight:700"><%= t('iso.isolated_status','Terisolir') %></span></div>
+        <% if (customer.package_name) { %><div class="row"><span class="label"><%= t('iso.pkg_sub','Paket Langganan') %></span><span class="val"><%= customer.package_name %></span></div><% } %>
+      </div>
+
+      <div class="iso-sec"><i class="bi bi-receipt"></i> <%= t('iso.unpaid_bill','Tagihan Belum Dibayar') %></div>
+
+      <% invoices.forEach(function(inv){ %>
+        <div class="iso-inv">
+          <div class="top">
+            <div>
+              <div class="period"><%= t('iso.period','Periode') %> <%= inv.period_month %> / <%= inv.period_year %></div>
+              <div class="id">Invoice #<%= inv.id %></div>
+            </div>
+            <span class="badge bd" style="font-size:10px"><%= t('iso.unpaid','BELUM LUNAS') %></span>
+          </div>
+          <div class="amt">Rp <%= Number(inv.amount || 0).toLocaleString('id-ID') %></div>
+          <button type="button" class="iso-btn primary" onclick="openQuickQris(<%= inv.id %>, '<%= inv.publicToken %>')"><i class="bi bi-lightning-charge-fill"></i> <%= t('iso.pay_qris','Bayar Cepat via QRIS') %></button>
+          <a href="/customer/payment/create/<%= inv.id %>?t=<%= encodeURIComponent(inv.publicToken) %>#bank" class="iso-btn ghost iso-space"><i class="bi bi-credit-card"></i> <%= t('iso.transfer','Transfer Bank / E-Wallet') %></a>
+        </div>
+      <% }); %>
+
+      <% if (adminPhone) { %>
+        <a href="https://wa.me/<%= adminPhone.replace(/\D/g, '') %>?text=Halo%20Admin%20<%= encodeURIComponent(company) %>,%20layanan%20saya%20terisolir%20(Nama:%20<%= encodeURIComponent(customer.name) %>).%20Mohon%20bantuannya." class="iso-btn wa iso-space" target="_blank"><i class="bi bi-whatsapp"></i> <%= t('iso.contact_wa','Hubungi Admin via WhatsApp') %></a>
+      <% } %>
+    </div>
+
+  <!-- KONDISI 3: FALLBACK CARI -->
+  <% } else { %>
+    <div class="iso-card iso-danger">
+      <span class="iso-badge danger"><i class="bi bi-shield-lock-fill"></i> <%= t('iso.limited','Akses Terbatas') %></span>
+      <h1><%= t('iso.notice_title','Pemberitahuan Isolir') %></h1>
+      <p class="iso-sub"><%= t('iso.notice_body_pre','Perangkat Anda dialihkan ke portal pembayaran billing') %> <%= company %>. <%= t('iso.notice_body_post','Masukkan Nomor WhatsApp atau ID Pelanggan untuk menampilkan tagihan Anda.') %></p>
+
+      <form method="GET" action="/isolated" style="margin-top:16px">
+        <div class="field" style="margin-top:0">
+          <label for="q"><i class="bi bi-search"></i> <%= t('iso.search_title','Cari Tagihan Anda') %></label>
+          <div class="wrap"><i class="bi bi-search lead-ic"></i>
+            <input class="inp" id="q" name="q" value="<%= searchQuery || '' %>" placeholder="No. WA / ID / Username…" required autofocus></div>
+        </div>
+        <button type="submit" class="iso-btn primary"><i class="bi bi-search"></i> Cek Tagihan</button>
+      </form>
+      <% if (searchQuery && !customer) { %>
+        <div class="iso-error"><i class="bi bi-x-circle"></i> <%= t('iso.data_for','Data untuk') %> "<strong><%= searchQuery %></strong>" <%= t('iso.not_found','tidak ditemukan. Pastikan nomor WhatsApp atau ID sudah benar.') %></div>
+      <% } %>
+
+      <a href="/customer/login" class="iso-btn ghost iso-space"><i class="bi bi-box-arrow-in-right"></i> <%= t('iso.login_portal','Masuk ke Portal Pelanggan') %></a>
+      <% if (adminPhone) { %>
+        <a href="https://wa.me/<%= adminPhone.replace(/\D/g, '') %>?text=Halo%20Admin%20<%= encodeURIComponent(company) %>,%20internet%20saya%20terisolir%20tapi%20tagihan%20tidak%20muncul.%20Mohon%20bantuan." class="iso-btn wa iso-space" target="_blank"><i class="bi bi-whatsapp"></i> <%= t('iso.contact_cs','Hubungi Customer Service') %></a>
+      <% } %>
+    </div>
+  <% } %>
+
+  <div class="iso-foot">
+    <%= t('iso.billing_sys','Sistem Billing') %> <%= company %><br>
+    <%= t('iso.auto_restore','Akses otomatis pulih setelah pembayaran terkonfirmasi.') %>
+    <% if (address) { %><br><%= address %><% } %>
+  </div>
+
+</main>
+
+<!-- MODAL QRIS CEPAT -->
+<div class="iso-mo" id="qrisModalOverlay" onclick="if(event.target===this)closeQuickQris()">
+  <div class="iso-mc" id="qrisModalCard">
+    <button type="button" class="iso-mc-close" onclick="closeQuickQris()" aria-label="Tutup">&times;</button>
+
+    <!-- Loading -->
+    <div id="qrisLoadingState" style="padding:34px 0">
+      <div class="spin-pulse" style="width:20px;height:20px;margin:0 auto 16px"></div>
+      <h3 style="font-size:16px"><%= t('iso.preparing_qris','Menyiapkan QRIS…') %></h3>
+      <p class="iso-help" style="margin-top:4px"><%= t('iso.connecting','Menghubungkan ke gateway pembayaran server') %></p>
+    </div>
+
+    <!-- Content -->
+    <div id="qrisContentState" style="display:none">
+      <div class="gt"><i class="bi bi-qr-code-scan"></i> <span id="qrisGatewayTitle"><%= t('iso.qris_payment','PEMBAYARAN QRIS') %></span></div>
+      <div class="per" id="qrisInvoicePeriod"><%= t('iso.net_bill','Tagihan Internet') %></div>
+
+      <div class="iso-qr"><img id="qrisImage" src="" alt="QRIS Code"></div>
+
+      <div class="iso-amt-box">
+        <div class="l"><%= t('iso.total','Total Pembayaran') %></div>
+        <div class="v" id="qrisAmountDisplay">Rp 0</div>
+        <div id="qrisUniqueBadge" class="iso-unique" style="display:none"><%= t('iso.unique_note','Termasuk Kode Unik Verifikasi') %></div>
+      </div>
+
+      <div class="iso-poll"><div class="spin-pulse"></div><span><%= t('iso.waiting','Menunggu Pembayaran… (Auto-Check)') %></span></div>
+
+      <div class="iso-actions">
+        <button type="button" class="iso-btn ghost" onclick="downloadQrImage()"><i class="bi bi-download"></i> Simpan</button>
+        <button type="button" class="iso-btn ghost" onclick="copyAmount()"><i class="bi bi-clipboard-check"></i> <%= t('iso.copy_amount','Salin Nominal') %></button>
+      </div>
+      <button type="button" class="iso-btn ghost iso-space" onclick="closeQuickQris()"><i class="bi bi-x-lg"></i> Tutup</button>
+
+      <div id="qrisExternalCheckout" style="margin-top:10px;display:none">
+        <a id="qrisCheckoutLink" href="#" target="_blank" class="iso-btn ghost"><i class="bi bi-box-arrow-up-right"></i> <%= t('iso.open_gateway','Buka Halaman Gateway') %></a>
+      </div>
+
+      <div id="qrisHelpText" class="iso-help">
+        Buka aplikasi m-Banking / E-Wallet (BCA, BRI, Mandiri, DANA, GoPay, OVO, ShopeePay), pilih Scan QRIS, lalu arahkan ke barcode di atas atau unggah dari galeri.
+      </div>
+    </div>
+
+    <!-- Success -->
+    <div id="qrisSuccessState" style="display:none;padding:20px 0">
+      <i class="bi bi-check-circle-fill iso-success-ic"></i>
+      <h2><%= t('iso.paid_title','Pembayaran Berhasil!') %></h2>
+      <p class="iso-sub" style="margin:8px 0 18px"><%= t('iso.thanks','Terima kasih! Pembayaran Anda telah kami terima.') %><br><strong style="color:var(--primary)"><%= t('iso.reactivating','Layanan internet Anda sedang diaktifkan kembali otomatis…') %></strong></p>
+      <div class="spin-pulse" style="margin:0 auto"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var currentInvoiceId = null, currentPublicToken = null, pollInterval = null, currentAmountNumber = 0;
+
+  function openQuickQris(invoiceId, token) {
+    currentInvoiceId = invoiceId; currentPublicToken = token;
+    var overlay = document.getElementById('qrisModalOverlay');
+    var loadingState = document.getElementById('qrisLoadingState');
+    var contentState = document.getElementById('qrisContentState');
+    var successState = document.getElementById('qrisSuccessState');
+
+    overlay.classList.add('active');
+    loadingState.style.display = 'block'; contentState.style.display = 'none'; successState.style.display = 'none';
+
+    fetch('/isolated/quick-qris/' + invoiceId, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token })
+    })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if (!data.success) { alert(data.message || 'Gagal menyiapkan pembayaran QRIS.'); closeQuickQris(); return; }
+      if (data.paid) { showSuccessState(); return; }
+
+      loadingState.style.display = 'none'; contentState.style.display = 'block';
+      document.getElementById('qrisGatewayTitle').innerText = data.gatewayName || 'PEMBAYARAN QRIS';
+      document.getElementById('qrisInvoicePeriod').innerText = 'Invoice #' + data.invoiceId + ' • Periode: ' + (data.periodText || '');
+      document.getElementById('qrisImage').src = data.qrDataUrl || '';
+      currentAmountNumber = data.amount;
+      document.getElementById('qrisAmountDisplay').innerText = 'Rp ' + Number(data.amount).toLocaleString('id-ID');
+
+      var uniqueBadge = document.getElementById('qrisUniqueBadge');
+      if (data.uniqueCode && data.uniqueCode > 0) {
+        var base = Number(data.nominalAsli || (Number(data.amount) - Number(data.uniqueCode)));
+        uniqueBadge.style.display = 'block';
+        uniqueBadge.innerHTML = 'Tagihan: Rp ' + base.toLocaleString('id-ID')
+          + ' + Kode Unik: Rp ' + Number(data.uniqueCode).toLocaleString('id-ID')
+          + ' = <b>Rp ' + Number(data.amount).toLocaleString('id-ID') + '</b>';
+      } else { uniqueBadge.style.display = 'none'; }
+
+      if (data.helpText) document.getElementById('qrisHelpText').innerText = data.helpText;
+
+      var checkoutBox = document.getElementById('qrisExternalCheckout');
+      var checkoutLink = document.getElementById('qrisCheckoutLink');
+      if (data.checkoutUrl) { checkoutBox.style.display = 'block'; checkoutLink.href = data.checkoutUrl; }
+      else { checkoutBox.style.display = 'none'; }
+
+      startPollingPayment(invoiceId, token);
+    })
+    .catch(function(err){ alert('Terjadi kesalahan saat memuat QRIS: ' + err.message); closeQuickQris(); });
+  }
+
+  function closeQuickQris() {
+    document.getElementById('qrisModalOverlay').classList.remove('active');
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  }
+
+  function startPollingPayment(invoiceId, token) {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(function(){
+      fetch('/customer/payment/status/' + invoiceId + '?t=' + encodeURIComponent(token))
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+          if (data.success && (data.status === 'paid' || data.paid_at)) {
+            clearInterval(pollInterval); pollInterval = null; showSuccessState();
+          }
+        }).catch(function(){});
+    }, 3000);
+  }
+
+  function showSuccessState() {
+    document.getElementById('qrisLoadingState').style.display = 'none';
+    document.getElementById('qrisContentState').style.display = 'none';
+    document.getElementById('qrisSuccessState').style.display = 'block';
+    setTimeout(function(){ window.location.reload(); }, 2500);
+  }
+
+  function downloadQrImage() {
+    var img = document.getElementById('qrisImage');
+    if (!img || !img.src) return;
+    var link = document.createElement('a');
+    link.href = img.src; link.download = 'QRIS-Tagihan-' + currentInvoiceId + '.png';
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  }
+
+  function copyAmount() {
+    if (!currentAmountNumber) return;
+    navigator.clipboard.writeText(String(currentAmountNumber))
+      .then(function(){ alert('Nominal Rp ' + Number(currentAmountNumber).toLocaleString('id-ID') + ' berhasil disalin!'); })
+      .catch(function(){ alert('Nominal: Rp ' + currentAmountNumber); });
+  }
+</script>
+  <script src="/js/theme-toggle.js" defer></script>
+</body>
+</html>

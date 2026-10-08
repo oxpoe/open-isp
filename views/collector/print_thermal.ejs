@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= t('thermal.invoice_prefix','Struk Thermal #INV-') %><%= String(invoice.id).padStart(4, '0') %></title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Courier New', Courier, monospace, 'Lucida Console', sans-serif;
+      font-size: 12px;
+      line-height: 1.35;
+      color: #000000;
+      background: #e2e8f0;
+      padding: 15px 10px;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .ticket {
+      width: 58mm;
+      max-width: 100%;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 12px 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      border-radius: 4px;
+      transition: width 0.2s;
+    }
+
+    .ticket.size-80mm {
+      width: 80mm;
+      font-size: 13px;
+      padding: 16px 12px;
+    }
+
+    .text-center { text-align: center; }
+    .text-end { text-align: right; }
+    .fw-bold { font-weight: bold; }
+    .title { font-size: 14px; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
+    .subtitle { font-size: 10px; margin-bottom: 3px; color: #222; }
+    .divider { border-top: 1px dashed #000000; margin: 6px 0; }
+    .row-item { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 11px; }
+    .size-80mm .row-item { font-size: 12.5px; }
+    .row-item .label { color: #333; }
+    .row-item .val { font-weight: bold; text-align: right; word-break: break-word; }
+    
+    .total-box {
+      border: 1.5px dashed #000000;
+      padding: 8px 4px;
+      margin: 8px 0;
+      text-align: center;
+    }
+    .total-amount { font-size: 16px; font-weight: bold; margin-top: 2px; }
+    .badge-status {
+      display: inline-block;
+      padding: 2px 10px;
+      font-weight: bold;
+      font-size: 12px;
+      border: 1.5px solid #000;
+      margin-top: 5px;
+      background: #ffffff;
+    }
+
+    .no-print {
+      margin-top: 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-group-size {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .btn-size {
+      background: #ffffff;
+      border: 1px solid #94a3b8;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-size.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-print {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 12px;
+      box-shadow: 0 2px 6px rgba(79,70,229,0.3);
+    }
+
+    .btn-close {
+      background: #64748b;
+      color: white;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    @media print {
+      @page {
+        size: auto;
+        margin: 0;
+      }
+      body {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        background: #ffffff;
+      }
+      .ticket {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 4px 2px;
+        box-shadow: none;
+        border-radius: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ticket" id="ticketBox">
+    <div class="text-center">
+      <div class="title"><%= settings.company_name || company || 'INTERNET SERVICE' %></div>
+      <div class="subtitle"><%= settings.company_address || 'Pusat Layanan Internet Terpercaya' %></div>
+      <% if (settings.company_phone) { %>
+        <div class="subtitle"><%= t('thermal.contact','Telp/WA:') %> <%= settings.company_phone %></div>
+      <% } %>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="text-center fw-bold" style="font-size: 11px; margin: 4px 0;"><%= t('thermal.receipt_title','STRUK BUKTI PEMBAYARAN') %></div>
+
+    <div class="divider"></div>
+
+    <div class="row-item"><span class="label"><%= t('thermal.invoice_no','No. Faktur:') %></span><span class="val">#INV-<%= String(invoice.id).padStart(4, '0') %></span></div>
+    <div class="row-item"><span class="label"><%= t('thermal.time','Waktu:') %></span><span class="val"><%= formatDateLocal(getNowLocal()) %></span></div>
+    <div class="row-item"><span class="label"><%= t('thermal.officer','Petugas:') %></span><span class="val"><%= collectorName || 'Kasir / Admin' %></span></div>
+
+    <div class="divider"></div>
+
+    <div class="row-item"><span class="label"><%= t('thermal.cust_id','ID Pelg:') %></span><span class="val"><%= customer.customer_code || ('#' + customer.id) %></span></div>
+    <div class="row-item"><span class="label"><%= t('thermal.name','Nama:') %></span><span class="val"><%= customer.name %></span></div>
+    <% if (customer.phone) { %>
+      <div class="row-item"><span class="label"><%= t('thermal.phone','No. HP:') %></span><span class="val"><%= customer.phone %></span></div>
+    <% } %>
+    <% if (customer.pppoe_username) { %>
+      <div class="row-item"><span class="label">PPPoE:</span><span class="val"><%= customer.pppoe_username %></span></div>
+    <% } %>
+    <div class="row-item"><span class="label"><%= t('thermal.package','Paket:') %></span><span class="val"><%= invoice.package_name || customer.package_name || 'Internet Broadband' %></span></div>
+    <div class="row-item"><span class="label"><%= t('thermal.period','Periode:') %></span><span class="val"><%= invoice.period_month %>/<%= invoice.period_year %></span></div>
+
+    <div class="divider"></div>
+
+    <% if (Number(invoice.discount_amount||0) > 0) { %>
+      <div class="row-item"><span class="label"><%= t('thermal.discount','Diskon:') %></span><span class="val">- Rp <%= Number(invoice.discount_amount).toLocaleString('id-ID') %></span></div>
+    <% } %>
+    <div class="total-box">
+      <div style="font-size: 10px; font-weight: bold;"><%= t('thermal.total_payment','TOTAL PEMBAYARAN') %></div>
+      <% const amt = invoice.amount != null ? invoice.amount : (customer.package_price != null ? customer.package_price : 0); %>
+      <div class="total-amount">Rp <%= parseInt(amt || 0).toLocaleString('id-ID') %></div>
+      <div class="badge-status"><%= t('thermal.paid','*** LUNAS ***') %></div>
+    </div>
+
+    <div class="text-center subtitle" style="margin-top: 8px;">
+      <%= t('thermal.receipt_note','Simpan struk ini sebagai bukti pembayaran yang sah.') %><br>
+      <strong><%= t('thermal.thanks','Terima Kasih atas Pembayaran Anda!') %></strong>
+    </div>
+
+    <div class="no-print">
+      <div class="btn-group-size">
+        <button type="button" class="btn-size active" id="btn58" onclick="setPaperSize('58mm')"><%= t('thermal.size58','Thermal 58mm') %></button>
+        <button type="button" class="btn-size" id="btn80" onclick="setPaperSize('80mm')"><%= t('thermal.size80','Thermal 80mm') %></button>
+      </div>
+      <div class="btn-row">
+        <button class="btn-print" onclick="window.print()"><i class="bi bi-printer-fill"></i> <%= t('thermal.print_receipt','Cetak Struk') %></button>
+        <button class="btn-close" onclick="window.close()"><i class="bi bi-x-lg"></i> <%= t('common.close','Tutup') %></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function setPaperSize(size) {
+      const box = document.getElementById('ticketBox');
+      const b58 = document.getElementById('btn58');
+      const b80 = document.getElementById('btn80');
+      if (size === '80mm') {
+        box.classList.add('size-80mm');
+        b80.classList.add('active');
+        b58.classList.remove('active');
+        localStorage.setItem('thermal_paper_size', '80mm');
+      } else {
+        box.classList.remove('size-80mm');
+        b58.classList.add('active');
+        b80.classList.remove('active');
+        localStorage.setItem('thermal_paper_size', '58mm');
+      }
+    }
+
+    // Restore saved size
+    const savedSize = localStorage.getItem('thermal_paper_size');
+    if (savedSize === '80mm') {
+      setPaperSize('80mm');
+    }
+
+    // Otomatis buka dialog pemilih printer saat halaman dimuat
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        if (!window.location.search.includes('noprint')) {
+          window.print();
+        }
+      }, 350);
+    });
+  </script>
+</body>
+</html>

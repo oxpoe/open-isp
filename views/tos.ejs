@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= t('customer.pages.tos.meta_title', 'Syarat & Ketentuan') %> | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/pages.css?v=3">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/img/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>document.documentElement.classList.add('js');(function(){try{var s=localStorage.getItem('landing-theme')||'dark';document.documentElement.setAttribute('data-theme',s);}catch(e){}})();</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container inner">
+    <a class="brand" href="/" aria-label="Beranda"><img class="bmark" src="<%= brandLogo %>" alt="<%= company %>"><span class="bname"><%= brandName %></span></a>
+    <div class="header-actions" style="margin-left:auto">
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema"><i class="bi bi-moon-stars-fill"></i></button>
+      <a class="lbtn lbtn-ghost lbtn-sm" href="<%= isLoggedIn ? '/customer/dashboard' : '/customer/login' %>"><i class="bi bi-box-arrow-in-right"></i> <%= isLoggedIn ? 'Dashboard' : 'Masuk' %></a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="page-hero">
+    <h1><%= t('customer.pages.tos.title', 'Syarat & Ketentuan') %></h1>
+    <p><%= t('customer.pages.tos.subtitle', 'Harap baca dengan teliti sebelum menggunakan layanan kami.') %></p>
+  </section>
+
+  <div class="prose">
+    <p><%- String(t('customer.pages.tos.p1', 'Selamat datang di layanan internet <strong>{company}</strong>. Dengan menggunakan layanan kami dan melakukan pembayaran melalui sistem ini, Anda setuju untuk terikat oleh syarat dan ketentuan berikut:')).replace('{company}', company) %></p>
+
+    <h4><i class="bi bi-broadcast"></i> 1. <%= t('customer.pages.tos.s1_title', 'Layanan') %></h4>
+    <p><%= t('customer.pages.tos.s1_body', 'Kami menyediakan layanan akses internet (ISP) kepada pelanggan sesuai dengan paket yang dipilih. Kualitas layanan dapat dipengaruhi oleh faktor teknis, lokasi geografis, dan kondisi cuaca yang ekstrem.') %></p>
+
+    <h4><i class="bi bi-wallet2"></i> 2. <%= t('customer.pages.tos.s2_title', 'Pembayaran & Tagihan') %></h4>
+    <ul>
+      <li><%= t('customer.pages.tos.s2_li1', 'Tagihan internet akan diterbitkan secara otomatis oleh sistem setiap bulan sesuai dengan siklus langganan Anda.') %></li>
+      <li><%= t('customer.pages.tos.s2_li2', 'Pembayaran dapat dilakukan secara mandiri melalui Portal Pelanggan menggunakan metode QRIS, Transfer Bank, atau E-Wallet yang tersedia.') %></li>
+      <li><%= t('customer.pages.tos.s2_li3', 'Setiap pembayaran yang sudah berhasil diverifikasi oleh sistem bersifat final dan tidak dapat dibatalkan atau dikembalikan (Non-Refundable).') %></li>
+    </ul>
+
+    <h4><i class="bi bi-shield-lock"></i> 3. <%= t('customer.pages.tos.s3_title', 'Kebijakan Isolir (Suspend)') %></h4>
+    <p><%= t('customer.pages.tos.s3_body', 'Sistem kami akan melakukan pemutusan layanan sementara (Isolir) secara otomatis apabila tagihan belum dilunasi hingga melewati batas waktu (Jatuh Tempo) yang telah ditentukan. Layanan akan aktif kembali secara otomatis segera setelah pembayaran terverifikasi.') %></p>
+
+    <h4 id="refund"><i class="bi bi-arrow-repeat"></i> 4. <%= t('customer.pages.tos.s4_title', 'Pengembalian Dana (Refund)') %></h4>
+    <p><%= t('customer.pages.tos.s4_body', 'Pengembalian dana hanya dapat dipertimbangkan jika terjadi kesalahan sistem pada payment gateway kami yang menyebabkan transaksi ganda untuk satu tagihan yang sama.') %></p>
+
+    <h4><i class="bi bi-exclamation-octagon"></i> 5. <%= t('customer.pages.tos.s5_title', 'Batasan Tanggung Jawab') %></h4>
+    <p><%= String(t('customer.pages.tos.s5_body', '{company} tidak bertanggung jawab atas kerugian yang disebabkan oleh gangguan teknis dari penyedia hulu (Upstream), kerusakan perangkat akibat kelalaian pelanggan, atau kejadian luar biasa (Force Majeure).')).replace('{company}', company) %></p>
+
+    <div style="text-align:center;margin-top:30px">
+      <a class="lbtn lbtn-primary" href="<%= isLoggedIn ? '/customer/dashboard' : '/customer/login' %>"><i class="bi bi-arrow-left"></i> <%= t('common.back_to', 'Kembali ke') %> <%= isLoggedIn ? t('customer.dashboard_title', 'Dashboard Pelanggan') : t('common.portal', 'Portal') %></a>
+    </div>
+  </div>
+
+  <div class="page-foot">&copy; <%= new Date().getFullYear() %> <%= company %> • <%= t('customer.pages.tos.footer_tagline', 'Semua Hak Dilindungi') %></div>
+</main>
+
+<script>
+  function toggleTheme(){ var el=document.documentElement; var t=el.getAttribute('data-theme')==='dark'?'light':'dark'; el.setAttribute('data-theme',t); try{localStorage.setItem('landing-theme',t);}catch(e){} }
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js',{scope:'/customer/'}).then(function(r){try{r.update();}catch(e){}}).catch(function(){}); }
+</script>
+<%- include('partials/customer_bottom_nav', { activeNav: 'none' }) %>
+</body>
+</html>

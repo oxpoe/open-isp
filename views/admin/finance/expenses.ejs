@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pengeluaran | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .val-box { background: var(--bg2); padding: 16px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+    .val-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; }
+    .val-text { font-size: 13px; color: var(--muted); }
+    .val-num { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .filter-bar{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  </style>
+</head>
+<body>
+<%- include('../partials/sidebar', { activePage: 'expenses', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-wallet2"></i> Pengeluaran (Cash Out)</div>
+    <div class="tb-right">
+      <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
+      <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> Catat Pengeluaran</button>
+    </div>
+  </div>
+  <div class="page">
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <% 
+      const totalThisMonth = expenses.filter(e => e.date.startsWith(getNowLocal().substring(0,7))).reduce((a,b)=>a+Number(b.amount), 0);
+      const totalAll = expenses.reduce((a,b)=>a+Number(b.amount), 0);
+    %>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:16px;margin-bottom:20px">
+      <div class="val-box">
+        <div class="val-icon" style="background:rgba(239, 68, 68, 0.1);color:#ef4444"><i class="bi bi-graph-down-arrow"></i></div>
+        <div>
+          <div class="val-text">Pengeluaran Bulan Ini</div>
+          <div class="val-num">Rp <%= totalThisMonth.toLocaleString('id-ID') %></div>
+        </div>
+      </div>
+      <div class="val-box">
+        <div class="val-icon" style="background:rgba(99, 102, 241, 0.1);color:#6366f1"><i class="bi bi-wallet-fill"></i></div>
+        <div>
+          <div class="val-text">Total Pengeluaran Dicatat</div>
+          <div class="val-num">Rp <%= totalAll.toLocaleString('id-ID') %></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="card-hd"><h6><i class="bi bi-list-ul"></i> Riwayat Pengeluaran</h6></div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('common.date','Tanggal') %></th>
+              <th><%= t('common.category','Kategori') %></th>
+              <th><%= t('common.desc_note','Deskripsi / Catatan') %></th>
+              <th>Vendor/Toko</th>
+              <th>Metode</th>
+              <th class="num"><%= t('common.amount_qty','Jumlah') %></th>
+              <th>Pencatat</th>
+              <th><%= t('common.actions','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+          <% if (expenses.length===0) { %>
+            <tr><td colspan="8" class="text-center text-muted" style="padding:32px">Belum ada data pengeluaran.</td></tr>
+          <% } %>
+          <% expenses.forEach((item)=>{ %>
+            <tr>
+              <td style="white-space:nowrap"><%= formatDateLocal(item.date) %></td>
+              <td>
+                <span class="badge" <%- 'style="background: ' + (item.category_color ? item.category_color+'20' : 'rgba(255,255,255,0.1)') + '; color: ' + (item.category_color || 'white') + '; border: 1px solid ' + (item.category_color ? item.category_color+'50' : 'rgba(255,255,255,0.2)') + ';"' %>>
+                  <i class="<%= item.category_icon || 'bi bi-tag' %>"></i> <%= item.category %>
+                </span>
+              </td>
+              <td style="max-width:300px;white-space:normal">
+                <strong><%= item.description %></strong>
+                <% if(item.receipt_number){ %><div style="font-size:11px;color:var(--muted);margin-top:2px"><i class="bi bi-receipt"></i> <%= item.receipt_number %></div><% } %>
+              </td>
+              <td><%= item.vendor || '-' %></td>
+              <td>
+                <span class="badge bm"><%= String(item.payment_method).toUpperCase() %></span>
+              </td>
+              <td class="num fw6" style="color:#ef4444">- Rp <%= Number(item.amount).toLocaleString('id-ID') %></td>
+              <td style="font-size:12px"><%= item.recorded_by_name || 'Admin' %></td>
+              <td>
+                <form method="POST" action="/admin/finance/expenses/<%= item.id %>/delete" style="display:inline" onsubmit="return confirm('Hapus data pengeluaran ini?')">
+                  <button class="btn btn-d btn-icon btn-sm" title="Hapus"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add -->
+<div class="mo" id="addModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-plus-circle"></i> Catat Pengeluaran Baru</span><button type="button" class="mc" onclick="closeModal('addModal')">&times;</button></div>
+    <form method="POST" action="/admin/finance/expenses">
+      <div class="mbody">
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Tanggal Pengeluaran <span class="text-danger">*</span></label>
+            <input type="date" class="fc" name="date" required value="<%= getNowLocal().substring(0,10) %>" max="<%= getNowLocal().substring(0,10) %>">
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('common.category','Kategori') %> <span class="text-danger">*</span></label>
+            <select class="fc" name="category" required>
+              <option value="">-- Pilih Kategori --</option>
+              <% categories.forEach(c => { %>
+                <option value="<%= c.name %>"><%= c.name %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Jumlah / Nominal (Rp) <span class="text-danger">*</span></label>
+          <input type="text" class="fc" name="amount" id="amountInput" required placeholder="Contoh: 150.000" style="font-size:16px;font-weight:bold" autocomplete="off">
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('common.desc_note2','Deskripsi / Keterangan') %> <span class="text-danger">*</span></label>
+          <textarea class="fc" name="description" required placeholder="Beli Router Mikrotik RB750Gr3..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Nama Toko/Vendor (Opsional)</label>
+            <input type="text" class="fc" name="vendor" placeholder="Misal: Tokopedia / Toko Komputer X">
+          </div>
+          <div class="fg">
+            <label class="fl">No. Nota / Kwitansi (Opsional)</label>
+            <input type="text" class="fc" name="receipt_number" placeholder="INV-123456">
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Metode Pembayaran</label>
+          <select class="fc" name="payment_method">
+            <option value="cash">Tunai (Cash)</option>
+            <option value="transfer">Transfer Bank</option>
+            <option value="ewallet">E-Wallet (OVO/Dana/Gopay)</option>
+            <option value="credit">Kredit / Paylater</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengeluaran</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),5000);
+
+// Format Rupiah Input
+const amtInput = document.getElementById('amountInput');
+if(amtInput){
+  amtInput.addEventListener('keyup', function(e) {
+    let val = this.value.replace(/[^0-9]/g, '');
+    if(val){
+      this.value = parseInt(val, 10).toLocaleString('id-ID');
+    } else {
+      this.value = '';
+    }
+  });
+}
+</script>
+</body>
+</html>

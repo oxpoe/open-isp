@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="<%= (typeof lang !== 'undefined' ? lang : 'id') %>">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title><%= t('admin.acsdev.title', 'Detail Perangkat') %> | <%= company %></title>
+    <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); font-weight: 700; color: var(--muted); }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 18px; border-bottom: 1px solid rgba(51, 65, 85, 0.1); }
+        .status-banner { padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; font-weight: 700; border: 1px solid var(--border); }
+        .status-online { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .status-offline { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        .client-card { background: var(--sub-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+        .client-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .client-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(59,130,246,0.1); color: var(--primary); }
+    </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: 'acs_pro', company }) %>
+<div class="mw">
+    <div class="topbar">
+        <div class="tb-title">
+            <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+            <i class="bi bi-hdd-network"></i>
+            <%= t('admin.acsdev.title', 'Detail Perangkat') %>: <%= device.serialNumber || device.sn || device.phone || '-' %>
+        </div>
+        <div class="tb-right">
+            <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
+            <a href="/admin/acs?acs=<%= encodeURIComponent(acsId || 'all') %>" class="btn btn-g btn-sm" title="Kembali">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
+            <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+        </div>
+    </div>
+    <div class="page">
+        <div class="status-banner <%= isOnline ? 'status-online' : 'status-offline' %>">
+            <i class="bi bi-circle-fill" style="font-size:10px"></i>
+            <%= isOnline ? t('admin.acsdev.online', 'Perangkat Online') : t('admin.acsdev.offline', 'Perangkat Offline') %>
+            — <%= t('admin.acsdev.last_inform', 'Inform Terakhir') %>: <%= device.lastInform ? new Date(device.lastInform).toLocaleString('id-ID') : t('admin.acsdev.never', 'Belum pernah') %>
+        </div>
+
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-info-circle"></i> <%= t('admin.acsdev.device_info', 'Info Perangkat') %></div>
+                <div class="info-row"><span><%= t('admin.acsdev.tag', 'Tag/ID') %></span><span style="font-weight:800;"><%= device.phone || device.id || '-' %></span></div>
+                <div class="info-row"><span><%= t('admin.acsdev.model', 'Model') %></span><span><%= device.model || '-' %></span></div>
+                <div class="info-row"><span><%= t('admin.acsdev.serial', 'Serial Number') %></span><code style="color:var(--info)"><%= device.serialNumber || device.sn || '-' %></code></div>
+                <div class="info-row"><span><%= t('admin.acsdev.swver', 'Versi Software') %></span><span><%= device.softwareVersion || '-' %></span></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><i class="bi bi-diagram-3"></i> <%= t('admin.acsdev.net_info', 'Info Jaringan') %></div>
+                <div class="info-row"><span><%= t('admin.acsdev.pppoe_user', 'PPPoE User') %></span><span><%= device.pppoeUsername || device.pppoeUser || '-' %></span></div>
+                <div class="info-row"><span><%= t('admin.acsdev.ip', 'IP Address') %></span><code><%= device.pppoeIP || device.ip || '-' %></code></div>
+                <div class="info-row"><span><%= t('admin.acsdev.rxpower', 'RX Power') %></span><span class="badge" style="background:var(--primary); color:white;"><%= device.rxPower || '-' %> dBm</span></div>
+                <div class="info-row"><span><%= t('admin.acsdev.ssid', 'SSID') %></span><span><%= device.ssid || '-' %></span></div>
+                <div class="info-row"><span><%= t('admin.acsdev.uptime', 'Uptime') %></span><span><%= device.uptime || '-' %></span></div>
+                <div class="info-row"><span><%= t('admin.acsdev.pppoe_uptime', 'PPPoE Uptime') %></span><span><%= device.pppoeUptime || '-' %></span></div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <div><i class="bi bi-people"></i> <%= t('admin.acsdev.clients', 'Klien Terhubung (Live)') %></div>
+                <span class="badge bm"><%= (clients && clients.length) ? clients.length : 0 %></span>
+            </div>
+            <div style="padding:18px 18px 10px 18px;">
+                <% if (clients && clients.length) { %>
+                    <% clients.forEach((client) => { 
+                        const iface = String(client.iface || '');
+                        const isWiFi = iface.toLowerCase().includes('wifi') || iface.toLowerCase().includes('wlan') || iface.toLowerCase().includes('802.11');
+                        const isOn = String(client.status || '').toLowerCase() === 'online';
+                    %>
+                        <div class="client-card">
+                            <div class="client-header">
+                                <div class="client-icon"><i class="bi bi-<%= isWiFi ? 'wifi' : 'ethernet' %>"></i></div>
+                                <div style="flex:1;">
+                                    <div style="font-weight:800;"><%= client.hostname || '-' %></div>
+                                    <div style="font-size:11px; color:var(--muted);"><%= client.ip || '-' %> | <%= client.mac || '-' %></div>
+                                </div>
+                                <% if (typeof client.rssi === 'number') { %>
+                                    <div class="badge" style="background:var(--primary); color:white;"><%= client.rssi %> dBm</div>
+                                <% } %>
+                                <span class="badge <%= isOn ? 'bs' : 'bm' %>"><%= client.status || '-' %></span>
+                            </div>
+                            <div style="font-size:11px;color:var(--muted)"><%= t('admin.acsdev.iface', 'Interface') %>: <%= client.iface || '-' %></div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div style="text-align:center; color:var(--muted); padding: 8px 0;">
+                        <i class="bi bi-info-circle"></i> <%= t('admin.acsdev.no_clients', 'Tidak ada klien terhubung.') %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <footer style="margin-top: 30px; padding: 20px; text-align: center; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border);">
+            &copy; <%= new Date().getFullYear() %> <%= (typeof settings !== 'undefined' ? settings.company_header : 'OPEN-ISP') %> - <%= t('admin.acsdev.genieacs', 'GenieACS Pro') %>
+        </footer>
+    </div>
+</div>
+</body>
+</html>

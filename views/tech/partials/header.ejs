@@ -1,0 +1,41 @@
+<!-- views/tech/partials/header.ejs -->
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>" data-theme="dark" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= title %> - <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="/vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="/css/landing.css?v=4">
+  <link rel="stylesheet" href="/css/auth.css?v=4">
+  <link rel="stylesheet" href="/css/portal.css?v=4">
+  <link rel="stylesheet" href="/css/portal-theme.css?v=3">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <script>document.documentElement.classList.add('js');(function(){try{var s=localStorage.getItem('landing-theme')||'dark';document.documentElement.setAttribute('data-theme',s);}catch(e){}})();function toggleTheme(){var el=document.documentElement;var t=el.getAttribute('data-theme')==='dark'?'light':'dark';el.setAttribute('data-theme',t);try{localStorage.setItem('landing-theme',t);}catch(e){}}</script>
+</head>
+<body class="portal-body">
+
+  <div class="portal-topnav">
+    <div class="t"><i class="bi bi-tools" style="color:var(--primary)"></i> <%= title %> <span style="font-size:10px;opacity:.55;font-weight:400">v<%= appVersion %></span></div>
+    <div class="actions">
+      <a href="/lang/id" class="nav-btn lang-btn" title="Bahasa Indonesia">ID</a>
+      <a href="/lang/en" class="nav-btn lang-btn" title="English">EN</a>
+      <button type="button" class="nav-btn" onclick="toggleTheme()" title="Ganti tema"><i class="bi bi-moon-stars-fill"></i></button>
+      <a href="/tech/customers/new" class="nav-btn" title="<%= t('tech.new_customer', 'Tambah Pelanggan') %>"><i class="bi bi-person-plus-fill"></i></a>
+      <a href="/tech/logout" class="nav-btn" onclick="return confirm('<%= t('tech.logout_confirm', 'Apakah Anda yakin ingin logout?') %>')" title="Logout"><i class="bi bi-box-arrow-right"></i></a>
+    </div>
+  </div>
+
+  <div class="container" style="max-width:720px;padding-top:16px">
+    <%- include('../../partials/service-notice') %>
+    <% if (typeof msg !== 'undefined' && msg) { %>
+      <div class="auth-alert <%= msg.type==='error'?'err':'ok' %>" id="techAlert">
+        <i class="bi bi-<%= msg.type==='error'?'exclamation-circle':'check-circle' %>"></i> <%= msg.text %>
+      </div>
+      <script>setTimeout(function(){var a=document.getElementById('techAlert');if(a)a.style.display='none';},4500);</script>
+    <% } %>

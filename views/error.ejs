@@ -1,0 +1,80 @@
+<%
+  var _code = Number(typeof statusCode !== 'undefined' ? statusCode : 500);
+  var _lang = (typeof lang !== 'undefined') ? lang : 'id';
+  function _tt(id, en) { return _lang === 'en' ? en : id; }
+  var MAP = {
+    400: { t: _tt('Permintaan Tidak Valid','Bad Request'), d: _tt('Permintaan tidak dapat diproses. Coba muat ulang halaman.','The request could not be processed. Try reloading the page.'), i: 'bi-exclamation-triangle' },
+    401: { t: _tt('Belum Masuk','Not Signed In'), d: _tt('Anda perlu masuk terlebih dahulu untuk membuka halaman ini.','You need to sign in first to open this page.'), i: 'bi-shield-lock' },
+    403: { t: _tt('Akses Ditolak','Access Denied'), d: _tt('Anda tidak memiliki izin untuk membuka halaman ini.','You do not have permission to open this page.'), i: 'bi-shield-exclamation' },
+    404: { t: _tt('Halaman Tidak Ditemukan','Page Not Found'), d: _tt('Alamat yang Anda tuju tidak ada atau sudah dipindahkan.','The address you are looking for does not exist or has been moved.'), i: 'bi-compass' },
+    408: { t: _tt('Waktu Habis','Request Timeout'), d: _tt('Permintaan melebihi batas waktu. Periksa koneksi lalu coba lagi.','The request timed out. Check your connection and try again.'), i: 'bi-hourglass-split' },
+    429: { t: _tt('Terlalu Banyak Permintaan','Too Many Requests'), d: _tt('Silakan tunggu sebentar, lalu coba lagi.','Please wait a moment, then try again.'), i: 'bi-speedometer' },
+    500: { t: _tt('Kesalahan Server','Server Error'), d: _tt('Terjadi kesalahan di server kami. Tim teknis sudah menerima laporannya.','An error occurred on our server. The technical team has been notified.'), i: 'bi-tools' },
+    502: { t: _tt('Gerbang Bermasalah','Bad Gateway'), d: _tt('Layanan tujuan sedang tidak dapat dijangkau. Coba beberapa saat lagi.','The destination service is unreachable. Please try again later.'), i: 'bi-hdd-network' },
+    503: { t: _tt('Layanan Tidak Tersedia','Service Unavailable'), d: _tt('Layanan sedang pemeliharaan atau sibuk. Silakan coba beberapa saat lagi.','The service is under maintenance or busy. Please try again later.'), i: 'bi-cone-striped' },
+    504: { t: _tt('Server Tidak Merespons','Server Not Responding'), d: _tt('Server tidak merespons tepat waktu. Silakan coba beberapa saat lagi.','The server did not respond in time. Please try again later.'), i: 'bi-clock-history' }
+  };
+  var _m = MAP[_code] || { t: _tt('Terjadi Kesalahan','Something Went Wrong'), d: (typeof error !== 'undefined' && error) ? error : _tt('Terjadi kesalahan. Silakan coba lagi.','An error occurred. Please try again.'), i: 'bi-exclamation-octagon' };
+  var _path = (typeof path !== 'undefined' && path) ? String(path) : '';
+  var _isAdmin = _path.indexOf('/admin') === 0;
+  var _home = _isAdmin ? '/admin' : '/';
+  var _homeLabel = _isAdmin ? _tt('Ke Dashboard Admin','To Admin Dashboard') : _tt('Ke Beranda','To Home');
+  var _logo = (typeof brandLogo !== 'undefined' && brandLogo) ? brandLogo : '/img/logo.png';
+  var _name = (typeof brandName !== 'undefined' && brandName) ? brandName : 'OPEN-ISP';
+  var _statusUrl = (typeof uptimeUrl !== 'undefined' && uptimeUrl) ? uptimeUrl : '';
+%>
+<!DOCTYPE html>
+<html lang="<%= _lang %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title><%= _code %> — <%= _m.t %> | <%= _name %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="icon" href="/img/icons/icon-192.png">
+  <style>
+    :root { --bg:#0A0D14; --surface:#141824; --surface2:#1A1F2E; --border:rgba(255,255,255,.08); --text:#fff; --muted:rgba(255,255,255,.55); --lime:#ADFF2F; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100dvh; background:var(--bg); color:var(--text);
+      font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+      display:flex; align-items:center; justify-content:center; padding:24px; }
+    .wrap { width:100%; max-width:460px; text-align:center; }
+    .logo { height:52px; max-width:200px; object-fit:contain; margin-bottom:22px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:22px; padding:30px 22px 24px; }
+    .ico { width:64px; height:64px; margin:0 auto 16px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      background:rgba(173,255,47,.12); border:1px solid rgba(173,255,47,.28); color:var(--lime); font-size:28px; }
+    .code { font-size:56px; font-weight:800; line-height:1; letter-spacing:-.02em; color:var(--lime); margin:0 0 6px; }
+    h1 { font-size:17px; font-weight:700; margin:0 0 8px; }
+    p.d { font-size:13px; line-height:1.55; color:var(--muted); margin:0 0 22px; }
+    .btns { display:flex; flex-direction:column; gap:10px; }
+    .btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:14px 16px; border-radius:14px;
+      font-size:14px; font-weight:700; text-decoration:none; cursor:pointer; border:1px solid transparent; }
+    .btn-main { background:var(--lime); color:#0A0D14; }
+    .btn-main:active { transform:scale(.98); }
+    .btn-ghost { background:var(--surface2); color:var(--text); border-color:var(--border); }
+    .meta { margin-top:16px; font-size:11px; color:rgba(255,255,255,.3); word-break:break-all; }
+    @media (min-width:480px) { .btns { flex-direction:row; } .btn { flex:1; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="logo" src="<%= _logo %>" alt="<%= _name %>" onerror="this.style.display='none'">
+    <div class="card">
+      <div class="ico"><i class="bi <%= _m.i %>"></i></div>
+      <p class="code"><%= _code %></p>
+      <h1><%= _m.t %></h1>
+      <p class="d"><%= (typeof error !== 'undefined' && error && _code !== 404) ? error : _m.d %></p>
+      <div class="btns">
+        <a class="btn btn-main" href="<%= _home %>"><i class="bi bi-house-door"></i> <%= _homeLabel %></a>
+        <button class="btn btn-ghost" type="button" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> <%= _tt('Muat Ulang','Reload') %></button>
+      </div>
+      <% if (_statusUrl) { %>
+      <div class="btns" style="margin-top:10px;">
+        <a class="btn btn-ghost" style="flex:1" href="<%= _statusUrl %>" target="_blank" rel="noopener"><i class="bi bi-activity"></i> <%= _tt('Cek Status Layanan','Check Service Status') %></a>
+      </div>
+      <% } %>
+      <div class="meta"><%= _name %> · v<%= (typeof appVersion !== 'undefined') ? appVersion : '0.5' %><% if (_path) { %> · <span><%= _path %></span><% } %></div>
+    </div>
+  </div>
+</body>
+</html>

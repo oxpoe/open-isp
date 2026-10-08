@@ -1,0 +1,12 @@
+  </div> <!-- End container -->
+
+  <nav class="portal-bottomnav">
+    <a href="/tech" class="portal-nav-item <%= activePage === 'dashboard' ? 'active' : '' %>"><i class="bi bi-briefcase-fill"></i><span><%= t('tech.nav.my_tasks', 'Tugas Saya') %></span></a>
+    <a href="/tech/pool" class="portal-nav-item <%= activePage === 'pool' ? 'active' : '' %>"><i class="bi bi-inbox-fill"></i><span><%= t('tech.nav.new_tickets', 'Tiket Baru') %></span></a>
+    <a href="/tech/attendance" class="portal-nav-item <%= activePage === 'attendance' ? 'active' : '' %>"><i class="bi bi-calendar-check-fill"></i><span><%= t('collector.absensi','Absensi') %></span></a>
+    <a href="/tech/map" class="portal-nav-item <%= activePage === 'map' ? 'active' : '' %>"><i class="bi bi-map-fill"></i><span><%= t('tech.nav.map', 'Peta') %></span></a>
+    <a href="/tech/monitoring" class="portal-nav-item <%= activePage === 'monitoring' ? 'active' : '' %>"><i class="bi bi-display-fill"></i><span><%= t('tech.nav.monitor', 'Monitor') %></span></a>
+  </nav>
+
+</body>
+</html>

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <style>
+    /* Health Status Badge */
+    .health-badge {
+      font-size: 20px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      display: inline-block;
+      margin: 10px 0;
+    }
+    .health-healthy {
+      background: var(--sdim);
+      color: var(--success);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+    .health-warning {
+      background: var(--wdim);
+      color: var(--warning);
+      border: 1px solid rgba(210, 153, 34, 0.3);
+    }
+    .health-critical {
+      background: var(--ddim);
+      color: var(--danger);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    /* Progress Bar */
+    .progress {
+      height: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg3);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+    }
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      transition: width .6s ease;
+    }
+    .bg-success { background-color: var(--success); }
+    .bg-warning { background-color: var(--warning); }
+    .bg-danger { background-color: var(--danger); }
+
+    /* Issue/Warning Items */
+    .issue-item, .warning-item {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border-left: 4px solid;
+      font-size: 13px;
+    }
+    .issue-item {
+      background: var(--ddim);
+      border-left-color: var(--danger);
+    }
+    .warning-item {
+      background: var(--wdim);
+      border-left-color: var(--warning);
+    }
+
+    /* Metric Card Customization */
+    .metric-card {
+      text-align: center;
+      padding: 20px;
+      background: var(--bg3);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .metric-card h3 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--text);
+    }
+    .metric-card p {
+      color: var(--muted);
+      margin: 4px 0 8px 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Chart Container */
+    .chart-container {
+      position: relative;
+      height: 250px;
+    }
+
+    /* Grid layout fixes */
+    .mon-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 768px) {
+      .mon-grid { grid-template-columns: 1fr; }
+    }
+    .chd-d { background: var(--ddim); color: var(--danger); border-bottom: 1px solid var(--danger); }
+    .chd-w { background: var(--wdim); color: var(--warning); border-bottom: 1px solid var(--warning); }
+    .stat-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .mb0 { margin-bottom: 0; }
+    .wb-all { word-break: break-all; }
+    .fs11 { font-size: 11px; }
+    .mh250 { max-height: 250px; }
+    .mh300 { max-height: 300px; }
+    .err-log-box { overflow-y: auto; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
+    .fs12 { font-size: 12px; }
+    .fs10 { font-size: 10px; }
+    .db { display: block; }
+    .m10-0 { margin: 10px 0; }
+    
+    /* Alert Messages */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .alert-success {
+      background: var(--sdim);
+      color: var(--success);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+    .alert-danger {
+      background: var(--ddim);
+      color: var(--danger);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+    .alert-info {
+      background: rgba(102, 126, 234, 0.1);
+      color: rgb(102, 126, 234);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Form Styles */
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text);
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg2);
+      color: var(--text);
+      font-size: 14px;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .form-check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-check-input {
+      width: 40px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .form-check-label {
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9998;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.show {
+      display: block;
+    }
+    .modal-dialog {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg2);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      z-index: 9999;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    .modal-dialog.show {
+      display: block;
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h5 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .btn-close {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .btn-close:hover {
+      background: var(--bg3);
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: activePage || 'monitoring', company }) %>
+
+<div class="mw">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-title">
+      <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <i class="bi bi-activity"></i>
+      <span id="page-title">Monitoring Sistem</span>
+    </div>
+    <div class="tb-right">
+      <button onclick="location.reload()" class="btn btn-g btn-sm">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <span class="adm-badge">
+        <i class="bi bi-person-fill"></i> 
+        <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %>
+      </span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="page">
+
+    <!-- Health Status -->
+    <div class="card mb16">
+      <div class="card-bd text-center">
+        <h6 class="mb16"><%= t('admin.monitoring.system_health', 'Status Kesehatan Sistem') %></h6>
+        <div class="health-badge health-<%= healthStatus.status %>">
+          <i class="bi bi-<%= healthStatus.status === 'healthy' ? 'check-circle' : healthStatus.status === 'warning' ? 'exclamation-triangle' : 'x-circle' %>"></i>
+          <%= healthStatus.status.toUpperCase() %>
+        </div>
+        <p class="text-muted mt-2 fs12">Update terakhir: <%= new Date(healthStatus.timestamp).toLocaleString('id-ID') %></p>
+      </div>
+    </div>
+
+    <!-- Issues and Warnings -->
+    <% if (healthStatus.issues.length > 0 || healthStatus.warnings.length > 0) { %>
+    <div class="mon-grid">
+      <% if (healthStatus.issues.length > 0) { %>
+      <div class="card">
+        <div class="card-hd chd-d">
+          <h6><i class="bi bi-exclamation-triangle-fill"></i> Issues (<%= healthStatus.issues.length %>)</h6>
+        </div>
+        <div class="card-bd">
+          <% healthStatus.issues.forEach(issue => {
+            if (issue) { %>
+          <div class="issue-item">
+            <i class="bi bi-x-circle-fill"></i> <%= issue %>
+          </div>
+          <% } }) %>
+        </div>
+      </div>
+      <% } %>
+      
+      <% if (healthStatus.warnings.length > 0) { %>
+      <div class="card">
+        <div class="card-hd chd-w">
+          <h6><i class="bi bi-exclamation-triangle"></i> Warnings (<%= healthStatus.warnings.length %>)</h6>
+        </div>
+        <div class="card-bd">
+          <% healthStatus.warnings.forEach(warning => {
+            if (warning) { %>
+          <div class="warning-item">
+            <i class="bi bi-exclamation-circle"></i> <%= warning %>
+          </div>
+          <% } }) %>
+        </div>
+      </div>
+      <% } %>
+    </div>
+    <% } %>
+
+    <!-- System Metrics -->
+    <div class="card mb16">
+      <div class="card-hd">
+        <h6><i class="bi bi-cpu"></i> Metrik Sistem</h6>
+      </div>
+      <div class="card-bd">
+        <div class="stat-grid mb0">
+          <!-- CPU -->
+          <div class="metric-card">
+            <p>CPU Usage</p>
+            <h3><%= healthStatus.metrics.system.cpu.usage %>%</h3>
+            <div class="progress mt-2 m10-0">
+              <div class="progress-bar <%= parseFloat(healthStatus.metrics.system.cpu.usage) > 80 ? 'bg-danger' : parseFloat(healthStatus.metrics.system.cpu.usage) > 60 ? 'bg-warning' : 'bg-success' %>"
+                   id="cpuProgressBar">
+              </div>
+            </div>
+            <small class="text-muted fs10 db">
+              <%= healthStatus.metrics.system.cpu.cores %> cores • <%= healthStatus.metrics.system.cpu.model %>
+            </small>
+          </div>
+          <!-- Memory -->
+          <div class="metric-card">
+            <p>Memory Usage</p>
+            <h3><%= healthStatus.metrics.system.memory.percentage %>%</h3>
+            <div class="progress mt-2 m10-0">
+              <div class="progress-bar <%= parseFloat(healthStatus.metrics.system.memory.percentage) > 80 ? 'bg-danger' : parseFloat(healthStatus.metrics.system.memory.percentage) > 60 ? 'bg-warning' : 'bg-success' %>"
+                   id="memoryProgressBar">
+              </div>
+            </div>
+            <small class="text-muted fs10 db">
+              <%= healthStatus.metrics.system.memory.used %> / <%= healthStatus.metrics.system.memory.total %>
+            </small>
+          </div>
+          <!-- Load Average -->
+          <div class="metric-card">
+            <p>Load Average (1 min)</p>
+            <h3><%= healthStatus.metrics.system.loadAverage['1min'] %></h3>
+            <div class="progress mt-2 m10-0">
+              <div class="progress-bar <%= parseFloat(healthStatus.metrics.system.loadAverage['1min']) > healthStatus.metrics.system.cpu.cores * 2 ? 'bg-danger' : parseFloat(healthStatus.metrics.system.loadAverage['1min']) > healthStatus.metrics.system.cpu.cores ? 'bg-warning' : 'bg-success' %>"
+                   id="loadProgressBar">
+              </div>
+            </div>
+            <small class="text-muted fs10 db">
+              5m: <%= healthStatus.metrics.system.loadAverage['5min'] %> • 15m: <%= healthStatus.metrics.system.loadAverage['15min'] %>
+            </small>
+          </div>
+          <!-- Disk Usage -->
+          <div class="metric-card">
+            <p>Disk Usage</p>
+            <h3><%= healthStatus.metrics.disk.percentage %></h3>
+            <div class="progress mt-2 m10-0">
+              <div class="progress-bar <%= healthStatus.metrics.disk.percentage !== 'N/A' && parseFloat(healthStatus.metrics.disk.percentage.replace('%', '')) > 80 ? 'bg-danger' : healthStatus.metrics.disk.percentage !== 'N/A' && parseFloat(healthStatus.metrics.disk.percentage.replace('%', '')) > 60 ? 'bg-warning' : 'bg-success' %>"
+                   id="diskProgressBar">
+              </div>
+            </div>
+            <small class="text-muted fs10 db">
+              Used: <%= healthStatus.metrics.disk.used %> / <%= healthStatus.metrics.disk.total %>
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Charts -->
+    <div class="mon-grid">
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-graph-up"></i> CPU Usage History</h6>
+        </div>
+        <div class="card-bd">
+          <div class="chart-container">
+            <canvas id="cpuChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-graph-up"></i> Memory Usage History</h6>
+        </div>
+        <div class="card-bd">
+          <div class="chart-container">
+            <canvas id="memoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Database Info -->
+    <div class="card mb16">
+      <div class="card-hd">
+        <h6><i class="bi bi-database"></i> Database Info</h6>
+      </div>
+      <div class="card-bd">
+        <div class="mon-grid mb0">
+          <div>
+            <table class="dtbl">
+              <tr>
+                <td class="text-muted">Size</td>
+                <td class="fw6"><%= healthStatus.metrics.database.size %></td>
+              </tr>
+              <tr>
+                <td class="text-muted">Tables</td>
+                <td class="fw6"><%= healthStatus.metrics.database.totalTables %></td>
+              </tr>
+              <tr>
+                <td class="text-muted">Path</td>
+                <td class="fw6 wb-all fs11"><%= healthStatus.metrics.database.path %></td>
+              </tr>
+            </table>
+          </div>
+          <div class="tbl-wrap mh250">
+            <table class="dtbl">
+              <thead>
+                <tr>
+                  <th>Table</th>
+                  <th class="num">Records</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (healthStatus.metrics.database.tables && typeof healthStatus.metrics.database.tables === 'object' && healthStatus.metrics.database.tables !== null) {
+                   Object.keys(healthStatus.metrics.database.tables).forEach(tableName => { %>
+                  <tr>
+                    <td><%= tableName %></td>
+                    <td class="num"><%= healthStatus.metrics.database.tables[tableName] %></td>
+                  </tr>
+                  <% }) } else { %>
+                <tr>
+                  <td colspan="2" class="text-center text-muted">No table data available</td>
+                </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Summary -->
+    <div class="card mb16">
+      <div class="card-hd">
+        <h6><i class="bi bi-journal-text"></i> Ringkasan Performa (10 Sample Terakhir)</h6>
+      </div>
+      <div class="card-bd">
+        <div class="stat-grid stat-grid-3 mb0">
+          <div>
+            <p class="sc-label">Rata-rata</p>
+            <table class="dtbl">
+              <tr>
+                <td class="text-muted">CPU</td>
+                <td class="fw6"><%= performanceSummary.averages.cpu %>%</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Memory</td>
+                <td class="fw6"><%= performanceSummary.averages.memory %>%</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Load (1m)</td>
+                <td class="fw6"><%= performanceSummary.averages.load1 %></td>
+              </tr>
+            </table>
+          </div>
+          <div>
+            <p class="sc-label">Maximum</p>
+            <table class="dtbl">
+              <tr>
+                <td class="text-muted">CPU</td>
+                <td class="fw6 text-danger"><%= performanceSummary.maximums.cpu %>%</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Memory</td>
+                <td class="fw6 text-danger"><%= performanceSummary.maximums.memory %>%</td>
+              </tr>
+              <tr>
+                <td class="text-muted">Load (1m)</td>
+                <td class="fw6 text-danger"><%= performanceSummary.maximums.load1 %></td>
+              </tr>
+            </table>
+          </div>
+          <div>
+            <p class="sc-label"><%= t('pwa.field.period','Periode') %></p>
+            <table class="dtbl">
+              <tr>
+                <td class="text-muted">Start</td>
+                <td class="fw6" style="font-size: 11px;"><%= new Date(performanceSummary.period.start).toLocaleString('id-ID') %></td>
+              </tr>
+              <tr>
+                <td class="text-muted">End</td>
+                <td class="fw6" style="font-size: 11px;"><%= new Date(performanceSummary.period.end).toLocaleString('id-ID') %></td>
+              </tr>
+              <tr>
+                <td class="text-muted">Samples</td>
+                <td class="fw6"><%= performanceSummary.period.samples %></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Diagnostics -->
+    <div class="mon-grid">
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-patch-check"></i> Diagnosa Konektivitas</h6>
+        </div>
+        <div class="card-bd">
+          <p class="sc-label mb8">Dependensi Eksternal</p>
+          <table class="dtbl">
+            <tr>
+              <td>GenieACS</td>
+              <td class="text-right">
+                <span class="badge <%= dependencies.genieacs.status === 'online' ? 'bs' : 'bd' %>">
+                  <%= dependencies.genieacs.status.toUpperCase() %>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td>WhatsApp Bot</td>
+              <td class="text-right">
+                <span class="badge <%= dependencies.whatsapp.status === 'online' ? 'bs' : 'bd' %>">
+                  <%= dependencies.whatsapp.status.toUpperCase() %>
+                </span>
+              </td>
+            </tr>
+          </table>
+          
+          <p class="sc-label mt16 mb8">Router MikroTik</p>
+          <table class="dtbl">
+            <% dependencies.mikrotik.forEach(r => { %>
+            <tr>
+              <td><%= r.name %> (<%= r.host %>)</td>
+              <td class="text-right">
+                <span class="badge <%= r.status === 'online' ? 'bs' : 'bd' %>">
+                  <%= r.status.toUpperCase() %>
+                </span>
+              </td>
+            </tr>
+            <% }) %>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <h6><i class="bi bi-bug"></i> Log Error Terbaru</h6>
+        </div>
+        <div class="card-bd err-log-box mh300">
+          <% if (recentErrors.length === 0) { %>
+            <p class="text-muted text-center py-5">Tidak ada log error terbaru</p>
+          <% } else { %>
+            <% recentErrors.forEach(err => { %>
+              <div style="font-family: monospace; font-size: 11px; color: var(--danger); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 4px 0; white-space: pre-wrap;">
+                <%= err %>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="text-center mb16">
+      <button onclick="location.reload()" class="btn btn-p">
+        <i class="bi bi-arrow-clockwise"></i> Refresh Data
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Scripts -->
+<script>
+  // Set progress bar widths dynamically
+  document.addEventListener('DOMContentLoaded', function() {
+    // CPU Progress Bar
+    const cpuProgressBar = document.getElementById('cpuProgressBar');
+    if (cpuProgressBar) {
+      const cpuUsage = parseFloat('<%= healthStatus.metrics.system.cpu.usage %>');
+      cpuProgressBar.style.width = cpuUsage + '%';
+    }
+
+    // Memory Progress Bar
+    const memoryProgressBar = document.getElementById('memoryProgressBar');
+    if (memoryProgressBar) {
+      const memoryUsage = parseFloat('<%= healthStatus.metrics.system.memory.percentage %>');
+      memoryProgressBar.style.width = memoryUsage + '%';
+    }
+
+    // Load Progress Bar
+    const loadProgressBar = document.getElementById('loadProgressBar');
+    if (loadProgressBar) {
+      const load1 = parseFloat('<%= healthStatus.metrics.system.loadAverage["1min"] %>');
+      const cores = parseInt('<%= healthStatus.metrics.system.cpu.cores %>');
+      const loadPercent = Math.min((load1 / cores) * 100, 100);
+      loadProgressBar.style.width = loadPercent + '%';
+    }
+
+    // Disk Progress Bar
+    const diskProgressBar = document.getElementById('diskProgressBar');
+    if (diskProgressBar) {
+      const diskPercentage = '<%= healthStatus.metrics.disk.percentage %>';
+      if (diskPercentage !== 'N/A') {
+        diskProgressBar.style.width = diskPercentage;
+      } else {
+        diskProgressBar.style.width = '0%';
+      }
+    }
+  });
+
+  // CPU Chart
+  const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+  const cpuChart = new Chart(cpuCtx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'CPU Usage (%)',
+        data: [],
+        borderColor: 'rgb(102, 126, 234)',
+        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      }
+    }
+  });
+
+  // Memory Chart
+  const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+  const memoryChart = new Chart(memoryCtx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Memory Usage (%)',
+        data: [],
+        borderColor: 'rgb(118, 75, 162)',
+        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      }
+    }
+  });
+
+  // Load metrics history
+  async function loadMetricsHistory() {
+    try {
+      const response = await fetch('/admin/api/metrics/history?limit=10');
+      const history = await response.json();
+
+      const labels = history.map(m => new Date(m.timestamp).toLocaleTimeString('id-ID'));
+      const cpuData = history.map(m => parseFloat(m.system.cpu.usage));
+      const memoryData = history.map(m => parseFloat(m.system.memory.percentage));
+
+      cpuChart.data.labels = labels;
+      cpuChart.data.datasets[0].data = cpuData;
+      cpuChart.update();
+
+      memoryChart.data.labels = labels;
+      memoryChart.data.datasets[0].data = memoryData;
+      memoryChart.update();
+    } catch (error) {
+      console.error('Failed to load metrics history:', error);
+    }
+  }
+
+  // Load initial data
+  loadMetricsHistory();
+
+  // Auto refresh every 30 seconds
+  setInterval(() => {
+    loadMetricsHistory();
+  }, 30000);
+
+  // GenieACS Settings Form Handler (guard: form mungkin tidak ada di sebagian render)
+  var _acsForm = document.getElementById('genieacsSettingsForm');
+  if (_acsForm) _acsForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+      genieacs_timeout: parseInt(document.getElementById('genieacs_timeout').value),
+      genieacs_rxpower_threshold: parseFloat(document.getElementById('genieacs_rxpower_threshold').value),
+      genieacs_monitoring_interval: parseInt(document.getElementById('genieacs_monitoring_interval').value),
+      genieacs_monitoring_enabled: document.getElementById('genieacs_monitoring_enabled').checked
+    };
+
+    try {
+      const response = await fetch('/admin/api/genieacs/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+      const messageDiv = document.getElementById('genieacsMessage');
+      
+      if (result.success) {
+        messageDiv.className = 'alert alert-success';
+        messageDiv.innerHTML = '<i class="bi bi-check-circle"></i> ' + result.message;
+        messageDiv.style.display = 'block';
+        
+        // Hide message after 3 seconds
+        setTimeout(() => {
+          messageDiv.style.display = 'none';
+        }, 3000);
+      } else {
+        messageDiv.className = 'alert alert-danger';
+        messageDiv.innerHTML = '<i class="bi bi-x-circle"></i> ' + result.message;
+        messageDiv.style.display = 'block';
+      }
+    } catch (error) {
+      const messageDiv = document.getElementById('genieacsMessage');
+      messageDiv.className = 'alert alert-danger';
+      messageDiv.innerHTML = '<i class="bi bi-x-circle"></i> Error: ' + error.message;
+      messageDiv.style.display = 'block';
+    }
+  });
+
+  // Test GenieACS Connection
+  async function testGenieACSConnection() {
+    const messageDiv = document.getElementById('genieacsMessage');
+    messageDiv.className = 'alert alert-info';
+    messageDiv.innerHTML = '<i class="bi bi-hourglass-split"></i> Testing koneksi ke GenieACS...';
+    messageDiv.style.display = 'block';
+
+    try {
+      const response = await fetch('/admin/api/genieacs/test');
+      const result = await response.json();
+      
+      if (result.success) {
+        messageDiv.className = 'alert alert-success';
+        messageDiv.innerHTML = '<i class="bi bi-check-circle"></i> ' + result.message + 
+                               (result.deviceCount !== undefined ? ' (' + result.deviceCount + ' devices)' : '');
+      } else {
+        messageDiv.className = 'alert alert-danger';
+        messageDiv.innerHTML = '<i class="bi bi-x-circle"></i> ' + result.message;
+      }
+    } catch (error) {
+      messageDiv.className = 'alert alert-danger';
+      messageDiv.innerHTML = '<i class="bi bi-x-circle"></i> Error: ' + error.message;
+    }
+  }
+
+  // Modal Functions
+  function openGenieACSSettings() {
+    document.getElementById('genieacsModalOverlay').classList.add('show');
+    document.getElementById('genieacsModal').classList.add('show');
+  }
+
+  function closeGenieACSSettings() {
+    document.getElementById('genieacsModalOverlay').classList.remove('show');
+    document.getElementById('genieacsModal').classList.remove('show');
+  }
+
+  async function saveGenieACSSettingsModal() {
+    const formData = {
+      genieacs_timeout: parseInt(document.getElementById('genieacs_timeout_modal').value),
+      genieacs_rxpower_threshold: parseFloat(document.getElementById('genieacs_rxpower_threshold_modal').value),
+      genieacs_monitoring_interval: parseInt(document.getElementById('genieacs_monitoring_interval_modal').value),
+      genieacs_monitoring_enabled: document.getElementById('genieacs_monitoring_enabled_modal').checked
+    };
+
+    try {
+      const response = await fetch('/admin/api/genieacs/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+      const messageDiv = document.getElementById('genieacsMessageModal');
+      
+      if (result.success) {
+        messageDiv.className = 'alert alert-success';
+        messageDiv.innerHTML = '<i class="bi bi-check-circle"></i> ' + result.message;
+        messageDiv.style.display = 'block';
+        
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          closeGenieACSSettings();
+          location.reload();
+        }, 2000);
+      } else {
+        messageDiv.className = 'alert alert-danger';
+        messageDiv.innerHTML = '<i class="bi bi-x-circle"></i> ' + result.message;
+        messageDiv.style.display = 'block';
+      }
+    } catch (error) {
+      const messageDiv = document.getElementById('genieacsMessageModal');
+      messageDiv.className = 'alert alert-danger';
+      messageDiv.innerHTML = '<i class="bi bi-x-circle"></i> Error: ' + error.message;
+      messageDiv.style.display = 'block';
+    }
+  }
+
+  async function testGenieACSConnectionModal() {
+    const messageDiv = document.getElementById('genieacsMessageModal');
+    messageDiv.className = 'alert alert-info';
+    messageDiv.innerHTML = '<i class="bi bi-hourglass-split"></i> Testing koneksi ke GenieACS...';
+    messageDiv.style.display = 'block';
+
+    try {
+      const response = await fetch('/admin/api/genieacs/test');
+      const result = await response.json();
+      
+      if (result.success) {
+        messageDiv.className = 'alert alert-success';
+        messageDiv.innerHTML = '<i class="bi bi-check-circle"></i> ' + result.message + 
+                               (result.deviceCount !== undefined ? ' (' + result.deviceCount + ' devices)' : '');
+      } else {
+        messageDiv.className = 'alert alert-danger';
+        messageDiv.innerHTML = '<i class="bi bi-x-circle"></i> ' + result.message;
+      }
+    } catch (error) {
+      messageDiv.className = 'alert alert-danger';
+      messageDiv.innerHTML = '<i class="bi bi-x-circle"></i> Error: ' + error.message;
+    }
+  }
+
+  // Close modal on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeGenieACSSettings();
+    }
+  });
+</script>
+</body>
+</html>

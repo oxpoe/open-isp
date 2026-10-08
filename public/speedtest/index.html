@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speed Test</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0b1220; color: #e2e8f0; }
+    html[data-theme="light"] body { background: #F2F5F1; color: #161A21; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 18px; }
+    .head { text-align: center; margin-bottom: 6px; }
+    .head h1 { font-size: 18px; margin: 0 0 2px; font-weight: 800; }
+    .head p { margin: 0; font-size: 12px; color: #8A96A6; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+    .cell { background: rgba(30, 41, 59, .6); border: 1px solid rgba(148, 163, 184, .2); border-radius: 14px; padding: 16px; text-align: center; }
+    html[data-theme="light"] .cell { background: #fff; border-color: #e2e8f0; }
+    .val { font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+    .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: #8A96A6; margin-top: 2px; }
+    .val.dl { color: #22d3ee; } .val.ul { color: #a78bfa; } .val.pingv { color: #34d399; } .val.jit { color: #fbbf24; }
+    .bar { height: 10px; border-radius: 999px; background: rgba(148, 163, 184, .2); overflow: hidden; margin-top: 16px; }
+    .bar > i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ADFF2F, #22d3ee); transition: width .2s; }
+    .btn { margin-top: 16px; width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #ADFF2F, #059669); cursor: pointer; font-size: 15px; }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .status { margin-top: 10px; font-size: 13px; color: #8A96A6; text-align: center; min-height: 18px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <h1><i>&#9889;</i> Speed Test</h1>
+      <p>Dari perangkat Anda ke server kami</p>
+    </div>
+    <div class="grid">
+      <div class="cell"><div class="val pingv" id="ping">-</div><div class="lbl">Ping (ms)</div></div>
+      <div class="cell"><div class="val jit" id="jitter">-</div><div class="lbl">Jitter (ms)</div></div>
+      <div class="cell"><div class="val dl" id="dl">-</div><div class="lbl">Download (Mbps)</div></div>
+      <div class="cell"><div class="val ul" id="ul">-</div><div class="lbl">Upload (Mbps)</div></div>
+    </div>
+    <div class="bar"><i id="prog"></i></div>
+    <button class="btn" id="startBtn">Mulai Tes</button>
+    <div class="status" id="status">&nbsp;</div>
+  </div>
+
+  <script src="speedtest.js"></script>
+  <script>
+    (function () {
+      try {
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('app-theme') || 'dark');
+      } catch (e) {}
+
+      var el = function (id) { return document.getElementById(id); };
+      var st = new Speedtest();
+      st.setParameter('url_dl', '/speedtest/garbage.php');
+      st.setParameter('url_ul', '/speedtest/empty.php');
+      st.setParameter('url_ping', '/speedtest/empty.php');
+      st.setParameter('url_getIp', '/speedtest/getIP.php');
+      st.setParameter('telemetry_level', 'disabled');
+      st.setParameter('time_dl', 12);
+      st.setParameter('time_ul', 12);
+
+      var running = false;
+      var labels = { 0: 'Menyiapkan...', 1: 'Mengukur Download...', 2: 'Mengukur Ping / Jitter...', 3: 'Mengukur Upload...', 4: 'Selesai', 5: 'Dibatalkan' };
+
+      st.onupdate = function (data) {
+        if (!data) return;
+        if (data.dlStatus) el('dl').textContent = (Math.round(data.dlStatus * 100) / 100);
+        if (data.ulStatus) el('ul').textContent = (Math.round(data.ulStatus * 100) / 100);
+        if (data.pingStatus) el('ping').textContent = (Math.round(data.pingStatus * 100) / 100);
+        if (data.jitterStatus) el('jitter').textContent = (Math.round(data.jitterStatus * 100) / 100);
+        var p = 0;
+        if (data.testState === 1) p = (data.dlProgress || 0) * 45;
+        else if (data.testState === 2) p = 45 + (data.pingProgress || 0) * 10;
+        else if (data.testState === 3) p = 55 + (data.ulProgress || 0) * 45;
+        else if (data.testState >= 4) p = 100;
+        el('prog').style.width = p + '%';
+        el('status').textContent = labels[data.testState] || '';
+      };
+
+      st.onend = function (aborted) {
+        running = false;
+        el('startBtn').disabled = false;
+        el('startBtn').textContent = 'Uji Lagi';
+        el('status').textContent = aborted ? 'Tes dibatalkan' : 'Tes selesai';
+        if (!aborted) el('prog').style.width = '100%';
+      };
+
+      el('startBtn').addEventListener('click', function () {
+        if (running) return;
+        running = true;
+        this.disabled = true;
+        this.textContent = 'Mengukur...';
+        el('dl').textContent = el('ul').textContent = el('ping').textContent = el('jitter').textContent = '-';
+        el('prog').style.width = '0%';
+        st.start();
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kas Masuk | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .val-box { background: var(--bg2); padding: 16px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+    .val-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; font-size: 20px; }
+    .val-text { font-size: 13px; color: var(--muted); }
+    .val-num { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  </style>
+</head>
+<body>
+<%- include('../partials/sidebar', { activePage: 'cash_in', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-cash-stack"></i> Kas Masuk (Lain-lain)</div>
+    <div class="tb-right">
+      <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
+      <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> Tambah Kas Masuk</button>
+    </div>
+  </div>
+  <div class="page">
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <div class="alert alert-w mb-3">
+      <i class="bi bi-info-circle-fill"></i> <strong>Informasi:</strong> Halaman ini digunakan untuk mencatat kas masuk / pemasukan <strong>selain</strong> dari pembayaran tagihan pelanggan (misal: modal awal, penjualan perangkat bekas, dll). Pendapatan tagihan pelanggan sudah otomatis dicatat di laporan.
+    </div>
+
+    <% 
+      const totalThisMonth = cashIn.filter(e => e.date.startsWith(getNowLocal().substring(0,7))).reduce((a,b)=>a+Number(b.amount), 0);
+      const totalAll = cashIn.reduce((a,b)=>a+Number(b.amount), 0);
+    %>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px,1fr));gap:16px;margin-bottom:20px">
+      <div class="val-box">
+        <div class="val-icon" style="background:rgba(16, 185, 129, 0.1);color:#10b981"><i class="bi bi-graph-up-arrow"></i></div>
+        <div>
+          <div class="val-text">Kas Masuk Bulan Ini</div>
+          <div class="val-num">Rp <%= totalThisMonth.toLocaleString('id-ID') %></div>
+        </div>
+      </div>
+      <div class="val-box">
+        <div class="val-icon" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6"><i class="bi bi-piggy-bank-fill"></i></div>
+        <div>
+          <div class="val-text">Total Kas Masuk (Lainnya)</div>
+          <div class="val-num">Rp <%= totalAll.toLocaleString('id-ID') %></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="card-hd"><h6><i class="bi bi-list-ul"></i> Riwayat Kas Masuk</h6></div>
+      <div class="tbl-wrap">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th><%= t('common.date','Tanggal') %></th>
+              <th><%= t('common.category','Kategori') %></th>
+              <th><%= t('common.desc_note','Deskripsi / Catatan') %></th>
+              <th>Metode</th>
+              <th class="num"><%= t('common.amount_qty','Jumlah') %></th>
+              <th>Pencatat</th>
+              <th><%= t('common.actions','Aksi') %></th>
+            </tr>
+          </thead>
+          <tbody>
+          <% if (cashIn.length===0) { %>
+            <tr><td colspan="7" class="text-center text-muted" style="padding:32px">Belum ada data kas masuk.</td></tr>
+          <% } %>
+          <% cashIn.forEach((item)=>{ %>
+            <tr>
+              <td style="white-space:nowrap"><%= formatDateLocal(item.date) %></td>
+              <td><span class="badge bs"><%= item.category %></span></td>
+              <td style="max-width:300px;white-space:normal">
+                <strong><%= item.description %></strong>
+                <% if(item.receipt_number){ %><div style="font-size:11px;color:var(--muted);margin-top:2px"><i class="bi bi-receipt"></i> <%= item.receipt_number %></div><% } %>
+              </td>
+              <td>
+                <span class="badge bm"><%= String(item.payment_method).toUpperCase() %></span>
+              </td>
+              <td class="num fw6" style="color:#10b981">+ Rp <%= Number(item.amount).toLocaleString('id-ID') %></td>
+              <td style="font-size:12px"><%= item.recorded_by_name || 'Admin' %></td>
+              <td>
+                <form method="POST" action="/admin/finance/cash-in/<%= item.id %>/delete" style="display:inline" onsubmit="return confirm('Hapus data kas masuk ini?')">
+                  <button class="btn btn-d btn-icon btn-sm" title="Hapus"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add -->
+<div class="mo" id="addModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-plus-circle"></i> Catat Kas Masuk</span><button type="button" class="mc" onclick="closeModal('addModal')">&times;</button></div>
+    <form method="POST" action="/admin/finance/cash-in">
+      <div class="mbody">
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl"><%= t('common.date','Tanggal') %> <span class="text-danger">*</span></label>
+            <input type="date" class="fc" name="date" required value="<%= getNowLocal().substring(0,10) %>" max="<%= getNowLocal().substring(0,10) %>">
+          </div>
+          <div class="fg">
+            <label class="fl">Sumber / Kategori <span class="text-danger">*</span></label>
+            <select class="fc" name="category" required>
+              <option value="Modal Usaha">Modal Usaha / Suntikan Dana</option>
+              <option value="Penjualan Aset">Penjualan Aset/Barang Bekas</option>
+              <option value="Jasa Lainnya">Pendapatan Jasa Lainnya</option>
+              <option value="Lain-lain">Lain-lain</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Jumlah / Nominal (Rp) <span class="text-danger">*</span></label>
+          <input type="text" class="fc" name="amount" id="amountInput" required placeholder="Contoh: 500.000" style="font-size:16px;font-weight:bold" autocomplete="off">
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('common.desc_note2','Deskripsi / Keterangan') %> <span class="text-danger">*</span></label>
+          <textarea class="fc" name="description" required placeholder="Suntikan modal dari owner..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Metode Penerimaan</label>
+            <select class="fc" name="payment_method">
+              <option value="cash">Tunai (Cash)</option>
+              <option value="transfer">Transfer Bank</option>
+              <option value="ewallet">E-Wallet (OVO/Dana/Gopay)</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">No. Referensi (Opsional)</label>
+            <input type="text" class="fc" name="receipt_number" placeholder="Bisa dikosongkan">
+          </div>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pemasukan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),5000);
+
+const amtInput = document.getElementById('amountInput');
+if(amtInput){
+  amtInput.addEventListener('keyup', function(e) {
+    let val = this.value.replace(/[^0-9]/g, '');
+    if(val){
+      this.value = parseInt(val, 10).toLocaleString('id-ID');
+    } else {
+      this.value = '';
+    }
+  });
+}
+</script>
+</body>
+</html>

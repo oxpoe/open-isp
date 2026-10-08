@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kategori Pengeluaran | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+    .cat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
+    .cat-card:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+    .cat-info { display: flex; align-items: center; gap: 14px; }
+    .cat-icon { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; font-size: 18px; }
+    .cat-name { font-weight: 600; color: var(--text); font-size: 15px; margin-bottom: 2px; }
+    .cat-desc { font-size: 12px; color: var(--muted); line-height: 1.3; }
+    
+    .icon-sel { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .icon-sel label { cursor: pointer; }
+    .icon-sel input { display: none; }
+    .icon-box { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid transparent; display: grid; place-items: center; font-size: 16px; color: var(--muted); transition: 0.2s; }
+    .icon-sel input:checked + .icon-box { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-color: #3b82f6; }
+  </style>
+</head>
+<body>
+<%- include('../partials/sidebar', { activePage: 'expense_categories', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-tags"></i> Kategori Pengeluaran</div>
+    <div class="tb-right">
+      <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
+      <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> Tambah Kategori</button>
+    </div>
+  </div>
+  <div class="page">
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <div class="alert alert-info mb-4" style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); color:#bfdbfe;">
+      <i class="bi bi-lightbulb-fill"></i> Kategori ini digunakan untuk mengelompokkan jenis pengeluaran agar laporan laba rugi lebih mudah dibaca.
+    </div>
+
+    <div class="cat-grid">
+      <% categories.forEach(cat => { %>
+        <div class="cat-card">
+          <div class="cat-info">
+            <div class="cat-icon" <%- 'style="background: ' + cat.color + '20; color: ' + cat.color + ';"' %>>
+              <i class="<%= cat.icon || 'bi bi-tag' %>"></i>
+            </div>
+            <div>
+              <div class="cat-name"><%= cat.name %></div>
+              <div class="cat-desc"><%= cat.description || 'Tidak ada deskripsi' %></div>
+            </div>
+          </div>
+          <form method="POST" action="/admin/finance/expense-categories/<%= cat.id %>/delete" onsubmit="return confirm('Hapus kategori ini? (Pastikan tidak ada pengeluaran yang menggunakannya)')">
+            <button class="btn btn-d btn-icon btn-sm" style="opacity:0.7"><i class="bi bi-trash"></i></button>
+          </form>
+        </div>
+      <% }) %>
+      <% if(categories.length === 0) { %>
+        <div style="grid-column: 1/-1; padding: 40px; text-align:center; color:var(--muted); background:var(--bg2); border-radius:12px">
+          Belum ada kategori yang ditambahkan.
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add -->
+<div class="mo" id="addModal">
+  <div class="mb">
+    <div class="mh"><span class="mt"><i class="bi bi-plus-circle"></i> Tambah Kategori</span><button type="button" class="mc" onclick="closeModal('addModal')">&times;</button></div>
+    <form method="POST" action="/admin/finance/expense-categories">
+      <div class="mbody">
+        <div class="fg">
+          <label class="fl">Nama Kategori <span class="text-danger">*</span></label>
+          <input type="text" class="fc" name="name" required placeholder="Contoh: Bensin Kendaraan">
+        </div>
+        <div class="fg">
+          <label class="fl"><%= t('common.description','Deskripsi') %></label>
+          <textarea class="fc" name="description" placeholder="Beli Router Mikrotik RB750Gr3..."></textarea>
+        </div>
+        
+        <div class="form-row mt-3">
+          <div class="fg">
+            <label class="fl">Pilih Ikon</label>
+            <div class="icon-sel">
+              <% const icons = ['bi-tag', 'bi-tools', 'bi-router', 'bi-wallet2', 'bi-lightning-charge', 'bi-car-front', 'bi-briefcase', 'bi-cup-hot', 'bi-house', 'bi-megaphone']; %>
+              <% icons.forEach((icon, i) => { %>
+                <label>
+                  <input type="radio" name="icon" value="bi <%= icon %>" <%= i===0?'checked':'' %>>
+                  <div class="icon-box"><i class="bi <%= icon %>"></i></div>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+          <div class="fg" style="max-width: 120px;">
+            <label class="fl">Warna Label</label>
+            <input type="color" class="fc" name="color" value="#3b82f6" style="padding: 4px; height: 42px; cursor: pointer;">
+          </div>
+        </div>
+      </div>
+      <div class="mf">
+        <button type="button" class="btn btn-g" onclick="closeModal('addModal')"><%= t('common.cancel','Batal') %></button>
+        <button type="submit" class="btn btn-p">Simpan Kategori</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')}));
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),5000);
+</script>
+</body>
+</html>

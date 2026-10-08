@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= ((typeof viewMode !== 'undefined' && viewMode === 'ewallet_logs') ? 'Log & Rekap' : t('admin.settings.title', 'Pengaturan')) %> | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="manifest" href="/admin/manifest.webmanifest">
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .set-toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:16px}
+    .set-tabs{display:flex;gap:6px;flex-wrap:wrap}
+    .set-tab{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-weight:600;font-size:12.5px;cursor:pointer;transition:.15s;font-family:inherit}
+    .set-tab:hover{color:var(--text);border-color:var(--primary)}
+    .set-tab.active{background:var(--primary);color:#0A0D14;border-color:var(--primary)}
+    .set-search{position:relative;display:flex;align-items:center;flex:1;min-width:220px;max-width:440px}
+    .set-search>i{position:absolute;left:11px;color:var(--muted);font-size:13px;pointer-events:none}
+    .set-search input{width:100%;padding:9px 34px 9px 32px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;outline:none;font-family:inherit}
+    .set-search input:focus{border-color:var(--primary)}
+    .set-search .clr{position:absolute;right:7px;border:none;background:transparent;color:var(--muted);cursor:pointer;padding:4px}
+    [data-setcat]{grid-column:1 / -1}
+    @media(max-width:768px){.set-toolbar{padding:8px}.set-search{max-width:none}}
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: (typeof activePage !== 'undefined' && activePage ? activePage : 'settings'), company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-gear"></i> <%= t('admin.settings.system_title', 'Pengaturan Sistem') %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <% const logsOnly = (typeof viewMode !== 'undefined' && viewMode === 'ewallet_logs'); %>
+
+    <style>
+      .ew-badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;white-space:nowrap}
+      .ew-green{background:rgba(34,197,94,.16);color:#22c55e}
+      .ew-amber{background:rgba(245,158,11,.18);color:#f59e0b}
+      .ew-gray{background:rgba(148,163,184,.16);color:#94a3b8}
+      .ew-svc{background:rgba(173,255,47,.12);color:#ADFF2F;border-radius:6px;padding:1px 8px;font-size:11.5px;font-weight:700}
+      .ew-log td{vertical-align:middle}
+      .ew-log tbody tr:hover{background:rgba(173,255,47,.04)}
+    </style>
+    <% if (logsOnly) { %>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <button type="button" class="btn btn-p btn-sm" id="ewtab-log" onclick="ewTab('log')"><i class="bi bi-broadcast"></i> Log Realtime</button>
+      <button type="button" class="btn btn-g btn-sm" id="ewtab-rekap" onclick="ewTab('rekap')"><i class="bi bi-check2-circle"></i> Rekap Auto-Lunas</button>
+    </div>
+    <div id="ew-tab-log">
+    <div class="card mb16">
+      <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h6 style="margin:0"><i class="bi bi-broadcast"></i> Log Notifikasi E-Wallet (Realtime)</h6>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <a class="btn btn-g btn-sm" href="/admin/settings"><i class="bi bi-arrow-left"></i> <%= t('common.back', 'Kembali') %></a>
+          <button type="button" class="btn btn-g btn-sm" onclick="enableEwalletNotif()"><i class="bi bi-bell"></i> <%= t('admin.settings.ewallet_logs.enable_notif', 'Aktifkan Notif') %></button>
+          <button type="button" class="btn btn-p btn-sm" onclick="toggleEwalletLive()" id="ew_live_btn"><i class="bi bi-broadcast"></i> <%= t('admin.settings.ewallet_logs.live', 'Live') %></button>
+          <button type="button" class="btn btn-g btn-sm" onclick="loadEwalletLogs()"><i class="bi bi-arrow-clockwise"></i> <%= t('common.refresh', 'Refresh') %></button>
+          <button type="button" class="btn btn-d btn-sm" onclick="clearEwalletLogs()"><i class="bi bi-trash"></i> <%= t('common.clear', 'Clear') %></button>
+        </div>
+      </div>
+      <div class="card-bd">
+        <div class="form-row" style="align-items:flex-end">
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.ewallet_logs.service', 'Service') %></label>
+            <input class="fc" id="ew_service" placeholder="DANA / Gojek / ShopeePay (opsional)">
+          </div>
+          <div class="fg" style="flex:2">
+            <label class="fl"><%= t('admin.settings.ewallet_logs.search', 'Cari') %></label>
+            <input class="fc" id="ew_q" placeholder="kata kunci (opsional)">
+          </div>
+          <div class="fg w160">
+            <label class="fl"><%= t('admin.settings.ewallet_logs.limit', 'Limit') %></label>
+            <select class="fs" id="ew_limit">
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="200" selected>200</option>
+              <option value="500">500</option>
+            </select>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:6px">
+          Endpoint MacroDroid: <span class="mono">POST /api/webhook/v1/payment-notif</span>
+        </div>
+        <div class="hint" style="margin-top:6px" id="ew_notif_hint"></div>
+        <div class="tbl-wrap" style="margin-top:10px;max-height:420px;overflow:auto">
+          <table class="dtbl ew-log">
+            <thead>
+              <tr>
+                <th style="width:150px"><%= t('common.time', 'Waktu') %></th>
+                <th style="width:120px">Sumber</th>
+                <th style="width:130px"><%= t('admin.settings.ewallet_logs.amount', 'Nominal') %></th>
+                <th style="width:120px"><%= t('common.status','Status') %></th>
+                <th style="width:100px">Cocok ke</th>
+                <th><%= t('admin.settings.ewallet_logs.content', 'Isi Notifikasi') %></th>
+                <th style="width:60px"></th>
+              </tr>
+            </thead>
+            <tbody id="ew_logs_body">
+              <tr><td colspan="7" class="text-center text-muted"><%= t('common.loading', 'Memuat data...') %></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="ew-tab-rekap" style="display:none">
+    <div class="card mb16">
+      <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h6 style="margin:0"><i class="bi bi-check2-circle"></i> Rekap Auto-Lunas</h6>
+        <form method="GET" action="/admin/ewallet-logs" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="fc" type="number" name="month" min="1" max="12" value="<%= (typeof alMonth!=='undefined'?alMonth:(new Date().getMonth()+1)) %>" style="width:70px">
+          <input class="fc" type="number" name="year" min="2000" max="3000" value="<%= (typeof alYear!=='undefined'?alYear:new Date().getFullYear()) %>" style="width:90px">
+          <button class="btn btn-p btn-sm"><i class="bi bi-funnel"></i> Tampilkan</button>
+          <a class="btn btn-g btn-sm" href="/admin/autolunas/export?month=<%= (typeof alMonth!=='undefined'?alMonth:(new Date().getMonth()+1)) %>&year=<%= (typeof alYear!=='undefined'?alYear:new Date().getFullYear()) %>"><i class="bi bi-download"></i> CSV</a>
+        </form>
+      </div>
+      <div class="card-bd">
+        <div style="display:flex;gap:24px;margin-bottom:10px;flex-wrap:wrap">
+          <div><div class="muted" style="font-size:11px">JUMLAH</div><div style="font-weight:800;font-size:20px;color:var(--primary)"><%= (typeof alRows!=='undefined'?alRows.length:0) %></div></div>
+          <div><div class="muted" style="font-size:11px">TOTAL</div><div style="font-weight:800;font-size:20px">Rp <%= Number((typeof alTotal!=='undefined'?alTotal:0)).toLocaleString('id-ID') %></div></div>
+        </div>
+        <div class="tbl-wrap" style="max-height:360px;overflow:auto">
+          <table class="dtbl">
+            <thead><tr><th style="width:48px">#</th><th><%= t('common.customer','Pelanggan') %></th><th style="width:110px">ID</th><th style="width:90px"><%= t('pwa.field.period','Periode') %></th><th style="width:110px"><%= t('collector.col_amount','Nominal') %></th><th style="width:150px"><%= t('collector.col_time','Waktu') %></th></tr></thead>
+            <tbody>
+              <% (typeof alRows!=='undefined'?alRows:[]).forEach(function(r,i){ %>
+              <tr>
+                <td class="muted"><%= i+1 %></td>
+                <td style="font-weight:700"><%= r.customer_name %></td>
+                <td><span class="ew-svc mono"><%= r.customer_code||'-' %></span></td>
+                <td><%= r.period_month %>/<%= r.period_year %></td>
+                <td style="font-weight:800;color:var(--primary)">Rp <%= Number(r.amount||0).toLocaleString('id-ID') %></td>
+                <td class="muted"><%= r.paid_at||'-' %></td>
+              </tr>
+              <% }); %>
+              <% if (typeof alRows==='undefined' || !alRows.length) { %><tr><td colspan="6" class="text-center text-muted">Tidak ada auto-lunas pada periode ini.</td></tr><% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+    <% } else { %>
+    <div class="card mb16">
+      <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h6 style="margin:0"><i class="bi bi-wallet2"></i> <%= t('admin.settings.ewallet_logs.title', 'Log Notifikasi E-Wallet (Webhook)') %></h6>
+        <a class="btn btn-p btn-sm" href="/admin/ewallet-logs"><i class="bi bi-box-arrow-up-right"></i> <%= t('common.open', 'Buka') %></a>
+      </div>
+      <div class="card-bd">
+        <div class="hint">Log notifikasi e-wallet dipindah ke halaman khusus agar pengaturan tidak terdorong ke bawah.</div>
+      </div>
+    </div>
+    <% } %>
+
+    <% if (!logsOnly) { %>
+    <form method="POST" action="/admin/settings">
+
+        <div class="set-toolbar">
+          <div class="set-tabs">
+            <button type="button" class="set-tab active" data-cat="umum" onclick="setSetTab('umum')"><i class="bi bi-info-circle"></i> <%= t('admin.settings.tab_general','Umum') %></button>
+            <button type="button" class="set-tab" data-cat="jaringan" onclick="setSetTab('jaringan')"><i class="bi bi-router"></i> <%= t('admin.settings.tab_network','Jaringan & Perangkat') %></button>
+            <button type="button" class="set-tab" data-cat="notif" onclick="setSetTab('notif')"><i class="bi bi-bell"></i> <%= t('admin.settings.tab_notif','Notifikasi & WhatsApp') %></button>
+            <button type="button" class="set-tab" data-cat="keamanan" onclick="setSetTab('keamanan')"><i class="bi bi-shield-lock"></i> <%= t('admin.settings.tab_security','Keamanan') %></button>
+            <button type="button" class="set-tab" data-cat="pembayaran" onclick="setSetTab('pembayaran')"><i class="bi bi-wallet2"></i> <%= t('admin.settings.tab_payment','Pembayaran') %></button>
+            <button type="button" class="set-tab" data-cat="branding" onclick="setSetTab('branding')"><i class="bi bi-palette"></i> Branding</button>
+          </div>
+          <div class="set-search">
+            <i class="bi bi-search"></i>
+            <input type="text" id="setSearch" placeholder="<%= t('admin.settings.search_ph','Cari pengaturan… (mis. qris, password, mikrotik)') %>" oninput="setSearch(this.value)">
+            <button type="button" class="clr" id="setSearchClear" style="display:none" onclick="document.getElementById('setSearch').value='';setSearch('');"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+
+        <div class="card mb16" data-setcat="notif">
+          <div class="card-hd"><h6><i class="bi bi-telegram"></i> <%= t('admin.settings.telegram.title', 'Pengaturan Telegram Bot (Backup Admin)') %></h6></div>
+          <div class="card-bd">
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl"><%= t('admin.settings.telegram.status', 'Status Bot Telegram') %></label>
+                <select class="fs" name="telegram_enabled">
+                  <option value="true" <%= settings.telegram_enabled ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
+                  <option value="false" <%= !settings.telegram_enabled ? 'selected' : '' %>><%= t('common.inactive', 'Nonaktif') %></option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl"><%= t('admin.settings.telegram.admin_id', 'Admin Telegram ID') %></label>
+                <input class="fc" name="telegram_admin_id" value="<%= settings.telegram_admin_id || '' %>" placeholder="Contoh: 12345678">
+              </div>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.telegram.bot_token', 'Telegram Bot Token') %></label>
+              <div style="display:flex;gap:8px">
+                <input class="fc" name="telegram_bot_token" value="<%= settings.telegram_bot_token || '' %>" placeholder="Dapatkan dari @BotFather">
+                <button type="button" class="btn btn-g" onclick="syncTelegram()" title="<%= t('admin.settings.telegram.sync_title', 'Sinkronkan / Hapus Webhook Lama') %>"><i class="bi bi-arrow-repeat"></i> <%= t('admin.settings.telegram.sync', 'Sinkronkan') %></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-sliders"></i> <%= t('admin.settings.system_title', 'Pengaturan Sistem') %></h6></div>
+          <div class="card-bd settings-grid">
+        
+        <!-- General Info -->
+        <div data-setcat="umum">
+          <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-info-circle"></i> <%= t('admin.settings.app_info', 'Info Aplikasi') %></h6>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.company_name', 'Nama Aplikasi / Perusahaan') %></label>
+            <input class="fc" name="company_header" value="<%= settings.company_header || '' %>">
+          </div>
+          <div class="fg">
+            <label class="fl">URL Publik Aplikasi (Public Base URL)</label>
+            <input class="fc" name="public_base_url" value="<%= settings.public_base_url || '' %>" placeholder="https://portal.domain-anda.com">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Digunakan untuk menyusun tautan login pelanggan yang dikirim via WhatsApp. Contoh: <span class="mono">https://portal.domain-anda.com</span></div>
+          </div>
+          <div class="fg">
+            <label class="fl">Prefix ID Pelanggan</label>
+            <input class="fc" name="customer_id_prefix" value="<%= settings.customer_id_prefix || 'SKY' %>" placeholder="SKY" style="text-transform:uppercase" maxlength="12">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Format ID Pelanggan: <span class="mono">PREFIX-angka</span> (contoh: <span class="mono"><%= (settings.customer_id_prefix || 'SKY') %>-48213</span>). Hanya angka setelah tanda hubung. ID <b>permanen</b> &amp; otomatis untuk pelanggan baru.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Jumlah Digit Angka ID Pelanggan</label>
+            <input class="fc" type="number" name="customer_id_digits" value="<%= settings.customer_id_digits || 5 %>" min="4" max="10" step="1">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Default 5 → contoh <span class="mono">SKY-48213</span>.</div>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.footer_info', 'Info Footer') %></label>
+            <input class="fc" name="footer_info" value="<%= settings.footer_info || '' %>">
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.owner_name', 'Nama Manajer / Owner') %></label>
+              <input class="fc" name="company_manager" value="<%= settings.company_manager || '' %>" placeholder="Admin Pusat">
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.primary_phone', 'Telepon Utama (CS)') %></label>
+              <input class="fc" name="company_phone" value="<%= settings.company_phone || '' %>" placeholder="081234567890">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.company_email', 'Email Perusahaan') %></label>
+            <input class="fc" name="company_email" value="<%= settings.company_email || '' %>" placeholder="support@isp.com">
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.office_address', 'Alamat Kantor') %></label>
+            <input class="fc" name="company_address" value="<%= settings.company_address || '' %>" placeholder="Jl. Utama No. 123">
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.office_lat', 'Latitude Kantor') %></label>
+              <input class="fc" name="office_lat" value="<%= settings.office_lat || '' %>" placeholder="-6.xxx">
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.office_lng', 'Longitude Kantor') %></label>
+              <input class="fc" name="office_lng" value="<%= settings.office_lng || '' %>" placeholder="106.xxx">
+            </div>
+          <div class="hint" style="margin-top:6px;color:var(--muted)">
+            <i class="bi bi-info-circle"></i> Koordinat kantor digunakan untuk validasi lokasi absensi karyawan (geofencing)
+          </div>
+          <div class="form-row" style="margin-top:12px">
+            <div class="fg">
+              <label class="fl">
+                <i class="bi bi-shield-check"></i> Geofencing Absensi
+              </label>
+              <select class="fs" name="attendance_geofencing">
+                <option value="true" <%= settings.attendance_geofencing === 'true' || settings.attendance_geofencing === true ? 'selected' : '' %>>Aktif (Validasi Lokasi)</option>
+                <option value="false" <%= settings.attendance_geofencing === 'false' || settings.attendance_geofencing === false ? 'selected' : '' %>>Nonaktif (Bebas)</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">
+                <i class="bi bi-geo-alt"></i> Radius Absensi (meter)
+              </label>
+              <input type="number" class="fc" name="attendance_radius" value="<%= settings.attendance_radius || '100' %>" placeholder="100" min="10" max="1000">
+            </div>
+          </div>
+          <div class="hint" style="margin-top:6px;color:var(--warning)">
+            <i class="bi bi-exclamation-triangle"></i> <strong>Geofencing:</strong> Karyawan hanya bisa absen jika berada dalam radius yang ditentukan dari koordinat kantor. Nonaktifkan jika karyawan bekerja remote/lapangan.
+          </div>
+          </div>
+          <div class="fg">
+            <label class="fl"><%= t('admin.settings.operational_hours', 'Jam Operasional') %></label>
+            <input class="fc" name="operational_hours" value="<%= settings.operational_hours || '' %>" placeholder="Setiap Hari: 08.00 - 22.00 WIB">
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.server_port', 'Port Server') %></label>
+              <input class="fc" type="number" name="server_port" value="<%= settings.server_port || 3001 %>">
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.timezone', 'Zona Waktu') %></label>
+              <select class="fs" name="timezone">
+                <option value="Asia/Jakarta" <%= settings.timezone === 'Asia/Jakarta' ? 'selected' : '' %>>WIB (Asia/Jakarta)</option>
+                <option value="Asia/Makassar" <%= settings.timezone === 'Asia/Makassar' ? 'selected' : '' %>>WITA (Asia/Makassar)</option>
+                <option value="Asia/Jayapura" <%= settings.timezone === 'Asia/Jayapura' ? 'selected' : '' %>>WIT (Asia/Jayapura)</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.settings.customer_otp_login', 'Login OTP Pelanggan') %></label>
+              <select class="fs" name="login_otp_enabled">
+                <option value="true" <%= settings.login_otp_enabled ? 'selected' : '' %>><%= t('admin.settings.otp_enabled', 'Aktif (Kirim via WA)') %></option>
+                <option value="false" <%= !settings.login_otp_enabled ? 'selected' : '' %>><%= t('admin.settings.otp_disabled', 'Nonaktif (Langsung)') %></option>
+              </select>
+            </div>
+          </div>
+          <div class="hint" style="margin:0 0 10px;padding:12px;border:1px dashed var(--border);border-radius:10px;background:var(--bg2)">
+            <i class="bi bi-robot"></i> <strong>Otomatisasi dipindah:</strong> Auto-Nonaktif, Auto-Hapus, Auto-Peringatan &amp; Auto-Lunas kini tertata di menu <a href="/admin/automation" style="color:var(--primary);font-weight:800">Automation &rarr;</a>
+          </div>
+          <div class="hint" style="margin-top:6px;color:var(--warning)">
+            <i class="bi bi-info-circle"></i> <strong>Pembayaran Kolektor:</strong> Pengaturan approval pembayaran kolektor sekarang diatur per akun kolektor pada menu Manajemen Kolektor, bukan dari pengaturan global.
+          </div>
+        </div>
+
+        <!-- GenieACS & MikroTik -->
+        <div data-setcat="jaringan">
+          <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-router"></i> <%= t('admin.settings.external_api', 'API Eksternal') %></h6>
+          
+          <div class="fg" style="margin-bottom:16px; background:rgba(59,130,246,0.08); padding:12px; border-radius:8px; border:1px dashed rgba(59,130,246,0.3);">
+            <label class="fl" style="display:flex; align-items:center; gap:8px; font-weight:bold; cursor:pointer; margin:0;">
+              <input type="checkbox" name="use_builtin_acs" value="true" id="use_builtin_acs" <%= settings.use_builtin_acs ? 'checked' : '' %> onchange="toggleAcsFields()">
+              Gunakan Built-in ACS Server (TR-069)
+            </label>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px; padding-left:20px;">
+              Jika diaktifkan, aplikasi akan bertindak sebagai server ACS TR-069 sendiri (endpoint: <span class="mono" style="font-weight:700;">/acs</span>) tanpa perlu server GenieACS terpisah.
+            </div>
+          </div>
+
+          <script>
+            function toggleAcsFields() {
+              const chk = document.getElementById('use_builtin_acs');
+              const fields = document.getElementById('genieacs_external_fields');
+              if (chk && fields) {
+                fields.style.display = chk.checked ? 'none' : 'block';
+              }
+            }
+          </script>
+
+          <div id="genieacs_external_fields" <% if (settings.use_builtin_acs) { %>style="display:none;"<% } %>>
+            <div class="fg">
+              <label class="fl">GenieACS API URL</label>
+              <input class="fc" name="genieacs_url" value="<%= settings.genieacs_url || '' %>" placeholder="http://192.168.8.89:7557">
+            </div>
+            <div class="form-row">
+              <div class="fg">
+                <label class="fl">GenieACS Username</label>
+                <input class="fc" name="genieacs_username" value="<%= settings.genieacs_username || '' %>">
+              </div>
+              <div class="fg">
+                <label class="fl">GenieACS Password</label>
+                <input class="fc" type="password" name="genieacs_password" value="<%= settings.genieacs_password || '' %>">
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-Router Mode Settings -->
+          <div class="form-row" style="margin-top:20px; background:rgba(34,197,94,0.08); padding:12px; border-radius:8px; border:1px dashed rgba(34,197,94,0.3);">
+            <div class="fg" style="flex:1">
+              <label class="fl"><i class="bi bi-shuffle"></i> Mode Multi-Router</label>
+              <select class="fs" name="multi_router_mode" id="multi_router_mode_select" onchange="toggleMultiRouterUI()">
+                <option value="active" <%= (settings.multi_router_mode === 'active' || !settings.multi_router_mode) ? 'selected' : '' %>>Aktif (Multiple Router)</option>
+                <option value="disabled" <%= settings.multi_router_mode === 'disabled' ? 'selected' : '' %>>Nonaktif (Single Router Mode)</option>
+              </select>
+              <div class="hint">Pilih mode operasional MikroTik: Aktif untuk multi-router, Nonaktif untuk single router dengan fallback otomatis</div>
+            </div>
+            <div class="fg" id="default_router_div" style="flex:1; <%= (settings.multi_router_mode === 'disabled') ? '' : 'display:none' %>">
+              <label class="fl">Default Router ID <span style="color:var(--muted); font-weight:normal;">(Opsional)</span></label>
+              <input class="fc" type="number" name="default_router_id" id="default_router_id" value="<%= settings.default_router_id || '' %>" placeholder="Kosongkan untuk auto-detect" min="1">
+              <div class="hint">Opsional. Jika kosong, sistem auto-detect router pertama (ID terkecil). Jika diisi, gunakan nilai ini.</div>
+            </div>
+          </div>
+
+          <script>
+            function toggleMultiRouterUI() {
+              const mode = document.getElementById('multi_router_mode_select')?.value || 'active';
+              const div = document.getElementById('default_router_div');
+              if (div) {
+                div.style.display = (mode === 'disabled') ? 'block' : 'none';
+              }
+            }
+          </script>
+
+          <div class="form-row" style="margin-top:20px">
+            <div class="fg">
+              <label class="fl">MikroTik IP / Host</label>
+              <input class="fc" name="mikrotik_host" value="<%= settings.mikrotik_host || '' %>" placeholder="192.168.1.1">
+            </div>
+            <div class="fg">
+              <label class="fl">MikroTik API Port</label>
+              <input class="fc" type="number" name="mikrotik_port" value="<%= settings.mikrotik_port || 8728 %>" placeholder="8728">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">MikroTik API User</label>
+              <input class="fc" name="mikrotik_user" value="<%= settings.mikrotik_user || '' %>">
+            </div>
+            <div class="fg">
+              <label class="fl">MikroTik API Password</label>
+              <input class="fc" type="password" name="mikrotik_password" value="<%= settings.mikrotik_password || '' %>">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Admin Auth -->
+        <div data-setcat="keamanan">
+          <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-shield-lock"></i> Kredensial Admin</h6>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Username Admin</label>
+              <input class="fc" name="admin_username" value="<%= settings.admin_username || '' %>">
+            </div>
+            <div class="fg">
+              <label class="fl">Password Admin</label>
+              <input class="fc" type="password" name="admin_password" value="<%= settings.admin_password || '' %>">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Admin API Key (Untuk akses luar)</label>
+            <input class="fc" name="admin_api_key" value="<%= settings.admin_api_key || '' %>">
+          </div>
+        </div>
+
+        <!-- WhatsApp -->
+        <div data-setcat="notif">
+          <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-whatsapp"></i> Integrasi WhatsApp</h6>
+          <div class="fg">
+            <label class="fl">Enable WhatsApp Bot</label>
+            <select class="fs" name="whatsapp_enabled">
+              <option value="true" <%= settings.whatsapp_enabled ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
+              <option value="false" <%= !settings.whatsapp_enabled ? 'selected' : '' %>><%= t('common.inactive','Nonaktif') %></option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Nomor Admin WA (Pisahkan dengan koma)</label>
+            <input class="fc" name="whatsapp_admin_numbers" value="<%= (settings.whatsapp_admin_numbers || []).join(', ') %>" placeholder="6281xxx, 6282xxx">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Nomor admin akan menerima notifikasi monitoring sistem. Nomor teknisi diambil otomatis dari <a href="/admin/technicians" style="color:var(--brand);font-weight:600">Data Teknisi</a>.</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Jeda Antar Pesan Broadcast (Detik)</label>
+            <input class="fc" type="number" name="whatsapp_broadcast_delay" value="<%= settings.whatsapp_broadcast_delay || 2 %>" min="1" max="60">
+            <div style="font-size:10px; color:var(--muted); margin-top:4px">Rekomendasi: Minimal 2 detik agar tidak terdeteksi spam oleh WhatsApp.</div>
+          </div>
+        </div>
+
+        <!-- Payment Gateway -->
+        <div data-setcat="branding">
+          <div class="card mb16">
+            <div class="card-hd"><h6><i class="bi bi-palette"></i> Logo Aplikasi</h6></div>
+            <div class="card-bd">
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Logo Portal Pelanggan &amp; Login</label>
+                  <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+                    <div style="flex:1 1 200px">
+                      <input class="fc" type="file" id="brand_portal_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                      <div style="font-size:10px; color:var(--muted); margin-top:4px">PNG/JPG/WebP, maks 2MB. PNG/JPEG otomatis dioptimalkan. Dipakai di halaman login &amp; portal pelanggan.</div>
+                    </div>
+                    <button class="btn btn-s" type="button" onclick="uploadBrandLogo('portal', this)" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
+                  </div>
+                  <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                    <div style="font-size:10px; color:var(--muted)">Saat ini:</div>
+                    <img src="<%= settings.logo_portal || settings.company_logo || '/img/logo.png' %>?v=<%= Date.now() %>" alt="Logo Portal" style="height:40px; object-fit:contain; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px; border:1px solid var(--border)">
+                  </div>
+                </div>
+                <div class="fg">
+                  <label class="fl">Logo PDF &amp; Invoice</label>
+                  <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+                    <div style="flex:1 1 200px">
+                      <input class="fc" type="file" id="brand_invoice_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                      <div style="font-size:10px; color:var(--muted); margin-top:4px">Dipakai pada semua cetakan PDF (invoice, faktur, struk, laporan).</div>
+                    </div>
+                    <button class="btn btn-s" type="button" onclick="uploadBrandLogo('invoice', this)" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
+                  </div>
+                  <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                    <div style="font-size:10px; color:var(--muted)">Saat ini:</div>
+                    <img src="<%= settings.logo_invoice || settings.logo_portal || settings.company_logo || '/img/logo.png' %>?v=<%= Date.now() %>" alt="Logo Invoice" style="height:40px; object-fit:contain; background:rgba(255,255,255,0.05); border-radius:6px; padding:4px; border:1px solid var(--border)">
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="fg">
+                  <label class="fl">Logo PWA (Ikon Aplikasi)</label>
+                  <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+                    <div style="flex:1 1 200px">
+                      <input class="fc" type="file" id="brand_pwa_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                      <div style="font-size:10px; color:var(--muted); margin-top:4px">Setelah upload, ikon PWA (192/512/maskable/apple-touch) &amp; favicon otomatis dibuat ulang dari gambar ini. Sebaiknya gambar persegi (1:1).</div>
+                    </div>
+                    <button class="btn btn-s" type="button" onclick="uploadBrandLogo('pwa', this)" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
+                    <button class="btn btn-g" type="button" onclick="regenPwaIcons(this)" style="height:38px"><i class="bi bi-phone"></i> Buat Ulang Ikon</button>
+                  </div>
+                  <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                    <div style="font-size:10px; color:var(--muted)">Preview:</div>
+                    <img src="/img/icons/icon-192.png?v=<%= Date.now() %>" alt="Ikon PWA" style="height:40px; width:40px; object-fit:contain; border-radius:8px; border:1px solid var(--border)">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb16">
+            <div class="card-hd"><h6><i class="bi bi-image"></i> Landing Page</h6></div>
+            <div class="card-bd">
+              <div class="fg">
+                <label class="fl">Foto Hero Landing Page</label>
+                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+                  <div style="flex:1 1 200px">
+                    <input class="fc" type="file" id="brand_hero_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                    <div style="font-size:10px; color:var(--muted); margin-top:4px">PNG/JPEG otomatis dikonversi ke <b>WebP</b> (+ fallback JPEG) agar lebih ringan. Rasio disarankan 16:10 (mis. 1600×1000).</div>
+                  </div>
+                  <button class="btn btn-s" type="button" onclick="uploadBrandLogo('hero', this)" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
+                </div>
+                <div style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+                  <div style="font-size:10px; color:var(--muted)">Preview:</div>
+                  <img src="/img/landing/server-1600.webp?v=<%= Date.now() %>" alt="Hero Landing" style="height:64px; border-radius:8px; border:1px solid var(--border)">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb16">
+            <div class="card-hd"><h6><i class="bi bi-speedometer2"></i> Speed Test &amp; Uptime</h6></div>
+            <div class="card-bd">
+              <div class="fg">
+                <label class="fl">Provider Speed Test (Isi Cepat)</label>
+                <select class="fc" id="speedtest_preset" onchange="applySpeedtestPreset(this.value)">
+                  <option value="">-- Pilih untuk isi URL &amp; mode otomatis (opsional) --</option>
+                  <option value="librespeed">LibreSpeed Self-Hosted (internal, embed)</option>
+                  <option value="openspeedtest">OpenSpeedTest Self-Hosted (internal, embed)</option>
+                  <option value="ookla">Ookla Speedtest Custom (eksternal, embed)</option>
+                  <option value="cloudflare">Cloudflare Speed Test (eksternal, buka tab)</option>
+                  <option value="googlefiber">Google Fiber Speed Test (eksternal, buka tab)</option>
+                  <option value="speedtestnet">Speedtest.net / Ookla (eksternal, buka tab)</option>
+                </select>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Preset hanya mengisi otomatis — sesuaikan URL bila perlu.</div>
+              </div>
+              <div class="fg">
+                <label class="fl">Link Speed Test</label>
+                <input class="fc" name="speedtest_url" id="speedtest_url_input" value="<%= settings.speedtest_url || '' %>" placeholder="https://speed.domain-anda.com">
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Bisa <b>internal</b> (LibreSpeed / OpenSpeedTest self-hosted) atau <b>eksternal</b> (Ookla Custom, Cloudflare, Google Fiber, dll). Harus bisa diakses <b>public</b>. Jika dikosongkan, dashboard pelanggan menampilkan <i>"Speedtest belum di setup"</i>.</div>
+              </div>
+              <div class="fg">
+                <label class="fl">Mode Tampilan di Dashboard Pelanggan</label>
+                <select class="fc" name="speedtest_mode" id="speedtest_mode_select">
+                  <option value="iframe" <%= (settings.speedtest_mode || 'iframe') === 'iframe' ? 'selected' : '' %>>Embed / iframe — untuk provider yang mengizinkan</option>
+                  <option value="tab" <%= settings.speedtest_mode === 'tab' ? 'selected' : '' %>>Buka Tab Baru — untuk provider yang memblokir iframe</option>
+                </select>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Di halaman pelanggan tersedia tombol <b>Muat Ulang</b> (reload speed test) &amp; <b>Bersihkan Cache</b>.</div>
+              </div>
+              <script>
+                function applySpeedtestPreset(v) {
+                  var urls = {
+                    librespeed: 'https://speed.domain-anda.com/',
+                    openspeedtest: 'https://speed.domain-anda.com/',
+                    ookla: 'https://nama-anda.speedtestcustom.com/',
+                    cloudflare: 'https://speed.cloudflare.com/',
+                    googlefiber: 'https://fiber.google.com/speedtest/',
+                    speedtestnet: 'https://www.speedtest.net/'
+                  };
+                  var modes = { cloudflare:'tab', googlefiber:'tab', speedtestnet:'tab', librespeed:'iframe', openspeedtest:'iframe', ookla:'iframe' };
+                  if (!v) return;
+                  var u = document.getElementById('speedtest_url_input');
+                  var m = document.getElementById('speedtest_mode_select');
+                  if (u && urls[v]) u.value = urls[v];
+                  if (m && modes[v]) m.value = modes[v];
+                }
+              </script>
+              <div class="fg">
+                <label class="fl">Link Repositori Proyek (GitHub)</label>
+                <input class="fc" name="project_url" value="<%= settings.project_url || 'https://github.com/oxpoe/open-isp' %>" placeholder="https://github.com/oxpoe/open-isp">
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Dipakai untuk tautan <b>Repo</b>, <b>Form/Issue</b> (<code>/issues/new/choose</code>), <b>Wiki</b>, dan <b>Lisensi</b> di landing page.</div>
+              </div>
+              <div class="fg">
+                <label class="fl">Link Uptime Website (Status)</label>
+                <input class="fc" name="uptime_url" value="<%= settings.uptime_url || '' %>" placeholder="https://status.domain-anda.com">
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Dipakai untuk tombol/redirect <b><%= t('common.status','Status') %></b> di landing page. Jika dikosongkan, landing page <b>tidak menampilkan tab Status</b>.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-span-2" data-setcat="pembayaran">
+          <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-wallet2"></i> Pengaturan Payment Gateway</h6>
+          
+          <div style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+            <h6 style="font-size:12px; margin-bottom: 10px;">QRIS Statis (Semi-Otomatis)</h6>
+            <div class="form-row3">
+              <div class="fg">
+                <label class="fl">Status QRIS Statis</label>
+                <select class="fs" name="qris_static_enabled">
+                  <option value="true" <%= (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false') ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
+                  <option value="false" <%= (settings.qris_static_enabled === false || settings.qris_static_enabled === 'false') ? 'selected' : '' %>><%= t('common.inactive','Nonaktif') %></option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">QRIS Static QR URL</label>
+                <input class="fc" name="qris_static_qr_url" value="<%= settings.qris_static_qr_url || '' %>" placeholder="https://.../qris.png atau link QRIS">
+              </div>
+              <div class="fg">
+                <label class="fl">Catatan</label>
+                <input class="fc" value="Portal pelanggan akan menampilkan QRIS + nominal unik (kode bayar)." readonly>
+              </div>
+            </div>
+            <div class="fg" style="margin-top:10px">
+              <label class="fl">QRIS Static Payload (String)</label>
+              <textarea class="fc" name="qris_static_payload" rows="3" placeholder="000201010211...6304XXXX"><%= settings.qris_static_payload || '' %></textarea>
+              <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika diisi, sistem akan membuat QRIS dinamis per transaksi (nominal langsung terisi saat scan). Jika kosong, sistem pakai URL gambar seperti biasa.</div>
+            </div>
+            <div style="margin-top:10px">
+              <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+                <div class="fg" style="min-width:260px; flex: 1 1 260px">
+                  <label class="fl">Upload Gambar QRIS (opsional)</label>
+                  <input class="fc" type="file" id="qris_upload_file" name="qris_file" accept="image/png,image/jpeg,image/jpg,image/webp">
+                  <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika di-upload, sistem akan menyimpan file dan otomatis mengisi URL QRIS.</div>
+                </div>
+                <button class="btn btn-s" type="button" id="qris_upload_btn" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
+              </div>
+            </div>
+            <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
+            <script>
+              (function () {
+                const fileInput = document.getElementById('qris_upload_file');
+                const btn = document.getElementById('qris_upload_btn');
+                if (!fileInput || !btn) return;
+
+                const normalizePayload = (raw) => {
+                  let s = String(raw || '').replace(/[\r\n\t]+/g, '').trim();
+                  const idx = s.indexOf('000201');
+                  if (idx > 0) s = s.slice(idx);
+                  const lastCrc = s.lastIndexOf('6304');
+                  if (lastCrc >= 0 && s.length >= lastCrc + 8) s = s.slice(0, lastCrc + 8);
+                  return s;
+                };
+
+                const decodeQrPayloadInBrowser = async (file) => {
+                  try {
+                    if (!window.jsQR) return '';
+                    const url = URL.createObjectURL(file);
+                    const img = new Image();
+                    img.decoding = 'async';
+                    img.src = url;
+                    await new Promise((resolve, reject) => {
+                      img.onload = () => resolve();
+                      img.onerror = () => reject(new Error('Gagal membaca gambar'));
+                    });
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    if (!ctx) return '';
+                    canvas.width = img.naturalWidth || img.width || 0;
+                    canvas.height = img.naturalHeight || img.height || 0;
+                    if (!canvas.width || !canvas.height) return '';
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const res = window.jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: 'attemptBoth' });
+                    URL.revokeObjectURL(url);
+                    if (!res || !res.data) return '';
+                    const s = normalizePayload(res.data);
+                    return s.startsWith('000201') ? s : '';
+                  } catch {
+                    return '';
+                  }
+                };
+
+                btn.addEventListener('click', async () => {
+                  const f = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+                  if (!f) return;
+                  const fd = new FormData();
+                  fd.append('qris_file', f);
+                  const payload = await decodeQrPayloadInBrowser(f);
+                  if (payload) fd.append('qris_payload', payload);
+                  btn.disabled = true;
+                  try {
+                    const r = await fetch('/admin/settings/qris-upload', { method: 'POST', body: fd, credentials: 'same-origin' });
+                    if (!r.ok) throw new Error('Upload gagal');
+                    window.location.href = '/admin/settings';
+                  } catch (e) {
+                    window.location.href = '/admin/settings';
+                  } finally {
+                    btn.disabled = false;
+                  }
+                });
+              })();
+            </script>
+            <% if (settings.qris_static_qr_url) { %>
+              <div style="margin-top:10px; display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+                <div style="font-size:10px; color:var(--muted)">Preview:</div>
+                <img src="<%= settings.qris_static_qr_url %>" alt="QRIS" style="height:72px; width:72px; object-fit:contain; background:#fff; border-radius:12px; padding:8px; border:1px solid rgba(0,0,0,0.08)">
+                <div style="font-size:10px; color:var(--muted)">Gunakan tombol <span style="font-weight:700">QR</span> di menu Billing untuk membuat nominal unik per invoice.</div>
+              </div>
+            <% } %>
+
+            <!-- Transfer Bank & E-Wallet Manual (Mode 2) -->
+            <div style="margin-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px;">
+              <h6 style="font-size:12px; margin-bottom: 10px;"><i class="bi bi-bank"></i> Transfer Bank &amp; E-Wallet (Manual, Mode 2)</h6>
+              <div class="form-row3">
+                <div class="fg">
+                  <label class="fl">Status Transfer Bank</label>
+                  <select class="fs" name="payment_bank_enabled">
+                    <option value="true" <%= (settings.payment_bank_enabled !== false && settings.payment_bank_enabled !== 'false') ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
+                    <option value="false" <%= (settings.payment_bank_enabled === false || settings.payment_bank_enabled === 'false') ? 'selected' : '' %>><%= t('common.inactive','Nonaktif') %></option>
+                  </select>
+                </div>
+                <div class="fg">
+                  <label class="fl">Status E-Wallet</label>
+                  <select class="fs" name="payment_ewallet_enabled">
+                    <option value="true" <%= (settings.payment_ewallet_enabled !== false && settings.payment_ewallet_enabled !== 'false') ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
+                    <option value="false" <%= (settings.payment_ewallet_enabled === false || settings.payment_ewallet_enabled === 'false') ? 'selected' : '' %>><%= t('common.inactive','Nonaktif') %></option>
+                  </select>
+                </div>
+              </div>
+              <div class="fg" style="margin-top:10px">
+                <label class="fl">Rekening Bank (1 per baris: Bank|Nomor|Atas Nama)</label>
+                <textarea class="fc" name="payment_bank_accounts" rows="3" placeholder="BCA|1234567890|PT Artha Mega Data"><%= settings.payment_bank_accounts || '' %></textarea>
+              </div>
+              <div class="fg" style="margin-top:10px">
+                <label class="fl">E-Wallet (1 per baris: Nama|Nomor|Atas Nama)</label>
+                <textarea class="fc" name="payment_ewallet_accounts" rows="3" placeholder="DANA|08123456789|Admin OPEN-ISP"><%= settings.payment_ewallet_accounts || '' %></textarea>
+              </div>
+              <div style="font-size:10px; color:var(--muted); margin-top:4px">Nominal &amp; kode unik sama seperti QRIS; verifikasi otomatis (webhook forwarder) + manual (upload bukti).</div>
+            </div>
+
+            <!-- Hubungkan Webhook Notifikasi E-Wallet (Mode 2) -->
+            <div style="margin-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px;">
+              <h6 style="font-size:11px; margin-bottom: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-phone"></i> Hubungkan Webhook Notifikasi E-Wallet (Mode 2)</h6>
+              <% 
+                const _base = (settings.public_base_url || '').replace(/\/+$/, '');
+                const _secret = String(settings.webhook_secret || '');
+                const macroWebhookUrlFull = _base + '/api/webhook/v1/payment-notif?secret_key=' + encodeURIComponent(_secret);
+              %>
+              <div class="fg">
+                <label class="fl">1) URL Webhook (method POST)</label>
+                <div style="display:flex;gap:8px">
+                  <input class="fc" id="macro_webhook_url" readonly value="<%= macroWebhookUrlFull %>">
+                  <button type="button" class="btn btn-g" onclick="copyInput('macro_webhook_url', 'URL Webhook')"><i class="bi bi-copy"></i></button>
+                </div>
+              </div>
+              <div class="fg" style="margin-top:8px">
+                <label class="fl">2) Secret Token (alternatif header <span class="mono">X-Webhook-Token</span>)</label>
+                <div style="display:flex;gap:8px">
+                  <input class="fc mono" type="password" id="macro_webhook_secret" readonly value="<%= _secret %>">
+                  <button type="button" class="btn btn-g" onclick="toggleSecret('macro_webhook_secret')" title="Lihat/Sembunyikan"><i class="bi bi-eye"></i></button>
+                  <button type="button" class="btn btn-g" onclick="copyInput('macro_webhook_secret', 'Secret Token')"><i class="bi bi-copy"></i></button>
+                </div>
+              </div>
+              <div class="fg" style="margin-top:10px">
+                <label class="fl"><i class="bi bi-bell"></i> Notifikasi WA saat Pembayaran Belum Cocok</label>
+                <select class="fs" name="webhook_unmatched_notify_enabled">
+                  <option value="true" <%= (settings.webhook_unmatched_notify_enabled === undefined ? true : settings.webhook_unmatched_notify_enabled) ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
+                  <option value="false" <%= (settings.webhook_unmatched_notify_enabled === undefined ? true : settings.webhook_unmatched_notify_enabled) ? '' : 'selected' %>><%= t('common.inactive','Nonaktif') %></option>
+                </select>
+                <div class="hint">Kirim WA ke admin tiap ada pembayaran terdeteksi tapi belum cocok (untuk dicocokkan manual via jam notif vs bukti transfer).</div>
+              </div>
+              <div class="fg" style="margin-top:10px">
+                <label class="fl"><i class="bi bi-clock-history"></i> Retensi Notifikasi Webhook (Otomasi)</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <select class="fs" name="webhook_notif_retention_enabled">
+                    <option value="1" <%= (String(settings.webhook_notif_retention_enabled) === '0' || String(settings.webhook_notif_retention_enabled) === 'false') ? '' : 'selected' %>><%= t('common.active','Aktif') %></option>
+                    <option value="0" <%= (String(settings.webhook_notif_retention_enabled) === '0' || String(settings.webhook_notif_retention_enabled) === 'false') ? 'selected' : '' %>><%= t('common.inactive','Nonaktif') %></option>
+                  </select>
+                  <input class="fc" type="number" min="1" max="3650" name="webhook_notif_retention_days" value="<%= (settings.webhook_notif_retention_days || 30) %>" placeholder="30">
+                </div>
+                <div class="hint">Notif webhook yang lebih tua dari jumlah hari ini dihapus otomatis tiap hari (04:45). Default 30 hari.</div>
+              </div>
+              <div style="background:rgba(148,163,184,0.12);border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:10px;font-size:12px;line-height:1.55">
+                <b><i class="bi bi-info-circle"></i> Cara memasang di app (mis. android-notification-forwarder / MacroDroid):</b>
+                <ol style="margin:6px 0 0 18px;padding:0">
+                  <li>Method <span class="mono">POST</span>, Content-Type <span class="mono">application/json</span>.</li>
+                  <li><b>API URL</b> = URL di atas (secret sudah termasuk), <i>atau</i> URL dasar + header <span class="mono">X-Webhook-Token: &lt;token&gt;</span>.</li>
+                  <li><b>Target Apps</b> = package aplikasi bank/e-wallet (mis. <span class="mono">com.gojek.gopay</span>, OVO, DANA, Jenius).</li>
+                  <li>Notifikasi WhatsApp/Telegram otomatis ditolak agar chat tak dianggap pembayaran.</li>
+                  <li>Nominal di notifikasi harus <b>sama dengan nominal unik tagihan</b> (jumlah + kode unik QRIS).</li>
+                </ol>
+              </div>
+              <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <button type="button" class="btn btn-p btn-sm" onclick="testWebhook()"><i class="bi bi-send-check"></i> Tes Webhook</button>
+                <span id="webhookTestResult" class="muted" style="font-size:12px"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Mode & Mayar -->
+          <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+            <h6 style="font-size:12px;margin-bottom:10px"><i class="bi bi-credit-card-2-front"></i> Mode Pembayaran</h6>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+              <div>
+                <label class="fl">Mode</label>
+                <select class="fs" name="payment_mode">
+                  <option value="selfservice" <%= (settings.payment_mode || 'selfservice') === 'selfservice' ? 'selected' : '' %>>Self-Service (QRIS statis + manual/MacroDroid)</option>
+                  <option value="gateway" <%= settings.payment_mode === 'gateway' ? 'selected' : '' %>>Gateway (Mayar)</option>
+                </select>
+                <div class="hint">Mode 1 = Gateway (hanya Mayar). Mode 2 = QRIS statis + verifikasi manual.</div>
+              </div>
+              <div>
+                <label class="fl">Mayar API Key</label>
+                <input class="fc" type="password" name="mayar_api_key" value="<%= settings.mayar_api_key || '' %>" placeholder="API key Mayar (Bearer)">
+                <div class="hint">Webhook Mayar: <span class="mono">https://&lt;domain-anda&gt;/api/webhook/mayar</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fg" style="margin-top: 15px;">
+            <label class="fl">Webhook Mayar (Mode 1 — Gateway)</label>
+            <div style="display:flex;gap:8px">
+              <input class="fc" id="mayar_webhook_url" readonly value="<%= ((settings.public_base_url || '').replace(/\/+$/, '')) %>/api/webhook/mayar">
+              <button type="button" class="btn btn-g" onclick="copyInput('mayar_webhook_url', 'Webhook Mayar')"><i class="bi bi-copy"></i></button>
+            </div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Tempel di dashboard Mayar sebagai URL webhook (event <span class="mono">payment.received</span>).</div>
+          </div>
+        </div>
+
+      </div>
+      
+          <div class="card-bd" style="border-top:1px solid var(--border);padding-top:20px;text-align:right">
+            <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+          </div>
+        </div>
+    </form>
+    <% } %>
+  </div>
+</div>
+
+<script>
+function copyInput(id, name) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.select();
+    document.execCommand('copy');
+    alert(name + ' berhasil disalin!');
+  }
+}
+function toggleSecret(id) {
+  const i = document.getElementById(id);
+  if (!i) return;
+  i.type = (i.type === 'password') ? 'text' : 'password';
+}
+async function testWebhook() {
+  const out = document.getElementById('webhookTestResult');
+  const secEl = document.getElementById('macro_webhook_secret');
+  if (out) { out.textContent = 'Menguji…'; out.style.color = 'var(--muted)'; }
+  try {
+    const secret = secEl ? secEl.value : '';
+    const res = await fetch('/api/webhook/v1/payment-notif', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Webhook-Token': secret },
+      body: JSON.stringify({ app_name: 'TEST', notification_title: 'Tes', notification_text: 'Kamu menerima Rp999.999.999 (tes webhook)', timestamp_ms: Date.now() })
+    });
+    const j = await res.json().catch(function () { return {}; });
+    if (out) {
+      if (j && j.status === 'processed') { out.textContent = 'Webhook OK — ' + JSON.stringify(j); out.style.color = 'var(--success)'; }
+      else { out.textContent = 'Webhook gagal — ' + JSON.stringify(j); out.style.color = 'var(--danger)'; }
+    }
+  } catch (e) {
+    if (out) { out.textContent = 'Gagal — ' + e.message; out.style.color = 'var(--danger)'; }
+  }
+}
+window.regenPwaIcons = function (btn) {
+  if (!confirm('Buat ulang ikon PWA (192/512/maskable/apple) dari logo saat ini?')) return;
+  var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Memproses...';
+  fetch('/admin/settings/regenerate-icons', { method: 'POST' })
+    .then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (d) { alert((d && d.message) || 'Selesai'); })
+    .catch(function (e) { alert('Gagal: ' + e.message); })
+    .finally(function () { btn.disabled = false; btn.innerHTML = old; });
+};
+
+window.runAutoDeactivate = function () {
+  if (!confirm('Jalankan auto-nonaktif sekarang? Pelanggan yang menunggak sesuai batas akan diisolir.')) return;
+  fetch('/admin/customers/auto-deactivate-now', { method: 'POST' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { alert(d.message || 'Selesai'); if (d.processed > 0) location.reload(); })
+    .catch(function () { alert('Gagal menjalankan auto-nonaktif'); });
+};
+
+function copyWebhook() {
+  const el = document.getElementById('webhook_url');
+  el.select();
+  document.execCommand('copy');
+  alert('Link Webhook berhasil disalin!');
+}
+async function syncTelegram() {
+  try {
+    const res = await fetch('/admin/api/telegram/sync', { method: 'POST' });
+    const data = await res.json();
+    if (data.success) alert(data.message);
+    else alert('Gagal: ' + data.error);
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Admin TIDAK memakai Service Worker (SW hanya untuk portal pelanggan, scope /customer/).
+// Bersihkan registrasi SW lama yang scope-nya bukan /customer/.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    regs.forEach((r) => { if (!r.scope.includes('/customer/')) r.unregister().catch(() => {}); });
+  }).catch(() => {});
+}
+
+async function copyText(text) {
+  const v = String(text ?? '');
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(v);
+      return true;
+    }
+  } catch {}
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = v;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+function canNotify() {
+  return typeof Notification !== 'undefined';
+}
+
+function notifEnabled() {
+  return localStorage.getItem('ew_notif_enabled') === '1';
+}
+
+function setNotifEnabled(v) {
+  localStorage.setItem('ew_notif_enabled', v ? '1' : '0');
+}
+
+function updateNotifHint() {
+  const el = document.getElementById('ew_notif_hint');
+  if (!el) return;
+  const perm = canNotify() ? Notification.permission : 'unsupported';
+  const enabled = notifEnabled();
+  let msg = '';
+  if (perm === 'unsupported') msg = 'Notifikasi browser tidak didukung di device ini.';
+  else if (perm === 'denied') msg = 'Notifikasi diblokir. Izinkan di pengaturan browser.';
+  else if (perm === 'granted') msg = enabled ? 'Notif aktif. Notifikasi muncul saat ada log baru (mode Live).' : 'Notif siap, tapi masih nonaktif.';
+  else msg = 'Klik "Aktifkan Notif" untuk minta izin notifikasi.';
+  el.textContent = msg;
+}
+
+async function enableEwalletNotif() {
+  if (!canNotify()) return updateNotifHint();
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      setNotifEnabled(true);
+      updateNotifHint();
+      try { new Notification('E-Wallet Monitor', { body: 'Notifikasi aktif.' }); } catch {}
+      return;
+    }
+    setNotifEnabled(false);
+    updateNotifHint();
+  } catch {
+    setNotifEnabled(false);
+    updateNotifHint();
+  }
+}
+
+let ewLastId = Number(localStorage.getItem('ew_last_id') || 0);
+let ewLiveTimer = null;
+let ewLiveActive = false;
+
+function showEwalletNotification(row) {
+  if (!notifEnabled()) return;
+  if (!canNotify() || Notification.permission !== 'granted') return;
+  const svc = String(row?.service || 'E-Wallet');
+  const amt = row?.parsed_ok ? `Rp ${(Number(row.parsed_amount) || 0).toLocaleString('id-ID')}` : 'Nominal tidak terdeteksi';
+  const body = String(row?.content || '').replace(/\r?\n/g, ' ').slice(0, 140);
+  try {
+    new Notification(`${svc}: ${amt}`, { body });
+  } catch {}
+}
+
+function toggleEwalletLive() {
+  ewLiveActive = !ewLiveActive;
+  const btn = document.getElementById('ew_live_btn');
+  if (btn) {
+    btn.className = ewLiveActive ? 'btn btn-d btn-sm' : 'btn btn-p btn-sm';
+    btn.innerHTML = ewLiveActive ? '<i class="bi bi-stop-circle"></i> Stop' : '<i class="bi bi-broadcast"></i> Live';
+  }
+  if (ewLiveTimer) {
+    clearInterval(ewLiveTimer);
+    ewLiveTimer = null;
+  }
+  if (ewLiveActive) {
+    loadEwalletLogs(true);
+    ewLiveTimer = setInterval(() => loadEwalletLogs(true), 5000);
+  }
+}
+
+function ewTab(t){
+  var log = document.getElementById('ew-tab-log'), rek = document.getElementById('ew-tab-rekap');
+  if (!log || !rek) return;
+  log.style.display = (t === 'log') ? '' : 'none';
+  rek.style.display = (t === 'rekap') ? '' : 'none';
+  var bl = document.getElementById('ewtab-log'), br = document.getElementById('ewtab-rekap');
+  if (bl && br) { bl.className = 'btn btn-sm ' + (t === 'log' ? 'btn-p' : 'btn-g'); br.className = 'btn btn-sm ' + (t === 'rekap' ? 'btn-p' : 'btn-g'); }
+}
+async function loadEwalletLogs() {
+  const body = document.getElementById('ew_logs_body');
+  const service = document.getElementById('ew_service')?.value || '';
+  const q = document.getElementById('ew_q')?.value || '';
+  const limit = document.getElementById('ew_limit')?.value || '200';
+  if (!body) return;
+  body.innerHTML = '<tr><td colspan="7" class="text-center text-muted"><%= t('common.loading_short','Memuat...') %></td></tr>';
+  try {
+    const url = `/admin/api/webhook/payment-notif/logs?limit=${encodeURIComponent(limit)}&service=${encodeURIComponent(service)}&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Gagal memuat log');
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+    if (rows.length === 0) {
+      body.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Belum ada data.</td></tr>';
+      return;
+    }
+    const newest = rows[0];
+    const newestId = Number(newest?.id || 0);
+    if (newestId && ewLastId === 0) {
+      ewLastId = newestId;
+      localStorage.setItem('ew_last_id', String(ewLastId));
+    } else if (newestId && newestId > ewLastId) {
+      ewLastId = newestId;
+      localStorage.setItem('ew_last_id', String(ewLastId));
+      showEwalletNotification(newest);
+    }
+
+    body.innerHTML = rows.map(r => {
+      const parsed = Number(r.parsed_ok || 0) ? true : false;
+      const amountNum = (r.parsed_amount != null && r.parsed_amount !== '') ? Number(r.parsed_amount) : null;
+      const created = r.created_at ? escHtml(r.created_at) : '-';
+      const svc = escHtml(r.service || '');
+      const content = escHtml((r.content || '').replace(/\r?\n/g, ' '));
+      const mi = Number(r.matched_invoice_id || 0) || 0;
+      const mv = Number(r.matched_voucher_order_id || 0) || 0;
+      const md = Number(r.matched_donation_order_id || 0) || 0;
+      const isMatched = !!(mi || mv || md);
+      let statusBadge;
+      if (!parsed) statusBadge = '<span class="ew-badge ew-gray">Bukan transaksi</span>';
+      else if (isMatched) statusBadge = '<span class="ew-badge ew-green">Lunas</span>';
+      else statusBadge = '<span class="ew-badge ew-amber">Belum cocok</span>';
+      const amountHtml = (amountNum == null)
+        ? '<span class="muted">—</span>'
+        : ('<span class="mono" style="font-weight:800;' + (parsed ? 'color:var(--primary)' : 'color:var(--muted)') + '">Rp ' + amountNum.toLocaleString('id-ID') + '</span>');
+      const matchHtml = mi
+        ? ('<a class="mono" href="/admin/billing?search=' + mi + '" target="_blank" style="font-weight:800">INV#' + mi + '</a>')
+        : (mv ? ('<span class="mono" style="font-weight:800">Voucher#' + mv + '</span>')
+              : (md ? ('<span class="mono" style="font-weight:800">Donasi#' + md + '</span>') : '<span class="muted">—</span>'));
+      const rawEnc = encodeURIComponent(String(r.content || ''));
+      const rawShortEnc = encodeURIComponent(String(r.content || '').replace(/\r?\n/g, ' ').slice(0, 180));
+      const rowStyle = (parsed && !isMatched) ? 'background:rgba(245,158,11,.05)' : '';
+      return '<tr style="' + rowStyle + '">' +
+        '<td class="mono" style="white-space:nowrap">' + created + '</td>' +
+        '<td>' + (svc ? ('<span class="ew-svc">' + svc + '</span>') : '<span class="muted">—</span>') + '</td>' +
+        '<td>' + amountHtml + '</td>' +
+        '<td>' + statusBadge + '</td>' +
+        '<td>' + matchHtml + '</td>' +
+        '<td style="max-width:620px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + content + '">' + content + '</td>' +
+        '<td><button type="button" class="btn btn-g btn-sm btn-copy-ew" data-raw="' + rawEnc + '" data-short="' + rawShortEnc + '" title="Salin isi"><i class="bi bi-copy"></i></button></td>' +
+      '</tr>';
+    }).join('');
+
+    body.querySelectorAll('.btn-copy-ew').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const rawEnc = btn.getAttribute('data-raw') || '';
+        const rawShortEnc = btn.getAttribute('data-short') || '';
+        const decoded = decodeURIComponent(rawEnc);
+        const shortText = rawShortEnc ? decodeURIComponent(rawShortEnc) : 'Tersalin.';
+        const ok = await copyText(decoded);
+        if (ok) {
+          alert(`Tersalin:\n${shortText}`);
+        } else {
+          alert('Gagal menyalin.');
+        }
+      });
+    });
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="7" class="text-center text-muted">${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+async function clearEwalletLogs() {
+  if (!confirm('Hapus semua log e-wallet?')) return;
+  try {
+    const res = await fetch('/admin/api/webhook/payment-notif/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || 'Gagal menghapus log');
+    await loadEwalletLogs();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+// Branding: upload logo (portal / invoice / pwa)
+async function uploadBrandLogo(type, btn) {
+  const map = { portal: 'brand_portal_file', invoice: 'brand_invoice_file', pwa: 'brand_pwa_file', hero: 'brand_hero_file' };
+  const input = document.getElementById(map[type]);
+  const f = input && input.files && input.files[0] ? input.files[0] : null;
+  if (!f) { alert('Pilih file logo terlebih dahulu'); return; }
+  const fd = new FormData();
+  fd.append('logo_file', f);
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Upload...';
+  try {
+    const r = await fetch('/admin/settings/branding/logo/' + type, { method: 'POST', body: fd, credentials: 'same-origin' });
+    if (!r.ok) throw new Error('Upload logo gagal');
+    window.location.href = '/admin/settings';
+  } catch (e) {
+    alert(e.message);
+    btn.disabled = false;
+    btn.innerHTML = old;
+  }
+}
+
+setTimeout(loadEwalletLogs, 200);
+setTimeout(updateNotifHint, 250);
+setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.display='none'),5000);
+
+// ── Pengaturan: tab kategori + pencarian ──
+var _setCat = 'umum';
+function setSetTab(cat) {
+  _setCat = cat;
+  document.querySelectorAll('[data-setcat]').forEach(function (el) { el.style.display = (el.getAttribute('data-setcat') === cat) ? '' : 'none'; });
+  document.querySelectorAll('.set-tab').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-cat') === cat); });
+  var s = document.getElementById('setSearch'); if (s) s.value = '';
+  var clr = document.getElementById('setSearchClear'); if (clr) clr.style.display = 'none';
+  document.querySelectorAll('.fg, .form-row, .form-row2, .form-row3').forEach(function (r) { r.style.display = ''; });
+  try { localStorage.setItem('setCat', cat); } catch (e) {}
+}
+function setSearch(q) {
+  q = (q || '').trim().toLowerCase();
+  var clr = document.getElementById('setSearchClear'); if (clr) clr.style.display = q ? '' : 'none';
+  var blocks = document.querySelectorAll('[data-setcat]');
+  if (!q) { setSetTab(_setCat); return; }
+  blocks.forEach(function (el) { el.style.display = ''; });
+  document.querySelectorAll('.set-tab').forEach(function (b) { b.classList.remove('active'); });
+  document.querySelectorAll('.fg, .form-row, .form-row2, .form-row3').forEach(function (r) {
+    r.style.display = ((r.textContent || '').toLowerCase().indexOf(q) !== -1) ? '' : 'none';
+  });
+  blocks.forEach(function (el) {
+    var any = Array.prototype.some.call(el.querySelectorAll('.fg, .form-row, .form-row2, .form-row3'), function (r) { return r.style.display !== 'none'; });
+    el.style.display = any ? '' : 'none';
+  });
+}
+(function initSetTabs() {
+  try { var saved = localStorage.getItem('setCat'); if (saved) _setCat = saved; } catch (e) {}
+  setSetTab(_setCat);
+  // wiring eksplisit (lebih andal dari atribut inline)
+  var si = document.getElementById('setSearch');
+  if (si) si.addEventListener('input', function () { setSearch(this.value); });
+  var clr = document.getElementById('setSearchClear');
+  if (clr) clr.addEventListener('click', function () { var el = document.getElementById('setSearch'); if (el) el.value = ''; setSearch(''); });
+  document.querySelectorAll('.set-tab').forEach(function (b) { b.addEventListener('click', function () { setSetTab(this.getAttribute('data-cat')); }); });
+})();
+</script>
+</body>
+</html>

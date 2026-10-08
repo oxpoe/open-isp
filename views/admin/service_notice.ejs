@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= t('admin.service_notice.title', 'Status Layanan &amp; Pengumuman') %> | <%= company %></title>
+  <meta name="theme-color" content="#0A0D14">
+  <link rel="manifest" href="/admin/manifest.webmanifest">
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .sn-preview{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.03);position:relative;overflow:hidden}
+    .sn-preview::before{content:"";position:absolute;top:0;bottom:0;left:0;width:4px;background:var(--brand,#ADFF2F)}
+    .sn-preview[data-tone="danger"]::before{background:#fb7185}
+    .sn-preview .sn-ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:21px;flex:0 0 auto;background:rgba(173,255,47,.14);color:var(--brand,#ADFF2F)}
+    .sn-preview[data-tone="danger"] .sn-ico{background:rgba(251,113,133,.16);color:#fb7185}
+    .sn-preview .sn-main{min-width:0}
+    .sn-preview .sn-title{font-weight:800;font-size:14.5px}
+    .sn-preview .sn-text{font-size:13.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+    .sn-preview .sn-eta{font-size:12.5px;margin-top:9px}
+    .sn-preview .sn-since{color:var(--muted)}
+  </style>
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: (typeof activePage !== 'undefined' && activePage ? activePage : 'service_notice'), company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-megaphone-fill"></i> <%= t('admin.service_notice.title', 'Status Layanan &amp; Pengumuman') %></div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
+      <a href="/" target="_blank" rel="noopener" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-up-right"></i> <%= t('admin.service_notice.view_landing', 'Lihat Landing') %></a>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
+    </div>
+  </div>
+  <div class="page">
+
+    <% if (msg) { %>
+    <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+      <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+    </div>
+    <% } %>
+
+    <form method="POST" action="/admin/service-notice" id="noticeForm">
+      <div class="card mb16">
+        <div class="card-hd"><h6><i class="bi bi-broadcast-pin"></i> <%= t('admin.service_notice.mode_time', 'Mode &amp; Waktu') %></h6></div>
+        <div class="card-bd">
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('admin.service_notice.mode', 'Mode Pengumuman') %></label>
+              <select class="fs" name="notice_mode" id="n_mode">
+                <option value="NORMAL" <%= (settings.notice_mode || 'NORMAL') === 'NORMAL' ? 'selected' : '' %>><%= t('admin.service_notice.mode_normal', 'NORMAL — tidak ada pengumuman') %></option>
+                <option value="GANGGUAN_MASAL" <%= settings.notice_mode === 'GANGGUAN_MASAL' ? 'selected' : '' %>><%= t('admin.service_notice.mode_mass', 'Gangguan Masal — warning + estimasi') %></option>
+                <option value="PERBAIKAN" <%= settings.notice_mode === 'PERBAIKAN' ? 'selected' : '' %>><%= t('admin.service_notice.mode_repair', 'Perbaikan Sistem — info ringan') %></option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.service_notice.start', 'Jam Mulai Gangguan/Perbaikan') %></label>
+              <input class="fc" type="datetime-local" name="notice_start" id="n_start" value="<%= settings.notice_start || '' %>">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl"><%= t('admin.service_notice.interval', 'Interval Estimasi (jam)') %></label>
+              <input class="fc" type="number" min="1" max="168" name="notice_interval_hours" id="n_interval" value="<%= settings.notice_interval_hours || 5 %>">
+              <div class="hint"><%= t('admin.service_notice.interval_hint', 'Estimasi maju otomatis tiap interval ini bila belum ditandai selesai.') %></div>
+            </div>
+            <div class="fg">
+              <label class="fl"><%= t('admin.service_notice.note', 'Catatan Kustom (opsional)') %></label>
+              <input class="fc" name="notice_note" id="n_note" value="<%= settings.notice_note || '' %>" placeholder="<%= t('admin.service_notice.note_ph', 'Kosongkan untuk teks bawaan') %>">
+            </div>
+          </div>
+        </div>
+        <div class="card-bd" style="border-top:1px solid var(--border);padding-top:16px;text-align:right">
+          <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> <%= t('common.save', 'Simpan') %></button>
+        </div>
+      </div>
+    </form>
+
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-eye"></i> <%= t('admin.service_notice.preview', 'Pratinjau Kotak Pesan') %></h6></div>
+      <div class="card-bd">
+        <div id="snPreview" class="sn-preview" data-tone="primary">
+          <div class="sn-ico"><i class="bi bi-tools" id="snIcon"></i></div>
+          <div class="sn-main">
+            <div class="sn-title" id="snTitle"><%= t('admin.service_notice.js_repair', 'Perbaikan Sistem') %></div>
+            <div class="sn-text" id="snText"><%= t('admin.service_notice.preview_text', 'Sedang ada sedikit perbaikan sistem.') %></div>
+            <div class="sn-eta" id="snEta"></div>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:10px"><i class="bi bi-info-circle"></i> <%= t('admin.service_notice.preview_hint', 'Pratinjau kasar. Tampilan final mengikuti tema landing &amp; dashboard pelanggan (di bawah iklan).') %></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  var I18N_SN = {
+    mass: "<%= t('admin.service_notice.js_mass', 'Gangguan Masal') %>",
+    repair: "<%= t('admin.service_notice.js_repair', 'Perbaikan Sistem') %>",
+    massText: "<%= t('admin.service_notice.js_mass_text', 'Sedang terjadi gangguan pada jaringan kami. Tim teknis sedang menangani dan akan segera memulihkan layanan.') %>",
+    repairText: "<%= t('admin.service_notice.js_repair_text', 'Sedang ada sedikit perbaikan sistem. Mohon kesabarannya ya, layanan akan kembali normal secepatnya.') %>",
+    eta: "<%= t('admin.service_notice.js_eta', 'Estimasi selesai:') %>",
+    since: "<%= t('admin.service_notice.js_since', 'sejak') %>"
+  };
+  var els = {
+    mode: document.getElementById('n_mode'),
+    start: document.getElementById('n_start'),
+    interval: document.getElementById('n_interval'),
+    note: document.getElementById('n_note')
+  };
+  var out = {
+    box: document.getElementById('snPreview'),
+    ico: document.getElementById('snIcon'),
+    title: document.getElementById('snTitle'),
+    text: document.getElementById('snText'),
+    eta: document.getElementById('snEta')
+  };
+  function pad(n){ return String(n).length < 2 ? '0' + n : String(n); }
+  function fmt(d){ return pad(d.getHours()) + '.' + pad(d.getMinutes()) + ' ' + pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+  function render(){
+    var mode = els.mode.value;
+    if (mode === 'NORMAL') { out.box.style.display = 'none'; return; }
+    out.box.style.display = 'flex';
+    var mass = mode === 'GANGGUAN_MASAL';
+    out.box.setAttribute('data-tone', mass ? 'danger' : 'primary');
+    out.ico.className = 'bi ' + (mass ? 'bi-exclamation-triangle-fill' : 'bi-tools');
+    out.title.textContent = mass ? I18N_SN.mass : I18N_SN.repair;
+    out.text.textContent = els.note.value.trim() || (mass ? I18N_SN.massText : I18N_SN.repairText);
+    var startVal = els.start.value;
+    if (!startVal) { out.eta.innerHTML = ''; return; }
+    var start = new Date(startVal);
+    if (isNaN(start.getTime())) { out.eta.innerHTML = ''; return; }
+    var iv = parseInt(els.interval.value, 10); if (!iv || iv < 1) iv = 5;
+    var ms = iv * 3600 * 1000;
+    var steps = Math.max(1, Math.floor((Date.now() - start.getTime()) / ms) + 1);
+    var est = new Date(start.getTime() + steps * ms);
+    out.eta.innerHTML = '<i class="bi bi-clock-history"></i> ' + I18N_SN.eta + ' <b>' + fmt(est) + '</b> <span class="sn-since">· ' + I18N_SN.since + ' ' + fmt(start) + '</span>';
+  }
+  ['change', 'input'].forEach(function(ev){
+    [els.mode, els.start, els.interval, els.note].forEach(function(el){ el.addEventListener(ev, render); });
+  });
+  render();
+</script>
+</body>
+</html>

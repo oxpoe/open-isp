@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | <%= company %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  
+  <style>
+    :root {
+      --bg: #070913;
+      --card-bg: rgba(15, 18, 36, 0.75);
+      --border: rgba(255, 255, 255, 0.06);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #ADFF2F;
+      --primary-glow: rgba(173, 255, 47, 0.15);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.15);
+      --danger: #f43f5e;
+      --danger-glow: rgba(244, 63, 94, 0.15);
+      --warning: #f59e0b;
+      --warning-glow: rgba(245, 158, 11, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Container */
+    .noc-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    /* Header */
+    .noc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 14px 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-logo-icon {
+      font-size: 24px;
+      color: var(--primary);
+      filter: drop-shadow(0 0 8px var(--primary));
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ADFF2F, #7cc61a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .router-badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .router-select-wrapper {
+      position: relative;
+    }
+
+    .router-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 32px 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      appearance: none;
+      transition: all 0.2s;
+    }
+
+    .router-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .router-select-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--text-muted);
+    }
+
+    .btn-back {
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--danger);
+      background: var(--danger-glow);
+    }
+
+    .btn-back:hover {
+      background: rgba(244, 63, 94, 0.25);
+      border-color: var(--danger);
+    }
+
+    .btn-fullscreen {
+      border-color: rgba(59, 130, 246, 0.3);
+      color: var(--primary);
+      background: var(--primary-glow);
+    }
+
+    .btn-fullscreen:hover {
+      background: rgba(59, 130, 246, 0.25);
+      border-color: var(--primary);
+    }
+
+    .digital-clock {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text);
+      letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+
+    /* Grid Layout */
+    .noc-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr 340px;
+      flex: 1;
+      gap: 16px;
+      min-height: 0; /* Important for flex child overflow */
+    }
+
+    /* Cards */
+    .noc-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(12px);
+      min-height: 0; /* Prevent overflow */
+    }
+
+    .noc-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .noc-card-title i {
+      color: var(--primary);
+    }
+
+    /* Stats Grid */
+    .stats-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .stat-widget {
+      border-radius: 10px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      background: rgba(255,255,255,0.01);
+    }
+
+    .stat-widget::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+    }
+
+    .stat-widget.primary::before { background: var(--primary); }
+    .stat-widget.success::before { background: var(--success); }
+    .stat-widget.danger::before { background: var(--danger); }
+    .stat-widget.warning::before { background: var(--warning); }
+
+    .stat-widget.primary { background: var(--primary-glow); }
+    .stat-widget.success { background: var(--success-glow); }
+    .stat-widget.danger { background: var(--danger-glow); }
+    .stat-widget.warning { background: var(--warning-glow); }
+
+    .stat-icon {
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .stat-widget.primary .stat-icon { color: var(--primary); }
+    .stat-widget.success .stat-icon { color: var(--success); }
+    .stat-widget.danger .stat-icon { color: var(--danger); }
+    .stat-widget.warning .stat-icon { color: var(--warning); }
+
+    .stat-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1.1;
+      margin-top: 2px;
+    }
+
+    /* CPU & Memory Circular Gauges */
+    .system-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      justify-content: space-around;
+      height: 100%;
+    }
+
+    .gauge-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 130px;
+    }
+
+    .gauge-svg {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      transform: rotate(-90deg);
+    }
+
+    .gauge-track {
+      fill: none;
+      stroke: rgba(255,255,255,0.05);
+      stroke-width: 10;
+    }
+
+    .gauge-progress {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s ease-in-out;
+    }
+
+    .gauge-wrapper.cpu .gauge-progress {
+      stroke: var(--warning);
+      filter: drop-shadow(0 0 4px var(--warning));
+    }
+
+    .gauge-wrapper.mem .gauge-progress {
+      stroke: var(--primary);
+      filter: drop-shadow(0 0 4px var(--primary));
+    }
+
+    .gauge-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .gauge-percent {
+      font-size: 22px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .gauge-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .system-info-list {
+      width: 100%;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sys-info-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .sys-info-key {
+      color: var(--text-muted);
+    }
+
+    .sys-info-val {
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Main Chart Area */
+    .chart-layout {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .chart-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .interface-select-wrapper {
+      position: relative;
+    }
+
+    .interface-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 32px 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      appearance: none;
+      min-width: 150px;
+    }
+
+    .interface-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .chart-container {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      background: rgba(0,0,0,0.1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    /* Table Container */
+    .table-card {
+      margin-top: 16px;
+      flex: 0.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .table-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .noc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .noc-table th {
+      position: sticky;
+      top: 0;
+      background: var(--card-bg);
+      padding: 10px 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      z-index: 2;
+    }
+
+    .noc-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .noc-table tbody tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .badge-status {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-status.active {
+      background: var(--success-glow);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .badge-status.inactive {
+      background: var(--danger-glow);
+      color: var(--danger);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+    }
+
+    .badge-status.disabled {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .speed-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .speed-up { color: var(--primary); }
+    .speed-down { color: var(--success); }
+
+    /* Loading Overlay */
+    .noc-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity 0.5s ease;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px stroke var(--primary-glow);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .overlay-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* Media Queries for Responsiveness */
+    /* Target Portrait mode on smaller screens (Tablet / Mobile) to collapse to stack/grid */
+    @media (max-width: 1024px) and (orientation: portrait) {
+      .noc-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .noc-container {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+      .noc-grid > :nth-child(1),
+      .noc-grid > :nth-child(2),
+      .noc-grid > :nth-child(3) {
+        grid-column: span 1;
+      }
+      .chart-container {
+        min-height: 320px;
+        height: 320px;
+      }
+      .table-card {
+        flex: none;
+        height: 350px;
+      }
+      .noc-header {
+        flex-direction: column;
+        gap: 14px;
+        align-items: stretch;
+        text-align: center;
+      }
+      .header-left {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .header-right {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .router-select {
+        width: 100%;
+      }
+      .digital-clock {
+        text-align: center;
+      }
+      .btn-action {
+        justify-content: center;
+      }
+    }
+
+    /* Media Queries for Responsiveness */
+    /* Prevent horizontal scrollbar globally */
+    html, body, .noc-container {
+      max-width: 100vw;
+      overflow-x: hidden !important;
+    }
+
+    /* Hide Type and Status columns in table on screens under 1024px width */
+    @media (max-width: 1024px) {
+      .noc-table th:nth-child(2),
+      .noc-table td:nth-child(2),
+      .noc-table th:nth-child(3),
+      .noc-table td:nth-child(3) {
+        display: none !important;
+      }
+    }
+
+    /* Target Portrait mode on smaller screens (Tablet / Mobile) to collapse to stack/grid */
+    @media (max-width: 1024px) and (orientation: portrait) {
+      .noc-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .noc-container {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+      .noc-grid > :nth-child(1),
+      .noc-grid > :nth-child(2),
+      .noc-grid > :nth-child(3) {
+        grid-column: span 1;
+      }
+      .chart-container {
+        min-height: 320px;
+        height: 320px;
+      }
+      .table-card {
+        flex: none;
+        height: 350px;
+      }
+      .system-layout {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+        height: auto;
+      }
+      .system-info-list {
+        width: 100%;
+        margin-top: 10px;
+      }
+      .noc-header {
+        flex-direction: column;
+        gap: 14px;
+        align-items: stretch;
+        text-align: center;
+      }
+      .header-left {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .header-right {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .router-select {
+        width: 100%;
+      }
+      .digital-clock {
+        text-align: center;
+      }
+      .btn-action {
+        justify-content: center;
+      }
+    }
+
+    /* Target Landscape mode on small screens (Phones / Small Tablets) to keep 3 columns but scale down */
+    @media (max-width: 1024px) and (orientation: landscape) {
+      .noc-grid {
+        grid-template-columns: 18% 62% 20%;
+        gap: 8px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .noc-card {
+        padding: 8px;
+      }
+      .chart-layout {
+        padding: 8px 10px;
+      }
+      .chart-container {
+        padding: 4px;
+      }
+      .noc-card-title {
+        font-size: 10px;
+        margin-bottom: 6px;
+      }
+      .system-layout {
+        gap: 4px;
+        height: auto;
+        justify-content: flex-start;
+      }
+      .gauge-wrapper {
+        max-width: 85px;
+      }
+      .gauge-wrapper.cpu .gauge-progress,
+      .gauge-wrapper.mem .gauge-progress {
+        stroke-width: 8;
+      }
+      .gauge-percent {
+        font-size: 13px;
+      }
+      .gauge-label {
+        font-size: 8px;
+        margin-top: 1px;
+      }
+      .sys-info-item {
+        font-size: 9px;
+      }
+      .stat-widget {
+        padding: 6px 8px;
+        gap: 6px;
+      }
+      .stat-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+      }
+      .stat-value {
+        font-size: 14px;
+      }
+      .stat-label {
+        font-size: 8px;
+      }
+      .noc-table th, .noc-table td {
+        padding: 5px 6px;
+        font-size: 11px;
+      }
+      .noc-header {
+        padding: 8px 12px;
+      }
+      .header-title {
+        font-size: 14px;
+      }
+      .router-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
+      .digital-clock {
+        font-size: 12px;
+        padding: 4px 8px;
+      }
+      .router-select {
+        font-size: 11px;
+        padding: 4px 24px 4px 8px;
+      }
+      .btn-action {
+        font-size: 11px;
+        padding: 4px 8px;
+      }
+    }
+
+    /* Target small heights (like phone landscape mode) to allow scrolling */
+    @media (max-height: 700px) {
+      .noc-container {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+      .noc-grid {
+        height: auto;
+      }
+      .chart-container {
+        min-height: 280px;
+        height: 280px;
+      }
+      .table-card {
+        flex: none;
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="noc-overlay">
+    <div class="spinner"></div>
+    <div class="overlay-text">Menghubungkan ke MikroTik...</div>
+  </div>
+
+  <div class="noc-container">
+    
+    <!-- Top Header -->
+    <header class="noc-header">
+      <div class="header-left">
+        <i class="bi bi-cpu header-logo-icon"></i>
+        <div class="header-title">NOC Live Display</div>
+        <div class="router-badge" id="router-board-badge">
+          <i class="bi bi-hdd-network"></i>
+          <span id="router-model-name"><%= t('common.loading_short','Memuat...') %></span>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <!-- Clock -->
+        <div class="digital-clock" id="live-clock">00:00:00</div>
+        
+        <!-- Router Selector -->
+        <div class="router-select-wrapper">
+          <select id="router-selector-dropdown" class="router-select" onchange="switchRouter()">
+            <% routers.forEach(r => { %>
+              <option value="<%= r.id %>"><%= r.name %></option>
+            <% }) %>
+          </select>
+          <i class="bi bi-chevron-down router-select-icon"></i>
+        </div>
+
+        <!-- Fullscreen Button -->
+        <button class="btn-action btn-fullscreen" onclick="toggleFullscreen()">
+          <i class="bi bi-fullscreen" id="fs-btn-icon"></i>
+          <span id="fs-btn-text">Fullscreen</span>
+        </button>
+
+        <!-- Back to Dashboard -->
+        <a href="/admin/mikrotik" class="btn-action btn-back" style="text-decoration: none;">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Keluar</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="noc-grid">
+
+      <!-- Left Column: System CPU / Memory & Uptime -->
+      <section class="noc-card">
+        <div class="noc-card-title">
+          <i class="bi bi-hdd-stack"></i>
+          <span>System Resources</span>
+        </div>
+        
+        <div class="system-layout">
+          <!-- CPU Progress Circle -->
+          <div class="gauge-wrapper cpu">
+            <div style="position: relative; width: 100%; display: flex; justify-content: center; align-items: center;">
+              <svg class="gauge-svg" viewBox="0 0 140 140">
+                <circle class="gauge-track" cx="70" cy="70" r="55"></circle>
+                <circle class="gauge-progress" id="cpu-gauge-circle" cx="70" cy="70" r="55" stroke-dasharray="345.5" stroke-dashoffset="345.5"></circle>
+              </svg>
+              <div class="gauge-text">
+                <span class="gauge-percent" id="cpu-percent-text" style="color: var(--warning);">0%</span>
+              </div>
+            </div>
+            <span class="gauge-label">CPU Load</span>
+          </div>
+
+          <!-- Memory Progress Circle -->
+          <div class="gauge-wrapper mem">
+            <div style="position: relative; width: 100%; display: flex; justify-content: center; align-items: center;">
+              <svg class="gauge-svg" viewBox="0 0 140 140">
+                <circle class="gauge-track" cx="70" cy="70" r="55"></circle>
+                <circle class="gauge-progress" id="mem-gauge-circle" cx="70" cy="70" r="55" stroke-dasharray="345.5" stroke-dashoffset="345.5"></circle>
+              </svg>
+              <div class="gauge-text">
+                <span class="gauge-percent" id="mem-percent-text" style="color: var(--primary);">0%</span>
+              </div>
+            </div>
+            <span class="gauge-label">Memory Used</span>
+          </div>
+
+          <!-- System Info List -->
+          <div class="system-info-list">
+            <div class="sys-info-item">
+              <span class="sys-info-key">Board Name</span>
+              <span class="sys-info-val" id="board-name-val">-</span>
+            </div>
+            <div class="sys-info-item">
+              <span class="sys-info-key">RouterOS Ver</span>
+              <span class="sys-info-val" id="board-ver-val">-</span>
+            </div>
+            <div class="sys-info-item">
+              <span class="sys-info-key">Free Memory</span>
+              <span class="sys-info-val" id="free-mem-val">-</span>
+            </div>
+            <div class="sys-info-item">
+              <span class="sys-info-key"><%= t('admin.common.uptime','Uptime') %></span>
+              <span class="sys-info-val" id="uptime-val" style="color: var(--primary); font-weight:700;">-</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Center Column: Real-time Traffic Graph & Interfaces Table -->
+      <div style="display:flex;flex-direction:column;min-height:0;gap:16px;">
+        
+        <!-- Live Traffic Chart Card -->
+        <section class="noc-card chart-layout">
+          <div class="chart-header-row">
+            <div class="noc-card-title" style="margin-bottom:0;">
+              <i class="bi bi-activity"></i>
+              <span>Live Traffic Rate</span>
+            </div>
+            <div class="interface-select-wrapper">
+              <select id="interface-chart-selector" class="interface-select" onchange="switchChartInterface()">
+                <!-- Dynamic choices populated on load -->
+              </select>
+              <i class="bi bi-chevron-down router-select-icon"></i>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="traffic-live-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Interfaces Status Table -->
+        <section class="noc-card table-card">
+          <div class="noc-card-title">
+            <i class="bi bi-diagram-3"></i>
+            <span>Active Interfaces</span>
+          </div>
+          <div class="table-wrapper">
+            <table class="noc-table">
+              <thead>
+                <tr>
+                  <th>Interface</th>
+                  <th>Type</th>
+                  <th><%= t('common.status','Status') %></th>
+                  <th style="text-align: right;"><i class="bi bi-download"></i> RX Speed</th>
+                  <th style="text-align: right;"><i class="bi bi-upload"></i> TX Speed</th>
+                </tr>
+              </thead>
+              <tbody id="interfaces-table-body">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Column: Clients (PPPoE / Hotspot) Status -->
+      <section class="noc-card stats-layout">
+        <div class="noc-card-title" style="margin-bottom:8px;">
+          <i class="bi bi-people"></i>
+          <span>Client Sessions</span>
+        </div>
+
+        <!-- PPPoE Active Card -->
+        <div class="stat-widget success">
+          <div class="stat-icon"><i class="bi bi-ethernet"></i></div>
+          <div class="stat-details">
+            <span class="stat-label">PPPoE Active</span>
+            <span class="stat-value" id="pppoe-active-val">0</span>
+          </div>
+        </div>
+
+        <!-- PPPoE Offline Card -->
+        <div class="stat-widget danger">
+          <div class="stat-icon"><i class="bi bi-plug"></i></div>
+          <div class="stat-details">
+            <span class="stat-label">PPPoE Offline</span>
+            <span class="stat-value" id="pppoe-offline-val">0</span>
+          </div>
+        </div>
+
+        <!-- PPPoE Total Card -->
+        <div class="stat-widget primary">
+          <div class="stat-icon"><i class="bi bi-hdd-network"></i></div>
+          <div class="stat-details">
+            <span class="stat-label">PPPoE Total Secrets</span>
+            <span class="stat-value" id="pppoe-total-val">0</span>
+          </div>
+        </div>
+
+        <!-- Hotspot Active Card -->
+        <div class="stat-widget warning">
+          <div class="stat-icon"><i class="bi bi-wifi"></i></div>
+          <div class="stat-details">
+            <span class="stat-label">Hotspot Active</span>
+            <span class="stat-value" id="hotspot-active-val">0</span>
+          </div>
+        </div>
+
+        <!-- Hotspot Total Card -->
+        <div class="stat-widget primary" style="background: rgba(255,255,255,0.02)">
+          <div class="stat-icon"><i class="bi bi-person-badge"></i></div>
+          <div class="stat-details">
+            <span class="stat-label">Hotspot Total Users</span>
+            <span class="stat-value" id="hotspot-total-val">0</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Chart.js and dynamic logic scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <script>
+    // Variables
+    let pollInterval = null;
+    let trafficChart = null;
+    let selectedInterface = '';
+    let historicalData = {
+      labels: [],
+      rx: [],
+      tx: []
+    };
+    const MAX_POINTS = 20;
+
+    // Previous byte counts to calculate rate
+    let previousTrafficSamples = {}; // Format: { interfaceName: { bytesIn: val, bytesOut: val, timestamp: val } }
+
+    // On Load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Init Clock
+      startClock();
+      
+      // Init Chart.js
+      initTrafficChart();
+
+      // Load First Data
+      loadMonitoringData();
+      
+      // Setup Interval (every 2.5 seconds)
+      pollInterval = setInterval(loadMonitoringData, 2500);
+    });
+
+    // Clock
+    function startClock() {
+      const clockEl = document.getElementById('live-clock');
+      setInterval(() => {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        clockEl.textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+
+    // Toggle HTML5 Fullscreen Mode
+    function toggleFullscreen() {
+      const icon = document.getElementById('fs-btn-icon');
+      const text = document.getElementById('fs-btn-text');
+      
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+          icon.className = 'bi bi-fullscreen-exit';
+          text.textContent = 'Exit Screen';
+        }).catch(err => {
+          console.error(`Error enabling fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen().then(() => {
+          icon.className = 'bi bi-fullscreen';
+          text.textContent = 'Fullscreen';
+        });
+      }
+    }
+
+    // Switch Router
+    function switchRouter() {
+      // Clear data & reset
+      previousTrafficSamples = {};
+      historicalData.labels = [];
+      historicalData.rx = [];
+      historicalData.tx = [];
+      if (trafficChart) {
+        trafficChart.data.labels = [];
+        trafficChart.data.datasets[0].data = [];
+        trafficChart.data.datasets[1].data = [];
+        trafficChart.update();
+      }
+      
+      // Show loading overlay
+      const overlay = document.getElementById('loading-overlay');
+      overlay.style.opacity = '1';
+      overlay.style.pointerEvents = 'auto';
+      
+      loadMonitoringData();
+    }
+
+    // Initialize Chart.js
+    function initTrafficChart() {
+      const ctx = document.getElementById('traffic-live-chart').getContext('2d');
+      trafficChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Download (RX)',
+              data: [],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.05)',
+              fill: true,
+              tension: 0.4,
+              borderWidth: 2.5,
+              pointRadius: 0,
+              pointHoverRadius: 4
+            },
+            {
+              label: 'Upload (TX)',
+              data: [],
+              borderColor: '#ADFF2F',
+              backgroundColor: 'rgba(59, 130, 246, 0.05)',
+              fill: true,
+              tension: 0.4,
+              borderWidth: 2.5,
+              pointRadius: 0,
+              pointHoverRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: '#94a3b8',
+                font: {
+                  family: 'Inter',
+                  weight: '600',
+                  size: 11
+                }
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: 'rgba(15, 18, 36, 0.95)',
+              borderColor: 'rgba(255,255,255,0.08)',
+              borderWidth: 1,
+              titleColor: '#f8fafc',
+              bodyColor: '#cbd5e1',
+              titleFont: { family: 'JetBrains Mono' },
+              bodyFont: { family: 'JetBrains Mono' }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                color: 'rgba(255,255,255,0.03)'
+              },
+              ticks: {
+                color: '#64748b',
+                font: { family: 'JetBrains Mono', size: 10 }
+              }
+            },
+            y: {
+              grid: {
+                color: 'rgba(255,255,255,0.03)'
+              },
+              ticks: {
+                color: '#64748b',
+                font: { family: 'JetBrains Mono', size: 10 },
+                callback: function(value) {
+                  return value.toFixed(1) + ' Mbps';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Switch chart interface dropdown
+    function switchChartInterface() {
+      selectedInterface = document.getElementById('interface-chart-selector').value;
+      // Reset chart history for clean render
+      historicalData.labels = [];
+      historicalData.rx = [];
+      historicalData.tx = [];
+      if (trafficChart) {
+        trafficChart.data.labels = [];
+        trafficChart.data.datasets[0].data = [];
+        trafficChart.data.datasets[1].data = [];
+        trafficChart.update();
+      }
+    }
+
+    // Main fetch routine
+    async function loadMonitoringData() {
+      const routerId = document.getElementById('router-selector-dropdown').value;
+      try {
+        const res = await fetch(`/admin/api/mikrotik/monitoring-display-data?routerId=${routerId}`);
+        if (!res.ok) throw new Error('API Error');
+        const data = await res.json();
+        
+        if (data.ok) {
+          // Hide loading overlay
+          const overlay = document.getElementById('loading-overlay');
+          overlay.style.opacity = '0';
+          overlay.style.pointerEvents = 'none';
+
+          // Update System Info
+          document.getElementById('router-model-name').textContent = `${data.resources.boardName} (${data.resources.version})`;
+          document.getElementById('board-name-val').textContent = data.resources.boardName;
+          document.getElementById('board-ver-val').textContent = data.resources.version;
+          document.getElementById('uptime-val').textContent = data.resources.uptime;
+          
+          // Format Free Memory
+          const freeMemMb = (data.resources.freeMemory / (1024 * 1024)).toFixed(1);
+          const totalMemMb = (data.resources.totalMemory / (1024 * 1024)).toFixed(1);
+          document.getElementById('free-mem-val').textContent = `${freeMemMb} MB / ${totalMemMb} MB`;
+
+          // Update Client Stats
+          document.getElementById('pppoe-active-val').textContent = data.pppoe.active;
+          document.getElementById('pppoe-offline-val').textContent = data.pppoe.offline;
+          document.getElementById('pppoe-total-val').textContent = data.pppoe.total;
+          document.getElementById('hotspot-active-val').textContent = data.hotspot.active;
+          document.getElementById('hotspot-total-val').textContent = data.hotspot.total;
+
+          // Update CPU Circle Progress
+          const cpuVal = parseInt(data.resources.cpu) || 0;
+          document.getElementById('cpu-percent-text').textContent = `${cpuVal}%`;
+          // SVG circle circumference is ~345.5 (radius 55 * 2 * pi)
+          const cpuOffset = 345.5 - (cpuVal / 100) * 345.5;
+          document.getElementById('cpu-gauge-circle').style.strokeDashoffset = cpuOffset;
+
+          // Update Memory Circle Progress
+          const usedMemoryBytes = data.resources.totalMemory - data.resources.freeMemory;
+          const memVal = data.resources.totalMemory > 0 ? Math.round((usedMemoryBytes / data.resources.totalMemory) * 100) : 0;
+          document.getElementById('mem-percent-text').textContent = `${memVal}%`;
+          const memOffset = 345.5 - (memVal / 100) * 345.5;
+          document.getElementById('mem-gauge-circle').style.strokeDashoffset = memOffset;
+
+          // Process Interface Rates
+          const now = data.timestamp;
+          const intList = data.interfaces || [];
+          
+          // Populate Selector Dropdown if empty or changed
+          const selector = document.getElementById('interface-chart-selector');
+          const currentSelectVal = selector.value;
+          
+          // Determine running interfaces to suggest
+          const activeInterfaces = intList.filter(i => i.running && !i.disabled);
+          
+          if (selector.options.length !== intList.length) {
+            selector.innerHTML = intList.map(i => `<option value="${escapeHtmlAttr(i.name)}">${escapeHtmlAttr(i.name)}</option>`).join('');
+            
+            // Try to auto-select WAN or interface with traffic, or default first
+            if (activeInterfaces.length > 0) {
+              const defaultIface = activeInterfaces.find(i => 
+                i.name.toLowerCase().includes('wan') || 
+                i.name.toLowerCase().includes('pppoe-out') || 
+                i.name.toLowerCase().includes('ether1')
+              ) || activeInterfaces[0];
+              selector.value = defaultIface.name;
+            } else if (intList.length > 0) {
+              selector.value = intList[0].name;
+            }
+            selectedInterface = selector.value;
+          }
+
+          // Calculate Rates for All Interfaces
+          const calculatedRates = {};
+          intList.forEach(i => {
+            const name = i.name;
+            const prev = previousTrafficSamples[name];
+            
+            let rxBps = 0;
+            let txBps = 0;
+            
+            if (prev && prev.timestamp < now) {
+              const timeDeltaSec = (now - prev.timestamp) / 1000;
+              
+              // Handle counter wraps (if router restarts or resets counters)
+              const deltaIn = i.bytesIn >= prev.bytesIn ? i.bytesIn - prev.bytesIn : i.bytesIn;
+              const deltaOut = i.bytesOut >= prev.bytesOut ? i.bytesOut - prev.bytesOut : i.bytesOut;
+              
+              rxBps = (deltaIn * 8) / timeDeltaSec;
+              txBps = (deltaOut * 8) / timeDeltaSec;
+            }
+            
+            // Save sample for next run
+            previousTrafficSamples[name] = {
+              bytesIn: i.bytesIn,
+              bytesOut: i.bytesOut,
+              timestamp: now
+            };
+
+            calculatedRates[name] = {
+              rxMbps: rxBps / 1000000,
+              txMbps: txBps / 1000000
+            };
+          });
+
+          // Render Interfaces Table
+          const tbody = document.getElementById('interfaces-table-body');
+          tbody.innerHTML = intList.map(i => {
+            const rates = calculatedRates[i.name] || { rxMbps: 0, txMbps: 0 };
+            
+            let statusText = 'active';
+            let statusClass = 'active';
+            
+            if (i.disabled) {
+              statusText = 'disabled';
+              statusClass = 'disabled';
+            } else if (!i.running) {
+              statusText = 'inactive';
+              statusClass = 'inactive';
+            }
+            
+            return `
+              <tr>
+                <td style="font-weight:600;"><i class="bi bi-hdd-network small" style="color:var(--text-muted);margin-right:6px"></i>${escapeHtmlAttr(i.name)}</td>
+                <td style="color:var(--text-muted);font-size:12px;">${escapeHtmlAttr(i.type)}</td>
+                <td><span class="badge-status ${statusClass}">${statusText}</span></td>
+                <td style="text-align: right;" class="speed-cell speed-down">${rates.rxMbps.toFixed(2)} Mbps</td>
+                <td style="text-align: right;" class="speed-cell speed-up">${rates.txMbps.toFixed(2)} Mbps</td>
+              </tr>
+            `;
+          }).join('');
+
+          // Update traffic Chart.js
+          const activeRates = calculatedRates[selectedInterface] || { rxMbps: 0, txMbps: 0 };
+          const timeLabel = new Date(now).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          
+          historicalData.labels.push(timeLabel);
+          historicalData.rx.push(activeRates.rxMbps);
+          historicalData.tx.push(activeRates.txMbps);
+
+          // Rolling Window limit
+          if (historicalData.labels.length > MAX_POINTS) {
+            historicalData.labels.shift();
+            historicalData.rx.shift();
+            historicalData.tx.shift();
+          }
+
+          if (trafficChart) {
+            trafficChart.data.labels = historicalData.labels;
+            trafficChart.data.datasets[0].data = historicalData.rx;
+            trafficChart.data.datasets[1].data = historicalData.tx;
+            trafficChart.update();
+          }
+        }
+      } catch (err) {
+        console.error('[NOC Display] Load error:', err.message);
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+          overlay.style.opacity = '1';
+          overlay.style.pointerEvents = 'auto';
+          const overlayText = overlay.querySelector('.overlay-text');
+          if (overlayText) {
+            overlayText.innerHTML = `<span style="color:var(--danger);font-weight:700">Koneksi MikroTik Gagal</span><br><span style="font-size:11px;text-transform:none;margin-top:4px;display:block;color:var(--text-muted)">Pastikan IP/port benar dan API service aktif. Mencoba kembali...</span>`;
+          }
+        }
+      }
+    }
+
+    function escapeHtmlAttr(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+  </script>
+</body>
+</html>

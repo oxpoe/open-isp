@@ -1,0 +1,155 @@
+<%- include('partials/header') %>
+
+<div class="p-card">
+  <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px"><i class="bi bi-person-plus-fill" style="color:var(--primary)"></i> <%= t('tech.cc.title','Tambah Pelanggan') %></div>
+  <div class="muted" style="font-size:12.5px;margin-top:3px"><%= t('tech.cc.subtitle','Isi data pelanggan dan lokasi pemasangan.') %></div>
+
+  <form method="POST" action="/tech/customers" style="margin-top:14px">
+    <div class="p-field">
+      <label><%= t('iso.cust_name','Nama Pelanggan') %></label>
+      <input name="name" class="p-input" required>
+    </div>
+    <div class="p-grid2">
+      <div class="p-field"><label><%= t('tech.cc.phone','No. HP') %></label><input name="phone" class="p-input" placeholder="08xxxxxxxxxx"></div>
+      <div class="p-field"><label><%= t('pwa.field.package','Paket') %></label>
+        <select name="package_id" class="p-input">
+          <option value=""><%= t('tech.cc.ph_pkg','-- Pilih Paket --') %></option>
+          <% packages.forEach(function(p){ %><option value="<%= p.id %>"><%= p.name %> (Rp <%= Number(p.price||0).toLocaleString('id-ID') %>)</option><% }) %>
+        </select>
+      </div>
+    </div>
+    <div class="p-grid2">
+      <div class="p-field"><label>Email</label><input name="email" class="p-input" type="email" placeholder="<%= t('tech.cc.ph_optional','opsional') %>"></div>
+      <div class="p-field"><label><%= t('tech.cc.identity','No. Identitas (KTP/SIM/Paspor)') %></label><input name="nik" class="p-input" placeholder="<%= t('tech.cc.ph_optional','opsional') %>"></div>
+    </div>
+    <div class="p-field"><label><%= t('pwa.field.address','Alamat') %></label><textarea name="address" class="p-input" rows="2"></textarea></div>
+    <div class="p-field"><label><%= t('collector.col_area','Area / Wilayah') %></label><input name="area" class="p-input" placeholder="<%= t('tech.cc.ph_address','Contoh: Kelurahan A, Blok B') %>"></div>
+
+    <div class="p-grid2">
+      <div class="p-field"><label><%= t('tech.cc.router','Router (MikroTik) *') %></label>
+        <select id="router_id" name="router_id" class="p-input" required onchange="loadPppoeUsers(); loadPppoeProfiles()">
+          <option value=""><%= t('tech.cc.ph_router','-- Pilih Router --') %></option>
+          <% (routers || []).forEach(function(r){ %><option value="<%= r.id %>"><%= r.name %></option><% }) %>
+        </select>
+        <div class="muted" style="font-size:11px;margin-top:5px"><%= t('tech.cc.required_pppoe','Wajib untuk pelanggan PPPoE/Hotspot') %></div>
+      </div>
+      <div class="p-field"><label><%= t('tech.cc.pppoe_user','PPPoE Username') %></label>
+        <input id="pppoe_username" name="pppoe_username" class="p-input" list="pppoeList" placeholder="Pilih / cari dari MikroTik">
+        <datalist id="pppoeList"></datalist>
+        <div id="pppoeHint" class="muted" style="font-size:11px;margin-top:5px"></div>
+      </div>
+    </div>
+
+    <div class="p-grid2">
+      <div class="p-field"><label><%= t('tech.cc.isolir_profile','Profile Isolir') %></label><select id="isolir_profile" name="isolir_profile" class="p-input"></select></div>
+      <div class="p-field"><label>Status</label>
+        <select name="status" class="p-input"><option value="active">Aktif</option><option value="suspended">Suspend</option><option value="inactive">Nonaktif</option></select>
+      </div>
+    </div>
+
+    <div class="p-grid2">
+      <div class="p-field"><label><%= t('tech.cc.auto_isolate','Isolir Otomatis') %></label><select name="auto_isolate" class="p-input"><option value="1">Aktif</option><option value="0"><%= t('tech.cc.inactive2','Tidak Aktif') %></option></select></div>
+      <div class="p-field"><label><%= t('tech.cc.isolir_date','Tanggal Isolir (1-31)') %></label><input name="isolate_day" type="number" min="1" max="31" value="10" class="p-input"></div>
+    </div>
+
+    <div class="p-grid2">
+      <div class="p-field"><label><%= t('tech.cc.install_date','Tanggal Pasang') %></label><input name="install_date" type="date" class="p-input"></div>
+      <div class="p-field"><label>OLT</label>
+        <select name="olt_id" class="p-input"><option value=""><%= t('tech.cc.ph_olt','-- Tanpa OLT --') %></option><% (olts || []).forEach(function(o){ %><option value="<%= o.id %>"><%= o.name %></option><% }) %></select>
+      </div>
+    </div>
+
+    <div class="p-sub"><i class="bi bi-geo-alt-fill" style="color:var(--warning)"></i> <%= t('tech.cc.cust_location','Lokasi Pelanggan') %></div>
+    <div class="p-grid2">
+      <div class="p-field"><label>Latitude</label><input id="lat" name="lat" class="p-input" placeholder="-6.2"></div>
+      <div class="p-field"><label>Longitude</label><input id="lng" name="lng" class="p-input" placeholder="106.8"></div>
+    </div>
+    <button type="button" class="p-btn ghost" onclick="getLocation()"><i class="bi bi-crosshair"></i> <%= t('tech.cc.gps_btn','Ambil Lokasi HP') %></button>
+
+    <div class="p-sub"><i class="bi bi-diagram-3-fill" style="color:var(--success)"></i> <%= t('tech.cc.odp_port','ODP & Port') %></div>
+    <div class="p-field"><label>ODP</label>
+      <select id="odp_id" name="odp_id" class="p-input" onchange="onOdpChanged()">
+        <option value=""><%= t('tech.cc.ph_odp','-- Pilih ODP --') %></option>
+        <% odps.forEach(function(o){ %><option value="<%= o.id %>" data-lat="<%= o.lat || '' %>" data-lng="<%= o.lng || '' %>" data-pon="<%= o.pon_port || '' %>" data-cap="<%= o.port_capacity || 16 %>"><%= o.name %></option><% }) %>
+      </select>
+      <div id="odpInfo" class="muted" style="font-size:11.5px;margin-top:6px"></div>
+    </div>
+    <div class="p-grid2">
+      <div class="p-field"><label><%= t('tech.cc.cust_port','Port Pelanggan (ODP)') %></label><input id="pon_port" name="pon_port" class="p-input" placeholder="contoh: 1"></div>
+      <div class="p-field"><label><%= t('tech.cc.update_odp','Update ODP') %></label><select name="update_odp" id="update_odp" class="p-input" onchange="toggleOdpEdit()"><option value="0"><%= t('tech.cc.no','Tidak') %></option><option value="1"><%= t('tech.cc.yes','Ya') %></option></select></div>
+    </div>
+
+    <div id="odpEdit" style="display:none;margin-top:4px">
+      <div class="p-grid2">
+        <div class="p-field"><label>ODP Latitude</label><input id="odp_lat" name="odp_lat" class="p-input"></div>
+        <div class="p-field"><label>ODP Longitude</label><input id="odp_lng" name="odp_lng" class="p-input"></div>
+      </div>
+      <div class="p-grid2">
+        <div class="p-field"><label><%= t('tech.cc.odp_pon','ODP PON Port (Trunk)') %></label><input id="odp_pon_port" name="odp_pon_port" class="p-input" placeholder="<%= t('tech.cc.ph_optional','opsional') %>"></div>
+        <div class="p-field"><label><%= t('tech.cc.odp_capacity','Kapasitas Port ODP') %></label><input id="odp_port_capacity" name="odp_port_capacity" type="number" min="1" class="p-input" value="16"></div>
+      </div>
+      <button type="button" class="p-btn ghost" onclick="copyCustomerToOdp()"><i class="bi bi-arrow-down-circle"></i> <%= t('tech.cc.same_location','Samakan Lokasi ODP = Lokasi Pelanggan') %></button>
+    </div>
+
+    <div class="p-field" style="margin-top:14px"><label><%= t('tech.cc.note','Catatan') %></label><textarea name="notes" class="p-input" rows="2" placeholder="<%= t('tech.cc.ph_optional','opsional') %>"></textarea></div>
+
+    <button type="submit" class="p-btn primary" style="margin-top:8px"><i class="bi bi-save2"></i> <%= t('tech.cc.save','Simpan Pelanggan') %></button>
+  </form>
+</div>
+
+<script>
+  function getLocation() {
+    if (!navigator.geolocation) return alert('Geolocation tidak didukung di perangkat ini.');
+    navigator.geolocation.getCurrentPosition(function(pos){ document.getElementById('lat').value = pos.coords.latitude; document.getElementById('lng').value = pos.coords.longitude; },
+      function(err){ alert('Gagal mengambil lokasi: ' + (err.message || err)); }, { enableHighAccuracy: true, timeout: 8000 });
+  }
+  function toggleOdpEdit() { document.getElementById('odpEdit').style.display = document.getElementById('update_odp').value === '1' ? 'block' : 'none'; }
+  function copyCustomerToOdp() { document.getElementById('odp_lat').value = document.getElementById('lat').value; document.getElementById('odp_lng').value = document.getElementById('lng').value; }
+  async function onOdpChanged() {
+    var sel = document.getElementById('odp_id'), opt = sel.options[sel.selectedIndex], odpId = sel.value;
+    document.getElementById('odp_lat').value = (opt && opt.dataset && opt.dataset.lat) || '';
+    document.getElementById('odp_lng').value = (opt && opt.dataset && opt.dataset.lng) || '';
+    document.getElementById('odp_pon_port').value = (opt && opt.dataset && opt.dataset.pon) || '';
+    document.getElementById('odp_port_capacity').value = (opt && opt.dataset && opt.dataset.cap) || 16;
+    var infoEl = document.getElementById('odpInfo'); infoEl.innerText = '';
+    if (!odpId) return;
+    try {
+      var res = await fetch('/tech/api/odps/' + encodeURIComponent(odpId) + '/ports');
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal ambil info ODP');
+      var used = Array.isArray(data.usedPorts) ? data.usedPorts.join(', ') : '';
+      infoEl.innerText = 'Port terpakai: ' + data.usedCount + '/' + data.capacity + ' • Sisa: ' + data.remaining + (used ? ' • (' + used + ')' : '');
+    } catch (e) { infoEl.innerText = e.message; }
+  }
+  async function loadPppoeUsers() {
+    var routerId = (document.getElementById('router_id') || {}).value || '';
+    var hint = document.getElementById('pppoeHint'), list = document.getElementById('pppoeList');
+    if (hint) hint.innerText = 'Memuat user PPPoE dari MikroTik…';
+    if (list) list.innerHTML = '';
+    try {
+      var url = routerId ? '/tech/api/mikrotik/pppoe-users?routerId=' + encodeURIComponent(routerId) : '/tech/api/mikrotik/pppoe-users';
+      var res = await fetch(url); var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal memuat user PPPoE');
+      var users = Array.isArray(data) ? data : [];
+      if (list) list.innerHTML = users.filter(function(u){return u && u.name;}).map(function(u){ return '<option value="' + String(u.name).replace(/"/g,'&quot;') + '"></option>'; }).join('');
+      if (hint) hint.innerText = users.length ? ('Tersedia ' + users.length + ' user PPPoE.') : 'Tidak ada user PPPoE.';
+    } catch (e) { if (hint) hint.innerText = e.message; }
+  }
+  async function loadPppoeProfiles() {
+    var routerId = (document.getElementById('router_id') || {}).value || '';
+    var sel = document.getElementById('isolir_profile'); if (sel) sel.innerHTML = '';
+    try {
+      var url = routerId ? '/tech/api/mikrotik/pppoe-profiles?routerId=' + encodeURIComponent(routerId) : '/tech/api/mikrotik/pppoe-profiles';
+      var res = await fetch(url); var data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal memuat profile PPPoE');
+      var profiles = Array.isArray(data) ? data : [];
+      var opts = ['<option value="isolir">isolir</option>'];
+      for (var i = 0; i < profiles.length; i++) { var p = profiles[i]; if (!p || !p.name || p.name === 'isolir') continue; opts.push('<option value="' + String(p.name).replace(/"/g,'&quot;') + '">' + p.name + '</option>'); }
+      if (sel) sel.innerHTML = opts.join('');
+    } catch (e) { if (sel) sel.innerHTML = '<option value="isolir">isolir</option>'; }
+  }
+  loadPppoeUsers();
+  loadPppoeProfiles();
+</script>
+
+<%- include('partials/bottom_nav') %>
