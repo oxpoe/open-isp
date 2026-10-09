@@ -49,7 +49,7 @@
           </thead>
           <tbody>
             <% if (!areas || areas.length === 0) { %>
-              <tr><td colspan="6" class="text-center text-muted" style="padding:24px">Belum ada data area. Klik "<%= t('admin.ar.add','Tambah Area Baru') %>" untuk membuat area.</td></tr>
+              <tr><td colspan="6" class="text-center text-muted" style="padding:24px">Belum ada data area. Klik "<%= t('admin.ar.add','Tambah Area Baru') %>"<%= t('admin.ar.create_area',' untuk membuat area.') %></td></tr>
             <% } else { %>
               <% areas.forEach((a, idx) => { %>
                 <tr>

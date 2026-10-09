@@ -222,7 +222,7 @@
           <div class="fg">
             <label class="fl"><%= t('admin.set.public_url','URL Publik Aplikasi (Public Base URL)') %></label>
             <input class="fc" name="public_base_url" value="<%= settings.public_base_url || '' %>" placeholder="https://portal.domain-anda.com">
-            <div style="font-size:10px; color:var(--muted); margin-top:4px">Digunakan untuk menyusun tautan login pelanggan yang dikirim via WhatsApp. Contoh: <span class="mono">https://portal.domain-anda.com</span></div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.link_hint','Digunakan untuk menyusun tautan login pelanggan yang dikirim via WhatsApp. Contoh: ') %><span class="mono">https://portal.domain-anda.com</span></div>
           </div>
           <div class="fg">
             <label class="fl"><%= t('admin.set.id_prefix','Prefix ID Pelanggan') %></label>
@@ -445,7 +445,7 @@
           <div class="fg">
             <label class="fl"><%= t('admin.set.wa_numbers','Nomor Admin WA (Pisahkan dengan koma)') %></label>
             <input class="fc" name="whatsapp_admin_numbers" value="<%= (settings.whatsapp_admin_numbers || []).join(', ') %>" placeholder="6281xxx, 6282xxx">
-            <div style="font-size:10px; color:var(--muted); margin-top:4px">Nomor admin akan menerima notifikasi monitoring sistem. Nomor teknisi diambil otomatis dari <a href="/admin/technicians" style="color:var(--brand);font-weight:600">Data Teknisi</a>.</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.wa_numbers_hint','Nomor admin akan menerima notifikasi monitoring sistem. Nomor teknisi diambil otomatis dari ') %><a href="/admin/technicians" style="color:var(--brand);font-weight:600">Data Teknisi</a>.</div>
           </div>
           <div class="fg">
             <label class="fl"><%= t('admin.set.wa_delay','Jeda Antar Pesan Broadcast (Detik)') %></label>
@@ -465,7 +465,7 @@
                   <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
                     <div style="flex:1 1 200px">
                       <input class="fc" type="file" id="brand_portal_file" accept="image/png,image/jpeg,image/jpg,image/webp">
-                      <div style="font-size:10px; color:var(--muted); margin-top:4px">PNG/JPG/WebP, maks 2MB. PNG/JPEG otomatis dioptimalkan. Dipakai di halaman login &amp; portal pelanggan.</div>
+                      <div style="font-size:10px; color:var(--muted); margin-top:4px"><%- t('admin.set.logo_hint','PNG/JPG/WebP, maks 2MB. PNG/JPEG otomatis dioptimalkan. Dipakai di halaman login &amp; portal pelanggan.') %></div>
                     </div>
                     <button class="btn btn-s" type="button" onclick="uploadBrandLogo('portal', this)" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
                   </div>
@@ -495,7 +495,7 @@
                   <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
                     <div style="flex:1 1 200px">
                       <input class="fc" type="file" id="brand_pwa_file" accept="image/png,image/jpeg,image/jpg,image/webp">
-                      <div style="font-size:10px; color:var(--muted); margin-top:4px">Setelah upload, ikon PWA (192/512/maskable/apple-touch) &amp; favicon otomatis dibuat ulang dari gambar ini. Sebaiknya gambar persegi (1:1).</div>
+                      <div style="font-size:10px; color:var(--muted); margin-top:4px"><%- t('admin.set.pwa_icon_hint','Setelah upload, ikon PWA (192/512/maskable/apple-touch) &amp; favicon otomatis dibuat ulang dari gambar ini. Sebaiknya gambar persegi (1:1).') %></div>
                     </div>
                     <button class="btn btn-s" type="button" onclick="uploadBrandLogo('pwa', this)" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
                     <button class="btn btn-g" type="button" onclick="regenPwaIcons(this)" style="height:38px"><i class="bi bi-phone"></i> Buat Ulang Ikon</button>
@@ -517,7 +517,7 @@
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
                   <div style="flex:1 1 200px">
                     <input class="fc" type="file" id="brand_hero_file" accept="image/png,image/jpeg,image/jpg,image/webp">
-                    <div style="font-size:10px; color:var(--muted); margin-top:4px">PNG/JPEG otomatis dikonversi ke <b>WebP</b> (+ fallback JPEG) agar lebih ringan. Rasio disarankan 16:10 (mis. 1600×1000).</div>
+                    <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.hero_hint','PNG/JPEG otomatis dikonversi ke ') %><b>WebP</b> (+ fallback JPEG) agar lebih ringan. Rasio disarankan 16:10 (mis. 1600×1000).</div>
                   </div>
                   <button class="btn btn-s" type="button" onclick="uploadBrandLogo('hero', this)" style="height:38px"><i class="bi bi-upload"></i> Upload</button>
                 </div>
@@ -548,7 +548,7 @@
               <div class="fg">
                 <label class="fl"><%= t('admin.set.speed_link','Link Speed Test') %></label>
                 <input class="fc" name="speedtest_url" id="speedtest_url_input" value="<%= settings.speedtest_url || '' %>" placeholder="https://speed.domain-anda.com">
-                <div style="font-size:10px; color:var(--muted); margin-top:4px">Bisa <b>internal</b> (LibreSpeed / OpenSpeedTest self-hosted) atau <b>eksternal</b> (Ookla Custom, Cloudflare, Google Fiber, dll). Harus bisa diakses <b>public</b>. Jika dikosongkan, dashboard pelanggan menampilkan <i>"Speedtest belum di setup"</i>.</div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Bisa <b>internal</b><%= t('admin.set.speedtest_hint2',' (LibreSpeed / OpenSpeedTest self-hosted) atau ') %><b>eksternal</b> (Ookla Custom, Cloudflare, Google Fiber, dll). Harus bisa diakses <b>public</b><%= t('admin.set.speedtest_hint3','. Jika dikosongkan, dashboard pelanggan menampilkan ') %><i><%= t('admin.set.speedtest_notset','"Speedtest belum di setup"') %></i>.</div>
               </div>
               <div class="fg">
                 <label class="fl"><%= t('admin.set.speed_mode','Mode Tampilan di Dashboard Pelanggan') %></label>
@@ -556,7 +556,7 @@
                   <option value="iframe" <%= (settings.speedtest_mode || 'iframe') === 'iframe' ? 'selected' : '' %>><%= t('admin.set.sp_mode_iframe','Embed / iframe — untuk provider yang mengizinkan') %></option>
                   <option value="tab" <%= settings.speedtest_mode === 'tab' ? 'selected' : '' %>><%= t('admin.set.sp_mode_tab','Buka Tab Baru — untuk provider yang memblokir iframe') %></option>
                 </select>
-                <div style="font-size:10px; color:var(--muted); margin-top:4px">Di halaman pelanggan tersedia tombol <b>Muat Ulang</b> (reload speed test) &amp; <b>Bersihkan Cache</b>.</div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.speedtest_btn_hint','Di halaman pelanggan tersedia tombol ') %><b>Muat Ulang</b> (reload speed test) &amp; <b>Bersihkan Cache</b>.</div>
               </div>
               <script>
                 function applySpeedtestPreset(v) {
@@ -579,12 +579,12 @@
               <div class="fg">
                 <label class="fl"><%= t('admin.set.repo_link','Link Repositori Proyek (GitHub)') %></label>
                 <input class="fc" name="project_url" value="<%= settings.project_url || 'https://github.com/oxpoe/open-isp' %>" placeholder="https://github.com/oxpoe/open-isp">
-                <div style="font-size:10px; color:var(--muted); margin-top:4px">Dipakai untuk tautan <b>Repo</b>, <b>Form/Issue</b> (<code>/issues/new/choose</code>), <b>Wiki</b>, dan <b>Lisensi</b> di landing page.</div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.repo_hint','Dipakai untuk tautan ') %><b>Repo</b>, <b>Form/Issue</b> (<code>/issues/new/choose</code>), <b>Wiki</b>, dan <b>Lisensi</b> di landing page.</div>
               </div>
               <div class="fg">
                 <label class="fl"><%= t('admin.set.uptime_link','Link Uptime Website (Status)') %></label>
                 <input class="fc" name="uptime_url" value="<%= settings.uptime_url || '' %>" placeholder="https://status.domain-anda.com">
-                <div style="font-size:10px; color:var(--muted); margin-top:4px">Dipakai untuk tombol/redirect <b><%= t('common.status','Status') %></b> di landing page. Jika dikosongkan, landing page <b>tidak menampilkan tab Status</b>.</div>
+                <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.uptime_hint','Dipakai untuk tombol/redirect ') %><b><%= t('common.status','Status') %></b> di landing page. Jika dikosongkan, landing page <b>tidak menampilkan tab Status</b>.</div>
               </div>
             </div>
           </div>
@@ -696,7 +696,7 @@
               <div style="margin-top:10px; display:flex; gap:12px; align-items:center; flex-wrap:wrap">
                 <div style="font-size:10px; color:var(--muted)">Preview:</div>
                 <img src="<%= settings.qris_static_qr_url %>" alt="QRIS" style="height:72px; width:72px; object-fit:contain; background:#fff; border-radius:12px; padding:8px; border:1px solid rgba(0,0,0,0.08)">
-                <div style="font-size:10px; color:var(--muted)">Gunakan tombol <span style="font-weight:700">QR</span> di menu Billing untuk membuat nominal unik per invoice.</div>
+                <div style="font-size:10px; color:var(--muted)">Gunakan tombol <span style="font-weight:700">QR</span><%= t('admin.set.qris_unique_hint',' di menu Billing untuk membuat nominal unik per invoice.') %></div>
               </div>
             <% } %>
 

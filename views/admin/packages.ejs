@@ -190,7 +190,7 @@
           <% if (typeof profileMode !== 'undefined' && profileMode === 'radius-attributes') { %>
             <i class="bi bi-broadcast"></i> <%- t('admin.pkg.mode_radius_hint','Mode RADIUS: rate-limit &amp; IP dari <b>atribut RADIUS</b> — profil PPP MikroTik tidak dibuat otomatis.') %>
           <% } else { %>
-            <i class="bi bi-router"></i> Profil PPP MikroTik akan <b>dibuat/diperbarui otomatis</b> dari speed paket<% if (typeof profileMode !== 'undefined' && profileMode === 'radius-profile') { %> (mode RADIUS pakai profil MikroTik)<% } %>.
+            <i class="bi bi-router"></i><%= t('admin.pkg.profile_a',' Profil PPP MikroTik akan ') %><b><%= t('admin.pkg.profile_b','dibuat/diperbarui otomatis') %></b> dari speed paket<% if (typeof profileMode !== 'undefined' && profileMode === 'radius-profile') { %><%= t('admin.pkg.profile_c',' (mode RADIUS pakai profil MikroTik)') %><% } %>.
           <% } %>
         </div>
         
@@ -232,7 +232,7 @@
         </div>
         <div class="hint" style="margin-top:6px;font-size:11px">
           <i class="bi bi-speedometer2"></i> <%- t('admin.pkg.ratelimit_hint','Rate-limit asli (MikroTik &amp; RADIUS):') %> <b class="mono" id="ratePreview" style="color:var(--primary)">-</b>
-          <span style="color:var(--muted)">— format <span class="mono">rx/tx</span> (+ burst: <span class="mono">rx/tx rxB/txB rxT/txT time</span>). Nilai sama dipakai untuk profil MikroTik <b>dan</b> atribut RADIUS.</span>
+          <span style="color:var(--muted)">— format <span class="mono">rx/tx</span> (+ burst: <span class="mono">rx/tx rxB/txB rxT/txT time</span><%= t('admin.pkg.fup_hint','). Nilai sama dipakai untuk profil MikroTik ') %><b>dan</b> atribut RADIUS.</span>
         </div>
 
         <!-- Kecepatan UpTo / Maximum Burst Rate (Opsional Manual) -->
@@ -260,7 +260,7 @@
           </div>
           <div class="flex ai-c" style="gap:8px;margin-top:4px">
             <input type="checkbox" name="prorate_first_invoice" id="add_prorate" value="1">
-            <label for="add_prorate" style="margin:0;font-size:12px">Prorata tagihan <strong>pertama</strong> jika pasang di tengah bulan (proporsi sisa hari, perlu tanggal pasang di data pelanggan)</label>
+            <label for="add_prorate" style="margin:0;font-size:12px"><%= t('admin.pkg.prorata_a','Prorata tagihan ') %><strong>pertama</strong><%= t('admin.pkg.prorata_b',' jika pasang di tengah bulan (proporsi sisa hari, perlu tanggal pasang di data pelanggan)') %></label>
           </div>
         </div>
         

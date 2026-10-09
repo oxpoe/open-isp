@@ -115,7 +115,7 @@
 
     <div class="card mb16">
       <div class="card-hd"><h6><i class="bi bi-send-check"></i> <%= t('admin.bc.send_title','Kirim Tagihan Sekarang (Manual — bila Auto OFF)') %></h6></div>
-      <form method="POST" action="/admin/whatsapp/send-billing-now" onsubmit="return confirm('Kirim tagihan sekarang ke pelanggan belum bayar?');">
+      <form method="POST" action="/admin/whatsapp/send-billing-now" onsubmit="return confirm('Kirim tagihan sekarang ke pelanggan <%= t('admin.bc.unpaid','belum bayar') %>?');">
         <div class="card-bd">
           <div style="display:flex;gap:14px;flex-wrap:wrap">
             <div class="fg"><label class="fl"><i class="bi bi-calendar-event"></i> <%= t('admin.bc.isolir_date','Tanggal Isolir') %></label>
@@ -145,7 +145,7 @@
               </div>
             </div>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="bi bi-info-circle"></i> Kirim ke pelanggan <b>belum bayar</b> pada tanggal isolir terpilih. Gunakan <b>Random</b> agar tidak dianggap spam/di-ban.</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="bi bi-info-circle"></i><%= t('admin.bc.send_to',' Kirim ke pelanggan ') %><b><%= t('admin.bc.unpaid','belum bayar') %></b><%= t('admin.bc.on_date',' pada tanggal isolir terpilih. Gunakan ') %><b>Random</b> agar tidak dianggap spam/di-ban.</div>
         </div>
         <div class="card-bd" style="border-top:1px solid var(--border);background:var(--bg2);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
           <div id="bsResult" style="font-size:12px" class="text-muted"></div>

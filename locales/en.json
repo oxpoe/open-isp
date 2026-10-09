@@ -932,7 +932,8 @@
       "empty_cust": "No customer data yet.",
       "empty_odp": "No ODP data yet.",
       "view_port": "Click to view port visual",
-      "port_err": "Failed to load port data."
+      "port_err": "Failed to load port data.",
+      "route_hint": "Drag the orange points to change the route. Click the button below to add a bend point."
     },
     "print_invoice": {
       "title": "Print Invoice Receipt",
@@ -1116,7 +1117,8 @@
       "run_prov": "Run Provisioning",
       "add_server": "Add ACS Server",
       "bind_lan": "Select the LAN Ports to bind:",
-      "bind_ssid": "Select the WLAN (SSID) to bind:"
+      "bind_ssid": "Select the WLAN (SSID) to bind:",
+      "load_log": " to load logs."
     },
     "vd": {
       "action": "Action",
@@ -1146,7 +1148,11 @@
       "tab_templates": "Message Templates",
       "tab_livechat": "Live Chat",
       "tab_preview": "Message Preview",
-      "ph_deviceid": "Device ID (optional)"
+      "ph_deviceid": "Device ID (optional)",
+      "selfhost": " or Self-Hosted Server URL)",
+      "fonnte_hint": " for Fonnte Cloud, or switch to your own server domain/IP when using ",
+      "qr_hint": "Click the button, then open WhatsApp &rarr; Linked Devices &rarr; Link a device, scan the QR. The QR is valid for ~30 seconds &amp; refreshes automatically.",
+      "notif_only": " replies to commands anymore — WhatsApp is only for "
     },
     "automation": {
       "title": "Automation",
@@ -1641,7 +1647,8 @@
       "approve_invoice": "Approve &amp; Create Invoice",
       "modem_hint": "Customer modem login credentials for RADIUS & PPPoE.",
       "reg_hint": "Automatically calculated on install/payment. Can be adjusted manually if needed.",
-      "modem_hint_mt": "Customer modem login credentials for PPPoE MikroTik API."
+      "modem_hint_mt": "Customer modem login credentials for PPPoE MikroTik API.",
+      "reg_auto": " automatically: arrears "
     },
     "bill": {
       "ph_note": "e.g. service credit for downtime",
@@ -1668,7 +1675,8 @@
       "all_routers": "All Routers",
       "all_collectors": "All Collectors",
       "opt_percent": "Percent (%)",
-      "opt_amount": "Amount (Rp)"
+      "opt_amount": "Amount (Rp)",
+      "pct_hint": " The percentage is calculated from the base price (before VAT/USO). The QRIS unique code will be regenerated."
     },
     "common": {
       "keep_empty": "Leave empty to keep unchanged",
@@ -1820,7 +1828,8 @@
       "alert_copied": "MikroTik & RADIUS Isolir setup script copied! Paste it into your MikroTik Terminal.",
       "alert_copied2": "MikroTik script copied!",
       "deactivate": "Deactivate",
-      "activate": "Activate"
+      "activate": "Activate",
+      "rate_from_mt": "rate-limit & IP are taken from the PPP profile on MikroTik"
     },
     "set": {
       "ew_log_realtime": "Realtime Log",
@@ -1921,7 +1930,21 @@
       "office_coord_hint": "Office coordinates are used for employee attendance location validation (geofencing).",
       "set_auto_moved": "Automation moved:",
       "set_auto_list": "Auto-Deactivate, Auto-Delete, Auto-Warning &amp; Auto-",
-      "set_auto_now": "are now organized in the"
+      "set_auto_now": "are now organized in the",
+      "link_hint": "Used to build the customer login link sent via WhatsApp. Example: ",
+      "wa_numbers_hint": "Admin numbers receive system monitoring notifications. Technician numbers are taken automatically from ",
+      "logo_hint": "PNG/JPG/WebP, max 2MB. PNG/JPEG is auto-optimized. Used on the login page &amp; customer portal.",
+      "pwa_icon_hint": "After upload, PWA icons (192/512/maskable/apple-touch) &amp; favicon are regenerated from this image. A square image (1:1) is recommended.",
+      "hero_hint": "PNG/JPEG is automatically converted to ",
+      "speedtest_hint2": " (LibreSpeed / OpenSpeedTest self-hosted) or ",
+      "speedtest_hint3": ". If left empty, the customer dashboard shows ",
+      "speedtest_notset": "\"Speedtest not set up yet\"",
+      "speedtest_btn_hint": "On the customer page there are buttons ",
+      "repo_hint": "Used for the link ",
+      "uptime_hint": "Used for the button/redirect ",
+      "qris_unique_hint": " in the Billing menu to create a unique amount per invoice.",
+      "wh_hint": " = the URL above (secret already included), ",
+      "wh_amount_hint": "equal to the invoice unique amount"
     },
     "mt": {
       "updating": "Updating...",
@@ -1954,7 +1977,8 @@
       "selected": "selected",
       "history": "Discount History (last 100)",
       "th_note": "Note",
-      "empty_cust": "No customers."
+      "empty_cust": "No customers.",
+      "unpaid": "unpaid"
     },
     "cpay": {
       "title": "Collector Payment Approval",
@@ -2050,10 +2074,17 @@
       "prorata_first": "First invoice proration (install date = billing month)",
       "night_hint": "The system switches customers to this PPP profile between 00:00 - 06:00.",
       "kalong_hint": "Check to configure (fields open automatically if this package uses Jam Kalong).",
-      "fup_hint": "Check to configure (fields open automatically if this package uses FUP).",
+      "fup_hint": "). The same value is used for the MikroTik profile ",
       "active_days_hint": "The customer stays active for X days since activation / payment.",
       "ratelimit_hint": "Actual rate-limit (MikroTik &amp; RADIUS):",
-      "profile_hint2": "PPP profile + IP pool are created/updated automatically on MikroTik (MikroTik / RADIUS-profile mode). In RADIUS-attribute mode, IP &amp; rate-limit come from RADIUS."
+      "profile_hint2": "PPP profile + IP pool are created/updated automatically on MikroTik (MikroTik / RADIUS-profile mode). In RADIUS-attribute mode, IP &amp; rate-limit come from RADIUS.",
+      "radius_hint3": " — the values above are read from RADIUS settings. To change, open ",
+      "mt_hint3": " — the values above are read from the PPP profile on the router. To change, edit in ",
+      "profile_a": " The MikroTik PPP profile will be ",
+      "profile_b": "created/updated automatically",
+      "profile_c": " (RADIUS mode uses MikroTik profile)",
+      "prorata_a": "Invoice proration ",
+      "prorata_b": " if installed mid-month (proportion of remaining days; requires install date in customer data)"
     },
     "col": {
       "title": "Collector Management",
@@ -2071,7 +2102,8 @@
       "full_name": "Full Name",
       "area_region": "Area / Assignment Region",
       "opt_all_area": "-- All Areas / Unrestricted --",
-      "empty": "No collector data yet."
+      "empty": "No collector data yet.",
+      "mode_hint": "` means the collector payment directly settles the invoice, while `"
     },
     "mon": {
       "title": "System Monitoring",
@@ -2202,7 +2234,8 @@
       "save": "Save Income",
       "title": "Cash In",
       "th_method": "Method",
-      "empty": "No cash-in data yet."
+      "empty": "No cash-in data yet.",
+      "info": " This page is used to record cash-in / income "
     },
     "exp": {
       "heading": "Expenses (Cash Out)",
@@ -2244,7 +2277,8 @@
       "save": "Save Area",
       "edit": "Edit Area Data",
       "title": "Area Management",
-      "th_name": "Area / Region Name"
+      "th_name": "Area / Region Name",
+      "create_area": " to create an area."
     },
     "rt": {
       "list": "MikroTik Router List",
@@ -2275,7 +2309,10 @@
       "delay_sec": "Delay (seconds)",
       "stop": "Stop",
       "moved": "Auto reminder moved:",
-      "moved_desc": "schedule, template selection & reminder message settings are now in the"
+      "moved_desc": "schedule, template selection & reminder message settings are now in the",
+      "send_to": " Send to customers ",
+      "unpaid": "unpaid",
+      "on_date": " on the selected isolir date. Use "
     },
     "bk": {
       "title": "Backup & Recovery",
@@ -2333,10 +2370,19 @@
     },
     "rep": {
       "ppn_incl": "Yes — VAT already included",
-      "tax_hint": "Corporate income tax, VAT, USO &amp; BHP are calculated automatically from this value."
+      "tax_hint": "Corporate income tax, VAT, USO &amp; BHP are calculated automatically from this value.",
+      "export_hint": "— export &amp; print monthly",
+      "sum_hint": " = sum of each month; match with ",
+      "audit_hint": " (year) above for auditing.",
+      "calc_hint": "— calculated automatically"
     },
     "wlc": {
-      "empty": "No messages with this customer yet. Type a message below and press Enter to start."
+      "empty": "No messages with this customer yet. Type a message below and press Enter to start.",
+      "loading": " Loading messages..."
+    },
+    "wp": {
+      "auto": "automatic message",
+      "sample": " with sample data — "
     }
   },
   "tech": {

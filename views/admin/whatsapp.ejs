@@ -87,10 +87,10 @@
           </div>
 
           <div class="fg mb12">
-            <label class="fl">API Endpoint URL (Default: <code>https://api.fonnte.com/send</code> atau URL Server Self-Hosted)</label>
+            <label class="fl">API Endpoint URL (Default: <code>https://api.fonnte.com/send</code><%= t('admin.wa.selfhost',' atau URL Server Self-Hosted)') %></label>
             <input class="fc" name="fonnte_api_url" value="<%= fonnteSettings.fonnte_api_url %>" placeholder="https://api.fonnte.com/send">
             <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">
-              <i class="bi bi-info-circle"></i> Gunakan <code>https://api.fonnte.com/send</code> untuk Fonnte Cloud, atau ubah ke domain/IP server mandiri jika menggunakan <b>Fonnte Self-Hosted</b> (misal: <code>http://192.168.1.100:8000/send</code>).
+              <i class="bi bi-info-circle"></i> Gunakan <code>https://api.fonnte.com/send</code><%= t('admin.wa.fonnte_hint',' untuk Fonnte Cloud, atau ubah ke domain/IP server mandiri jika menggunakan ') %><b>Fonnte Self-Hosted</b> (misal: <code>http://192.168.1.100:8000/send</code>).
             </div>
           </div>
 
@@ -177,7 +177,7 @@
           </div>
           <div style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(173,255,47,.06);border:1px solid var(--primary-glow);">
             <div class="fw6" style="font-size:12.5px;color:var(--primary);margin-bottom:6px;"><i class="bi bi-qr-code"></i> Login WhatsApp (Scan QR)</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Klik tombol, lalu buka WhatsApp &rarr; Perangkat Tertaut &rarr; Tautkan perangkat, scan QR. QR berlaku ~30 detik &amp; diperbarui otomatis.</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px"><%- t('admin.wa.qr_hint','Klik tombol, lalu buka WhatsApp &rarr; Perangkat Tertaut &rarr; Tautkan perangkat, scan QR. QR berlaku ~30 detik &amp; diperbarui otomatis.') %></div>
             <button type="button" class="btn btn-p btn-sm" onclick="showGowaQr()"><i class="bi bi-qr-code-scan"></i> Tampilkan QR</button>
             <a href="<%= gowaUiUrl %>" target="_blank" rel="noopener" class="btn btn-g btn-sm" style="margin-left:6px"><i class="bi bi-box-arrow-up-right"></i> Buka UI GOWA</a>
             <div id="gowa_qr_wrap" style="display:none;margin-top:10px;text-align:center">
@@ -187,7 +187,7 @@
           </div>
           <div style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);">
             <div class="fw6" style="font-size:12.5px;color:var(--info,#38BDF8);margin-bottom:6px;"><i class="bi bi-broadcast"></i> Webhook Pesan Masuk (Live Chat)</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Set di GOWA: <code>WHATSAPP_WEBHOOK=&lt;URL di bawah&gt;</code> dan <code>WHATSAPP_WEBHOOK_SECRET=&lt;secret&gt;</code>, lalu restart GOWA. <strong>Catatan:</strong> bot WA <em>tidak</em> membalas perintah lagi — WhatsApp hanya untuk <strong>notifikasi</strong>. Interaksi cepat (menu admin/teknisi) kini dipindah ke <strong>Telegram</strong>.</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Set di GOWA: <code>WHATSAPP_WEBHOOK=&lt;URL di bawah&gt;</code> dan <code>WHATSAPP_WEBHOOK_SECRET=&lt;secret&gt;</code>, lalu restart GOWA. <strong>Catatan:</strong> bot WA <em>tidak</em><%= t('admin.wa.notif_only',' membalas perintah lagi — WhatsApp hanya untuk ') %><strong>notifikasi</strong>. Interaksi cepat (menu admin/teknisi) kini dipindah ke <strong>Telegram</strong>.</div>
             <div class="form-row mb12">
               <div class="fg" style="flex:2;">
                 <label class="fl">Webhook URL (tempel ke GOWA)</label>

@@ -32,7 +32,7 @@
         <h6><i class="bi bi-list-ul"></i> <%= t('admin.col.list','Daftar Kolektor') %></h6>
       </div>
       <div class="hint" style="padding:12px 16px 0 16px;font-size:12px;color:var(--muted)">
-        Pengaturan approval pembayaran berlaku per akun kolektor. `<%= t('admin.col.direct','Langsung Lunas') %>` berarti pembayaran dari kolektor langsung melunasi invoice, sedangkan `<%= t('admin.col.approval','Perlu Approval') %>` berarti harus disetujui admin atau kasir terlebih dahulu.
+        Pengaturan approval pembayaran berlaku per akun kolektor. `<%= t('admin.col.direct','Langsung Lunas') %><%= t('admin.col.mode_hint','` berarti pembayaran dari kolektor langsung melunasi invoice, sedangkan `') %><%= t('admin.col.approval','Perlu Approval') %>` berarti harus disetujui admin atau kasir terlebih dahulu.
       </div>
       <div style="padding:12px 16px 0 16px;display:flex;gap:10px;flex-wrap:wrap">
         <select id="collectorModeFilter" class="fs" style="max-width:220px">

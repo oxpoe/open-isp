@@ -932,7 +932,8 @@
       "empty_cust": "Belum ada data pelanggan.",
       "empty_odp": "Belum ada data ODP.",
       "view_port": "Klik untuk lihat visual port",
-      "port_err": "Gagal memuat data port."
+      "port_err": "Gagal memuat data port.",
+      "route_hint": "Tarik titik oranye untuk mengubah jalur. Klik tombol di bawah untuk menambah titik lekukan."
     },
     "print_invoice": {
       "title": "Cetak Struk Tagihan",
@@ -1116,7 +1117,8 @@
       "run_prov": "Jalankan Provisioning",
       "add_server": "Tambah Server ACS",
       "bind_lan": "Pilih LAN Port yang akan di-bind:",
-      "bind_ssid": "Pilih WLAN (SSID) yang akan di-bind:"
+      "bind_ssid": "Pilih WLAN (SSID) yang akan di-bind:",
+      "load_log": " untuk memuat log."
     },
     "vd": {
       "action": "Aksi",
@@ -1146,7 +1148,11 @@
       "tab_templates": "Template Pesan",
       "tab_livechat": "Live Chat",
       "tab_preview": "Preview Pesan",
-      "ph_deviceid": "Device ID (opsional)"
+      "ph_deviceid": "Device ID (opsional)",
+      "selfhost": " atau URL Server Self-Hosted)",
+      "fonnte_hint": " untuk Fonnte Cloud, atau ubah ke domain/IP server mandiri jika menggunakan ",
+      "qr_hint": "Klik tombol, lalu buka WhatsApp &rarr; Perangkat Tertaut &rarr; Tautkan perangkat, scan QR. QR berlaku ~30 detik &amp; diperbarui otomatis.",
+      "notif_only": " membalas perintah lagi — WhatsApp hanya untuk "
     },
     "automation": {
       "title": "Otomatisasi",
@@ -1642,7 +1648,8 @@
       "approve_invoice": "Setujui &amp; Buat Tagihan",
       "modem_hint": "Kredensial login modem pelanggan untuk RADIUS & PPPoE.",
       "reg_hint": "Otomatis dihitung saat pasang/bayar. Bisa disesuaikan manual jika perlu.",
-      "modem_hint_mt": "Kredensial login modem pelanggan untuk PPPoE MikroTik API."
+      "modem_hint_mt": "Kredensial login modem pelanggan untuk PPPoE MikroTik API.",
+      "reg_auto": " otomatis: menunggak "
     },
     "bill": {
       "ph_note": "mis. kompensasi gangguan",
@@ -1669,7 +1676,8 @@
       "all_routers": "Semua Router",
       "all_collectors": "Semua Kolektor",
       "opt_percent": "Persen (%)",
-      "opt_amount": "Nominal (Rp)"
+      "opt_amount": "Nominal (Rp)",
+      "pct_hint": " Persen dihitung dari harga dasar (sebelum PPN/USO). Kode unik QRIS akan digenerate ulang."
     },
     "common": {
       "keep_empty": "Biarkan kosong jika tidak diganti",
@@ -1821,7 +1829,8 @@
       "alert_copied": "Script setup MikroTik & Isolir RADIUS berhasil disalin! Silakan tempelkan (paste) di Terminal MikroTik Anda.",
       "alert_copied2": "Script MikroTik berhasil disalin!",
       "deactivate": "Non-aktifkan",
-      "activate": "Aktifkan"
+      "activate": "Aktifkan",
+      "rate_from_mt": "rate-limit & IP diambil dari profil PPP di MikroTik"
     },
     "set": {
       "ew_log_realtime": "Log Realtime",
@@ -1922,7 +1931,21 @@
       "office_coord_hint": "Koordinat kantor digunakan untuk validasi lokasi absensi karyawan (geofencing)",
       "set_auto_moved": "Otomatisasi dipindah:",
       "set_auto_list": "Auto-Nonaktif, Auto-Hapus, Auto-Peringatan &amp; Auto-",
-      "set_auto_now": "kini tertata di menu"
+      "set_auto_now": "kini tertata di menu",
+      "link_hint": "Digunakan untuk menyusun tautan login pelanggan yang dikirim via WhatsApp. Contoh: ",
+      "wa_numbers_hint": "Nomor admin akan menerima notifikasi monitoring sistem. Nomor teknisi diambil otomatis dari ",
+      "logo_hint": "PNG/JPG/WebP, maks 2MB. PNG/JPEG otomatis dioptimalkan. Dipakai di halaman login &amp; portal pelanggan.",
+      "pwa_icon_hint": "Setelah upload, ikon PWA (192/512/maskable/apple-touch) &amp; favicon otomatis dibuat ulang dari gambar ini. Sebaiknya gambar persegi (1:1).",
+      "hero_hint": "PNG/JPEG otomatis dikonversi ke ",
+      "speedtest_hint2": " (LibreSpeed / OpenSpeedTest self-hosted) atau ",
+      "speedtest_hint3": ". Jika dikosongkan, dashboard pelanggan menampilkan ",
+      "speedtest_notset": "\"Speedtest belum di setup\"",
+      "speedtest_btn_hint": "Di halaman pelanggan tersedia tombol ",
+      "repo_hint": "Dipakai untuk tautan ",
+      "uptime_hint": "Dipakai untuk tombol/redirect ",
+      "qris_unique_hint": " di menu Billing untuk membuat nominal unik per invoice.",
+      "wh_hint": " = URL di atas (secret sudah termasuk), ",
+      "wh_amount_hint": "sama dengan nominal unik tagihan"
     },
     "mt": {
       "updating": "Memperbarui...",
@@ -1955,7 +1978,8 @@
       "selected": "dipilih",
       "history": "Riwayat Diskon (100 terakhir)",
       "th_note": "Catatan",
-      "empty_cust": "Tidak ada pelanggan."
+      "empty_cust": "Tidak ada pelanggan.",
+      "unpaid": "belum bayar"
     },
     "cpay": {
       "title": "Approval Pembayaran Kolektor",
@@ -2051,10 +2075,17 @@
       "prorata_first": "Prorata tagihan pertama (tanggal pasang = bulan tagihan)",
       "night_hint": "Sistem akan ganti profile ppp pelanggan ke profile ini pada jam 00:00 - 06:00.",
       "kalong_hint": "Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai Jam Kalong).",
-      "fup_hint": "Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai FUP).",
+      "fup_hint": "). Nilai sama dipakai untuk profil MikroTik ",
       "active_days_hint": "Pelanggan aktif selama X hari sejak aktivasi / pembayaran.",
       "ratelimit_hint": "Rate-limit asli (MikroTik &amp; RADIUS):",
-      "profile_hint2": "Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS."
+      "profile_hint2": "Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS.",
+      "radius_hint3": " — nilai di atas dibaca dari pengaturan RADIUS. Untuk mengubah, buka ",
+      "mt_hint3": " — nilai di atas dibaca dari profil PPP di router. Untuk mengubah, edit di ",
+      "profile_a": " Profil PPP MikroTik akan ",
+      "profile_b": "dibuat/diperbarui otomatis",
+      "profile_c": " (mode RADIUS pakai profil MikroTik)",
+      "prorata_a": "Prorata tagihan ",
+      "prorata_b": " jika pasang di tengah bulan (proporsi sisa hari, perlu tanggal pasang di data pelanggan)"
     },
     "col": {
       "title": "Manajemen Kolektor",
@@ -2072,7 +2103,8 @@
       "full_name": "Nama Lengkap",
       "area_region": "Area / Wilayah Tugas",
       "opt_all_area": "-- Semua Area / Bebas --",
-      "empty": "Belum ada data kolektor."
+      "empty": "Belum ada data kolektor.",
+      "mode_hint": "` berarti pembayaran dari kolektor langsung melunasi invoice, sedangkan `"
     },
     "mon": {
       "title": "Monitoring Sistem",
@@ -2203,7 +2235,8 @@
       "save": "Simpan Pemasukan",
       "title": "Kas Masuk",
       "th_method": "Metode",
-      "empty": "Belum ada data kas masuk."
+      "empty": "Belum ada data kas masuk.",
+      "info": " Halaman ini digunakan untuk mencatat kas masuk / pemasukan "
     },
     "exp": {
       "heading": "Pengeluaran (Cash Out)",
@@ -2245,7 +2278,8 @@
       "save": "Simpan Area",
       "edit": "Edit Data Area",
       "title": "Manajemen Area",
-      "th_name": "Nama Area / Wilayah"
+      "th_name": "Nama Area / Wilayah",
+      "create_area": " untuk membuat area."
     },
     "rt": {
       "list": "Daftar Router MikroTik",
@@ -2276,7 +2310,10 @@
       "delay_sec": "Jeda (detik)",
       "stop": "Hentikan",
       "moved": "Pengingat otomatis dipindah:",
-      "moved_desc": "pengaturan jadwal, pemilihan template &amp; isi pesan pengingat tagihan kini di menu"
+      "moved_desc": "pengaturan jadwal, pemilihan template &amp; isi pesan pengingat tagihan kini di menu",
+      "send_to": " Kirim ke pelanggan ",
+      "unpaid": "belum bayar",
+      "on_date": " pada tanggal isolir terpilih. Gunakan "
     },
     "bk": {
       "title": "Backup & Recovery",
@@ -2334,10 +2371,19 @@
     },
     "rep": {
       "ppn_incl": "Ya — PPN sudah termasuk",
-      "tax_hint": "PPh Badan, PPN, USO &amp; BHP dihitung otomatis dari nilai ini."
+      "tax_hint": "PPh Badan, PPN, USO &amp; BHP dihitung otomatis dari nilai ini.",
+      "export_hint": "— export &amp; cetak tiap bulan",
+      "sum_hint": " = penjumlahan tiap bulan; cocokkan dengan ",
+      "audit_hint": " (tahun) di atas untuk audit.",
+      "calc_hint": "— dihitung otomatis"
     },
     "wlc": {
-      "empty": "Belum ada pesan dengan pelanggan ini. Ketik pesan di bawah dan tekan Enter untuk memulai."
+      "empty": "Belum ada pesan dengan pelanggan ini. Ketik pesan di bawah dan tekan Enter untuk memulai.",
+      "loading": " Memuat pesan..."
+    },
+    "wp": {
+      "auto": "pesan otomatis",
+      "sample": " dengan data contoh — "
     }
   },
   "tech": {

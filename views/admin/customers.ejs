@@ -318,7 +318,7 @@
               </td>
               <td>
                 <% if (c.status==='active') { %><span class="badge bs"><i class="bi bi-circle-fill" style="font-size:7px"></i><%= t('admin.customers.filter.active', 'Aktif') %></span>
-                <% } else if (c.status==='suspended') { %><% if (c.deactivate_cause==='auto_unpaid') { %><span class="badge bd" title="<%= t('admin.cust.inactive','Nonaktif') %> otomatis: menunggak <%= c.unpaid_streak %> bulan"><i class="bi bi-person-x"></i> <%= t('admin.cust.inactive','Nonaktif') %> (auto)</span><% } else { %><span class="badge bw"><%= t('admin.customers.filter.suspended', 'Suspend') %></span><% } %>
+                <% } else if (c.status==='suspended') { %><% if (c.deactivate_cause==='auto_unpaid') { %><span class="badge bd" title="<%= t('admin.cust.inactive','Nonaktif') %><%= t('admin.cust.reg_auto',' otomatis: menunggak ') %><%= c.unpaid_streak %> bulan"><i class="bi bi-person-x"></i> <%= t('admin.cust.inactive','Nonaktif') %> (auto)</span><% } else { %><span class="badge bw"><%= t('admin.customers.filter.suspended', 'Suspend') %></span><% } %>
                 <% } else { %><span class="badge bm"><%= t('admin.customers.filter.inactive', 'Nonaktif') %></span><% } %>
                 <% if (c.status === 'inactive' && (c.reg_total || c.reg_due_date || c.reg_voucher_code)) { %>
                   <div style="font-size:10px;margin-top:4px;color:var(--muted)">

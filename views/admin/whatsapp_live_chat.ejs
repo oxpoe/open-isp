@@ -269,7 +269,7 @@ async function openChat(phone, name) {
 async function loadChatMessages(phone, showSpinner = false) {
   const container = document.getElementById('chatMessages');
   if (showSpinner) {
-    container.innerHTML = `<div class="text-center text-muted" style="margin:auto;"><i class="bi bi-arrow-repeat spin"></i> Memuat pesan...</div>`;
+    container.innerHTML = `<div class="text-center text-muted" style="margin:auto;"><i class="bi bi-arrow-repeat spin"></i><%= t('admin.wlc.loading',' Memuat pesan...') %></div>`;
   }
   
   try {
