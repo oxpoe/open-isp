@@ -51,22 +51,22 @@
       <div class="card-bd">
         <% if (isolirSource === 'radius') { %>
           <div class="form-row">
-            <div class="fg"><label class="fl">Aksi isolir</label><div class="mono"><%= radiusIsolir.action %></div></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.isolir_action','Aksi isolir') %></label><div class="mono"><%= radiusIsolir.action %></div></div>
             <div class="fg"><label class="fl">Rate-limit</label><div class="mono"><%= radiusIsolir.rateLimit %></div></div>
             <div class="fg"><label class="fl">Pool</label><div class="mono"><%= radiusIsolir.pool %></div></div>
-            <div class="fg"><label class="fl">IP Pool isolir</label><div class="mono"><%= radiusIsolir.ipPoolEnabled ? (radiusIsolir.ipPoolStart + ' – ' + radiusIsolir.ipPoolEnd) : 'nonaktif' %></div></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.isolir_ip_pool','IP Pool isolir') %></label><div class="mono"><%= radiusIsolir.ipPoolEnabled ? (radiusIsolir.ipPoolStart + ' – ' + radiusIsolir.ipPoolEnd) : 'nonaktif' %></div></div>
           </div>
-          <div class="hint"><i class="bi bi-info-circle"></i> Mode <b>RADIUS</b> — nilai di atas dibaca dari pengaturan RADIUS. Untuk mengubah, buka <b>RADIUS Settings</b> (tombol di atas).</div>
+          <div class="hint"><i class="bi bi-info-circle"></i> <%- t('admin.pkg.radius_hint','Mode <b>RADIUS</b> — nilai di atas dibaca dari pengaturan RADIUS. Untuk mengubah, buka <b>RADIUS Settings</b> (tombol di atas).') %></div>
         <% } else { %>
           <div class="form-row">
-            <div class="fg"><label class="fl">Nama Profil</label><div class="mono"><%= isolirProfileName %></div></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.prof_name','Nama Profil') %></label><div class="mono"><%= isolirProfileName %></div></div>
             <div class="fg"><label class="fl">Rate-limit (live)</label><div class="mono"><%= isolirExists ? (isolirLiveRl || '-') : '—' %></div></div>
           </div>
           <div class="form-row">
             <div class="fg"><label class="fl">Local Address (live)</label><div class="mono"><%= isolirExists ? (isolirLiveLocal || '-') : '—' %></div></div>
             <div class="fg"><label class="fl">Remote / Pool (live)</label><div class="mono"><%= isolirExists ? (isolirLiveRemote || '-') : '—' %></div></div>
           </div>
-          <div class="hint"><i class="bi bi-info-circle"></i> Mode <b>MikroTik</b> — nilai di atas dibaca dari profil PPP di router. Untuk mengubah, edit di <b>MikroTik &rarr; PPPoE Profiles</b>.</div>
+          <div class="hint"><i class="bi bi-info-circle"></i> <%- t('admin.pkg.mt_hint','Mode <b>MikroTik</b> — nilai di atas dibaca dari profil PPP di router. Untuk mengubah, edit di <b>MikroTik &rarr; PPPoE Profiles</b>.') %></div>
         <% } %>
       </div>
     </div>
@@ -77,7 +77,7 @@
         <div style="display:flex;align-items:center;gap:10px">
           <% if (typeof routers !== 'undefined' && routers && routers.length > 0) { %>
           <select class="fs" style="width:160px" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
-            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>> Semua Router</option>
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>> <%= t('admin.pkg.all_routers','Semua Router') %></option>
             <% routers.forEach(r => { %>
               <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>> <%= r.name %></option>
             <% }) %>
@@ -93,7 +93,7 @@
               <th>#</th>
               <th><%= t('admin.packages.table.name', 'Nama Paket') %></th>
               <th><%= t('admin.packages.table.price_month', 'Harga / Bulan') %></th>
-              <th>Promo / Prorata</th>
+              <th><%= t('admin.pkg.th_promo','Promo / Prorata') %></th>
               <th><%= t('admin.packages.table.speed', 'Kecepatan') %></th>
               <th><%= t('admin.packages.table.description', 'Deskripsi') %></th>
               <th><%= t('admin.packages.table.isolir', 'Profil Isolir') %></th>
@@ -158,7 +158,7 @@
                   <div class="act-menu">
                     <button type="button" class="act-item" data-idx="<%= i %>" onclick="editPkg(+this.dataset.idx)"><i class="bi bi-pencil"></i> Edit Paket</button>
                     <div class="act-sep"></div>
-                    <button type="submit" form="pkdel-<%= p.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus Paket</button>
+                    <button type="submit" form="pkdel-<%= p.id %>" class="act-item danger"><i class="bi bi-trash"></i> <%= t('admin.pkg.del_pkg','Hapus Paket') %></button>
                   </div>
                 </div>
               </td>
@@ -188,7 +188,7 @@
         </div>
         <div class="hint" style="margin:-2px 0 10px;font-size:11px">
           <% if (typeof profileMode !== 'undefined' && profileMode === 'radius-attributes') { %>
-            <i class="bi bi-broadcast"></i> Mode RADIUS: rate-limit &amp; IP dari <b>atribut RADIUS</b> — profil PPP MikroTik tidak dibuat otomatis.
+            <i class="bi bi-broadcast"></i> <%- t('admin.pkg.mode_radius_hint','Mode RADIUS: rate-limit &amp; IP dari <b>atribut RADIUS</b> — profil PPP MikroTik tidak dibuat otomatis.') %>
           <% } else { %>
             <i class="bi bi-router"></i> Profil PPP MikroTik akan <b>dibuat/diperbarui otomatis</b> dari speed paket<% if (typeof profileMode !== 'undefined' && profileMode === 'radius-profile') { %> (mode RADIUS pakai profil MikroTik)<% } %>.
           <% } %>
@@ -204,14 +204,14 @@
         <!-- Tipe Billing: Pascabayar vs Prabayar -->
         <div class="form-row" style="background:rgba(99,102,241,0.05);padding:12px 14px;border-radius:10px;margin-top:10px;border:1px solid rgba(99,102,241,0.15);">
           <div class="fg">
-            <label class="fl"><i class="bi bi-credit-card-2-front text-primary me-1"></i> Tipe Penagihan / Billing *</label>
+            <label class="fl"><i class="bi bi-credit-card-2-front text-primary me-1"></i> <%= t('admin.pkg.billing_type','Tipe Penagihan / Billing *') %></label>
             <select class="fs" name="billing_type" id="add_billing_type" onchange="toggleAddBillingType(this.value)">
-              <option value="postpaid" selected>Pascabayar (Kalender / Jatuh Tempo Tetap)</option>
-              <option value="prepaid">Prabayar (Masa Aktif Bergulir)</option>
+              <option value="postpaid" selected><%= t('admin.pkg.opt_postpaid','Pascabayar (Kalender / Jatuh Tempo Tetap)') %></option>
+              <option value="prepaid"><%= t('admin.pkg.opt_prepaid','Prabayar (Masa Aktif Bergulir)') %></option>
             </select>
           </div>
           <div class="fg" id="add_duration_days_fg" style="display:none">
-            <label class="fl"><i class="bi bi-clock-history text-warning me-1"></i> Durasi Masa Aktif (Hari) *</label>
+            <label class="fl"><i class="bi bi-clock-history text-warning me-1"></i> <%= t('admin.pkg.validity_days','Durasi Masa Aktif (Hari) *') %></label>
             <input class="fc" name="duration_days" id="add_duration_days" type="number" min="1" value="30" placeholder="30">
             <small class="text-muted" style="font-size:11px;display:block;margin-top:2px;">
               Pelanggan aktif selama X hari sejak aktivasi / pembayaran.
@@ -223,11 +223,11 @@
         <div class="form-row" style="background:rgba(59,130,246,0.04);padding:12px 14px;border-radius:10px;margin-top:10px;border:1px solid rgba(59,130,246,0.12);">
           <div class="fg">
             <label class="fl" style="color:var(--primary);font-weight:700;"><i class="bi bi-download"></i> Kecepatan Download (Mbps) *</label>
-            <input class="fc" name="speed_down" id="add_down" type="number" step="any" min="0" placeholder="Contoh: 10" required>
+            <input class="fc" name="speed_down" id="add_down" type="number" step="any" min="0" placeholder="<%= t('admin.pkg.ph_down','Contoh: 10') %>" required>
           </div>
           <div class="fg">
             <label class="fl" style="color:var(--info);font-weight:700;"><i class="bi bi-upload"></i> Kecepatan Upload (Mbps) *</label>
-            <input class="fc" name="speed_up" id="add_up" type="number" step="any" min="0" placeholder="Contoh: 5" required>
+            <input class="fc" name="speed_up" id="add_up" type="number" step="any" min="0" placeholder="<%= t('admin.pkg.ph_up','Contoh: 5') %>" required>
           </div>
         </div>
         <div class="hint" style="margin-top:6px;font-size:11px">
@@ -241,22 +241,22 @@
           <div class="form-row">
             <div class="fg">
               <label class="fl">Download UpTo (Mbps)</label>
-              <input class="fc" name="speed_down_upto" id="add_down_upto" type="number" step="any" min="0" placeholder="Kosongkan jika tanpa UpTo (mis: 20)">
+              <input class="fc" name="speed_down_upto" id="add_down_upto" type="number" step="any" min="0" placeholder="<%= t('admin.pkg.ph_upto_down','Kosongkan jika tanpa UpTo (mis: 20)') %>">
             </div>
             <div class="fg">
               <label class="fl">Upload UpTo (Mbps)</label>
-              <input class="fc" name="speed_up_upto" id="add_up_upto" type="number" step="any" min="0" placeholder="Kosongkan jika tanpa UpTo (mis: 10)">
+              <input class="fc" name="speed_up_upto" id="add_up_upto" type="number" step="any" min="0" placeholder="<%= t('admin.pkg.ph_upto_up','Kosongkan jika tanpa UpTo (mis: 10)') %>">
             </div>
           </div>
           <small class="text-muted" style="font-size:11px;display:block;margin-top:2px;">
-            Bila diisi, paket akan tampil sebagai: <strong>10 Mbps (Up to 20 Mbps)</strong> di invoice & portal pelanggan.
+            <%- t('admin.pkg.upto_hint','Bila diisi, paket akan tampil sebagai: <strong>10 Mbps (Up to 20 Mbps)</strong> di invoice & portal pelanggan.') %>
           </small>
         </div>
         <div style="background: rgba(34,197,94,0.06); padding: 12px 14px; border-radius: 10px; margin-top: 10px;">
           <div class="fw6" style="font-size:12px;margin-bottom:8px;color:var(--success)"><i class="bi bi-percent"></i> Promo & prorata tagihan</div>
           <div class="form-row">
-            <div class="fg"><label class="fl">Harga promo (Rp / siklus)</label><input class="fc" name="promo_price" type="number" min="0" placeholder="Opsional, mis. 99000"></div>
-            <div class="fg"><label class="fl">Jumlah bulan promo</label><input class="fc" name="promo_cycles" type="number" min="0" value="0" placeholder="0 = tanpa promo"></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.promo_price','Harga promo (Rp / siklus)') %></label><input class="fc" name="promo_price" type="number" min="0" placeholder="<%= t('admin.pkg.ph_promo_price','Opsional, mis. 99000') %>"></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.promo_cycles','Jumlah bulan promo') %></label><input class="fc" name="promo_cycles" type="number" min="0" value="0" placeholder="<%= t('admin.pkg.ph_promo_cycles','0 = tanpa promo') %>"></div>
           </div>
           <div class="flex ai-c" style="gap:8px;margin-top:4px">
             <input type="checkbox" name="prorate_first_invoice" id="add_prorate" value="1">
@@ -274,7 +274,7 @@
               </label>
             </div>
             <div class="fg">
-              <label class="fl">Persentase PPN (%)</label>
+              <label class="fl"><%= t('admin.pkg.ppn_pct','Persentase PPN (%)') %></label>
               <input class="fc" name="ppn_percentage" type="number" step="any" min="0" value="11.0">
             </div>
           </div>
@@ -286,7 +286,7 @@
               </label>
             </div>
             <div class="fg">
-              <label class="fl">Persentase ULO/USO (%)</label>
+              <label class="fl"><%= t('admin.pkg.uso_pct','Persentase ULO/USO (%)') %></label>
               <input class="fc" name="uso_percentage" type="number" step="any" min="0" value="1.75">
             </div>
           </div>
@@ -298,8 +298,8 @@
         <div style="background:rgba(59,130,246,0.05);padding:12px 14px;border-radius:10px;margin-top:10px;border:1px solid rgba(59,130,246,0.15);">
           <div class="fw6" style="font-size:12px;margin-bottom:8px;color:var(--info)"><i class="bi bi-hdd-network"></i> IP Pool &amp; Profil MikroTik <span class="text-muted" style="font-weight:400">(comment: "manage by cloud")</span></div>
           <div class="form-row">
-            <div class="fg"><label class="fl">Nama IP Pool</label><input class="fc" name="pool_name" id="add_pool_name" placeholder="mis. HOME10"></div>
-            <div class="fg"><label class="fl">Rentang IP (ranges)</label><input class="fc" name="pool_ranges" id="add_pool_ranges" placeholder="10.20.0.10-10.20.0.254"></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.pool_name','Nama IP Pool') %></label><input class="fc" name="pool_name" id="add_pool_name" placeholder="mis. HOME10"></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.pool_ranges','Rentang IP (ranges)') %></label><input class="fc" name="pool_ranges" id="add_pool_ranges" placeholder="10.20.0.10-10.20.0.254"></div>
           </div>
           <div class="form-row">
             <div class="fg"><label class="fl">Local Address (gateway)</label><input class="fc" name="local_address" id="add_local_address" placeholder="10.20.0.1/24"></div>
@@ -324,7 +324,7 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="fg"><label class="fl"><i class="bi bi-shield-slash"></i> Profil Isolir (paket ini)</label><select class="fs" name="isolir_profile" id="add_isolir_profile"><option value="">— pakai default global/customer —</option></select></div>
+            <div class="fg"><label class="fl"><i class="bi bi-shield-slash"></i> <%= t('admin.pkg.isolir_profile','Profil Isolir (paket ini)') %></label><select class="fs" name="isolir_profile" id="add_isolir_profile"><option value=""><%= t('admin.pkg.ph_isolir_profile','— pakai default global/customer —') %></option></select></div>
           </div>
           <small class="text-muted" style="font-size:11px;display:block;margin-top:2px">Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS.</small>
         </div>
@@ -337,16 +337,16 @@
           </div>
           <div id="add_night_fields" style="display:none">
             <div class="fg">
-              <label class="fl">Nama Profile Malam (MikroTik)</label>
+              <label class="fl"><%= t('admin.pkg.prof_name','Nama Profil') %>e Malam (MikroTik)</label>
               <div style="display:flex;gap:8px">
                 <select class="fs" id="add_night_profile_select" style="max-width:200px" onchange="document.getElementById('add_night_profile_input').value=this.value">
-                  <option value="">-- Pilih Profile --</option>
+                  <option value=""><%= t('admin.pkg.ph_night_profile','-- Pilih Profile --') %></option>
                 </select>
                 <input class="fc" name="night_profile_name" id="add_night_profile_input" placeholder="<%= t('admin.common.type_manual','Atau ketik manual...') %>">
               </div>
             </div>
             <div class="form-row">
-              <div class="fg"><label class="fl">Download Malam (Mbps)</label><input class="fc" name="night_speed_down" type="number" step="any" min="0" placeholder="20"></div>
+              <div class="fg"><label class="fl"><%= t('admin.pkg.night_down','Download Malam (Mbps)') %></label><input class="fc" name="night_speed_down" type="number" step="any" min="0" placeholder="20"></div>
               <div class="fg"><label class="fl">Upload Malam (Mbps)</label><input class="fc" name="night_speed_up" type="number" step="any" min="0" placeholder="10"></div>
             </div>
             <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Sistem akan ganti profile ppp pelanggan ke profile ini pada jam 00:00 - 06:00.</div>
@@ -360,10 +360,10 @@
           </div>
           <div id="add_fup_fields" style="display:none">
             <div class="fg">
-              <label class="fl">Nama Profile FUP (MikroTik)</label>
+              <label class="fl"><%= t('admin.pkg.prof_name','Nama Profil') %>e FUP (MikroTik)</label>
               <div style="display:flex;gap:8px">
                 <select class="fs" id="add_fup_profile_select" style="max-width:200px" onchange="document.getElementById('add_fup_profile_input').value=this.value">
-                  <option value="">-- Pilih Profile --</option>
+                  <option value=""><%= t('admin.pkg.ph_night_profile','-- Pilih Profile --') %></option>
                 </select>
                 <input class="fc" name="fup_profile_name" id="add_fup_profile_input" placeholder="<%= t('admin.common.type_manual','Atau ketik manual...') %>">
               </div>
@@ -408,14 +408,14 @@
         <!-- Tipe Billing: Pascabayar vs Prabayar (Edit) -->
         <div class="form-row" style="background:rgba(99,102,241,0.05);padding:12px 14px;border-radius:10px;margin-top:10px;border:1px solid rgba(99,102,241,0.15);">
           <div class="fg">
-            <label class="fl"><i class="bi bi-credit-card-2-front text-primary me-1"></i> Tipe Penagihan / Billing *</label>
+            <label class="fl"><i class="bi bi-credit-card-2-front text-primary me-1"></i> <%= t('admin.pkg.billing_type','Tipe Penagihan / Billing *') %></label>
             <select class="fs" name="billing_type" id="e_billing_type" onchange="toggleEditBillingType(this.value)">
-              <option value="postpaid">Pascabayar (Kalender / Jatuh Tempo Tetap)</option>
-              <option value="prepaid">Prabayar (Masa Aktif Bergulir)</option>
+              <option value="postpaid"><%= t('admin.pkg.opt_postpaid','Pascabayar (Kalender / Jatuh Tempo Tetap)') %></option>
+              <option value="prepaid"><%= t('admin.pkg.opt_prepaid','Prabayar (Masa Aktif Bergulir)') %></option>
             </select>
           </div>
           <div class="fg" id="e_duration_days_fg" style="display:none">
-            <label class="fl"><i class="bi bi-clock-history text-warning me-1"></i> Durasi Masa Aktif (Hari) *</label>
+            <label class="fl"><i class="bi bi-clock-history text-warning me-1"></i> <%= t('admin.pkg.validity_days','Durasi Masa Aktif (Hari) *') %></label>
             <input class="fc" name="duration_days" id="e_duration_days" type="number" min="1" value="30" placeholder="30">
             <small class="text-muted" style="font-size:11px;display:block;margin-top:2px;">
               Pelanggan aktif selama X hari sejak aktivasi / pembayaran.
@@ -441,23 +441,23 @@
           <div class="form-row">
             <div class="fg">
               <label class="fl">Download UpTo (Mbps)</label>
-              <input class="fc" name="speed_down_upto" id="e_down_upto" type="number" step="any" min="0" placeholder="Kosongkan jika tanpa UpTo (mis: 20)">
+              <input class="fc" name="speed_down_upto" id="e_down_upto" type="number" step="any" min="0" placeholder="<%= t('admin.pkg.ph_upto_down','Kosongkan jika tanpa UpTo (mis: 20)') %>">
             </div>
             <div class="fg">
               <label class="fl">Upload UpTo (Mbps)</label>
-              <input class="fc" name="speed_up_upto" id="e_up_upto" type="number" step="any" min="0" placeholder="Kosongkan jika tanpa UpTo (mis: 10)">
+              <input class="fc" name="speed_up_upto" id="e_up_upto" type="number" step="any" min="0" placeholder="<%= t('admin.pkg.ph_upto_up','Kosongkan jika tanpa UpTo (mis: 10)') %>">
             </div>
           </div>
           <small class="text-muted" style="font-size:11px;display:block;margin-top:2px;">
-            Bila diisi, paket akan tampil sebagai: <strong>10 Mbps (Up to 20 Mbps)</strong> di invoice & portal pelanggan.
+            <%- t('admin.pkg.upto_hint','Bila diisi, paket akan tampil sebagai: <strong>10 Mbps (Up to 20 Mbps)</strong> di invoice & portal pelanggan.') %>
           </small>
         </div>
 
         <div style="background: rgba(34,197,94,0.06); padding: 12px 14px; border-radius: 10px; margin-top: 10px;">
           <div class="fw6" style="font-size:12px;margin-bottom:8px;color:var(--success)"><i class="bi bi-percent"></i> Promo & prorata tagihan</div>
           <div class="form-row">
-            <div class="fg"><label class="fl">Harga promo (Rp / siklus)</label><input class="fc" name="promo_price" id="e_promo_price" type="number" min="0" placeholder="Kosong = tanpa harga promo"></div>
-            <div class="fg"><label class="fl">Jumlah bulan promo</label><input class="fc" name="promo_cycles" id="e_promo_cycles" type="number" min="0" value="0"></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.promo_price','Harga promo (Rp / siklus)') %></label><input class="fc" name="promo_price" id="e_promo_price" type="number" min="0" placeholder="Kosong = tanpa harga promo"></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.promo_cycles','Jumlah bulan promo') %></label><input class="fc" name="promo_cycles" id="e_promo_cycles" type="number" min="0" value="0"></div>
           </div>
           <div class="flex ai-c" style="gap:8px;margin-top:4px">
             <input type="checkbox" name="prorate_first_invoice" id="e_prorate" value="1">
@@ -475,7 +475,7 @@
               </label>
             </div>
             <div class="fg">
-              <label class="fl">Persentase PPN (%)</label>
+              <label class="fl"><%= t('admin.pkg.ppn_pct','Persentase PPN (%)') %></label>
               <input class="fc" name="ppn_percentage" id="e_ppn_percentage" type="number" step="any" min="0">
             </div>
           </div>
@@ -487,7 +487,7 @@
               </label>
             </div>
             <div class="fg">
-              <label class="fl">Persentase ULO/USO (%)</label>
+              <label class="fl"><%= t('admin.pkg.uso_pct','Persentase ULO/USO (%)') %></label>
               <input class="fc" name="uso_percentage" id="e_uso_percentage" type="number" step="any" min="0">
             </div>
           </div>
@@ -499,8 +499,8 @@
         <div style="background:rgba(59,130,246,0.05);padding:12px 14px;border-radius:10px;margin-top:10px;border:1px solid rgba(59,130,246,0.15);">
           <div class="fw6" style="font-size:12px;margin-bottom:8px;color:var(--info)"><i class="bi bi-hdd-network"></i> IP Pool &amp; Profil MikroTik <span class="text-muted" style="font-weight:400">(comment: "manage by cloud")</span></div>
           <div class="form-row">
-            <div class="fg"><label class="fl">Nama IP Pool</label><input class="fc" name="pool_name" id="e_pool_name" placeholder="mis. HOME10"></div>
-            <div class="fg"><label class="fl">Rentang IP (ranges)</label><input class="fc" name="pool_ranges" id="e_pool_ranges" placeholder="10.20.0.10-10.20.0.254"></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.pool_name','Nama IP Pool') %></label><input class="fc" name="pool_name" id="e_pool_name" placeholder="mis. HOME10"></div>
+            <div class="fg"><label class="fl"><%= t('admin.pkg.pool_ranges','Rentang IP (ranges)') %></label><input class="fc" name="pool_ranges" id="e_pool_ranges" placeholder="10.20.0.10-10.20.0.254"></div>
           </div>
           <div class="form-row">
             <div class="fg"><label class="fl">Local Address (gateway)</label><input class="fc" name="local_address" id="e_local_address" placeholder="10.20.0.1/24"></div>
@@ -525,7 +525,7 @@
             </div>
           </div>
           <div class="form-row">
-            <div class="fg"><label class="fl"><i class="bi bi-shield-slash"></i> Profil Isolir (paket ini)</label><select class="fs" name="isolir_profile" id="e_isolir_profile"><option value="">— pakai default global/customer —</option></select></div>
+            <div class="fg"><label class="fl"><i class="bi bi-shield-slash"></i> <%= t('admin.pkg.isolir_profile','Profil Isolir (paket ini)') %></label><select class="fs" name="isolir_profile" id="e_isolir_profile"><option value=""><%= t('admin.pkg.ph_isolir_profile','— pakai default global/customer —') %></option></select></div>
           </div>
           <small class="text-muted" style="font-size:11px;display:block;margin-top:2px">Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS.</small>
         </div>
@@ -539,16 +539,16 @@
           <small class="text-muted" style="font-size:11px;display:block;margin:-6px 0 8px 26px">Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai Jam Kalong).</small>
           <div id="e_night_fields" style="display:none">
             <div class="fg">
-              <label class="fl">Nama Profile Malam (MikroTik)</label>
+              <label class="fl"><%= t('admin.pkg.prof_name','Nama Profil') %>e Malam (MikroTik)</label>
               <div style="display:flex;gap:8px">
                 <select class="fs" id="e_night_profile_select" style="max-width:200px" onchange="document.getElementById('e_night_profile').value=this.value">
-                  <option value="">-- Pilih Profile --</option>
+                  <option value=""><%= t('admin.pkg.ph_night_profile','-- Pilih Profile --') %></option>
                 </select>
                 <input class="fc" name="night_profile_name" id="e_night_profile">
               </div>
             </div>
             <div class="form-row">
-              <div class="fg"><label class="fl">Download Malam (Mbps)</label><input class="fc" name="night_speed_down" id="e_night_down" type="number" step="any" min="0"></div>
+              <div class="fg"><label class="fl"><%= t('admin.pkg.night_down','Download Malam (Mbps)') %></label><input class="fc" name="night_speed_down" id="e_night_down" type="number" step="any" min="0"></div>
               <div class="fg"><label class="fl">Upload Malam (Mbps)</label><input class="fc" name="night_speed_up" id="e_night_up" type="number" step="any" min="0"></div>
             </div>
           </div>
@@ -562,10 +562,10 @@
           <small class="text-muted" style="font-size:11px;display:block;margin:-6px 0 8px 26px">Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai FUP).</small>
           <div id="e_fup_fields" style="display:none">
             <div class="fg">
-              <label class="fl">Nama Profile FUP (MikroTik)</label>
+              <label class="fl"><%= t('admin.pkg.prof_name','Nama Profil') %>e FUP (MikroTik)</label>
               <div style="display:flex;gap:8px">
                 <select class="fs" id="e_fup_profile_select" style="max-width:200px" onchange="document.getElementById('e_fup_profile').value=this.value">
-                  <option value="">-- Pilih Profile --</option>
+                  <option value=""><%= t('admin.pkg.ph_night_profile','-- Pilih Profile --') %></option>
                 </select>
                 <input class="fc" name="fup_profile_name" id="e_fup_profile">
               </div>

@@ -221,9 +221,9 @@
               <option value=""><%= t('admin.olts.no_data', 'Tidak ada data OLT') %></option>
             <% } else if (olts.length === 1) { %>
               <option value="<%= olts[0].id %>" <%= olts[0].is_active ? '' : 'disabled' %> selected><%= olts[0].name %> (<%= olts[0].host %>)</option>
-              <option value="all"> Semua OLT (Ringkasan Total)</option>
+              <option value="all"> <%= t('admin.olt.all_summary','Semua OLT (Ringkasan Total)') %></option>
 <% } else { %>
-              <option value="all"> Semua OLT (Ringkasan Total)</option>
+              <option value="all"> <%= t('admin.olt.all_summary','Semua OLT (Ringkasan Total)') %></option>
               <% olts.forEach(olt => { %>
                 <option value="<%= olt.id %>" <%= olt.is_active ? '' : 'disabled' %>><%= olt.name %> (<%= olt.host %>)</option>
               <% }) %>
@@ -295,8 +295,8 @@
               <div style="background:#0f172a; padding:12px; border-radius:8px; border:1px solid #334155;">
                 <div class="text-muted fw-bold mb-2" style="font-size:11px; text-transform:uppercase; color:#94a3b8;"><i class="bi bi-hdd-rack"></i> Profil & Parameter Connection</div>
                 <div class="mb-1">Profil SNMP: <strong id="oid-profile-name" style="color:#38bdf8;">-</strong></div>
-                <div class="mb-1">Host OLT: <strong id="oid-host">-</strong></div>
-                <div class="mb-1">Port SNMP: <strong id="oid-port">161</strong></div>
+                <div class="mb-1"><%= t('admin.olt.host','Host OLT:') %> <strong id="oid-host">-</strong></div>
+                <div class="mb-1"><%= t('admin.olt.snmp_port','Port SNMP:') %> <strong id="oid-port">161</strong></div>
                 <div>Community: <strong id="oid-community" style="color:#4ade80;">public</strong></div>
               </div>
             </div>
@@ -362,7 +362,7 @@
                   <th>PORT/INDEX</th>
                   <th>SN / SERIAL NUMBER</th>
                   <th>TYPE</th>
-                  <th>AKSI</th>
+                  <th><%= t('admin.olt.th_action','AKSI') %></th>
                 </tr>
               </thead>
               <tbody id="unauth-table-body">
@@ -398,7 +398,7 @@
               <tr>
                 <th><%= t('admin.olts.table.no', 'No') %></th>
                 <th><%= t('admin.olts.table.id', 'Id') %></th>
-                <th>Nama ONU / Pelanggan</th>
+                <th><%= t('admin.olt.th_onu_name','Nama ONU / Pelanggan') %></th>
                 <th><%= t('admin.olts.table.serial', 'Serial Number') %></th>
                 <th><%= t('admin.olts.table.status', 'Status') %></th>
                 <th><%= t('admin.olts.table.tx', 'TxPower') %></th>
@@ -456,7 +456,7 @@
                   <div class="act-menu">
                     <button type="button" class="act-item primary" onclick="testExistingOlt('<%= olt.id %>')"><i class="bi bi-broadcast"></i> <%= t('admin.dash.test_conn','Test Koneksi') %></button>
                     <button type="button" class="act-item" onclick="editOlt('<%= olt.id %>')"><i class="bi bi-pencil"></i> Edit OLT</button>
-                    <button type="submit" form="odl-<%= olt.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus OLT</button>
+                    <button type="submit" form="odl-<%= olt.id %>" class="act-item danger"><i class="bi bi-trash"></i> <%= t('admin.olt.del_olt','Hapus OLT') %></button>
                   </div>
                 </div>
               </td>
@@ -492,7 +492,7 @@
                     <option value="hioso">HIOSO (EPON / GPON)</option>
                     <option value="hsgq">HSGQ (EPON / GPON)</option>
                     <option value="bdcom">BDCOM (EPON / GPON)</option>
-                    <option value="generic">Generic / Lainnya (Standard SNMP EPON/GPON)</option>
+                    <option value="generic"><%= t('admin.olt.opt_generic','Generic / Lainnya (Standard SNMP EPON/GPON)') %></option>
                 </select>
             </div>
         </div>
@@ -503,7 +503,7 @@
         </div>
         <div class="form-row">
             <div class="fg"><label class="fl">Telnet port</label><input type="number" name="telnet_port" class="fc" value="23" min="1" max="65535"></div>
-            <div class="fg"><label class="fl">Enable password (ZTE)</label><input type="password" name="enable_password" class="fc" placeholder="zxr10 (opsional)"></div>
+            <div class="fg"><label class="fl">Enable password (ZTE)</label><input type="password" name="enable_password" class="fc" placeholder="<%= t('admin.olt.ph_enable_pw','zxr10 (opsional)') %>"></div>
         </div>
         <div class="fg"><label class="fl">API Base URL (go-api-c320 ZTE)</label><input type="url" name="api_base_url" class="fc" placeholder="http://127.0.0.1:8081 — kosong jika tidak pakai"></div>
         <div class="fg"><label class="fl"><%= t('admin.olts.form.description', 'Deskripsi / Lokasi') %></label><textarea name="description" class="fc" rows="2"></textarea></div>
@@ -540,7 +540,7 @@
                     <option value="hioso">HIOSO (EPON / GPON)</option>
                     <option value="hsgq">HSGQ (EPON / GPON)</option>
                     <option value="bdcom">BDCOM (EPON / GPON)</option>
-                    <option value="generic">Generic / Lainnya (Standard SNMP EPON/GPON)</option>
+                    <option value="generic"><%= t('admin.olt.opt_generic','Generic / Lainnya (Standard SNMP EPON/GPON)') %></option>
                 </select>
             </div>
         </div>
@@ -551,7 +551,7 @@
         </div>
         <div class="form-row">
             <div class="fg"><label class="fl">Telnet port</label><input type="number" name="telnet_port" id="e_telnet_port" class="fc" min="1" max="65535"></div>
-            <div class="fg"><label class="fl">Enable password (ZTE)</label><input type="password" name="enable_password" id="e_enable_password" class="fc" placeholder="Kosongkan jika tidak diubah"></div>
+            <div class="fg"><label class="fl">Enable password (ZTE)</label><input type="password" name="enable_password" id="e_enable_password" class="fc" placeholder="<%= t('admin.olt.ph_enable_pw2','Kosongkan jika tidak diubah') %>"></div>
         </div>
         <div class="fg"><label class="fl">API Base URL (go-api-c320)</label><input type="url" name="api_base_url" id="e_api_base_url" class="fc" placeholder="http://IP:8081"></div>
         <div class="fg"><label class="fl"><%= t('admin.olts.form.description', 'Deskripsi / Lokasi') %></label><textarea name="description" id="e_description" class="fc" rows="2"></textarea></div>
@@ -579,7 +579,7 @@
 <div class="mo" id="wanConfigModal">
   <div class="mb" style="max-width: 500px;">
     <div class="mh">
-      <span class="mt"><i class="bi bi-globe"></i> Konfigurasi WAN ONU</span>
+      <span class="mt"><i class="bi bi-globe"></i> <%= t('admin.olt.wan_title','Konfigurasi WAN ONU') %></span>
       <button type="button" class="mc" onclick="closeModal('wanConfigModal')">&times;</button>
     </div>
     <form id="wanConfigForm" onsubmit="submitWanConfig(event)">
@@ -589,12 +589,12 @@
         <input type="hidden" id="wan_onu_sn">
         
         <div class="fg">
-          <label class="fl">NAMA ONU</label>
+          <label class="fl"><%= t('admin.olt.wan_name','NAMA ONU') %></label>
           <input type="text" id="wan_onu_name" class="fc" readonly>
         </div>
 
         <div class="fg">
-          <label class="fl">METODE KONFIGURASI</label>
+          <label class="fl"><%= t('admin.olt.wan_method','METODE KONFIGURASI') %></label>
           <select id="wan_method" class="fs" onchange="onWanMethodChange()">
             <option value="telnet">Telnet CLI (OLT OMCI)</option>
             <option value="go-api">REST go-api-c320 (ZTE VLAN / service-port)</option>
@@ -606,7 +606,7 @@
         </div>
         
         <div class="fg">
-          <label class="fl">MODE WAN</label>
+          <label class="fl"><%= t('admin.olt.wan_mode','MODE WAN') %></label>
           <select id="wan_mode" class="fs" onchange="toggleWanFields()">
             <option value="Bridge">Bridge</option>
             <option value="PPPoE">PPPoE</option>
@@ -619,11 +619,11 @@
         </div>
         <div id="wan_goapi_extra" style="display:none">
           <div class="form-row">
-            <div class="fg"><label class="fl">CVLAN (opsional)</label><input type="number" id="wan_cvlan" class="fc" min="1" max="4094" placeholder="Default = VLAN"></div>
+            <div class="fg"><label class="fl"><%= t('admin.olt.wan_cvlan','CVLAN (opsional)') %></label><input type="number" id="wan_cvlan" class="fc" min="1" max="4094" placeholder="<%= t('admin.olt.ph_cvlan','Default = VLAN') %>"></div>
             <div class="fg"><label class="fl">Priority (0–7)</label><input type="number" id="wan_priority" class="fc" min="0" max="7" value="0"></div>
           </div>
           <div class="fg">
-            <label class="fl">VLAN mode</label>
+            <label class="fl"><%= t('admin.olt.wan_vlan_mode','VLAN mode') %></label>
             <select id="wan_vlan_mode" class="fs">
               <option value="tag">tag</option>
               <option value="translation">translation</option>
@@ -633,7 +633,7 @@
         </div>
 
         <div class="fg">
-          <label class="fl">BINDING LAN</label>
+          <label class="fl"><%= t('admin.olt.wan_bind_lan','BINDING LAN') %></label>
           <div class="d-flex flex-wrap gap-3 mt-1">
             <label class="d-flex align-items-center gap-1 small cursor-pointer"><input type="checkbox" name="wan_lan" value="1" checked> LAN1</label>
             <label class="d-flex align-items-center gap-1 small cursor-pointer"><input type="checkbox" name="wan_lan" value="2"> LAN2</label>
@@ -643,7 +643,7 @@
         </div>
 
         <div class="fg">
-          <label class="fl">BINDING SSID (WIFI)</label>
+          <label class="fl"><%= t('admin.olt.wan_bind_ssid','BINDING SSID (WIFI)') %></label>
           <div class="d-flex flex-wrap gap-3 mt-1">
             <label class="d-flex align-items-center gap-1 small cursor-pointer"><input type="checkbox" name="wan_ssid" value="1" checked> SSID1</label>
             <label class="d-flex align-items-center gap-1 small cursor-pointer"><input type="checkbox" name="wan_ssid" value="2"> SSID2</label>
@@ -794,7 +794,7 @@ async function loadOltDashboard(id) {
           <tr style="border-top:2px solid #334155; background:rgba(255,255,255,0.03);">
             <td colspan="2" style="color:#38bdf8; font-weight:bold; padding-top:8px;">OLT #${idx+1}: ${oSummary.name} (${oSummary.host}) - Brand: ${brand} [${oSummary.status}]</td>
           </tr>
-          <tr><td>Profil SNMP Aktif</td><td><code>${prof ? prof.name : (oSummary.error || 'Pending/No Match')}</code></td></tr>
+          <tr><td><%= t('admin.olt.oid_active','Profil SNMP Aktif') %></td><td><code>${prof ? prof.name : (oSummary.error || 'Pending/No Match')}</code></td></tr>
           <tr><td>OID Status Table</td><td><code>${prof ? prof.status_table : '-'}</code></td></tr>
           <tr><td>OID Name Table</td><td><code>${prof ? prof.name_table : '-'}</code></td></tr>
           <tr><td>OID Serial Table</td><td><code>${prof ? prof.sn_table : '-'}</code></td></tr>
@@ -1163,10 +1163,10 @@ async function testFormOlt(type) {
     const data = await res.json();
     if (data.success) {
       resultDiv.className = 'alert alert-s small mt-2';
-      resultDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <strong>Koneksi Sukses!</strong><br>' + (data.message || 'OLT merespons.');
+      resultDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <strong><%= t('admin.olt.conn_ok','Koneksi Sukses!') %></strong><br>' + (data.message || 'OLT merespons.');
     } else {
       resultDiv.className = 'alert alert-d small mt-2';
-      resultDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> <strong>Koneksi Gagal:</strong><br>' + (data.message || data.error);
+      resultDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> <strong><%= t('admin.olt.conn_fail','Koneksi Gagal:') %></strong><br>' + (data.message || data.error);
     }
   } catch (e) {
     resultDiv.className = 'alert alert-d small mt-2';
