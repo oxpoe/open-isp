@@ -3499,6 +3499,14 @@ router.post('/tickets/create', requireAdminSession, express.urlencoded({ extende
         const custPhone = cust ? cust.phone : '-';
         const custAddr = cust ? cust.address : '-';
 
+        const _waDigits = String(custPhone || '').replace(/\D/g, '').replace(/^0/, '62');
+        const _mapQ = (cust && cust.lat && cust.lng) ? (cust.lat + ',' + cust.lng) : String(custAddr || '');
+        const _base = (getSetting('public_base_url', '') || getSetting('app_url', '') || ('http://' + (req.get('host') || ''))).replace(/\/+$/, '');
+        const _links = `\n🔗 *Tautan Cepat:*\n` +
+          (_waDigits ? `• 💬 Chat Pelanggan: https://wa.me/${_waDigits}\n` : '') +
+          (_mapQ ? `• 📍 Lokasi: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(_mapQ)}\n` : '') +
+          `• 🧾 Detail Pelanggan: ${_base}/admin/customers?search=${encodeURIComponent(custPhone || custName)}\n` +
+          `• 🛠️ Pool Tiket Teknisi: ${_base}/tech/pool`;
         const waMsg = `📌 *TUGAS TEKNISI BARU DARI ADMIN*\n\n` +
                      `🎫 *ID Tiket:* #${ticketId}\n` +
                      `👤 *Pelanggan/Objek:* ${custName}\n` +
@@ -3506,7 +3514,7 @@ router.post('/tickets/create', requireAdminSession, express.urlencoded({ extende
                      `📍 *Alamat:* ${custAddr}\n` +
                      `📝 *Kendala/Tugas:* ${subject}\n` +
                      `💬 *Detail Pesan:* ${message}\n\n` +
-                     `Silakan cek di portal teknisi/admin untuk menindaklanjuti.`;
+                     `Silakan cek di portal teknisi/admin untuk menindaklanjuti.` + _links;
 
         // Send to assigned technician or broadcast to all active technicians if not assigned
         if (tech && tech.phone) {

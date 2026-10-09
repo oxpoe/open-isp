@@ -2945,13 +2945,21 @@ router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, re
         const photoCount = photoPaths.length;
         const photoText = photoCount > 0 ? `\n📸 *Foto Masalah:* ${photoCount} foto terlampir` : '';
         
+        const _waDigits = normalizeWaDigits(customer ? customer.phone : '');
+        const _mapQ = (customer && customer.lat && customer.lng) ? (customer.lat + ',' + customer.lng) : String(customer ? customer.address : '');
+        const _base = (String(settings.public_base_url || '') || String(settings.app_url || '') || ('http://' + (req.get('host') || ''))).replace(/\/+$/, '');
+        const _links = `\n🔗 *Tautan Cepat:*\n` +
+          (_waDigits ? `• 💬 Chat Pelanggan: https://wa.me/${_waDigits}\n` : '') +
+          (_mapQ ? `• 📍 Lokasi: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(_mapQ)}\n` : '') +
+          `• 🧾 Detail Pelanggan: ${_base}/admin/customers?search=${encodeURIComponent(customer ? (customer.phone || customer.name) : '')}\n` +
+          `• 🛠️ Pool Tiket Teknisi: ${_base}/tech/pool`;
         const waMsg = `🎫 *TIKET KELUHAN BARU*\n\n` +
                      `👤 *Pelanggan:* ${customer ? customer.name : 'Unknown'}\n` +
                      `📞 *WhatsApp:* ${customer ? customer.phone : '-'}\n` +
                      `📍 *Alamat:* ${customer ? customer.address : '-'}\n` +
                      `📝 *Subjek:* ${subject}\n` +
                      `💬 *Pesan:* ${message}${photoText}\n\n` +
-                     `Silakan cek di panel Admin/Teknisi untuk menindaklanjuti.`;
+                     `Silakan cek di panel Admin/Teknisi untuk menindaklanjuti.` + _links;
 
         const recipients = new Set();
         if (settings.whatsapp_admin_numbers && settings.whatsapp_admin_numbers.length > 0) {
