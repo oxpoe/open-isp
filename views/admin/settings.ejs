@@ -457,11 +457,11 @@
         <!-- Payment Gateway -->
         <div data-setcat="branding">
           <div class="card mb16">
-            <div class="card-hd"><h6><i class="bi bi-palette"></i> Logo Aplikasi</h6></div>
+            <div class="card-hd"><h6><i class="bi bi-palette"></i> <%= t('admin.set.logo_title','Logo Aplikasi') %></h6></div>
             <div class="card-bd">
               <div class="form-row">
                 <div class="fg">
-                  <label class="fl">Logo Portal Pelanggan &amp; Login</label>
+                  <label class="fl"><%- t('admin.set.logo_portal','Logo Portal Pelanggan &amp; Login') %></label>
                   <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
                     <div style="flex:1 1 200px">
                       <input class="fc" type="file" id="brand_portal_file" accept="image/png,image/jpeg,image/jpg,image/webp">
@@ -475,7 +475,7 @@
                   </div>
                 </div>
                 <div class="fg">
-                  <label class="fl">Logo PDF &amp; Invoice</label>
+                  <label class="fl"><%- t('admin.set.logo_invoice','Logo PDF &amp; Invoice') %></label>
                   <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
                     <div style="flex:1 1 200px">
                       <input class="fc" type="file" id="brand_invoice_file" accept="image/png,image/jpeg,image/jpg,image/webp">
@@ -491,7 +491,7 @@
               </div>
               <div class="form-row">
                 <div class="fg">
-                  <label class="fl">Logo PWA (Ikon Aplikasi)</label>
+                  <label class="fl"><%= t('admin.set.logo_pwa','Logo PWA (Ikon Aplikasi)') %></label>
                   <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
                     <div style="flex:1 1 200px">
                       <input class="fc" type="file" id="brand_pwa_file" accept="image/png,image/jpeg,image/jpg,image/webp">
@@ -513,7 +513,7 @@
             <div class="card-hd"><h6><i class="bi bi-image"></i> Landing Page</h6></div>
             <div class="card-bd">
               <div class="fg">
-                <label class="fl">Foto Hero Landing Page</label>
+                <label class="fl"><%= t('admin.set.hero','Foto Hero Landing Page') %></label>
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
                   <div style="flex:1 1 200px">
                     <input class="fc" type="file" id="brand_hero_file" accept="image/png,image/jpeg,image/jpg,image/webp">
@@ -530,31 +530,31 @@
           </div>
 
           <div class="card mb16">
-            <div class="card-hd"><h6><i class="bi bi-speedometer2"></i> Speed Test &amp; Uptime</h6></div>
+            <div class="card-hd"><h6><i class="bi bi-speedometer2"></i> <%- t('admin.set.speed_title','Speed Test &amp; Uptime') %></h6></div>
             <div class="card-bd">
               <div class="fg">
-                <label class="fl">Provider Speed Test (Isi Cepat)</label>
+                <label class="fl"><%= t('admin.set.speed_provider','Provider Speed Test (Isi Cepat)') %></label>
                 <select class="fc" id="speedtest_preset" onchange="applySpeedtestPreset(this.value)">
-                  <option value="">-- Pilih untuk isi URL &amp; mode otomatis (opsional) --</option>
-                  <option value="librespeed">LibreSpeed Self-Hosted (internal, embed)</option>
-                  <option value="openspeedtest">OpenSpeedTest Self-Hosted (internal, embed)</option>
-                  <option value="ookla">Ookla Speedtest Custom (eksternal, embed)</option>
-                  <option value="cloudflare">Cloudflare Speed Test (eksternal, buka tab)</option>
-                  <option value="googlefiber">Google Fiber Speed Test (eksternal, buka tab)</option>
-                  <option value="speedtestnet">Speedtest.net / Ookla (eksternal, buka tab)</option>
+                  <option value=""><%- t('admin.set.speed_provider_ph','-- Pilih untuk isi URL &amp; mode otomatis (opsional) --') %></option>
+                  <option value="librespeed"><%= t('admin.set.sp_librespeed','LibreSpeed Self-Hosted (internal, embed)') %></option>
+                  <option value="openspeedtest"><%= t('admin.set.sp_openspeed','OpenSpeedTest Self-Hosted (internal, embed)') %></option>
+                  <option value="ookla"><%= t('admin.set.sp_ookla','Ookla Speedtest Custom (eksternal, embed)') %></option>
+                  <option value="cloudflare"><%= t('admin.set.sp_cloudflare','Cloudflare Speed Test (eksternal, buka tab)') %></option>
+                  <option value="googlefiber"><%= t('admin.set.sp_googlefiber','Google Fiber Speed Test (eksternal, buka tab)') %></option>
+                  <option value="speedtestnet"><%= t('admin.set.sp_speedtestnet','Speedtest.net / Ookla (eksternal, buka tab)') %></option>
                 </select>
                 <div style="font-size:10px; color:var(--muted); margin-top:4px">Preset hanya mengisi otomatis — sesuaikan URL bila perlu.</div>
               </div>
               <div class="fg">
-                <label class="fl">Link Speed Test</label>
+                <label class="fl"><%= t('admin.set.speed_link','Link Speed Test') %></label>
                 <input class="fc" name="speedtest_url" id="speedtest_url_input" value="<%= settings.speedtest_url || '' %>" placeholder="https://speed.domain-anda.com">
                 <div style="font-size:10px; color:var(--muted); margin-top:4px">Bisa <b>internal</b> (LibreSpeed / OpenSpeedTest self-hosted) atau <b>eksternal</b> (Ookla Custom, Cloudflare, Google Fiber, dll). Harus bisa diakses <b>public</b>. Jika dikosongkan, dashboard pelanggan menampilkan <i>"Speedtest belum di setup"</i>.</div>
               </div>
               <div class="fg">
-                <label class="fl">Mode Tampilan di Dashboard Pelanggan</label>
+                <label class="fl"><%= t('admin.set.speed_mode','Mode Tampilan di Dashboard Pelanggan') %></label>
                 <select class="fc" name="speedtest_mode" id="speedtest_mode_select">
-                  <option value="iframe" <%= (settings.speedtest_mode || 'iframe') === 'iframe' ? 'selected' : '' %>>Embed / iframe — untuk provider yang mengizinkan</option>
-                  <option value="tab" <%= settings.speedtest_mode === 'tab' ? 'selected' : '' %>>Buka Tab Baru — untuk provider yang memblokir iframe</option>
+                  <option value="iframe" <%= (settings.speedtest_mode || 'iframe') === 'iframe' ? 'selected' : '' %>><%= t('admin.set.sp_mode_iframe','Embed / iframe — untuk provider yang mengizinkan') %></option>
+                  <option value="tab" <%= settings.speedtest_mode === 'tab' ? 'selected' : '' %>><%= t('admin.set.sp_mode_tab','Buka Tab Baru — untuk provider yang memblokir iframe') %></option>
                 </select>
                 <div style="font-size:10px; color:var(--muted); margin-top:4px">Di halaman pelanggan tersedia tombol <b>Muat Ulang</b> (reload speed test) &amp; <b>Bersihkan Cache</b>.</div>
               </div>
@@ -577,12 +577,12 @@
                 }
               </script>
               <div class="fg">
-                <label class="fl">Link Repositori Proyek (GitHub)</label>
+                <label class="fl"><%= t('admin.set.repo_link','Link Repositori Proyek (GitHub)') %></label>
                 <input class="fc" name="project_url" value="<%= settings.project_url || 'https://github.com/oxpoe/open-isp' %>" placeholder="https://github.com/oxpoe/open-isp">
                 <div style="font-size:10px; color:var(--muted); margin-top:4px">Dipakai untuk tautan <b>Repo</b>, <b>Form/Issue</b> (<code>/issues/new/choose</code>), <b>Wiki</b>, dan <b>Lisensi</b> di landing page.</div>
               </div>
               <div class="fg">
-                <label class="fl">Link Uptime Website (Status)</label>
+                <label class="fl"><%= t('admin.set.uptime_link','Link Uptime Website (Status)') %></label>
                 <input class="fc" name="uptime_url" value="<%= settings.uptime_url || '' %>" placeholder="https://status.domain-anda.com">
                 <div style="font-size:10px; color:var(--muted); margin-top:4px">Dipakai untuk tombol/redirect <b><%= t('common.status','Status') %></b> di landing page. Jika dikosongkan, landing page <b>tidak menampilkan tab Status</b>.</div>
               </div>
@@ -597,30 +597,30 @@
             <h6 style="font-size:12px; margin-bottom: 10px;">QRIS Statis (Semi-Otomatis)</h6>
             <div class="form-row3">
               <div class="fg">
-                <label class="fl">Status QRIS Statis</label>
+                <label class="fl"><%= t('admin.set.qris_status','Status QRIS Statis') %></label>
                 <select class="fs" name="qris_static_enabled">
                   <option value="true" <%= (settings.qris_static_enabled !== false && settings.qris_static_enabled !== 'false') ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
                   <option value="false" <%= (settings.qris_static_enabled === false || settings.qris_static_enabled === 'false') ? 'selected' : '' %>><%= t('common.inactive','Nonaktif') %></option>
                 </select>
               </div>
               <div class="fg">
-                <label class="fl">QRIS Static QR URL</label>
+                <label class="fl"><%= t('admin.set.qris_url','QRIS Static QR URL') %></label>
                 <input class="fc" name="qris_static_qr_url" value="<%= settings.qris_static_qr_url || '' %>" placeholder="https://.../qris.png atau link QRIS">
               </div>
               <div class="fg">
-                <label class="fl">Catatan</label>
+                <label class="fl"><%= t('admin.set.qris_note','Catatan') %></label>
                 <input class="fc" value="Portal pelanggan akan menampilkan QRIS + nominal unik (kode bayar)." readonly>
               </div>
             </div>
             <div class="fg" style="margin-top:10px">
-              <label class="fl">QRIS Static Payload (String)</label>
+              <label class="fl"><%= t('admin.set.qris_payload','QRIS Static Payload (String)') %></label>
               <textarea class="fc" name="qris_static_payload" rows="3" placeholder="000201010211...6304XXXX"><%= settings.qris_static_payload || '' %></textarea>
               <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika diisi, sistem akan membuat QRIS dinamis per transaksi (nominal langsung terisi saat scan). Jika kosong, sistem pakai URL gambar seperti biasa.</div>
             </div>
             <div style="margin-top:10px">
               <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
                 <div class="fg" style="min-width:260px; flex: 1 1 260px">
-                  <label class="fl">Upload Gambar QRIS (opsional)</label>
+                  <label class="fl"><%= t('admin.set.qris_upload','Upload Gambar QRIS (opsional)') %></label>
                   <input class="fc" type="file" id="qris_upload_file" name="qris_file" accept="image/png,image/jpeg,image/jpg,image/webp">
                   <div style="font-size:10px; color:var(--muted); margin-top:4px">Jika di-upload, sistem akan menyimpan file dan otomatis mengisi URL QRIS.</div>
                 </div>
@@ -705,14 +705,14 @@
               <h6 style="font-size:12px; margin-bottom: 10px;"><i class="bi bi-bank"></i> Transfer Bank &amp; E-Wallet (Manual, Mode 2)</h6>
               <div class="form-row3">
                 <div class="fg">
-                  <label class="fl">Status Transfer Bank</label>
+                  <label class="fl"><%= t('admin.set.bank_status','Status Transfer Bank') %></label>
                   <select class="fs" name="payment_bank_enabled">
                     <option value="true" <%= (settings.payment_bank_enabled !== false && settings.payment_bank_enabled !== 'false') ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
                     <option value="false" <%= (settings.payment_bank_enabled === false || settings.payment_bank_enabled === 'false') ? 'selected' : '' %>><%= t('common.inactive','Nonaktif') %></option>
                   </select>
                 </div>
                 <div class="fg">
-                  <label class="fl">Status E-Wallet</label>
+                  <label class="fl"><%= t('admin.set.ewallet_status','Status E-Wallet') %></label>
                   <select class="fs" name="payment_ewallet_enabled">
                     <option value="true" <%= (settings.payment_ewallet_enabled !== false && settings.payment_ewallet_enabled !== 'false') ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
                     <option value="false" <%= (settings.payment_ewallet_enabled === false || settings.payment_ewallet_enabled === 'false') ? 'selected' : '' %>><%= t('common.inactive','Nonaktif') %></option>
@@ -720,11 +720,11 @@
                 </div>
               </div>
               <div class="fg" style="margin-top:10px">
-                <label class="fl">Rekening Bank (1 per baris: Bank|Nomor|Atas Nama)</label>
+                <label class="fl"><%= t('admin.set.bank_list','Rekening Bank (1 per baris: Bank|Nomor|Atas Nama)') %></label>
                 <textarea class="fc" name="payment_bank_accounts" rows="3" placeholder="BCA|1234567890|PT Artha Mega Data"><%= settings.payment_bank_accounts || '' %></textarea>
               </div>
               <div class="fg" style="margin-top:10px">
-                <label class="fl">E-Wallet (1 per baris: Nama|Nomor|Atas Nama)</label>
+                <label class="fl"><%= t('admin.set.ewallet_list','E-Wallet (1 per baris: Nama|Nomor|Atas Nama)') %></label>
                 <textarea class="fc" name="payment_ewallet_accounts" rows="3" placeholder="DANA|08123456789|Admin OPEN-ISP"><%= settings.payment_ewallet_accounts || '' %></textarea>
               </div>
               <div style="font-size:10px; color:var(--muted); margin-top:4px">Nominal &amp; kode unik sama seperti QRIS; verifikasi otomatis (webhook forwarder) + manual (upload bukti).</div>
@@ -739,14 +739,14 @@
                 const macroWebhookUrlFull = _base + '/api/webhook/v1/payment-notif?secret_key=' + encodeURIComponent(_secret);
               %>
               <div class="fg">
-                <label class="fl">1) URL Webhook (method POST)</label>
+                <label class="fl"><%= t('admin.set.wh_url','1) URL Webhook (method POST)') %></label>
                 <div style="display:flex;gap:8px">
                   <input class="fc" id="macro_webhook_url" readonly value="<%= macroWebhookUrlFull %>">
                   <button type="button" class="btn btn-g" onclick="copyInput('macro_webhook_url', 'URL Webhook')"><i class="bi bi-copy"></i></button>
                 </div>
               </div>
               <div class="fg" style="margin-top:8px">
-                <label class="fl">2) Secret Token (alternatif header <span class="mono">X-Webhook-Token</span>)</label>
+                <label class="fl"><%- t('admin.set.wh_secret','2) Secret Token (alternatif header <span class="mono">X-Webhook-Token</span>)') %></label>
                 <div style="display:flex;gap:8px">
                   <input class="fc mono" type="password" id="macro_webhook_secret" readonly value="<%= _secret %>">
                   <button type="button" class="btn btn-g" onclick="toggleSecret('macro_webhook_secret')" title="Lihat/Sembunyikan"><i class="bi bi-eye"></i></button>
@@ -754,15 +754,15 @@
                 </div>
               </div>
               <div class="fg" style="margin-top:10px">
-                <label class="fl"><i class="bi bi-bell"></i> Notifikasi WA saat Pembayaran Belum Cocok</label>
+                <label class="fl"><i class="bi bi-bell"></i> <%= t('admin.set.wh_wa_notif','Notifikasi WA saat Pembayaran Belum Cocok') %></label>
                 <select class="fs" name="webhook_unmatched_notify_enabled">
                   <option value="true" <%= (settings.webhook_unmatched_notify_enabled === undefined ? true : settings.webhook_unmatched_notify_enabled) ? 'selected' : '' %>><%= t('common.active','Aktif') %></option>
                   <option value="false" <%= (settings.webhook_unmatched_notify_enabled === undefined ? true : settings.webhook_unmatched_notify_enabled) ? '' : 'selected' %>><%= t('common.inactive','Nonaktif') %></option>
                 </select>
-                <div class="hint">Kirim WA ke admin tiap ada pembayaran terdeteksi tapi belum cocok (untuk dicocokkan manual via jam notif vs bukti transfer).</div>
+                <div class="hint"><%= t('admin.set.wh_wa_hint','Kirim WA ke admin tiap ada pembayaran terdeteksi tapi belum cocok (untuk dicocokkan manual via jam notif vs bukti transfer).') %></div>
               </div>
               <div class="fg" style="margin-top:10px">
-                <label class="fl"><i class="bi bi-clock-history"></i> Retensi Notifikasi Webhook (Otomasi)</label>
+                <label class="fl"><i class="bi bi-clock-history"></i> <%= t('admin.set.wh_retention','Retensi Notifikasi Webhook (Otomasi)') %></label>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                   <select class="fs" name="webhook_notif_retention_enabled">
                     <option value="1" <%= (String(settings.webhook_notif_retention_enabled) === '0' || String(settings.webhook_notif_retention_enabled) === 'false') ? '' : 'selected' %>><%= t('common.active','Aktif') %></option>
@@ -770,20 +770,20 @@
                   </select>
                   <input class="fc" type="number" min="1" max="3650" name="webhook_notif_retention_days" value="<%= (settings.webhook_notif_retention_days || 30) %>" placeholder="30">
                 </div>
-                <div class="hint">Notif webhook yang lebih tua dari jumlah hari ini dihapus otomatis tiap hari (04:45). Default 30 hari.</div>
+                <div class="hint"><%= t('admin.set.wh_retention_hint','Notif webhook yang lebih tua dari jumlah hari ini dihapus otomatis tiap hari (04:45). Default 30 hari.') %></div>
               </div>
               <div style="background:rgba(148,163,184,0.12);border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:10px;font-size:12px;line-height:1.55">
-                <b><i class="bi bi-info-circle"></i> Cara memasang di app (mis. android-notification-forwarder / MacroDroid):</b>
+                <b><i class="bi bi-info-circle"></i> <%= t('admin.set.wh_howto','Cara memasang di app (mis. android-notification-forwarder / MacroDroid):') %></b>
                 <ol style="margin:6px 0 0 18px;padding:0">
-                  <li>Method <span class="mono">POST</span>, Content-Type <span class="mono">application/json</span>.</li>
-                  <li><b>API URL</b> = URL di atas (secret sudah termasuk), <i>atau</i> URL dasar + header <span class="mono">X-Webhook-Token: &lt;token&gt;</span>.</li>
-                  <li><b>Target Apps</b> = package aplikasi bank/e-wallet (mis. <span class="mono">com.gojek.gopay</span>, OVO, DANA, Jenius).</li>
-                  <li>Notifikasi WhatsApp/Telegram otomatis ditolak agar chat tak dianggap pembayaran.</li>
-                  <li>Nominal di notifikasi harus <b>sama dengan nominal unik tagihan</b> (jumlah + kode unik QRIS).</li>
+                  <li><%- t('admin.set.wh_li1','Method <span class="mono">POST</span>, Content-Type <span class="mono">application/json</span>.') %></li>
+                  <li><%- t('admin.set.wh_li2','<b>API URL</b> = URL di atas (secret sudah termasuk), <i>atau</i> URL dasar + header <span class="mono">X-Webhook-Token: &lt;token&gt;</span>.') %></li>
+                  <li><%- t('admin.set.wh_li3','<b>Target Apps</b> = package aplikasi bank/e-wallet (mis. <span class="mono">com.gojek.gopay</span>, OVO, DANA, Jenius).') %></li>
+                  <li><%= t('admin.set.wh_li4','Notifikasi WhatsApp/Telegram otomatis ditolak agar chat tak dianggap pembayaran.') %></li>
+                  <li><%- t('admin.set.wh_li5','Nominal di notifikasi harus <b>sama dengan nominal unik tagihan</b> (jumlah + kode unik QRIS).') %></li>
                 </ol>
               </div>
               <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <button type="button" class="btn btn-p btn-sm" onclick="testWebhook()"><i class="bi bi-send-check"></i> Tes Webhook</button>
+                <button type="button" class="btn btn-p btn-sm" onclick="testWebhook()"><i class="bi bi-send-check"></i> <%= t('admin.set.wh_test','Tes Webhook') %></button>
                 <span id="webhookTestResult" class="muted" style="font-size:12px"></span>
               </div>
             </div>
@@ -794,15 +794,15 @@
             <h6 style="font-size:12px;margin-bottom:10px"><i class="bi bi-credit-card-2-front"></i> Mode Pembayaran</h6>
             <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
               <div>
-                <label class="fl">Mode</label>
+                <label class="fl"><%= t('admin.set.pay_mode','Mode') %></label>
                 <select class="fs" name="payment_mode">
-                  <option value="selfservice" <%= (settings.payment_mode || 'selfservice') === 'selfservice' ? 'selected' : '' %>>Self-Service (QRIS statis + manual/MacroDroid)</option>
-                  <option value="gateway" <%= settings.payment_mode === 'gateway' ? 'selected' : '' %>>Gateway (Mayar)</option>
+                  <option value="selfservice" <%= (settings.payment_mode || 'selfservice') === 'selfservice' ? 'selected' : '' %>><%= t('admin.set.pay_on_self','Self-Service (QRIS statis + manual/MacroDroid)') %></option>
+                  <option value="gateway" <%= settings.payment_mode === 'gateway' ? 'selected' : '' %>><%= t('admin.set.pay_on_gateway','Gateway (Mayar)') %></option>
                 </select>
-                <div class="hint">Mode 1 = Gateway (hanya Mayar). Mode 2 = QRIS statis + verifikasi manual.</div>
+                <div class="hint"><%= t('admin.set.pay_mode_hint','Mode 1 = Gateway (hanya Mayar). Mode 2 = QRIS statis + verifikasi manual.') %></div>
               </div>
               <div>
-                <label class="fl">Mayar API Key</label>
+                <label class="fl"><%= t('admin.set.mayar_key','Mayar API Key') %></label>
                 <input class="fc" type="password" name="mayar_api_key" value="<%= settings.mayar_api_key || '' %>" placeholder="API key Mayar (Bearer)">
                 <div class="hint">Webhook Mayar: <span class="mono">https://&lt;domain-anda&gt;/api/webhook/mayar</span></div>
               </div>
@@ -810,7 +810,7 @@
           </div>
 
           <div class="fg" style="margin-top: 15px;">
-            <label class="fl">Webhook Mayar (Mode 1 — Gateway)</label>
+            <label class="fl"><%= t('admin.set.mayar_webhook','Webhook Mayar (Mode 1 — Gateway)') %></label>
             <div style="display:flex;gap:8px">
               <input class="fc" id="mayar_webhook_url" readonly value="<%= ((settings.public_base_url || '').replace(/\/+$/, '')) %>/api/webhook/mayar">
               <button type="button" class="btn btn-g" onclick="copyInput('mayar_webhook_url', 'Webhook Mayar')"><i class="bi bi-copy"></i></button>
@@ -822,7 +822,7 @@
       </div>
       
           <div class="card-bd" style="border-top:1px solid var(--border);padding-top:20px;text-align:right">
-            <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengaturan</button>
+            <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> <%= t('admin.set.save','Simpan Pengaturan') %></button>
           </div>
         </div>
     </form>
