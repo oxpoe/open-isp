@@ -11,6 +11,13 @@ function gateway() {
   return String(getSetting('wa_gateway_type', 'baileys') || 'baileys').toLowerCase();
 }
 
+function spx(t) {
+  return String(t || '').replace(/\{([^{}|]+(?:\|[^{}|]+)+)\}/g, function (m, c) {
+    const arr = c.split('|');
+    return arr[Math.floor(Math.random() * arr.length)].trim();
+  });
+}
+
 function publicBaseUrl() {
   let base = String(getSetting('public_base_url', '') || '').trim();
   if (base) return base.replace(/\/+$/, '');
@@ -36,7 +43,7 @@ function saveTemp(buffer, ext) {
 async function sendText(phone, text) {
   try {
     const whatsappService = require('./whatsappService');
-    await whatsappService.sendWhatsAppMessage(phone, text);
+    await whatsappService.sendWhatsAppMessage(phone, spx(text));
     return true;
   } catch (e) { return false; }
 }
@@ -66,6 +73,7 @@ async function sendMetaImage(phone, buffer, caption) {
 
 async function sendImage(phone, imageBuffer, caption) {
   const gw = gateway();
+  caption = spx(caption || '');
   try {
     if (gw === 'gowa') { await require('./gowaWhatsappService').sendGowaImage(phone, imageBuffer, caption || ''); return true; }
     if (gw === 'baileys') { const mod = await import('./whatsappBot.mjs'); return await mod.sendWAImage(phone, imageBuffer, caption || ''); }
@@ -84,6 +92,7 @@ async function sendImage(phone, imageBuffer, caption) {
 async function sendDocument(phone, docBuffer, filename, caption, mimetype) {
   const gw = gateway();
   const fn = filename || 'file.pdf';
+  caption = spx(caption || '');
   try {
     if (gw === 'gowa') { await require('./gowaWhatsappService').sendGowaDocument(phone, docBuffer, fn, caption || '', mimetype || 'application/pdf'); return true; }
     if (gw === 'baileys') { const mod = await import('./whatsappBot.mjs'); return await mod.sendWADocument(phone, docBuffer, fn, caption || '', mimetype || 'application/pdf'); }
