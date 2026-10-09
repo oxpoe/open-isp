@@ -266,7 +266,7 @@
               <input class="fc" name="office_lng" value="<%= settings.office_lng || '' %>" placeholder="106.xxx">
             </div>
           <div class="hint" style="margin-top:6px;color:var(--muted)">
-            <i class="bi bi-info-circle"></i> Koordinat kantor digunakan untuk validasi lokasi absensi karyawan (geofencing)
+            <i class="bi bi-info-circle"></i> <%= t('admin.set.office_coord_hint','Koordinat kantor digunakan untuk validasi lokasi absensi karyawan (geofencing)') %>
           </div>
           <div class="form-row" style="margin-top:12px">
             <div class="fg">
@@ -315,7 +315,7 @@
             </div>
           </div>
           <div class="hint" style="margin:0 0 10px;padding:12px;border:1px dashed var(--border);border-radius:10px;background:var(--bg2)">
-            <i class="bi bi-robot"></i> <strong>Otomatisasi dipindah:</strong> Auto-Nonaktif, Auto-Hapus, Auto-Peringatan &amp; Auto-<%= t('admin.set.ew_paid','Lunas') %> kini tertata di menu <a href="/admin/automation" style="color:var(--primary);font-weight:800">Automation &rarr;</a>
+            <i class="bi bi-robot"></i> <strong><%= t('admin.set.set_auto_moved','Otomatisasi dipindah:') %></strong> <%- t('admin.set.set_auto_list','Auto-Nonaktif, Auto-Hapus, Auto-Peringatan &amp; Auto-') %><%= t('admin.set.ew_paid','Lunas') %> <%- t('admin.set.set_auto_now','kini tertata di menu') %> <a href="/admin/automation" style="color:var(--primary);font-weight:800">Automation &rarr;</a>
           </div>
           <div class="hint" style="margin-top:6px;color:var(--warning)">
             <i class="bi bi-info-circle"></i> <strong><%= t('admin.set.colpay_label','Pembayaran Kolektor:') %></strong> <%= t('admin.set.colpay_desc','Pengaturan approval pembayaran kolektor sekarang diatur per akun kolektor pada menu Manajemen Kolektor, bukan dari pengaturan global.') %>

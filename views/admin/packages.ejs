@@ -214,7 +214,7 @@
             <label class="fl"><i class="bi bi-clock-history text-warning me-1"></i> <%= t('admin.pkg.validity_days','Durasi Masa Aktif (Hari) *') %></label>
             <input class="fc" name="duration_days" id="add_duration_days" type="number" min="1" value="30" placeholder="30">
             <small class="text-muted" style="font-size:11px;display:block;margin-top:2px;">
-              Pelanggan aktif selama X hari sejak aktivasi / pembayaran.
+              <%= t('admin.pkg.active_days_hint','Pelanggan aktif selama X hari sejak aktivasi / pembayaran.') %>
             </small>
           </div>
         </div>
@@ -231,7 +231,7 @@
           </div>
         </div>
         <div class="hint" style="margin-top:6px;font-size:11px">
-          <i class="bi bi-speedometer2"></i> Rate-limit asli (MikroTik &amp; RADIUS): <b class="mono" id="ratePreview" style="color:var(--primary)">-</b>
+          <i class="bi bi-speedometer2"></i> <%- t('admin.pkg.ratelimit_hint','Rate-limit asli (MikroTik &amp; RADIUS):') %> <b class="mono" id="ratePreview" style="color:var(--primary)">-</b>
           <span style="color:var(--muted)">— format <span class="mono">rx/tx</span> (+ burst: <span class="mono">rx/tx rxB/txB rxT/txT time</span>). Nilai sama dipakai untuk profil MikroTik <b>dan</b> atribut RADIUS.</span>
         </div>
 
@@ -326,7 +326,7 @@
           <div class="form-row">
             <div class="fg"><label class="fl"><i class="bi bi-shield-slash"></i> <%= t('admin.pkg.isolir_profile','Profil Isolir (paket ini)') %></label><select class="fs" name="isolir_profile" id="add_isolir_profile"><option value=""><%= t('admin.pkg.ph_isolir_profile','— pakai default global/customer —') %></option></select></div>
           </div>
-          <small class="text-muted" style="font-size:11px;display:block;margin-top:2px">Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS.</small>
+          <small class="text-muted" style="font-size:11px;display:block;margin-top:2px"><%- t('admin.pkg.profile_hint2','Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS.') %></small>
         </div>
 
         <!-- Dynamic Speed & FUP Section -->
@@ -418,7 +418,7 @@
             <label class="fl"><i class="bi bi-clock-history text-warning me-1"></i> <%= t('admin.pkg.validity_days','Durasi Masa Aktif (Hari) *') %></label>
             <input class="fc" name="duration_days" id="e_duration_days" type="number" min="1" value="30" placeholder="30">
             <small class="text-muted" style="font-size:11px;display:block;margin-top:2px;">
-              Pelanggan aktif selama X hari sejak aktivasi / pembayaran.
+              <%= t('admin.pkg.active_days_hint','Pelanggan aktif selama X hari sejak aktivasi / pembayaran.') %>
             </small>
           </div>
         </div>
@@ -527,7 +527,7 @@
           <div class="form-row">
             <div class="fg"><label class="fl"><i class="bi bi-shield-slash"></i> <%= t('admin.pkg.isolir_profile','Profil Isolir (paket ini)') %></label><select class="fs" name="isolir_profile" id="e_isolir_profile"><option value=""><%= t('admin.pkg.ph_isolir_profile','— pakai default global/customer —') %></option></select></div>
           </div>
-          <small class="text-muted" style="font-size:11px;display:block;margin-top:2px">Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS.</small>
+          <small class="text-muted" style="font-size:11px;display:block;margin-top:2px"><%- t('admin.pkg.profile_hint2','Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS.') %></small>
         </div>
 
         <!-- Dynamic Speed & FUP Section (Edit) -->

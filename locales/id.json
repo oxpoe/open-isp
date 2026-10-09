@@ -1641,7 +1641,8 @@
       "start_use": "Mulai Pakai",
       "approve_invoice": "Setujui &amp; Buat Tagihan",
       "modem_hint": "Kredensial login modem pelanggan untuk RADIUS & PPPoE.",
-      "reg_hint": "Otomatis dihitung saat pasang/bayar. Bisa disesuaikan manual jika perlu."
+      "reg_hint": "Otomatis dihitung saat pasang/bayar. Bisa disesuaikan manual jika perlu.",
+      "modem_hint_mt": "Kredensial login modem pelanggan untuk PPPoE MikroTik API."
     },
     "bill": {
       "ph_note": "mis. kompensasi gangguan",
@@ -1917,7 +1918,11 @@
       "speedtest_hint": "Preset hanya mengisi otomatis — sesuaikan URL bila perlu.",
       "qris_dyn_hint": "Jika diisi, sistem akan membuat QRIS dinamis per transaksi (nominal langsung terisi saat scan). Jika kosong, sistem pakai URL gambar seperti biasa.",
       "qris_upload_hint": "Jika di-upload, sistem akan menyimpan file dan otomatis mengisi URL QRIS.",
-      "bank_hint": "Nominal &amp; kode unik sama seperti QRIS; verifikasi otomatis (webhook forwarder) + manual (upload bukti)."
+      "bank_hint": "Nominal &amp; kode unik sama seperti QRIS; verifikasi otomatis (webhook forwarder) + manual (upload bukti).",
+      "office_coord_hint": "Koordinat kantor digunakan untuk validasi lokasi absensi karyawan (geofencing)",
+      "set_auto_moved": "Otomatisasi dipindah:",
+      "set_auto_list": "Auto-Nonaktif, Auto-Hapus, Auto-Peringatan &amp; Auto-",
+      "set_auto_now": "kini tertata di menu"
     },
     "mt": {
       "updating": "Memperbarui...",
@@ -2046,7 +2051,10 @@
       "prorata_first": "Prorata tagihan pertama (tanggal pasang = bulan tagihan)",
       "night_hint": "Sistem akan ganti profile ppp pelanggan ke profile ini pada jam 00:00 - 06:00.",
       "kalong_hint": "Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai Jam Kalong).",
-      "fup_hint": "Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai FUP)."
+      "fup_hint": "Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai FUP).",
+      "active_days_hint": "Pelanggan aktif selama X hari sejak aktivasi / pembayaran.",
+      "ratelimit_hint": "Rate-limit asli (MikroTik &amp; RADIUS):",
+      "profile_hint2": "Profil PPP + IP pool dibuat/diperbarui otomatis ke MikroTik (mode MikroTik / RADIUS profil). Pada mode RADIUS-atribut, IP &amp; rate-limit dari RADIUS."
     },
     "col": {
       "title": "Manajemen Kolektor",
@@ -2266,7 +2274,9 @@
       "opt_static": "Statis",
       "opt_random": "Random (anti-ban)",
       "delay_sec": "Jeda (detik)",
-      "stop": "Hentikan"
+      "stop": "Hentikan",
+      "moved": "Pengingat otomatis dipindah:",
+      "moved_desc": "pengaturan jadwal, pemilihan template &amp; isi pesan pengingat tagihan kini di menu"
     },
     "bk": {
       "title": "Backup & Recovery",

@@ -1640,7 +1640,8 @@
       "start_use": "Start Using",
       "approve_invoice": "Approve &amp; Create Invoice",
       "modem_hint": "Customer modem login credentials for RADIUS & PPPoE.",
-      "reg_hint": "Automatically calculated on install/payment. Can be adjusted manually if needed."
+      "reg_hint": "Automatically calculated on install/payment. Can be adjusted manually if needed.",
+      "modem_hint_mt": "Customer modem login credentials for PPPoE MikroTik API."
     },
     "bill": {
       "ph_note": "e.g. service credit for downtime",
@@ -1916,7 +1917,11 @@
       "speedtest_hint": "The preset only auto-fills — adjust the URL if needed.",
       "qris_dyn_hint": "If filled, the system creates a dynamic QRIS per transaction (amount auto-filled on scan). If empty, the system uses the image URL as usual.",
       "qris_upload_hint": "If uploaded, the system saves the file and auto-fills the QRIS URL.",
-      "bank_hint": "The amount &amp; unique code are the same as QRIS; verification is automatic (webhook forwarder) + manual (upload proof)."
+      "bank_hint": "The amount &amp; unique code are the same as QRIS; verification is automatic (webhook forwarder) + manual (upload proof).",
+      "office_coord_hint": "Office coordinates are used for employee attendance location validation (geofencing).",
+      "set_auto_moved": "Automation moved:",
+      "set_auto_list": "Auto-Deactivate, Auto-Delete, Auto-Warning &amp; Auto-",
+      "set_auto_now": "are now organized in the"
     },
     "mt": {
       "updating": "Updating...",
@@ -2045,7 +2050,10 @@
       "prorata_first": "First invoice proration (install date = billing month)",
       "night_hint": "The system switches customers to this PPP profile between 00:00 - 06:00.",
       "kalong_hint": "Check to configure (fields open automatically if this package uses Jam Kalong).",
-      "fup_hint": "Check to configure (fields open automatically if this package uses FUP)."
+      "fup_hint": "Check to configure (fields open automatically if this package uses FUP).",
+      "active_days_hint": "The customer stays active for X days since activation / payment.",
+      "ratelimit_hint": "Actual rate-limit (MikroTik &amp; RADIUS):",
+      "profile_hint2": "PPP profile + IP pool are created/updated automatically on MikroTik (MikroTik / RADIUS-profile mode). In RADIUS-attribute mode, IP &amp; rate-limit come from RADIUS."
     },
     "col": {
       "title": "Collector Management",
@@ -2265,7 +2273,9 @@
       "opt_static": "Static",
       "opt_random": "Random (anti-ban)",
       "delay_sec": "Delay (seconds)",
-      "stop": "Stop"
+      "stop": "Stop",
+      "moved": "Auto reminder moved:",
+      "moved_desc": "schedule, template selection & reminder message settings are now in the"
     },
     "bk": {
       "title": "Backup & Recovery",

@@ -536,7 +536,7 @@
               <div class="fg">
                 <label class="fl" style="font-weight:700; color:var(--warning);"><i class="bi bi-key-fill"></i> <%= isRadiusActive ? 'Password PPPoE / RADIUS *' : 'Password PPPoE *' %></label>
                 <input class="fc" name="pppoe_password" id="add_pppoe_password" placeholder="<%= t('admin.cust.ph_pppoe_pass','Masukkan password PPPoE') %>" required>
-                <small class="text-muted" style="font-size:10px;display:block;margin-top:4px"><%= isRadiusActive ? 'Kredensial login modem pelanggan untuk RADIUS & PPPoE.' : 'Kredensial login modem pelanggan untuk PPPoE MikroTik API.' %></small>
+                <small class="text-muted" style="font-size:10px;display:block;margin-top:4px"><%= isRadiusActive ? t('admin.cust.modem_hint','Kredensial login modem pelanggan untuk RADIUS & PPPoE.') : t('admin.cust.modem_hint_mt','Kredensial login modem pelanggan untuk PPPoE MikroTik API.') %></small>
               </div>
             </div>
           </div>
