@@ -62,7 +62,7 @@
           </thead>
           <tbody>
             <% if (!collectors || collectors.length === 0) { %>
-              <tr><td colspan="8" class="text-center text-muted" style="padding:20px">Belum ada data kolektor.</td></tr>
+              <tr><td colspan="8" class="text-center text-muted" style="padding:20px"><%= t('admin.col.empty','Belum ada data kolektor.') %></td></tr>
             <% } else { %>
               <% collectors.forEach(c => { %>
                 <tr data-mode="<%= c.auto_approve ? 'direct' : 'approval' %>" data-status="<%= c.is_active ? 'active' : 'inactive' %>">

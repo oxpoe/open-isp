@@ -73,7 +73,7 @@
           </thead>
           <tbody>
           <% if (cashIn.length===0) { %>
-            <tr><td colspan="7" class="text-center text-muted" style="padding:32px">Belum ada data kas masuk.</td></tr>
+            <tr><td colspan="7" class="text-center text-muted" style="padding:32px"><%= t('admin.cashin.empty','Belum ada data kas masuk.') %></td></tr>
           <% } %>
           <% cashIn.forEach((item)=>{ %>
             <tr>

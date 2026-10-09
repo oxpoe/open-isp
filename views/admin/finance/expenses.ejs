@@ -71,7 +71,7 @@
           </thead>
           <tbody>
           <% if (expenses.length===0) { %>
-            <tr><td colspan="8" class="text-center text-muted" style="padding:32px">Belum ada data pengeluaran.</td></tr>
+            <tr><td colspan="8" class="text-center text-muted" style="padding:32px"><%= t('admin.exp.empty','Belum ada data pengeluaran.') %></td></tr>
           <% } %>
           <% expenses.forEach((item)=>{ %>
             <tr>

@@ -125,7 +125,7 @@
             </thead>
             <tbody>
               <% if (customers.length===0) { %>
-                <tr><td colspan="7" class="text-center text-muted" style="padding:24px">Tidak ada pelanggan.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted" style="padding:24px"><%= t('admin.disc.empty_cust','Tidak ada pelanggan.') %></td></tr>
               <% } %>
               <% customers.forEach(function(c){ %>
                 <tr class="cust-row <%= c.status==='suspended'?'suspended':'' %>">

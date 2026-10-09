@@ -146,7 +146,7 @@
           <div class="fg">
             <label class="fl">Status Paket *</label>
             <select class="fc" id="form_is_active" required>
-              <option value="1">Aktif (Tampil di portal pelanggan)</option>
+              <option value="1"><%= t('admin.vp.opt_active','Aktif (Tampil di portal pelanggan)') %></option>
               <option value="0">Nonaktif (Sembunyikan)</option>
             </select>
           </div>
@@ -177,7 +177,7 @@
       
       const list = document.getElementById('packages-list');
       if (currentPackages.length === 0) {
-        list.innerHTML = '<tr><td colspan="9" class="text-center text-muted" style="padding: 24px;">Belum ada paket voucher hotspot real-time terdaftar. Klik tombol Tambah diatas untuk memulai!</td></tr>';
+        list.innerHTML = '<tr><td colspan="9" class="text-center text-muted" style="padding: 24px;"><%= t('admin.vp.empty','Belum ada paket voucher hotspot real-time terdaftar. Klik tombol Tambah diatas untuk memulai!') %></td></tr>';
         return;
       }
 
@@ -272,7 +272,7 @@
       document.getElementById('form_validity').value = meta.validity;
       hintEl.innerHTML = `<span style="color:var(--success)"><b>Terdeteksi:</b> Harga Rp ${meta.price.toLocaleString('id-ID')} • Durasi ${meta.validity}</span>`;
     } else {
-      hintEl.innerHTML = '<span class="text-muted">Profil tidak memiliki metadata Mikhmon. Isi harga dan masa aktif manual.</span>';
+      hintEl.innerHTML = '<span class="text-muted"><%= t('admin.vp.no_meta','Profil tidak memiliki metadata Mikhmon. Isi harga dan masa aktif manual.') %></span>';
     }
   }
 

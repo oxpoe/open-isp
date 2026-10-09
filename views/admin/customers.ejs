@@ -819,7 +819,7 @@
               <div class="fg">
                 <label class="fl" style="font-weight:700; color:var(--warning);"><i class="bi bi-key-fill"></i> Password PPPoE / RADIUS *</label>
                 <input class="fc" name="pppoe_password" id="e_pppoe_password" placeholder="<%= t('admin.cust.ph_pppoe_pass','Masukkan password PPPoE') %>" required>
-                <small class="text-muted" style="font-size:10px;display:block;margin-top:4px">Kredensial login modem pelanggan untuk RADIUS & PPPoE.</small>
+                <small class="text-muted" style="font-size:10px;display:block;margin-top:4px"><%= t('admin.cust.modem_hint','Kredensial login modem pelanggan untuk RADIUS & PPPoE.') %></small>
               </div>
             </div>
           </div>
@@ -886,7 +886,7 @@
             <div class="fg">
               <label class="fl"><i class="bi bi-hourglass-split text-warning me-1"></i> <%= t('admin.cust.validity_prepaid','Masa Aktif / Expired Date (Khusus Prabayar)') %></label>
               <input class="fc" type="date" name="expired_at" id="e_expired_at">
-              <small class="text-muted" style="font-size:10px;display:block;margin-top:2px;">Otomatis dihitung saat pasang/bayar. Bisa disesuaikan manual jika perlu.</small>
+              <small class="text-muted" style="font-size:10px;display:block;margin-top:2px;"><%= t('admin.cust.reg_hint','Otomatis dihitung saat pasang/bayar. Bisa disesuaikan manual jika perlu.') %></small>
             </div>
           </div>
           <div class="form-row">

@@ -372,8 +372,8 @@
       <% } else { %>
       <div class="card-bd" style="text-align:center;padding:60px 20px">
         <div style="font-size:64px;margin-bottom:16px;opacity:0.3"><i class="bi bi-inbox"></i></div>
-        <h3 style="color:var(--muted);font-weight:500">Tidak ada data absensi</h3>
-        <p style="color:var(--muted);font-size:14px">Belum ada karyawan yang melakukan absensi pada tanggal ini.</p>
+        <h3 style="color:var(--muted);font-weight:500"><%= t('admin.att.empty','Tidak ada data absensi') %></h3>
+        <p style="color:var(--muted);font-size:14px"><%= t('admin.att.empty_sub','Belum ada karyawan yang melakukan absensi pada tanggal ini.') %></p>
       </div>
       <% } %>
     </div>

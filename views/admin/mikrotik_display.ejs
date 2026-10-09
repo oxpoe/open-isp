@@ -1386,7 +1386,7 @@
           overlay.style.pointerEvents = 'auto';
           const overlayText = overlay.querySelector('.overlay-text');
           if (overlayText) {
-            overlayText.innerHTML = `<span style="color:var(--danger);font-weight:700">Koneksi MikroTik Gagal</span><br><span style="font-size:11px;text-transform:none;margin-top:4px;display:block;color:var(--text-muted)">Pastikan IP/port benar dan API service aktif. Mencoba kembali...</span>`;
+            overlayText.innerHTML = `<span style="color:var(--danger);font-weight:700">Koneksi MikroTik Gagal</span><br><span style="font-size:11px;text-transform:none;margin-top:4px;display:block;color:var(--text-muted)"><%= t('admin.md.reconnect_hint','Pastikan IP/port benar dan API service aktif. Mencoba kembali...') %></span>`;
           }
         }
       }

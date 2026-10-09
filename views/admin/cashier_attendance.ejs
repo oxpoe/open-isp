@@ -186,7 +186,7 @@
               <button type="button" onclick="clearSelectedPhoto('checkoutPhoto')" class="btn btn-d btn-sm" id="checkoutPhotoClearBtn" style="display: none; border-radius: 8px; font-size: 11px;"><%= t('collector.delete_photo','Hapus Foto') %></button>
             </div>
             <div id="checkoutPhotoPreviewWrap" style="display:none;margin-top:8px">
-              <div class="photo-help" style="margin-bottom:6px">Preview foto final yang akan dikirim:</div>
+              <div class="photo-help" style="margin-bottom:6px"><%= t('admin.ca.preview','Preview foto final yang akan dikirim:') %></div>
               <img id="checkoutPhotoPreview" alt="Preview foto check-out" style="width:100%;max-width:240px;border-radius:12px;border:1px solid var(--border);object-fit:cover">
             </div>
             <button id="checkoutSubmitBtn" class="btn btn-d btn-sm" style="width:100%;margin-top:12px;opacity:0.55;cursor:not-allowed" onclick="checkout(event)" disabled>
@@ -196,7 +196,7 @@
 
         <% } else { %>
           <span class="status-badge status-not-checked-in"><i class="bi bi-x-lg"></i> <%= t('admin.ca.not_checked_in','Belum Check-in') %></span>
-          <p style="color: var(--muted); margin: 16px 0;">Silakan lakukan check-in untuk memulai hari kerja Anda.</p>
+          <p style="color: var(--muted); margin: 16px 0;"><%= t('admin.ca.checkin_hint','Silakan lakukan check-in untuk memulai hari kerja Anda.') %></p>
           
           <textarea id="checkinNote" class="note-input" placeholder="<%= t('admin.ca.ph_note_in','Catatan check-in (opsional)') %>"></textarea>
           <input id="checkinPhoto" type="file" accept="image/*" capture="user" style="display: none;" onchange="updatePhotoInfo('checkinPhoto', 'checkinPhotoInfo', 'checkinPhotoPreviewWrap', 'checkinPhotoPreview')">
@@ -217,7 +217,7 @@
             <button type="button" onclick="clearSelectedPhoto('checkinPhoto')" class="btn btn-d btn-sm" id="checkinPhotoClearBtn" style="display: none; border-radius: 8px; font-size: 11px;"><%= t('collector.delete_photo','Hapus Foto') %></button>
           </div>
           <div id="checkinPhotoPreviewWrap" style="display:none;margin-top:8px">
-            <div class="photo-help" style="margin-bottom:6px">Preview foto final yang akan dikirim:</div>
+            <div class="photo-help" style="margin-bottom:6px"><%= t('admin.ca.preview','Preview foto final yang akan dikirim:') %></div>
             <img id="checkinPhotoPreview" alt="Preview foto check-in" style="width:100%;max-width:240px;border-radius:12px;border:1px solid var(--border);object-fit:cover">
           </div>
           <button id="checkinSubmitBtn" class="btn btn-s btn-sm" style="width:100%;margin-top:12px;opacity:0.55;cursor:not-allowed" onclick="checkin(event)" disabled>

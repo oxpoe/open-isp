@@ -226,12 +226,12 @@
             <div class="fg"><label class="fl">PPN di dalam harga?</label>
               <select class="fs" name="finance_revenue_includes_ppn">
                 <option value="0" <%= finance.inclPpn ? '' : 'selected' %>>Tidak — PPN ditambahkan</option>
-                <option value="1" <%= finance.inclPpn ? 'selected' : '' %>>Ya — PPN sudah termasuk</option>
+                <option value="1" <%= finance.inclPpn ? 'selected' : '' %>><%= t('admin.rep.ppn_incl','Ya — PPN sudah termasuk') %></option>
               </select>
             </div>
           </div>
           <button type="submit" class="btn btn-p btn-sm"><i class="bi bi-save"></i> Simpan Pengaturan</button>
-          <span class="hint" style="margin-left:10px">PPh Badan, PPN, USO &amp; BHP dihitung otomatis dari nilai ini.</span>
+          <span class="hint" style="margin-left:10px"><%- t('admin.rep.tax_hint','PPh Badan, PPN, USO &amp; BHP dihitung otomatis dari nilai ini.') %></span>
         </form>
       </div>
     </details>

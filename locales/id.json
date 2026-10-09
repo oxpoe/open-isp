@@ -927,7 +927,12 @@
       "th_pppoe": "PPPoE / Tag ONU",
       "th_pkg_odp": "Paket & ODP",
       "th_gps": "Koordinat GPS",
-      "ph_odp": "Cari ODP (nama / deskripsi)..."
+      "ph_odp": "Cari ODP (nama / deskripsi)...",
+      "pon_port": "PON Port (opsional)",
+      "empty_cust": "Belum ada data pelanggan.",
+      "empty_odp": "Belum ada data ODP.",
+      "view_port": "Klik untuk lihat visual port",
+      "port_err": "Gagal memuat data port."
     },
     "print_invoice": {
       "title": "Cetak Struk Tagihan",
@@ -1109,7 +1114,9 @@
       "wifi_pass": "Sandi Wi-Fi (WPA2)",
       "loading": "Mengunduh...",
       "run_prov": "Jalankan Provisioning",
-      "add_server": "Tambah Server ACS"
+      "add_server": "Tambah Server ACS",
+      "bind_lan": "Pilih LAN Port yang akan di-bind:",
+      "bind_ssid": "Pilih WLAN (SSID) yang akan di-bind:"
     },
     "vd": {
       "action": "Aksi",
@@ -1138,7 +1145,8 @@
       "tab_broadcast": "Broadcast & Pengingat",
       "tab_templates": "Template Pesan",
       "tab_livechat": "Live Chat",
-      "tab_preview": "Preview Pesan"
+      "tab_preview": "Preview Pesan",
+      "ph_deviceid": "Device ID (opsional)"
     },
     "automation": {
       "title": "Otomatisasi",
@@ -1631,7 +1639,9 @@
       "disconnect_mt": "Putus Sesi MikroTik",
       "calc_reg": "Kalkulator Prorata &mdash; Setujui Pendaftar",
       "start_use": "Mulai Pakai",
-      "approve_invoice": "Setujui &amp; Buat Tagihan"
+      "approve_invoice": "Setujui &amp; Buat Tagihan",
+      "modem_hint": "Kredensial login modem pelanggan untuk RADIUS & PPPoE.",
+      "reg_hint": "Otomatis dihitung saat pasang/bayar. Bisa disesuaikan manual jika perlu."
     },
     "bill": {
       "ph_note": "mis. kompensasi gangguan",
@@ -1685,12 +1695,17 @@
       "general_task": "-- Tugas Umum / Non-Pelanggan (Maintenance) --",
       "unassigned": "-- Belum Ditugaskan (Bebas) --",
       "st_open": "Belum Ditangani (Open)",
-      "st_progress": "Sedang Dikerjakan (In Progress)"
+      "st_progress": "Sedang Dikerjakan (In Progress)",
+      "no_photo": "Tidak ada foto"
     },
     "onu": {
       "select_vendor": "Pilih Vendor",
       "hint_rescan": "Klik \"Scan Ulang\" untuk mencari ONU yang belum terkonfigurasi",
-      "hint_reload": "Klik \"Muat Ulang / Scan\" untuk memantau status ONU terkonfigurasi via SNMP"
+      "hint_reload": "Klik \"Muat Ulang / Scan\" untuk memantau status ONU terkonfigurasi via SNMP",
+      "ssid_hint": "Set SSID dan password WiFi ONU",
+      "wan_mode_hint": "Bridge (MikroTik dial) atau Router (ONU dial)",
+      "ph_url": "Format: http://host:port atau https://host:port",
+      "empty": "Tidak ada ONU yang belum terkonfigurasi"
     },
     "rds": {
       "card_status": "Status RADIUS Server",
@@ -1898,13 +1913,19 @@
       "no_data": "Belum ada data.",
       "ew_not_tx": "Bukan transaksi",
       "ew_paid": "Lunas",
-      "ew_unmatched": "Belum cocok"
+      "ew_unmatched": "Belum cocok",
+      "speedtest_hint": "Preset hanya mengisi otomatis — sesuaikan URL bila perlu.",
+      "qris_dyn_hint": "Jika diisi, sistem akan membuat QRIS dinamis per transaksi (nominal langsung terisi saat scan). Jika kosong, sistem pakai URL gambar seperti biasa.",
+      "qris_upload_hint": "Jika di-upload, sistem akan menyimpan file dan otomatis mengisi URL QRIS.",
+      "bank_hint": "Nominal &amp; kode unik sama seperti QRIS; verifikasi otomatis (webhook forwarder) + manual (upload bukti)."
     },
     "mt": {
       "updating": "Memperbarui...",
       "online_list": "Daftar User PPPoE Online",
       "offline_list": "Daftar User PPPoE Offline",
-      "limit_uptime": "Limit Uptime (e.g. 1h)"
+      "limit_uptime": "Limit Uptime (e.g. 1h)",
+      "empty_pppoe": "Tidak ada data profile PPPoE.",
+      "empty_hs": "Tidak ada data profile Hotspot."
     },
     "disc": {
       "title": "Diskon Tagihan",
@@ -1928,7 +1949,8 @@
       "apply": "Terapkan Diskon",
       "selected": "dipilih",
       "history": "Riwayat Diskon (100 terakhir)",
-      "th_note": "Catatan"
+      "th_note": "Catatan",
+      "empty_cust": "Tidak ada pelanggan."
     },
     "cpay": {
       "title": "Approval Pembayaran Kolektor",
@@ -1943,7 +1965,8 @@
       "th_invoice": "Tagihan",
       "th_process": "Proses",
       "approve": "Setujui",
-      "reject": "Tolak"
+      "reject": "Tolak",
+      "wait_approval": "Menunggu admin atau kasir"
     },
     "att": {
       "late_checkin": "Terlambat Check-in",
@@ -1960,7 +1983,9 @@
       "checkin_time": "Waktu Check-in",
       "duration": "Durasi",
       "location": "Lokasi",
-      "photo": "Foto"
+      "photo": "Foto",
+      "empty": "Tidak ada data absensi",
+      "empty_sub": "Belum ada karyawan yang melakukan absensi pada tanggal ini."
     },
     "olt": {
       "all_summary": "Semua OLT (Ringkasan Total)",
@@ -2016,7 +2041,12 @@
       "ph_isolir_profile": "— pakai default global/customer —",
       "night_profile": "Nama Profile Malam (MikroTik)",
       "ph_night_profile": "-- Pilih Profile --",
-      "night_down": "Download Malam (Mbps)"
+      "night_down": "Download Malam (Mbps)",
+      "promo_prorata": "Promo & prorata tagihan",
+      "prorata_first": "Prorata tagihan pertama (tanggal pasang = bulan tagihan)",
+      "night_hint": "Sistem akan ganti profile ppp pelanggan ke profile ini pada jam 00:00 - 06:00.",
+      "kalong_hint": "Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai Jam Kalong).",
+      "fup_hint": "Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai FUP)."
     },
     "col": {
       "title": "Manajemen Kolektor",
@@ -2033,7 +2063,8 @@
       "del": "Hapus Kolektor",
       "full_name": "Nama Lengkap",
       "area_region": "Area / Wilayah Tugas",
-      "opt_all_area": "-- Semua Area / Bebas --"
+      "opt_all_area": "-- Semua Area / Bebas --",
+      "empty": "Belum ada data kolektor."
     },
     "mon": {
       "title": "Monitoring Sistem",
@@ -2080,7 +2111,9 @@
       "total_hours": "Total Jam",
       "work_hours": "Jam kerja",
       "avg": "Rata-rata",
-      "hours_per_day": "Jam/hari"
+      "hours_per_day": "Jam/hari",
+      "preview": "Preview foto final yang akan dikirim:",
+      "checkin_hint": "Silakan lakukan check-in untuk memulai hari kerja Anda."
     },
     "gis": {
       "ph_search": "Cari ODP, ODC, HTB, Pelanggan...",
@@ -2133,7 +2166,10 @@
       "th_validity": "Masa Aktif",
       "th_prefix": "Prefix",
       "th_len": "Panjang Kode",
-      "th_chars": "Karakter"
+      "th_chars": "Karakter",
+      "opt_active": "Aktif (Tampil di portal pelanggan)",
+      "empty": "Belum ada paket voucher hotspot real-time terdaftar. Klik tombol Tambah diatas untuk memulai!",
+      "no_meta": "Profil tidak memiliki metadata Mikhmon. Isi harga dan masa aktif manual."
     },
     "cashin": {
       "heading": "Kas Masuk (Lain-lain)",
@@ -2158,7 +2194,8 @@
       "ph_ref": "Bisa dikosongkan",
       "save": "Simpan Pemasukan",
       "title": "Kas Masuk",
-      "th_method": "Metode"
+      "th_method": "Metode",
+      "empty": "Belum ada data kas masuk."
     },
     "exp": {
       "heading": "Pengeluaran (Cash Out)",
@@ -2183,7 +2220,8 @@
       "pay_credit": "Kredit / Paylater",
       "save": "Simpan Pengeluaran",
       "title": "Pengeluaran",
-      "th_method": "Metode"
+      "th_method": "Metode",
+      "empty": "Belum ada data pengeluaran."
     },
     "ar": {
       "heading": "Manajemen Area / Wilayah",
@@ -2212,7 +2250,8 @@
       "setup_fw": "Setup Firewall Isolir",
       "edit": "Edit Router",
       "del": "Hapus Router",
-      "live_title": "Detail Live Router"
+      "live_title": "Detail Live Router",
+      "script_hint": "Script ini di-generate otomatis berdasarkan IP server & URL billing (app_url). Anda dapat menyalin dan menempelkannya di Winbox Terminal MikroTik."
     },
     "bc": {
       "send_title": "Kirim Tagihan Sekarang (Manual — bila Auto OFF)",
@@ -2246,7 +2285,9 @@
       "auto_clean": "Pembersihan Otomatis",
       "retention": "Retensi (Hari)",
       "history": "Riwayat Backup",
-      "empty": "Belum ada file backup tersedia"
+      "empty": "Belum ada file backup tersedia",
+      "file_hint": "File .db (database) atau .json (settings)",
+      "retention_hint": "Backup lebih lama dari periode ini akan dihapus"
     },
     "wt": {
       "title": "Pengaturan Template Notifikasi WhatsApp",
@@ -2266,12 +2307,27 @@
       "opt_qris": "Template Tagihan QRIS",
       "opt_success": "Template Pembayaran Sukses",
       "opt_isolir": "Template Pemberitahuan Isolir",
-      "vars": "Daftar Variabel Urutan Parameter (Components Payload):"
+      "vars": "Daftar Variabel Urutan Parameter (Components Payload):",
+      "ph_user": "(Username PPPoE, opsional)",
+      "warn_custid": "wajib menyertakan variabel ID Pelanggan"
     },
     "md": {
       "connecting": "Menghubungkan ke MikroTik...",
       "fullscreen": "Layar Penuh",
-      "exit": "Keluar"
+      "exit": "Keluar",
+      "reconnect_hint": "Pastikan IP/port benar dan API service aktif. Mencoba kembali..."
+    },
+    "payroll": {
+      "empty_staff": "Belum ada karyawan aktif",
+      "empty_slip": "Belum ada slip gaji untuk periode ini",
+      "gen_hint": "Klik \"Generate Semua\" untuk membuat slip gaji otomatis"
+    },
+    "rep": {
+      "ppn_incl": "Ya — PPN sudah termasuk",
+      "tax_hint": "PPh Badan, PPN, USO &amp; BHP dihitung otomatis dari nilai ini."
+    },
+    "wlc": {
+      "empty": "Belum ada pesan dengan pelanggan ini. Ketik pesan di bawah dan tekan Enter untuk memulai."
     }
   },
   "tech": {

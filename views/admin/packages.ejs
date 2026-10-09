@@ -253,7 +253,7 @@
           </small>
         </div>
         <div style="background: rgba(34,197,94,0.06); padding: 12px 14px; border-radius: 10px; margin-top: 10px;">
-          <div class="fw6" style="font-size:12px;margin-bottom:8px;color:var(--success)"><i class="bi bi-percent"></i> Promo & prorata tagihan</div>
+          <div class="fw6" style="font-size:12px;margin-bottom:8px;color:var(--success)"><i class="bi bi-percent"></i> <%= t('admin.pkg.promo_prorata','Promo & prorata tagihan') %></div>
           <div class="form-row">
             <div class="fg"><label class="fl"><%= t('admin.pkg.promo_price','Harga promo (Rp / siklus)') %></label><input class="fc" name="promo_price" type="number" min="0" placeholder="<%= t('admin.pkg.ph_promo_price','Opsional, mis. 99000') %>"></div>
             <div class="fg"><label class="fl"><%= t('admin.pkg.promo_cycles','Jumlah bulan promo') %></label><input class="fc" name="promo_cycles" type="number" min="0" value="0" placeholder="<%= t('admin.pkg.ph_promo_cycles','0 = tanpa promo') %>"></div>
@@ -349,7 +349,7 @@
               <div class="fg"><label class="fl"><%= t('admin.pkg.night_down','Download Malam (Mbps)') %></label><input class="fc" name="night_speed_down" type="number" step="any" min="0" placeholder="20"></div>
               <div class="fg"><label class="fl">Upload Malam (Mbps)</label><input class="fc" name="night_speed_up" type="number" step="any" min="0" placeholder="10"></div>
             </div>
-            <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Sistem akan ganti profile ppp pelanggan ke profile ini pada jam 00:00 - 06:00.</div>
+            <div style="font-size: 10px; color: var(--muted); margin-top: 4px;"><%= t('admin.pkg.night_hint','Sistem akan ganti profile ppp pelanggan ke profile ini pada jam 00:00 - 06:00.') %></div>
           </div>
           
           <hr style="opacity:0.1; margin: 15px 0;">
@@ -454,14 +454,14 @@
         </div>
 
         <div style="background: rgba(34,197,94,0.06); padding: 12px 14px; border-radius: 10px; margin-top: 10px;">
-          <div class="fw6" style="font-size:12px;margin-bottom:8px;color:var(--success)"><i class="bi bi-percent"></i> Promo & prorata tagihan</div>
+          <div class="fw6" style="font-size:12px;margin-bottom:8px;color:var(--success)"><i class="bi bi-percent"></i> <%= t('admin.pkg.promo_prorata','Promo & prorata tagihan') %></div>
           <div class="form-row">
             <div class="fg"><label class="fl"><%= t('admin.pkg.promo_price','Harga promo (Rp / siklus)') %></label><input class="fc" name="promo_price" id="e_promo_price" type="number" min="0" placeholder="Kosong = tanpa harga promo"></div>
             <div class="fg"><label class="fl"><%= t('admin.pkg.promo_cycles','Jumlah bulan promo') %></label><input class="fc" name="promo_cycles" id="e_promo_cycles" type="number" min="0" value="0"></div>
           </div>
           <div class="flex ai-c" style="gap:8px;margin-top:4px">
             <input type="checkbox" name="prorate_first_invoice" id="e_prorate" value="1">
-            <label for="e_prorate" style="margin:0;font-size:12px">Prorata tagihan pertama (tanggal pasang = bulan tagihan)</label>
+            <label for="e_prorate" style="margin:0;font-size:12px"><%= t('admin.pkg.prorata_first','Prorata tagihan pertama (tanggal pasang = bulan tagihan)') %></label>
           </div>
         </div>
         
@@ -536,7 +536,7 @@
             <input type="checkbox" name="use_night_speed" id="e_use_night" value="1" onchange="toggleEditNight()">
             <h6 style="font-size:12px; margin: 0; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-clock"></i> Aktifkan Jam Kalong</h6>
           </div>
-          <small class="text-muted" style="font-size:11px;display:block;margin:-6px 0 8px 26px">Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai Jam Kalong).</small>
+          <small class="text-muted" style="font-size:11px;display:block;margin:-6px 0 8px 26px"><%= t('admin.pkg.kalong_hint','Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai Jam Kalong).') %></small>
           <div id="e_night_fields" style="display:none">
             <div class="fg">
               <label class="fl"><%= t('admin.pkg.prof_name','Nama Profil') %>e Malam (MikroTik)</label>
@@ -559,7 +559,7 @@
             <input type="checkbox" name="use_fup" id="e_use_fup" value="1" onchange="toggleEditFup()">
             <h6 style="font-size:12px; margin: 0; color: var(--danger); text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-speedometer2"></i> Aktifkan FUP</h6>
           </div>
-          <small class="text-muted" style="font-size:11px;display:block;margin:-6px 0 8px 26px">Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai FUP).</small>
+          <small class="text-muted" style="font-size:11px;display:block;margin:-6px 0 8px 26px"><%= t('admin.pkg.fup_hint','Centang untuk mengatur (kolom terbuka otomatis bila paket ini memakai FUP).') %></small>
           <div id="e_fup_fields" style="display:none">
             <div class="fg">
               <label class="fl"><%= t('admin.pkg.prof_name','Nama Profil') %>e FUP (MikroTik)</label>

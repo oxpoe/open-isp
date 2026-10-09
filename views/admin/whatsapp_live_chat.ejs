@@ -278,7 +278,7 @@ async function loadChatMessages(phone, showSpinner = false) {
     if (data.ok) {
       const messages = data.messages || [];
       if (messages.length === 0) {
-        container.innerHTML = `<div class="text-center text-muted" style="margin:auto;">Belum ada pesan dengan pelanggan ini. Ketik pesan di bawah dan tekan Enter untuk memulai.</div>`;
+        container.innerHTML = `<div class="text-center text-muted" style="margin:auto;"><%= t('admin.wlc.empty','Belum ada pesan dengan pelanggan ini. Ketik pesan di bawah dan tekan Enter untuk memulai.') %></div>`;
         return;
       }
       

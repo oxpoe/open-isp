@@ -396,7 +396,7 @@
         <div style="background: var(--sub-bg); border: 1px solid var(--border); padding: 18px; border-radius: 16px; margin-bottom: 5px;">
             <h4 style="margin: 0 0 12px 0; font-size: 13px; color: var(--text); font-weight: 700;"><i class="bi bi-bezier2 text-primary"></i> LAN / WLAN Port Binding</h4>
             
-            <label class="fl" style="margin-bottom: 8px;">Pilih LAN Port yang akan di-bind:</label>
+            <label class="fl" style="margin-bottom: 8px;"><%= t('admin.acs.bind_lan','Pilih LAN Port yang akan di-bind:') %></label>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px;">
                 <label class="bind-tag active" id="lblLan1">
                     <input type="checkbox" name="lanPorts" value="LAN1" checked style="display: none;" onchange="syncTagClass(this, 'lblLan1')"> LAN 1
@@ -412,7 +412,7 @@
                 </label>
             </div>
 
-            <label class="fl" style="margin-bottom: 8px;">Pilih WLAN (SSID) yang akan di-bind:</label>
+            <label class="fl" style="margin-bottom: 8px;"><%= t('admin.acs.bind_ssid','Pilih WLAN (SSID) yang akan di-bind:') %></label>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
                 <label class="bind-tag active" id="lblWlan1">
                     <input type="checkbox" name="wlanSsids" value="SSID1" checked style="display: none;" onchange="syncTagClass(this, 'lblWlan1')"> SSID 1

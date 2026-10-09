@@ -54,7 +54,7 @@
               <label class="fl"><%= t('admin.wt.lbl_reminder','Template Pengingat Tagihan (Bulanan / Manual)') %></label>
               <textarea class="fc" id="tmpl_auto_billing" name="whatsapp_auto_billing_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_auto_billing_message %></textarea>
               <div style="font-size: 11px; color: var(--muted); margin-top: 6px; display:flex; justify-between; align-items:center;">
-                <span><i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)">(Username PPPoE, opsional)</span>, <b>{{nama}}</b>, <b>{{tagihan}}</b>, <b>{{rincian}}</b>, <b>{{paket}}</b>, <b>{{link}}</b>.</span>
+                <span><i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)"><%= t('admin.wt.ph_user','(Username PPPoE, opsional)') %></span>, <b>{{nama}}</b>, <b>{{tagihan}}</b>, <b>{{rincian}}</b>, <b>{{paket}}</b>, <b>{{link}}</b>.</span>
               </div>
             </div>
             
@@ -62,7 +62,7 @@
               <label class="fl"><%= t('admin.wt.lbl_qris','Template Tagihan QRIS (Manual)') %></label>
               <textarea class="fc" id="tmpl_billing_qris" name="whatsapp_billing_qris_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_billing_qris_message %></textarea>
               <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
-                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)">(Username PPPoE, opsional)</span>, <b>{{nama}}</b>, <b>{{periode}}</b>, <b>{{paket}}</b>, <b>{{qris_nominal}}</b>, <b>{{qris_kode}}</b>, <b>{{qris_qr}}</b>.
+                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)"><%= t('admin.wt.ph_user','(Username PPPoE, opsional)') %></span>, <b>{{nama}}</b>, <b>{{periode}}</b>, <b>{{paket}}</b>, <b>{{qris_nominal}}</b>, <b>{{qris_kode}}</b>, <b>{{qris_qr}}</b>.
               </div>
             </div>
           </div>
@@ -72,7 +72,7 @@
               <label class="fl"><%= t('admin.wt.lbl_success','Template Pembayaran Sukses (Lunas)') %></label>
               <textarea class="fc" id="tmpl_payment_success" name="whatsapp_payment_success_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_payment_success_message %></textarea>
               <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
-                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)">(Username PPPoE, opsional)</span>, <b>{{nama}}</b>, <b>{{no_invoice}}</b>, <b>{{paket}}</b>, <b>{{periode}}</b>, <b>{{waktu}}</b>, <b>{{metode}}</b>, <b>{{total}}</b>, <b>{{company}}</b>, <b>{{company_phone}}</b>, <b>{{link_portal}}</b>, <b>{{link_pdf}}</b> (link PDF invoice).
+                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)"><%= t('admin.wt.ph_user','(Username PPPoE, opsional)') %></span>, <b>{{nama}}</b>, <b>{{no_invoice}}</b>, <b>{{paket}}</b>, <b>{{periode}}</b>, <b>{{waktu}}</b>, <b>{{metode}}</b>, <b>{{total}}</b>, <b>{{company}}</b>, <b>{{company_phone}}</b>, <b>{{link_portal}}</b>, <b>{{link_pdf}}</b> (link PDF invoice).
               </div>
             </div>
 
@@ -80,7 +80,7 @@
               <label class="fl"><%= t('admin.wt.lbl_isolir','Template Pemberitahuan Isolir (Otomatis / Manual)') %></label>
               <textarea class="fc" id="tmpl_isolir" name="whatsapp_isolir_message" rows="8" required style="width: 100%;"><%= templates.whatsapp_isolir_message %></textarea>
               <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
-                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)">(Username PPPoE, opsional)</span>, <b>{{nama}}</b>, <b>{{paket}}</b>, <b>{{tagihan}}</b>, <b>{{link}}</b>.
+                <i class="bi bi-info-circle"></i> Variabel: <b style="color:var(--primary)">{{id_pelanggan}}</b> <span style="color:var(--primary)"><%= t('common.required','(wajib)') %></span>, <b style="color:var(--primary)">{{pppoe}}</b> <span style="color:var(--muted)"><%= t('admin.wt.ph_user','(Username PPPoE, opsional)') %></span>, <b>{{nama}}</b>, <b>{{paket}}</b>, <b>{{tagihan}}</b>, <b>{{link}}</b>.
               </div>
             </div>
 
@@ -113,7 +113,7 @@
             <button type="button" class="btn btn-primary btn-sm" onclick="fillOfficialReceiptPreset()"><i class="bi bi-receipt-cutoff"></i> Muat Template Struk Resmi Lengkap</button>
             <button type="button" class="btn btn-g btn-sm" onclick="fillSpintaxPreset()"><i class="bi bi-magic"></i> Muat Template Ringkas (Spintax Anti-Ban)</button>
             <button type="button" class="btn btn-w btn-sm" onclick="showMetaConverter()"><i class="bi bi-meta"></i> <i class="bi bi-magic"></i> <%= t('admin.wt.convert','Konversi Format Meta Cloud API') %></button>
-            <div style="flex-basis:100%; font-size:11.5px; color:var(--muted); margin-top:4px"><i class="bi bi-exclamation-circle" style="color:var(--primary)"></i> Setiap template <b>wajib menyertakan variabel ID Pelanggan</b> <b style="color:var(--primary)">{{id_pelanggan}}</b>.</div>
+            <div style="flex-basis:100%; font-size:11.5px; color:var(--muted); margin-top:4px"><i class="bi bi-exclamation-circle" style="color:var(--primary)"></i> Setiap template <b><%= t('admin.wt.warn_custid','wajib menyertakan variabel ID Pelanggan') %></b> <b style="color:var(--primary)">{{id_pelanggan}}</b>.</div>
             <div id="presetStatus" style="flex-basis:100%; font-size:12px; display:none"></div>
           </div>
           <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> <%= t('admin.wt.save','Simpan Template') %></button>

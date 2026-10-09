@@ -847,7 +847,7 @@
 
         <div class="form-row">
           <div class="fg"><label class="fl">Jumlah Port (Kapasitas)</label><input type="number" name="port_capacity" class="fc" min="1" step="1" value="16" required></div>
-          <div class="fg"><label class="fl">PON Port (opsional)</label><input type="text" name="pon_port" class="fc" placeholder="Contoh: 1/2/7"></div>
+          <div class="fg"><label class="fl"><%= t('admin.map.pon_port','PON Port (opsional)') %></label><input type="text" name="pon_port" class="fc" placeholder="Contoh: 1/2/7"></div>
         </div>
 
         <label class="fl"><%= t('admin.map.form.pick_location', 'Pilih Lokasi di Peta') %></label>
@@ -878,7 +878,7 @@
 
         <div class="form-row">
           <div class="fg"><label class="fl">Jumlah Port (Kapasitas)</label><input type="number" name="port_capacity" id="e_odp_capacity" class="fc" min="1" step="1" required></div>
-          <div class="fg"><label class="fl">PON Port (opsional)</label><input type="text" name="pon_port" id="e_odp_pon" class="fc" placeholder="Contoh: 1/2/7"></div>
+          <div class="fg"><label class="fl"><%= t('admin.map.pon_port','PON Port (opsional)') %></label><input type="text" name="pon_port" id="e_odp_pon" class="fc" placeholder="Contoh: 1/2/7"></div>
         </div>
 
         <label class="fl"><%= t('admin.map.form.adjust_location', 'Sesuaikan Lokasi di Peta') %></label>
@@ -1121,7 +1121,7 @@
   function renderCustomerTable() {
     var tb = document.getElementById('customersTableBody');
     if (!tb) return;
-    if (!customers.length) { tb.innerHTML = '<tr><td colspan="6" style="padding:16px;text-align:center;color:#64748b;">Belum ada data pelanggan.</td></tr>'; return; }
+    if (!customers.length) { tb.innerHTML = '<tr><td colspan="6" style="padding:16px;text-align:center;color:#64748b;"><%= t('admin.map.empty_cust','Belum ada data pelanggan.') %></td></tr>'; return; }
     tb.innerHTML = customers.map(function (c) {
       var hasGps = Boolean(c.lat && c.lng);
       var isActive = c.status === 'active';
@@ -1149,7 +1149,7 @@
   function renderOdpTable() {
     var tb = document.getElementById('odpsTbody');
     if (!tb) return;
-    if (!odps.length) { tb.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#64748b;">Belum ada data ODP.</td></tr>'; return; }
+    if (!odps.length) { tb.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#64748b;"><%= t('admin.map.empty_odp','Belum ada data ODP.') %></td></tr>'; return; }
     tb.innerHTML = odps.map(function (o) {
       var pu = o.port_usage || { capacity: Number(o.port_capacity || 16) || 16, usedCount: 0, remaining: Number(o.port_capacity || 16) || 16 };
       return '<tr data-name="' + escapeHtml(String(o.name || '').toLowerCase()) + '" data-desc="' + escapeHtml(String(o.description || '').toLowerCase()) + '">' +
@@ -1158,7 +1158,7 @@
         '<td><div style="font-weight:800;font-size:12px;">' +
           '<button type="button" class="btn btn-sm btn-g" style="font-weight:800;padding:2px 8px" onclick="showOdpPorts(' + Number(o.id) + ')" title="Lihat visual port terpakai"><i class="bi bi-diagram-2"></i> ' + pu.usedCount + '/' + pu.capacity + '</button>' +
           (pu.remaining === 0 ? ' <span class="cp-chip" style="background:#fee2e2;color:#991b1b;border-color:#fecaca"><i class="bi bi-exclamation-triangle-fill"></i> PENUH</span>' : ' <span style="font-size:11px;color:var(--muted)">sisa ' + pu.remaining + '</span>') +
-        '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Klik untuk lihat visual port</div></td>' +
+        '</div><div style="font-size:11px;color:var(--muted);margin-top:2px"><%= t('admin.map.view_port','Klik untuk lihat visual port') %></div></td>' +
         '<td><div style="font-size:11.5px;font-family:monospace;color:#334155;font-weight:700;">' + (Number(o.lat) || 0).toFixed(6) + ', ' + (Number(o.lng) || 0).toFixed(6) + '</div></td>' +
         '<td style="white-space:nowrap"><div class="act">' +
           '<button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>' +
@@ -2268,7 +2268,7 @@
         if (legend) legend.textContent = 'Hijau = terhubung (online), Merah = offline, tanpa warna = belum terhubung. Terpakai ' + (u.usedCount || 0) + '/' + cap + '.';
         if (title) title.textContent = 'Port ODP (' + (u.usedCount || 0) + '/' + cap + ')';
       })
-      .catch(function () { grid.innerHTML = '<span class="text-muted">Gagal memuat data port.</span>'; });
+      .catch(function () { grid.innerHTML = '<span class="text-muted"><%= t('admin.map.port_err','Gagal memuat data port.') %></span>'; });
   }
 
   function buildWaLink(phone, name) {

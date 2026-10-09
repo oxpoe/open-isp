@@ -358,7 +358,7 @@
                     <i class="bi bi-wifi" style="font-size:20px;color:#3b82f6"></i>
                     <div>
                       <div style="font-weight:700;color:#e2e8f0">Konfigurasi WiFi</div>
-                      <div class="hint" style="font-size:12px;margin-top:2px">Set SSID dan password WiFi ONU</div>
+                      <div class="hint" style="font-size:12px;margin-top:2px"><%= t('admin.onu.ssid_hint','Set SSID dan password WiFi ONU') %></div>
                     </div>
                   </div>
                   <input type="checkbox" id="enableWifi" onchange="toggleWifiFields()" style="width:20px;height:20px;cursor:pointer">
@@ -384,7 +384,7 @@
                     <i class="bi bi-ethernet" style="font-size:20px;color:#10b981"></i>
                     <div>
                       <div style="font-weight:700;color:#e2e8f0">Mode LAN</div>
-                      <div class="hint" style="font-size:12px;margin-top:2px">Bridge (MikroTik dial) atau Router (ONU dial)</div>
+                      <div class="hint" style="font-size:12px;margin-top:2px"><%= t('admin.onu.wan_mode_hint','Bridge (MikroTik dial) atau Router (ONU dial)') %></div>
                     </div>
                   </div>
                   <input type="checkbox" id="enableLanMode" onchange="toggleLanModeFields()" style="width:20px;height:20px;cursor:pointer">
@@ -460,7 +460,7 @@
                     <div class="fg" style="margin:0">
                       <label class="fl">ACS URL <span style="color:#ef4444">*</span></label>
                       <input type="text" class="fc" name="tr069AcsUrl" placeholder="http://acs.example.com:7547">
-                      <div class="hint" style="font-size:11px;margin-top:4px">Format: http://host:port atau https://host:port</div>
+                      <div class="hint" style="font-size:11px;margin-top:4px"><%= t('admin.onu.ph_url','Format: http://host:port atau https://host:port') %></div>
                     </div>
                     <div class="form-row2">
                       <div class="fg" style="margin:0">
@@ -585,7 +585,7 @@ async function scanUnconfiguredONUs() {
       });
       listDiv.innerHTML = html;
     } else {
-      listDiv.innerHTML = '<div class="hint" style="text-align:center;padding:40px"><i class="bi bi-check-circle" style="font-size:32px;color:#22c55e"></i><p>Tidak ada ONU yang belum terkonfigurasi</p></div>';
+      listDiv.innerHTML = '<div class="hint" style="text-align:center;padding:40px"><i class="bi bi-check-circle" style="font-size:32px;color:#22c55e"></i><p><%= t('admin.onu.empty','Tidak ada ONU yang belum terkonfigurasi') %></p></div>';
     }
   } catch (error) {
     listDiv.innerHTML = '<div class="alert alert-d"><i class="bi bi-exclamation-circle"></i> Error: ' + error.message + '</div>';

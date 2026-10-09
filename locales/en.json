@@ -927,7 +927,12 @@
       "th_pppoe": "PPPoE / ONU Tag",
       "th_pkg_odp": "Package & ODP",
       "th_gps": "GPS Coordinates",
-      "ph_odp": "Search ODP (name / description)..."
+      "ph_odp": "Search ODP (name / description)...",
+      "pon_port": "PON Port (optional)",
+      "empty_cust": "No customer data yet.",
+      "empty_odp": "No ODP data yet.",
+      "view_port": "Click to view port visual",
+      "port_err": "Failed to load port data."
     },
     "print_invoice": {
       "title": "Print Invoice Receipt",
@@ -1109,7 +1114,9 @@
       "wifi_pass": "Wi-Fi Password (WPA2)",
       "loading": "Loading...",
       "run_prov": "Run Provisioning",
-      "add_server": "Add ACS Server"
+      "add_server": "Add ACS Server",
+      "bind_lan": "Select the LAN Ports to bind:",
+      "bind_ssid": "Select the WLAN (SSID) to bind:"
     },
     "vd": {
       "action": "Action",
@@ -1138,7 +1145,8 @@
       "tab_broadcast": "Broadcast & Reminder",
       "tab_templates": "Message Templates",
       "tab_livechat": "Live Chat",
-      "tab_preview": "Message Preview"
+      "tab_preview": "Message Preview",
+      "ph_deviceid": "Device ID (optional)"
     },
     "automation": {
       "title": "Automation",
@@ -1630,7 +1638,9 @@
       "disconnect_mt": "Disconnect MikroTik Session",
       "calc_reg": "Prorata Calculator &mdash; Approve Registrant",
       "start_use": "Start Using",
-      "approve_invoice": "Approve &amp; Create Invoice"
+      "approve_invoice": "Approve &amp; Create Invoice",
+      "modem_hint": "Customer modem login credentials for RADIUS & PPPoE.",
+      "reg_hint": "Automatically calculated on install/payment. Can be adjusted manually if needed."
     },
     "bill": {
       "ph_note": "e.g. service credit for downtime",
@@ -1684,12 +1694,17 @@
       "general_task": "-- General / Non-Customer Task (Maintenance) --",
       "unassigned": "-- Unassigned (Open) --",
       "st_open": "Not Handled (Open)",
-      "st_progress": "In Progress"
+      "st_progress": "In Progress",
+      "no_photo": "No photo"
     },
     "onu": {
       "select_vendor": "Select Vendor",
       "hint_rescan": "Click \"Rescan\" to find unconfigured ONUs",
-      "hint_reload": "Click \"Reload / Scan\" to monitor configured ONU status via SNMP"
+      "hint_reload": "Click \"Reload / Scan\" to monitor configured ONU status via SNMP",
+      "ssid_hint": "Set the ONU WiFi SSID and password",
+      "wan_mode_hint": "Bridge (MikroTik dials) or Router (ONU dials)",
+      "ph_url": "Format: http://host:port or https://host:port",
+      "empty": "No unconfigured ONU found"
     },
     "rds": {
       "card_status": "RADIUS Server Status",
@@ -1897,13 +1912,19 @@
       "no_data": "No data yet.",
       "ew_not_tx": "Not a transaction",
       "ew_paid": "Paid",
-      "ew_unmatched": "Not matched"
+      "ew_unmatched": "Not matched",
+      "speedtest_hint": "The preset only auto-fills — adjust the URL if needed.",
+      "qris_dyn_hint": "If filled, the system creates a dynamic QRIS per transaction (amount auto-filled on scan). If empty, the system uses the image URL as usual.",
+      "qris_upload_hint": "If uploaded, the system saves the file and auto-fills the QRIS URL.",
+      "bank_hint": "The amount &amp; unique code are the same as QRIS; verification is automatic (webhook forwarder) + manual (upload proof)."
     },
     "mt": {
       "updating": "Updating...",
       "online_list": "Online PPPoE Users",
       "offline_list": "Offline PPPoE Users",
-      "limit_uptime": "Uptime Limit (e.g. 1h)"
+      "limit_uptime": "Uptime Limit (e.g. 1h)",
+      "empty_pppoe": "No PPPoE profile data.",
+      "empty_hs": "No Hotspot profile data."
     },
     "disc": {
       "title": "Invoice Discount",
@@ -1927,7 +1948,8 @@
       "apply": "Apply Discount",
       "selected": "selected",
       "history": "Discount History (last 100)",
-      "th_note": "Note"
+      "th_note": "Note",
+      "empty_cust": "No customers."
     },
     "cpay": {
       "title": "Collector Payment Approval",
@@ -1942,7 +1964,8 @@
       "th_invoice": "Invoice",
       "th_process": "Process",
       "approve": "Approve",
-      "reject": "Reject"
+      "reject": "Reject",
+      "wait_approval": "Waiting for admin or cashier"
     },
     "att": {
       "late_checkin": "Late Check-in",
@@ -1959,7 +1982,9 @@
       "checkin_time": "Check-in Time",
       "duration": "Duration",
       "location": "Location",
-      "photo": "Photo"
+      "photo": "Photo",
+      "empty": "No attendance data",
+      "empty_sub": "No employee has checked in on this date."
     },
     "olt": {
       "all_summary": "All OLTs (Total Summary)",
@@ -2015,7 +2040,12 @@
       "ph_isolir_profile": "— use global/customer default —",
       "night_profile": "Night Profile Name (MikroTik)",
       "ph_night_profile": "-- Select Profile --",
-      "night_down": "Night Download (Mbps)"
+      "night_down": "Night Download (Mbps)",
+      "promo_prorata": "Invoice promo & proration",
+      "prorata_first": "First invoice proration (install date = billing month)",
+      "night_hint": "The system switches customers to this PPP profile between 00:00 - 06:00.",
+      "kalong_hint": "Check to configure (fields open automatically if this package uses Jam Kalong).",
+      "fup_hint": "Check to configure (fields open automatically if this package uses FUP)."
     },
     "col": {
       "title": "Collector Management",
@@ -2032,7 +2062,8 @@
       "del": "Delete Collector",
       "full_name": "Full Name",
       "area_region": "Area / Assignment Region",
-      "opt_all_area": "-- All Areas / Unrestricted --"
+      "opt_all_area": "-- All Areas / Unrestricted --",
+      "empty": "No collector data yet."
     },
     "mon": {
       "title": "System Monitoring",
@@ -2079,7 +2110,9 @@
       "total_hours": "Total Hours",
       "work_hours": "Work hours",
       "avg": "Average",
-      "hours_per_day": "Hours/day"
+      "hours_per_day": "Hours/day",
+      "preview": "Preview of the final photo to be sent:",
+      "checkin_hint": "Please check in to start your workday."
     },
     "gis": {
       "ph_search": "Search ODP, ODC, HTB, Customer...",
@@ -2132,7 +2165,10 @@
       "th_validity": "Validity",
       "th_prefix": "Prefix",
       "th_len": "Code Length",
-      "th_chars": "Characters"
+      "th_chars": "Characters",
+      "opt_active": "Active (Shown in customer portal)",
+      "empty": "No real-time hotspot voucher package registered yet. Click the Add button above to start!",
+      "no_meta": "The profile has no Mikhmon metadata. Fill in the price and validity manually."
     },
     "cashin": {
       "heading": "Cash In (Others)",
@@ -2157,7 +2193,8 @@
       "ph_ref": "Can be left blank",
       "save": "Save Income",
       "title": "Cash In",
-      "th_method": "Method"
+      "th_method": "Method",
+      "empty": "No cash-in data yet."
     },
     "exp": {
       "heading": "Expenses (Cash Out)",
@@ -2182,7 +2219,8 @@
       "pay_credit": "Credit / Paylater",
       "save": "Save Expense",
       "title": "Expenses",
-      "th_method": "Method"
+      "th_method": "Method",
+      "empty": "No expense data yet."
     },
     "ar": {
       "heading": "Area / Region Management",
@@ -2211,7 +2249,8 @@
       "setup_fw": "Isolir Firewall Setup",
       "edit": "Edit Router",
       "del": "Delete Router",
-      "live_title": "Router Live Detail"
+      "live_title": "Router Live Detail",
+      "script_hint": "This script is auto-generated from the server IP & billing URL (app_url). You can copy and paste it into the MikroTik Winbox Terminal."
     },
     "bc": {
       "send_title": "Send Invoices Now (Manual — if Auto is OFF)",
@@ -2245,7 +2284,9 @@
       "auto_clean": "Automatic Cleanup",
       "retention": "Retention (Days)",
       "history": "Backup History",
-      "empty": "No backup files available"
+      "empty": "No backup files available",
+      "file_hint": ".db (database) or .json (settings) file",
+      "retention_hint": "Backups older than this period will be deleted"
     },
     "wt": {
       "title": "WhatsApp Notification Template Settings",
@@ -2265,12 +2306,27 @@
       "opt_qris": "QRIS Invoice Template",
       "opt_success": "Payment Success Template",
       "opt_isolir": "Isolir Notice Template",
-      "vars": "Parameter Order Variables (Components Payload):"
+      "vars": "Parameter Order Variables (Components Payload):",
+      "ph_user": "(PPPoE Username, optional)",
+      "warn_custid": "must include the Customer ID variable"
     },
     "md": {
       "connecting": "Connecting to MikroTik...",
       "fullscreen": "Fullscreen",
-      "exit": "Exit"
+      "exit": "Exit",
+      "reconnect_hint": "Make sure the IP/port is correct and the API service is active. Retrying..."
+    },
+    "payroll": {
+      "empty_staff": "No active employees",
+      "empty_slip": "No payslip for this period",
+      "gen_hint": "Click \"Generate All\" to create payslips automatically"
+    },
+    "rep": {
+      "ppn_incl": "Yes — VAT already included",
+      "tax_hint": "Corporate income tax, VAT, USO &amp; BHP are calculated automatically from this value."
+    },
+    "wlc": {
+      "empty": "No messages with this customer yet. Type a message below and press Enter to start."
     }
   },
   "tech": {

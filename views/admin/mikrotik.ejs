@@ -850,7 +850,7 @@
       }
       pppoeProfilesData = await res.json();
       if (!Array.isArray(pppoeProfilesData) || pppoeProfilesData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Tidak ada data profile PPPoE.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted"><%= t('admin.mt.empty_pppoe','Tidak ada data profile PPPoE.') %></td></tr>`;
         return;
       }
       tbody.innerHTML = pppoeProfilesData.map((p, i) => `
@@ -886,7 +886,7 @@
       }
       hotspotProfilesData = await res.json();
       if (!Array.isArray(hotspotProfilesData) || hotspotProfilesData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Tidak ada data profile Hotspot.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted"><%= t('admin.mt.empty_hs','Tidak ada data profile Hotspot.') %></td></tr>`;
         return;
       }
       tbody.innerHTML = hotspotProfilesData.map((p, i) => {

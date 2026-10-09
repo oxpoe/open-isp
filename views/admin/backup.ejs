@@ -99,7 +99,7 @@
             <div class="fg">
               <label class="fl"><%= t('admin.bk.pick_file','Pilih File Backup (.db / .json)') %></label>
               <input type="file" class="fc" name="backupFile" accept=".db,.sqlite,.json" required style="padding: 6px 10px;">
-              <small class="text-muted" style="font-size: 10px; display: block; margin-top: 4px;">File .db (database) atau .json (settings)</small>
+              <small class="text-muted" style="font-size: 10px; display: block; margin-top: 4px;"><%= t('admin.bk.file_hint','File .db (database) atau .json (settings)') %></small>
             </div>
             <button type="submit" class="btn btn-s w-100">
               <i class="bi bi-cloud-arrow-up"></i> Upload & Restore
@@ -116,7 +116,7 @@
             <div class="fg">
               <label class="fl"><%= t('admin.bk.retention','Retensi (Hari)') %></label>
               <input type="number" class="fc" name="retentionDays" value="30" min="1" max="365">
-              <small class="text-muted" style="font-size: 10px; display: block; margin-top: 4px;">Backup lebih lama dari periode ini akan dihapus</small>
+              <small class="text-muted" style="font-size: 10px; display: block; margin-top: 4px;"><%= t('admin.bk.retention_hint','Backup lebih lama dari periode ini akan dihapus') %></small>
             </div>
             <button type="submit" class="btn btn-w w-100">
               <i class="bi bi-stars"></i> Bersihkan Sekarang

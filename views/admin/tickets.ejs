@@ -314,7 +314,7 @@ document.addEventListener('click', function(e) {
   const allPhotos = [...customerPhotos, ...techPhotos];
   
   if (allPhotos.length === 0) {
-    gallery.innerHTML = '<div class="col-12 text-center text-muted">Tidak ada foto</div>';
+    gallery.innerHTML = '<div class="col-12 text-center text-muted"><%= t('admin.tk.no_photo','Tidak ada foto') %></div>';
   } else {
     // Customer photos first
     if (customerPhotos.length > 0) {

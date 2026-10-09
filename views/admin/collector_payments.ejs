@@ -101,7 +101,7 @@
                     <% if (decidedRole === 'system') { %>
                       <div style="font-size:10px;color:var(--muted)">Kolektor auto-approve aktif</div>
                     <% } else if (r.status === 'pending') { %>
-                      <div style="font-size:10px;color:var(--muted)">Menunggu admin atau kasir</div>
+                      <div style="font-size:10px;color:var(--muted)"><%= t('admin.cpay.wait_approval','Menunggu admin atau kasir') %></div>
                     <% } else if (r.decided_by_name) { %>
                       <div style="font-size:10px;color:var(--muted)">Oleh: <%= r.decided_by_name %></div>
                     <% } %>

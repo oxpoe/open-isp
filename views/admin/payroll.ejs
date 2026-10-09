@@ -87,7 +87,7 @@
         </div>
         <div class="card-bd">
           <% if (employees.length === 0) { %>
-          <div style="text-align:center;padding:40px"><div style="font-size:48px;opacity:.3"><i class="bi bi-person-fill"></i></div><p style="color:var(--muted)">Belum ada karyawan aktif</p></div>
+          <div style="text-align:center;padding:40px"><div style="font-size:48px;opacity:.3"><i class="bi bi-person-fill"></i></div><p style="color:var(--muted)"><%= t('admin.payroll.empty_staff','Belum ada karyawan aktif') %></p></div>
           <% } else { %>
           <% employees.forEach(emp => { %>
           <div class="emp-card type-<%= emp.employee_type %>">
@@ -137,7 +137,7 @@
         </div>
         <div class="card-bd">
           <% if (slips.length === 0) { %>
-          <div style="text-align:center;padding:40px"><div style="font-size:48px;opacity:.3"><i class="bi bi-inbox"></i></div><p style="color:var(--muted)">Belum ada slip gaji untuk periode ini</p><p style="color:var(--muted);font-size:12px">Klik "Generate Semua" untuk membuat slip gaji otomatis</p></div>
+          <div style="text-align:center;padding:40px"><div style="font-size:48px;opacity:.3"><i class="bi bi-inbox"></i></div><p style="color:var(--muted)"><%= t('admin.payroll.empty_slip','Belum ada slip gaji untuk periode ini') %></p><p style="color:var(--muted);font-size:12px"><%= t('admin.payroll.gen_hint','Klik "Generate Semua" untuk membuat slip gaji otomatis') %></p></div>
           <% } else { %>
 
           <!-- Bulk Actions -->
