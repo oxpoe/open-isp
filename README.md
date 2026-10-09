@@ -90,7 +90,7 @@ Opsional: `cp env-example.txt .env` untuk mengisi rahasia webhook pembayaran.
 node scripts/seed-demo.js
 ```
 
-Menambahkan paket, area, 12 pelanggan contoh, tagihan, dan tiket. Login pelanggan demo: `081200000001` / `demo-isp123`.
+Menambahkan paket, area, 12 pelanggan contoh, tagihan, dan tiket. Login pelanggan demo: `081200000001` (cukup nomor HP).
 
 ## Aktivasi Menu Lanjutan
 
