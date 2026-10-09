@@ -1731,18 +1731,10 @@ app.post('/api/webhook/gowa', async (req, res) => {
             .run(senderPhone, 'gowa_bot', custId, custName, text, 'received', String(p.id || ''));
         } catch (e) {}
 
-        const reply = async (msg) => {
-          try {
-            await require('./services/gowaWhatsappService').sendGowaMessage(senderPhone, msg);
-            try {
-              const db2 = require('./config/database');
-              db2.prepare("INSERT INTO wa_chat_messages (direction, gateway, sender_phone, recipient_phone, customer_name, message_text, status) VALUES ('outbound','gowa',?,?,?,?,?)")
-                .run('gowa_bot', senderPhone, null, msg, 'sent');
-            } catch (e2) {}
-          } catch (e) { logger.error('[GOWA webhook] gagal balas: ' + e.message); }
-        };
-        const waBot = await import('./services/whatsappBot.mjs');
-        await waBot.processIncomingCommand({ senderPhone: senderPhone, text: text, reply: reply, senderName: p.from_name || p.sender_display_name || '' });
+        // ── WA = HANYA NOTIFIKASI (keluar) ─────────────────────────────────
+        // Interaksi/balasan bot DIPINDAH ke Telegram. Pesan masuk tetap dicatat
+        // (di atas) agar terlihat di Live Chat, TANPA balasan otomatis.
+        return;
       } catch (e) { logger.error('[GOWA webhook] proses error: ' + e.message); }
     }, 0);
     return;

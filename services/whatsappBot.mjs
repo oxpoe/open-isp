@@ -2611,6 +2611,9 @@ export async function startWhatsAppBot() {
     });
 
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      // WA interaksi (perintah masuk) DINONAKTIFKAN — WA hanya untuk notifikasi keluar.
+      // Interaksi cepat kini di Telegram. (Fungsi kirim tetap aktif.)
+      return;
       if (type !== 'notify') return;
       for (const m of messages) {
         try {
