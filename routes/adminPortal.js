@@ -3504,9 +3504,7 @@ router.post('/tickets/create', requireAdminSession, express.urlencoded({ extende
         const _base = (getSetting('public_base_url', '') || getSetting('app_url', '') || ('http://' + (req.get('host') || ''))).replace(/\/+$/, '');
         const _links = `\n🔗 *Tautan Cepat:*\n` +
           (_waDigits ? `• 💬 Chat Pelanggan: https://wa.me/${_waDigits}\n` : '') +
-          (_mapQ ? `• 📍 Lokasi: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(_mapQ)}\n` : '') +
-          `• 🧾 Detail Pelanggan: ${_base}/admin/customers?search=${encodeURIComponent(custPhone || custName)}\n` +
-          `• 🛠️ Pool Tiket Teknisi: ${_base}/tech/pool`;
+          (_mapQ ? `• 📍 Share Lokasi: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(_mapQ)}` : '');
         const waMsg = `📌 *TUGAS TEKNISI BARU DARI ADMIN*\n\n` +
                      `🎫 *ID Tiket:* #${ticketId}\n` +
                      `👤 *Pelanggan/Objek:* ${custName}\n` +

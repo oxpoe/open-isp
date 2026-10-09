@@ -2950,9 +2950,7 @@ router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, re
         const _base = (String(settings.public_base_url || '') || String(settings.app_url || '') || ('http://' + (req.get('host') || ''))).replace(/\/+$/, '');
         const _links = `\n🔗 *Tautan Cepat:*\n` +
           (_waDigits ? `• 💬 Chat Pelanggan: https://wa.me/${_waDigits}\n` : '') +
-          (_mapQ ? `• 📍 Lokasi: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(_mapQ)}\n` : '') +
-          `• 🧾 Detail Pelanggan: ${_base}/admin/customers?search=${encodeURIComponent(customer ? (customer.phone || customer.name) : '')}\n` +
-          `• 🛠️ Pool Tiket Teknisi: ${_base}/tech/pool`;
+          (_mapQ ? `• 📍 Share Lokasi: https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(_mapQ)}` : '');
         const waMsg = `🎫 *TIKET KELUHAN BARU*\n\n` +
                      `👤 *Pelanggan:* ${customer ? customer.name : 'Unknown'}\n` +
                      `📞 *WhatsApp:* ${customer ? customer.phone : '-'}\n` +
