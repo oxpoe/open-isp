@@ -31,7 +31,7 @@
 - **RADIUS** — server PAP/CHAP untuk PPPoE/hotspot, secret per-NAS.
 - **Peta & GIS** — Leaflet + OpenStreetMap/satelit: marker pelanggan & ODP, jalur kabel, trafik PPPoE real-time; peta teknisi + rute Google Maps.
 - **Portal & peran** — admin (super admin/admin/kasir), teknisi (tiket, input pelanggan dari lapangan), kolektor (cek tagihan & pengajuan pembayaran), dan **PWA pelanggan** (tagihan, bayar, tiket, SSID/password, speed test, mode offline).
-- **Notifikasi** — WhatsApp (gateway [Gowa](https://github.com/aldinokemal/go-whatsapp-web-multidevice): broadcast, pengingat otomatis, struk pembayaran; bot Telegram admin (opsional).
+- **Notifikasi** — WhatsApp (gateway [Gowa](https://github.com/aldinokemal/go-whatsapp-web-multidevice): broadcast, pengingat otomatis, struk pembayaran; **monitoring & interaksi admin via Telegram** (menu & perintah: `/sistem`, `/pendapatan`, `/offline`, `/olt`, dll).
 - **Speed test** — server internal maupun eksternal (preset provider diatur admin), mode embed/tab, tombol Muat Ulang & Bersihkan Cache.
 - **PWA** — dapat dipasang di HP, offline, pembaruan otomatis (bar "versi baru tersedia").
 - **Bilingual** — antarmuka Indonesia / English (bisa diganti dari UI).
