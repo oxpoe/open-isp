@@ -377,11 +377,11 @@
     const sel = document.getElementById('profileName');
     sel.innerHTML = '';
     if (filtered.length === 0) {
-      sel.innerHTML = '<option value="">Tidak ada profile dengan harga/durasi (Mikhmon)</option>';
+      sel.innerHTML = '<option value=""><%= t('admin.vou.no_profile','Tidak ada profile dengan harga/durasi (Mikhmon)') %></option>';
       document.getElementById('profileHint').innerText = '';
       return;
     }
-    sel.insertAdjacentHTML('beforeend', '<option value="">-- Pilih Profile --</option>');
+    sel.insertAdjacentHTML('beforeend', '<option value=""><%= t('admin.vou.pick_profile','-- Pilih Profile --') %></option>');
     for (const x of filtered) {
       const label = `${x.raw.name} (Rp ${Number(x.meta.price || 0).toLocaleString('id-ID')} • ${x.meta.validity})`;
       sel.insertAdjacentHTML('beforeend', `<option value="${x.raw.name}">${label}</option>`);

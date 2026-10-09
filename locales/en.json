@@ -1463,7 +1463,9 @@
       "last_tr069": "Last TR-069:",
       "test_conn": "Test Connection",
       "threshold_hint": "Warning threshold for RX Power (-40 to -15 dBm)",
-      "timeout_hint": "Timeout for requests to GenieACS (5000-120000 ms)"
+      "timeout_hint": "Timeout for requests to GenieACS (5000-120000 ms)",
+      "genieacs_title": "GenieACS Settings",
+      "conn_live": "Connected Clients (Live)"
     },
     "cust": {
       "ph_note": "Optional internal note...",
@@ -1986,6 +1988,70 @@
       "night_profile": "Night Profile Name (MikroTik)",
       "ph_night_profile": "-- Select Profile --",
       "night_down": "Night Download (Mbps)"
+    },
+    "col": {
+      "title": "Collector Management",
+      "add_new": "Add New Collector",
+      "add": "Add Collector",
+      "list": "Collector List",
+      "all_paymode": "All Payment Modes",
+      "direct": "Direct Paid",
+      "approval": "Needs Approval",
+      "all_status": "All Account Statuses",
+      "phone": "Phone No.",
+      "area": "Assignment Area",
+      "paymode": "Payment Mode",
+      "del": "Delete Collector",
+      "full_name": "Full Name",
+      "area_region": "Area / Assignment Region",
+      "opt_all_area": "-- All Areas / Unrestricted --"
+    },
+    "mon": {
+      "title": "System Monitoring",
+      "updated": "Last update:",
+      "issues": "Issues",
+      "warnings": "Warnings",
+      "metrics": "System Metrics",
+      "perf": "Performance Summary (Last 10 Samples)",
+      "avg": "Average"
+    },
+    "vou": {
+      "no_profile": "No profile with price/duration (Mikhmon)",
+      "pick_profile": "-- Select Profile --"
+    },
+    "cr": {
+      "title": "Cashier Report",
+      "all_cashier": "All Cashiers",
+      "tx": "transactions",
+      "invoice": "Invoices:",
+      "topup": "Agent Deposit:",
+      "history": "Transaction History",
+      "th_type": "Type",
+      "th_detail": "Detail",
+      "th_note": "Note",
+      "badge_invoice": "INVOICE"
+    },
+    "ca": {
+      "today_status": "Today Status",
+      "checked_in": "Checked In",
+      "checked_out": "Checked Out",
+      "work_duration": "Work Duration",
+      "note_in": "Check-in Note",
+      "note_out": "Check-out Note",
+      "photo": "Attendance Photo",
+      "ph_note_out": "Check-out note (optional)",
+      "no_photo_out": "No photo taken yet. A photo is required for check-out.",
+      "not_checked_in": "Not Checked In",
+      "ph_note_in": "Check-in note (optional)",
+      "no_photo_in": "No photo taken yet. A photo is required for check-in.",
+      "total_days": "Total Days",
+      "this_month": "This Month",
+      "full_days": "Full Days",
+      "in_out": "Check-in & out",
+      "total_hours": "Total Hours",
+      "work_hours": "Work hours",
+      "avg": "Average",
+      "hours_per_day": "Hours/day"
     }
   },
   "tech": {

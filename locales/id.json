@@ -1464,7 +1464,9 @@
       "last_tr069": "TR-069 terakhir:",
       "test_conn": "Test Koneksi",
       "threshold_hint": "Threshold untuk warning RX Power (-40 sampai -15 dBm)",
-      "timeout_hint": "Timeout untuk request ke GenieACS (5000-120000 ms)"
+      "timeout_hint": "Timeout untuk request ke GenieACS (5000-120000 ms)",
+      "genieacs_title": "Pengaturan GenieACS",
+      "conn_live": "Klien Terhubung (Live)"
     },
     "cust": {
       "ph_note": "Catatan internal opsional...",
@@ -1987,6 +1989,70 @@
       "night_profile": "Nama Profile Malam (MikroTik)",
       "ph_night_profile": "-- Pilih Profile --",
       "night_down": "Download Malam (Mbps)"
+    },
+    "col": {
+      "title": "Manajemen Kolektor",
+      "add_new": "Tambah Kolektor Baru",
+      "add": "Tambah Kolektor",
+      "list": "Daftar Kolektor",
+      "all_paymode": "Semua Mode Pembayaran",
+      "direct": "Langsung Lunas",
+      "approval": "Perlu Approval",
+      "all_status": "Semua Status Akun",
+      "phone": "No. HP",
+      "area": "Area Tugas",
+      "paymode": "Mode Pembayaran",
+      "del": "Hapus Kolektor",
+      "full_name": "Nama Lengkap",
+      "area_region": "Area / Wilayah Tugas",
+      "opt_all_area": "-- Semua Area / Bebas --"
+    },
+    "mon": {
+      "title": "Monitoring Sistem",
+      "updated": "Update terakhir:",
+      "issues": "Masalah",
+      "warnings": "Peringatan",
+      "metrics": "Metrik Sistem",
+      "perf": "Ringkasan Performa (10 Sample Terakhir)",
+      "avg": "Rata-rata"
+    },
+    "vou": {
+      "no_profile": "Tidak ada profile dengan harga/durasi (Mikhmon)",
+      "pick_profile": "-- Pilih Profile --"
+    },
+    "cr": {
+      "title": "Laporan Kasir",
+      "all_cashier": "Semua Kasir",
+      "tx": "transaksi",
+      "invoice": "Tagihan:",
+      "topup": "Deposit Agent:",
+      "history": "Riwayat Transaksi",
+      "th_type": "Jenis",
+      "th_detail": "Detail",
+      "th_note": "Catatan",
+      "badge_invoice": "TAGIHAN"
+    },
+    "ca": {
+      "today_status": "Status Hari Ini",
+      "checked_in": "Sudah Check-in",
+      "checked_out": "Sudah Check-out",
+      "work_duration": "Durasi Kerja",
+      "note_in": "Catatan Check-in",
+      "note_out": "Catatan Check-out",
+      "photo": "Foto Absensi",
+      "ph_note_out": "Catatan check-out (opsional)",
+      "no_photo_out": "Belum ada foto diambil. Foto wajib untuk check-out.",
+      "not_checked_in": "Belum Check-in",
+      "ph_note_in": "Catatan check-in (opsional)",
+      "no_photo_in": "Belum ada foto diambil. Foto wajib untuk check-in.",
+      "total_days": "Total Hari",
+      "this_month": "Bulan ini",
+      "full_days": "Hari Lengkap",
+      "in_out": "Check-in & out",
+      "total_hours": "Total Jam",
+      "work_hours": "Jam kerja",
+      "avg": "Rata-rata",
+      "hours_per_day": "Jam/hari"
     }
   },
   "tech": {

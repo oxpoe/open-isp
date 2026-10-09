@@ -248,7 +248,7 @@
           <option value="online"><%= t('admin.dashboard.online', 'Online') %></option>
           <option value="offline"><%= t('admin.dashboard.offline', 'Offline') %></option>
         </select>
-        <button class="btn btn-g btn-sm" onclick="openGenieACSSettings()" title="Pengaturan GenieACS">
+        <button class="btn btn-g btn-sm" onclick="openGenieACSSettings()" title="<%= t('admin.dash.genieacs_title','Pengaturan GenieACS') %>">
           <i class="bi bi-gear"></i> GenieACS
         </button>
         <button class="btn btn-p btn-sm" id="btn-refresh" onclick="refreshAll()">
@@ -802,7 +802,7 @@ async function showDetail(tag) {
 
       <div style="margin-top:16px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden">
         <div style="padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-          <div><i class="bi bi-people"></i> Connected Clients (Live)</div>
+          <div><i class="bi bi-people"></i> <%= t('admin.dash.conn_live','Klien Terhubung (Live)') %></div>
           <span class="badge bm">${connected.length}</span>
         </div>
         <div style="padding:16px 18px">
@@ -1029,7 +1029,7 @@ async function saveGenieACSSettings() {
       showGenieACSMessage(result.message, 'success');
       setTimeout(() => {
         closeModal('genieacsModal');
-        showToast('Pengaturan GenieACS berhasil disimpan', 's');
+        showToast('<%= t('admin.dash.genieacs_title','Pengaturan GenieACS') %> berhasil disimpan', 's');
       }, 1500);
     } else {
       showGenieACSMessage(result.message, 'danger');

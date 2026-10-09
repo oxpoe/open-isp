@@ -103,14 +103,14 @@
     <!-- Today's Status -->
     <div class="card">
       <div class="card-hd">
-        <h6><i class="bi bi-calendar-day"></i> Status Hari Ini</h6>
+        <h6><i class="bi bi-calendar-day"></i> <%= t('admin.ca.today_status','Status Hari Ini') %></h6>
       </div>
       <div class="card-bd">
         <% if (todayAttendance) { %>
           <% if (todayAttendance.status === 'checked_in') { %>
-            <span class="status-badge status-checked-in"><i class="bi bi-check-lg"></i> Sudah Check-in</span>
+            <span class="status-badge status-checked-in"><i class="bi bi-check-lg"></i> <%= t('admin.ca.checked_in','Sudah Check-in') %></span>
           <% } else { %>
-            <span class="status-badge status-checked-out"><i class="bi bi-check-lg"></i> Sudah Check-out</span>
+            <span class="status-badge status-checked-out"><i class="bi bi-check-lg"></i> <%= t('admin.ca.checked_out','Sudah Check-out') %></span>
           <% } %>
 
           <div class="info-row">
@@ -124,7 +124,7 @@
               <span class="info-value"><%= formatDateLocal(todayAttendance.check_out_time) %></span>
             </div>
             <div class="info-row">
-              <span class="info-label">Durasi Kerja</span>
+              <span class="info-label"><%= t('admin.ca.work_duration','Durasi Kerja') %></span>
               <span class="info-value">
                 <%= Math.floor(todayAttendance.work_duration_minutes / 60) %> jam 
                 <%= todayAttendance.work_duration_minutes % 60 %> menit
@@ -134,21 +134,21 @@
 
           <% if (todayAttendance.check_in_note) { %>
             <div class="info-row">
-              <span class="info-label">Catatan Check-in</span>
+              <span class="info-label"><%= t('admin.ca.note_in','Catatan Check-in') %></span>
               <span class="info-value"><%= todayAttendance.check_in_note %></span>
             </div>
           <% } %>
 
           <% if (todayAttendance.check_out_note) { %>
             <div class="info-row">
-              <span class="info-label">Catatan Check-out</span>
+              <span class="info-label"><%= t('admin.ca.note_out','Catatan Check-out') %></span>
               <span class="info-value"><%= todayAttendance.check_out_note %></span>
             </div>
           <% } %>
 
           <% if (todayAttendance.check_in_photo || todayAttendance.check_out_photo) { %>
             <div class="info-row" style="align-items:flex-start">
-              <span class="info-label">Foto Absensi</span>
+              <span class="info-label"><%= t('admin.ca.photo','Foto Absensi') %></span>
               <span class="info-value" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
                 <% if (todayAttendance.check_in_photo) { %>
                   <a href="<%= todayAttendance.check_in_photo %>" target="_blank" style="text-decoration:none;color:var(--text);font-size:12px;text-align:center">
@@ -167,7 +167,7 @@
           <% } %>
 
           <% if (todayAttendance.status === 'checked_in') { %>
-            <textarea id="checkoutNote" class="note-input" placeholder="Catatan check-out (opsional)"></textarea>
+            <textarea id="checkoutNote" class="note-input" placeholder="<%= t('admin.ca.ph_note_out','Catatan check-out (opsional)') %>"></textarea>
             <input id="checkoutPhoto" type="file" accept="image/*" capture="user" style="display: none;" onchange="updatePhotoInfo('checkoutPhoto', 'checkoutPhotoInfo', 'checkoutPhotoPreviewWrap', 'checkoutPhotoPreview')">
             
             <div style="text-align: center; margin: 16px 0;">
@@ -177,7 +177,7 @@
               <div style="font-size: 11px; color: var(--muted); margin-top: 6px;"><%= t('collector.tap_camera','Ketuk tombol kamera untuk mengambil foto selfie') %></div>
             </div>
 
-            <div id="checkoutPhotoInfo" class="photo-help text-center">Belum ada foto diambil. Foto wajib untuk check-out.</div>
+            <div id="checkoutPhotoInfo" class="photo-help text-center"><%= t('admin.ca.no_photo_out','Belum ada foto diambil. Foto wajib untuk check-out.') %></div>
             <div style="text-align: center; margin-top: 4px;">
               <div id="checkoutPhotoStatus" class="photo-help" style="display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(239,68,68,0.18);color:#fecaca"><%= t('collector.selfie_required','Foto wajib') %></div>
             </div>
@@ -195,10 +195,10 @@
           <% } %>
 
         <% } else { %>
-          <span class="status-badge status-not-checked-in"><i class="bi bi-x-lg"></i> Belum Check-in</span>
+          <span class="status-badge status-not-checked-in"><i class="bi bi-x-lg"></i> <%= t('admin.ca.not_checked_in','Belum Check-in') %></span>
           <p style="color: var(--muted); margin: 16px 0;">Silakan lakukan check-in untuk memulai hari kerja Anda.</p>
           
-          <textarea id="checkinNote" class="note-input" placeholder="Catatan check-in (opsional)"></textarea>
+          <textarea id="checkinNote" class="note-input" placeholder="<%= t('admin.ca.ph_note_in','Catatan check-in (opsional)') %>"></textarea>
           <input id="checkinPhoto" type="file" accept="image/*" capture="user" style="display: none;" onchange="updatePhotoInfo('checkinPhoto', 'checkinPhotoInfo', 'checkinPhotoPreviewWrap', 'checkinPhotoPreview')">
           
           <div style="text-align: center; margin: 16px 0;">
@@ -208,7 +208,7 @@
             <div style="font-size: 11px; color: var(--muted); margin-top: 6px;"><%= t('collector.tap_camera','Ketuk tombol kamera untuk mengambil foto selfie') %></div>
           </div>
 
-          <div id="checkinPhotoInfo" class="photo-help text-center">Belum ada foto diambil. Foto wajib untuk check-in.</div>
+          <div id="checkinPhotoInfo" class="photo-help text-center"><%= t('admin.ca.no_photo_in','Belum ada foto diambil. Foto wajib untuk check-in.') %></div>
           <div style="text-align: center; margin-top: 4px;">
             <div id="checkinPhotoStatus" class="photo-help" style="display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(239,68,68,0.18);color:#fecaca"><%= t('collector.selfie_required','Foto wajib') %></div>
           </div>
@@ -235,31 +235,31 @@
     <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="sc p">
         <i class="bi bi-calendar-month sc-icon"></i>
-        <div class="sc-label">Total Hari</div>
+        <div class="sc-label"><%= t('admin.ca.total_days','Total Hari') %></div>
         <div class="sc-val"><%= summary.total_days || 0 %></div>
-        <div class="sc-sub">Bulan ini</div>
+        <div class="sc-sub"><%= t('admin.ca.this_month','Bulan ini') %></div>
       </div>
       <div class="sc s">
         <i class="bi bi-check-circle sc-icon"></i>
-        <div class="sc-label">Hari Lengkap</div>
+        <div class="sc-label"><%= t('admin.ca.full_days','Hari Lengkap') %></div>
         <div class="sc-val"><%= summary.completed_days || 0 %></div>
-        <div class="sc-sub">Check-in & out</div>
+        <div class="sc-sub"><%= t('admin.ca.in_out','Check-in & out') %></div>
       </div>
       <div class="sc p">
         <i class="bi bi-clock sc-icon"></i>
-        <div class="sc-label">Total Jam</div>
+        <div class="sc-label"><%= t('admin.ca.total_hours','Total Jam') %></div>
         <div class="sc-val">
           <%= summary.total_minutes ? Math.floor(summary.total_minutes / 60) : 0 %>
         </div>
-        <div class="sc-sub">Jam kerja</div>
+        <div class="sc-sub"><%= t('admin.ca.work_hours','Jam kerja') %></div>
       </div>
       <div class="sc s">
         <i class="bi bi-graph-up sc-icon"></i>
-        <div class="sc-label">Rata-rata</div>
+        <div class="sc-label"><%= t('admin.ca.avg','Rata-rata') %></div>
         <div class="sc-val">
           <%= summary.avg_minutes ? Math.floor(summary.avg_minutes / 60) : 0 %>
         </div>
-        <div class="sc-sub">Jam/hari</div>
+        <div class="sc-sub"><%= t('admin.ca.hours_per_day','Jam/hari') %></div>
       </div>
     </div>
 

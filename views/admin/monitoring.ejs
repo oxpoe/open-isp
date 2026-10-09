@@ -285,7 +285,7 @@
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
       <i class="bi bi-activity"></i>
-      <span id="page-title">Monitoring Sistem</span>
+      <span id="page-title"><%= t('admin.mon.title','Monitoring Sistem') %></span>
     </div>
     <div class="tb-right">
       <button onclick="location.reload()" class="btn btn-g btn-sm">
@@ -310,17 +310,17 @@
           <i class="bi bi-<%= healthStatus.status === 'healthy' ? 'check-circle' : healthStatus.status === 'warning' ? 'exclamation-triangle' : 'x-circle' %>"></i>
           <%= healthStatus.status.toUpperCase() %>
         </div>
-        <p class="text-muted mt-2 fs12">Update terakhir: <%= new Date(healthStatus.timestamp).toLocaleString('id-ID') %></p>
+        <p class="text-muted mt-2 fs12"><%= t('admin.mon.updated','Update terakhir:') %> <%= new Date(healthStatus.timestamp).toLocaleString('id-ID') %></p>
       </div>
     </div>
 
-    <!-- Issues and Warnings -->
+    <!-- <%= t('admin.mon.issues','Masalah') %> and <%= t('admin.mon.warnings','Peringatan') %> -->
     <% if (healthStatus.issues.length > 0 || healthStatus.warnings.length > 0) { %>
     <div class="mon-grid">
       <% if (healthStatus.issues.length > 0) { %>
       <div class="card">
         <div class="card-hd chd-d">
-          <h6><i class="bi bi-exclamation-triangle-fill"></i> Issues (<%= healthStatus.issues.length %>)</h6>
+          <h6><i class="bi bi-exclamation-triangle-fill"></i> <%= t('admin.mon.issues','Masalah') %> (<%= healthStatus.issues.length %>)</h6>
         </div>
         <div class="card-bd">
           <% healthStatus.issues.forEach(issue => {
@@ -336,7 +336,7 @@
       <% if (healthStatus.warnings.length > 0) { %>
       <div class="card">
         <div class="card-hd chd-w">
-          <h6><i class="bi bi-exclamation-triangle"></i> Warnings (<%= healthStatus.warnings.length %>)</h6>
+          <h6><i class="bi bi-exclamation-triangle"></i> <%= t('admin.mon.warnings','Peringatan') %> (<%= healthStatus.warnings.length %>)</h6>
         </div>
         <div class="card-bd">
           <% healthStatus.warnings.forEach(warning => {
@@ -354,7 +354,7 @@
     <!-- System Metrics -->
     <div class="card mb16">
       <div class="card-hd">
-        <h6><i class="bi bi-cpu"></i> Metrik Sistem</h6>
+        <h6><i class="bi bi-cpu"></i> <%= t('admin.mon.metrics','Metrik Sistem') %></h6>
       </div>
       <div class="card-bd">
         <div class="stat-grid mb0">
@@ -491,12 +491,12 @@
     <!-- Performance Summary -->
     <div class="card mb16">
       <div class="card-hd">
-        <h6><i class="bi bi-journal-text"></i> Ringkasan Performa (10 Sample Terakhir)</h6>
+        <h6><i class="bi bi-journal-text"></i> <%= t('admin.mon.perf','Ringkasan Performa (10 Sample Terakhir)') %></h6>
       </div>
       <div class="card-bd">
         <div class="stat-grid stat-grid-3 mb0">
           <div>
-            <p class="sc-label">Rata-rata</p>
+            <p class="sc-label"><%= t('admin.mon.avg','Rata-rata') %></p>
             <table class="dtbl">
               <tr>
                 <td class="text-muted">CPU</td>
