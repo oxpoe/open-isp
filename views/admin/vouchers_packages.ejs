@@ -2,7 +2,7 @@
 <html lang="<%= lang || 'id' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Paket Voucher Hotspot | <%= company %></title>
+  <title><%= t('admin.vp.title','Paket Voucher Hotspot') %> | <%= company %></title>
   <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
   <style>
@@ -36,22 +36,22 @@
 
     <div class="mtabs">
       <a href="/admin/vouchers" class="mtab"><i class="bi bi-ticket-perforated"></i> Pembuatan Voucher (Batch)</a>
-      <a href="/admin/vouchers/packages" class="mtab active"><i class="bi bi-ticket-detailed"></i> Konfigurasi Paket (Real-Time)</a>
+      <a href="/admin/vouchers/packages" class="mtab active"><i class="bi bi-ticket-detailed"></i> <%= t('admin.vp.config','Konfigurasi Paket') %> (Real-Time)</a>
     </div>
 
     <div class="card">
       <div class="card-hd">
-        <h6><i class="bi bi-list-stars"></i> Daftar Paket Hotspot Real-Time</h6>
+        <h6><i class="bi bi-list-stars"></i> <%= t('admin.vp.list','Daftar Paket Hotspot Real-Time') %></h6>
         <div style="display:flex;align-items:center;gap:10px">
           <% if (typeof routers !== 'undefined' && routers && routers.length > 0) { %>
           <select class="fs" style="width:160px" onchange="window.location.href='/admin/set-active-router?router_id=' + this.value">
-            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>> Semua Router</option>
+            <option value="all" <%= (!selectedRouterId) ? 'selected' : '' %>> <%= t('admin.vp.all_router','Semua Router') %></option>
             <% routers.forEach(r => { %>
               <option value="<%= r.id %>" <%= (selectedRouterId === r.id) ? 'selected' : '' %>> <%= r.name %></option>
             <% }) %>
           </select>
           <% } %>
-          <button class="btn btn-p btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> Tambah Konfigurasi Paket</button>
+          <button class="btn btn-p btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> <%= t('admin.vp.add_config','Tambah Konfigurasi Paket') %></button>
         </div>
       </div>
       <div class="tbl-wrap">
@@ -59,18 +59,18 @@
           <thead>
             <tr>
               <th>Router</th>
-              <th>Nama Profile</th>
-              <th>Harga</th>
-              <th>Masa Aktif</th>
-              <th>Prefix</th>
-              <th>Panjang Kode</th>
-              <th>Karakter</th>
+              <th><%= t('admin.vp.th_profile','Nama Profile') %></th>
+              <th><%= t('admin.vp.th_price','Harga') %></th>
+              <th><%= t('admin.vp.th_validity','Masa Aktif') %></th>
+              <th><%= t('admin.vp.th_prefix','Prefix') %></th>
+              <th><%= t('admin.vp.th_len','Panjang Kode') %></th>
+              <th><%= t('admin.vp.th_chars','Karakter') %></th>
               <th><%= t('common.status','Status') %></th>
               <th><%= t('common.actions','Aksi') %></th>
             </tr>
           </thead>
           <tbody id="packages-list">
-            <tr><td colspan="9" class="text-center text-muted">Memuat data paket...</td></tr>
+            <tr><td colspan="9" class="text-center text-muted"><%= t('admin.vp.loading','Memuat data paket...') %></td></tr>
           </tbody>
         </table>
       </div>
@@ -82,7 +82,7 @@
 <div class="mo" id="packageModal">
   <div class="mb" style="max-width: 600px;">
     <div class="mh">
-      <span class="mt" id="modalTitle">Konfigurasi Paket</span>
+      <span class="mt" id="modalTitle"><%= t('admin.vp.config','Konfigurasi Paket') %></span>
       <button class="mc" onclick="closeModal('packageModal')">&times;</button>
     </div>
     <form id="packageForm" onsubmit="savePackage(event)">
@@ -90,53 +90,53 @@
       <div class="mbody">
         
         <div class="fg">
-          <label class="fl">Pilih Router MikroTik <span class="text-danger">*</span></label>
+          <label class="fl"><%= t('admin.vp.pick_router','Pilih Router MikroTik') %> <span class="text-danger">*</span></label>
           <select class="fc" id="form_router_id" required onchange="loadMikrotikProfiles()">
-            <option value="">-- Pilih Router --</option>
+            <option value=""><%= t('admin.vp.opt_router','-- Pilih Router --') %></option>
             <% routers.forEach(r => { %>
               <option value="<%= r.id %>"><%= r.name %></option>
             <% }) %>
           </select>
-          <small class="text-muted d-block mt-1">Router harus dipilih untuk paket voucher</small>
+          <small class="text-muted d-block mt-1"><%= t('admin.vp.router_req','Router harus dipilih untuk paket voucher') %></small>
         </div>
 
         <div class="fg">
           <label class="fl">Hotspot User Profile *</label>
           <div style="display:flex;gap:8px">
             <select class="fs" id="form_profile_select" style="max-width:220px" onchange="document.getElementById('form_profile_name').value=this.value; onProfileSelected();">
-              <option value="">-- Pilih dari MikroTik --</option>
+              <option value=""><%= t('admin.vp.opt_from_mt','-- Pilih dari MikroTik --') %></option>
             </select>
-            <input class="fc" id="form_profile_name" required placeholder="Ketik nama profile manual...">
+            <input class="fc" id="form_profile_name" required placeholder="<%= t('admin.vp.ph_profile','Ketik nama profile manual...') %>">
           </div>
-          <div class="hint" id="profileHint">Pilih router & profil untuk membaca durasi bawaan atau ketik manual jika MikroTik offline.</div>
+          <div class="hint" id="profileHint"><%= t('admin.vp.profile_hint','Pilih router & profil untuk membaca durasi bawaan atau ketik manual jika MikroTik offline.') %></div>
         </div>
 
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Harga Jual (Rp) *</label>
-            <input class="fc" id="form_price" type="number" min="500" required placeholder="Contoh: 5000">
+            <label class="fl"><%= t('admin.vp.price','Harga Jual (Rp) *') %></label>
+            <input class="fc" id="form_price" type="number" min="500" required placeholder="<%= t('admin.vp.ph_price','Contoh: 5000') %>">
           </div>
           <div class="fg">
-            <label class="fl">Durasi / Masa Aktif *</label>
-            <input class="fc" id="form_validity" required placeholder="Contoh: 1d, 12h, 3h">
-            <div class="hint">Format Mikhmon (misal: 1d = 1 hari, 12h = 12 jam)</div>
+            <label class="fl"><%= t('admin.vp.validity','Durasi / Masa Aktif *') %></label>
+            <input class="fc" id="form_validity" required placeholder="<%= t('admin.vp.ph_validity','Contoh: 1d, 12h, 3h') %>">
+            <div class="hint"><%= t('admin.vp.validity_hint','Format Mikhmon (misal: 1d = 1 hari, 12h = 12 jam)') %></div>
           </div>
         </div>
 
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Prefix Kode Voucher</label>
-            <input class="fc" id="form_prefix" placeholder="Opsional (misal: ALI-)">
+            <label class="fl"><%= t('admin.vp.prefix','Prefix Kode Voucher') %></label>
+            <input class="fc" id="form_prefix" placeholder="<%= t('admin.vp.ph_prefix','Opsional (misal: ALI-)') %>">
           </div>
           <div class="fg">
-            <label class="fl">Panjang Kode (Jumlah Digit) *</label>
+            <label class="fl"><%= t('admin.vp.code_len','Panjang Kode (Jumlah Digit) *') %></label>
             <input class="fc" id="form_code_length" type="number" min="4" max="16" value="6" required>
           </div>
         </div>
 
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Tipe Karakter Kode *</label>
+            <label class="fl"><%= t('admin.vp.char_type','Tipe Karakter Kode *') %></label>
             <select class="fc" id="form_charset" required>
               <option value="numbers">Hanya Angka (0-9)</option>
               <option value="letters">Hanya Huruf Kecil (a-z)</option>
@@ -231,7 +231,7 @@
       }
       cachedMikrotikProfiles = Array.isArray(data) ? data : [];
       
-      profileSelect.innerHTML = '<option value="">-- Pilih dari MikroTik --</option>';
+      profileSelect.innerHTML = '<option value=""><%= t('admin.vp.opt_from_mt','-- Pilih dari MikroTik --') %></option>';
       cachedMikrotikProfiles.forEach(p => {
         profileSelect.insertAdjacentHTML('beforeend', `<option value="${p.name}">${p.name}</option>`);
       });
@@ -290,7 +290,7 @@
     const p = currentPackages[idx];
     if (!p) return;
     
-    document.getElementById('modalTitle').innerText = 'Edit Konfigurasi Paket';
+    document.getElementById('modalTitle').innerText = 'Edit <%= t('admin.vp.config','Konfigurasi Paket') %>';
     document.getElementById('packageId').value = p.id;
     document.getElementById('form_router_id').value = p.router_id || '';
     

@@ -2,7 +2,7 @@
 <html lang="<%= lang || 'id' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Kas Masuk | <%= company %></title>
+  <title><%= t('admin.cashin.title','Kas Masuk') %> | <%= company %></title>
   <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
   <style>
@@ -16,11 +16,11 @@
 <%- include('../partials/sidebar', { activePage: 'cash_in', company }) %>
 <div class="mw">
   <div class="topbar">
-    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-cash-stack"></i> Kas Masuk (Lain-lain)</div>
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-cash-stack"></i> <%= t('admin.cashin.heading','Kas Masuk (Lain-lain)') %></div>
     <div class="tb-right">
       <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
       <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
-      <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> Tambah Kas Masuk</button>
+      <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.cashin.add','Tambah Kas Masuk') %></button>
     </div>
   </div>
   <div class="page">
@@ -42,14 +42,14 @@
       <div class="val-box">
         <div class="val-icon" style="background:rgba(16, 185, 129, 0.1);color:#10b981"><i class="bi bi-graph-up-arrow"></i></div>
         <div>
-          <div class="val-text">Kas Masuk Bulan Ini</div>
+          <div class="val-text"><%= t('admin.cashin.month','Kas Masuk Bulan Ini') %></div>
           <div class="val-num">Rp <%= totalThisMonth.toLocaleString('id-ID') %></div>
         </div>
       </div>
       <div class="val-box">
         <div class="val-icon" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6"><i class="bi bi-piggy-bank-fill"></i></div>
         <div>
-          <div class="val-text">Total Kas Masuk (Lainnya)</div>
+          <div class="val-text"><%= t('admin.cashin.total','Total Kas Masuk (Lainnya)') %></div>
           <div class="val-num">Rp <%= totalAll.toLocaleString('id-ID') %></div>
         </div>
       </div>
@@ -57,7 +57,7 @@
 
     <!-- Table -->
     <div class="card">
-      <div class="card-hd"><h6><i class="bi bi-list-ul"></i> Riwayat Kas Masuk</h6></div>
+      <div class="card-hd"><h6><i class="bi bi-list-ul"></i> <%= t('admin.cashin.history','Riwayat Kas Masuk') %></h6></div>
       <div class="tbl-wrap">
         <table class="dtbl">
           <thead>
@@ -65,9 +65,9 @@
               <th><%= t('common.date','Tanggal') %></th>
               <th><%= t('common.category','Kategori') %></th>
               <th><%= t('common.desc_note','Deskripsi / Catatan') %></th>
-              <th>Metode</th>
+              <th><%= t('admin.cashin.th_method','Metode') %></th>
               <th class="num"><%= t('common.amount_qty','Jumlah') %></th>
-              <th>Pencatat</th>
+              <th><%= t('admin.cashin.th_recorder','Pencatat') %></th>
               <th><%= t('common.actions','Aksi') %></th>
             </tr>
           </thead>
@@ -105,7 +105,7 @@
 <!-- Modal Add -->
 <div class="mo" id="addModal">
   <div class="mb">
-    <div class="mh"><span class="mt"><i class="bi bi-plus-circle"></i> Catat Kas Masuk</span><button type="button" class="mc" onclick="closeModal('addModal')">&times;</button></div>
+    <div class="mh"><span class="mt"><i class="bi bi-plus-circle"></i> <%= t('admin.cashin.modal','Catat Kas Masuk') %></span><button type="button" class="mc" onclick="closeModal('addModal')">&times;</button></div>
     <form method="POST" action="/admin/finance/cash-in">
       <div class="mbody">
         <div class="form-row">
@@ -114,41 +114,41 @@
             <input type="date" class="fc" name="date" required value="<%= getNowLocal().substring(0,10) %>" max="<%= getNowLocal().substring(0,10) %>">
           </div>
           <div class="fg">
-            <label class="fl">Sumber / Kategori <span class="text-danger">*</span></label>
+            <label class="fl"><%= t('admin.cashin.source','Sumber / Kategori') %> <span class="text-danger">*</span></label>
             <select class="fc" name="category" required>
-              <option value="Modal Usaha">Modal Usaha / Suntikan Dana</option>
-              <option value="Penjualan Aset">Penjualan Aset/Barang Bekas</option>
-              <option value="Jasa Lainnya">Pendapatan Jasa Lainnya</option>
-              <option value="Lain-lain">Lain-lain</option>
+              <option value="Modal Usaha"><%= t('admin.cashin.opt_modal','Modal Usaha / Suntikan Dana') %></option>
+              <option value="Penjualan Aset"><%= t('admin.cashin.opt_asset','Penjualan Aset/Barang Bekas') %></option>
+              <option value="Jasa Lainnya"><%= t('admin.cashin.opt_service','Pendapatan Jasa Lainnya') %></option>
+              <option value="<%= t('admin.cashin.opt_other','Lain-lain') %>"><%= t('admin.cashin.opt_other','Lain-lain') %></option>
             </select>
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Jumlah / Nominal (Rp) <span class="text-danger">*</span></label>
+          <label class="fl"><%= t('admin.cashin.amount','Jumlah / Nominal (Rp)') %> <span class="text-danger">*</span></label>
           <input type="text" class="fc" name="amount" id="amountInput" required placeholder="Contoh: 500.000" style="font-size:16px;font-weight:bold" autocomplete="off">
         </div>
         <div class="fg">
           <label class="fl"><%= t('common.desc_note2','Deskripsi / Keterangan') %> <span class="text-danger">*</span></label>
-          <textarea class="fc" name="description" required placeholder="Suntikan modal dari owner..."></textarea>
+          <textarea class="fc" name="description" required placeholder="<%= t('admin.cashin.ph_desc','Suntikan modal dari owner...') %>"></textarea>
         </div>
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Metode Penerimaan</label>
+            <label class="fl"><%= t('admin.cashin.method','Metode Penerimaan') %></label>
             <select class="fc" name="payment_method">
-              <option value="cash">Tunai (Cash)</option>
-              <option value="transfer">Transfer Bank</option>
-              <option value="ewallet">E-Wallet (OVO/Dana/Gopay)</option>
+              <option value="cash"><%= t('admin.cashin.pay_cash','Tunai (Cash)') %></option>
+              <option value="transfer"><%= t('admin.cashin.pay_transfer','Transfer Bank') %></option>
+              <option value="ewallet"><%= t('admin.cashin.pay_ewallet','E-Wallet (OVO/Dana/Gopay)') %></option>
             </select>
           </div>
           <div class="fg">
-            <label class="fl">No. Referensi (Opsional)</label>
-            <input type="text" class="fc" name="receipt_number" placeholder="Bisa dikosongkan">
+            <label class="fl"><%= t('admin.cashin.ref','No. Referensi (Opsional)') %></label>
+            <input type="text" class="fc" name="receipt_number" placeholder="<%= t('admin.cashin.ph_ref','Bisa dikosongkan') %>">
           </div>
         </div>
       </div>
       <div class="mf">
         <button type="button" class="btn btn-g" onclick="closeModal('addModal')"><%= t('common.cancel','Batal') %></button>
-        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pemasukan</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> <%= t('admin.cashin.save','Simpan Pemasukan') %></button>
       </div>
     </form>
   </div>

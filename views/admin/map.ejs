@@ -653,7 +653,7 @@
       <span><%= title %></span>
     </div>
     <div class="tb-right">
-      <button class="btn btn-g btn-sm" id="mapsToggleBtn" onclick="toggleBillingMaps()"><i class="bi bi-map"></i> <span id="mapsToggleTxt">SEE MAPS</span></button>
+      <button class="btn btn-g btn-sm" id="mapsToggleBtn" onclick="toggleBillingMaps()"><i class="bi bi-map"></i> <span id="mapsToggleTxt"><%= t('admin.map.see_maps','LIHAT PETA') %></span></button>
       <button class="btn btn-p btn-sm" onclick="if(typeof openModal==='function'){openModal('addOdpModal')}else{toggleBillingMaps()}"><i class="bi bi-plus-circle"></i> <%= t('admin.map.add_odp', 'Tambah ODP') %></button>
     </div>
   </div>
@@ -676,30 +676,30 @@
         <div class="msc-icon msc-s"><i class="bi bi-router-fill"></i></div>
         <div class="msc-info">
           <div class="val"><%= customers.filter(c => c.status === 'active' && c.lat && c.lng).length %></div>
-          <div class="lbl">ONU Aktif (Peta)</div>
+          <div class="lbl"><%= t('admin.map.onu_active','ONU Aktif (Peta)') %></div>
         </div>
       </div>
       <div class="msc">
         <div class="msc-icon msc-d"><i class="bi bi-exclamation-triangle-fill"></i></div>
         <div class="msc-info">
           <div class="val"><%= customers.filter(c => c.status !== 'active' && c.lat && c.lng).length %></div>
-          <div class="lbl">ONU Isolir (Peta)</div>
+          <div class="lbl"><%= t('admin.map.onu_isolir','ONU Isolir (Peta)') %></div>
         </div>
       </div>
       <div class="msc">
         <div class="msc-icon msc-p"><i class="bi bi-geo-alt-fill"></i></div>
         <div class="msc-info">
           <div class="val"><%= customers.filter(c => !c.lat || !c.lng).length %></div>
-          <div class="lbl">Tanpa GPS</div>
+          <div class="lbl"><%= t('admin.map.no_gps','Tanpa GPS') %></div>
         </div>
       </div>
     </div>
 
     <div id="mapsPlaceholder" class="maps-placeholder">
       <i class="bi bi-map"></i>
-      <div class="maps-ph-title">Peta belum dimuat</div>
-      <div class="maps-ph-sub">Klik <b>SEE MAPS</b> untuk memuat peta &amp; daftar pelanggan/ODP (hemat resource).</div>
-      <button type="button" class="btn btn-p" onclick="toggleBillingMaps()"><i class="bi bi-eye"></i> SEE MAPS</button>
+      <div class="maps-ph-title"><%= t('admin.map.not_loaded','Peta belum dimuat') %></div>
+      <div class="maps-ph-sub"><%- t('admin.map.not_loaded_sub','Klik <b>SEE MAPS</b> untuk memuat peta &amp; daftar pelanggan/ODP (hemat resource).') %></div>
+      <button type="button" class="btn btn-p" onclick="toggleBillingMaps()"><i class="bi bi-eye"></i> <%= t('admin.map.see_maps','LIHAT PETA') %></button>
     </div>
 
     <div id="mapsContent" style="display:none">
@@ -711,15 +711,15 @@
           id="mapGlobalSearch" 
           class="map-search-input" 
           type="text" 
-          placeholder="Cari nama pelanggan, PPPoE, No HP, SN ONU, alamat, ODP..."
+          placeholder="<%= t('admin.map.ph_search','Cari nama pelanggan, PPPoE, No HP, SN ONU, alamat, ODP...') %>"
           autocomplete="off"
         >
-        <button id="mapSearchClearBtn" class="map-search-clear" onclick="clearMapSearch()" title="Hapus pencarian">&times;</button>
+        <button id="mapSearchClearBtn" class="map-search-clear" onclick="clearMapSearch()" title="<%= t('admin.map.clear_search','Hapus pencarian') %>">&times;</button>
         
         <!-- Auto-Suggest Dropdown Results -->
         <div id="mapSearchDropdown" class="map-search-dropdown">
           <div class="ms-header">
-            <span id="msHeaderCount">Hasil Pencarian</span>
+            <span id="msHeaderCount"><%= t('admin.map.search_result','Hasil Pencarian') %></span>
             <span><kbd style="background:#e2e8f0; padding:1px 4px; border-radius:4px; font-size:10px;">ESC</kbd> tutup</span>
           </div>
           <div id="msResultsList"></div>
@@ -728,26 +728,26 @@
 
       <!-- Quick Filter Pills -->
       <div class="map-filter-group">
-        <button type="button" class="map-pill-btn active" id="pillAll" onclick="applyStatusFilter('all')" title="Tampilkan semua marker">
+        <button type="button" class="map-pill-btn active" id="pillAll" onclick="applyStatusFilter('all')" title="<%= t('admin.map.tip_all','Tampilkan semua marker') %>">
           <i class="bi bi-grid-fill"></i> <%= t('collector.filter_all','Semua') %>
         </button>
-        <button type="button" class="map-pill-btn" id="pillActive" onclick="applyStatusFilter('active')" title="Hanya ONU aktif">
+        <button type="button" class="map-pill-btn" id="pillActive" onclick="applyStatusFilter('active')" title="<%= t('admin.map.tip_active','Hanya ONU aktif') %>">
           <i class="bi bi-check-circle-fill text-success"></i> Aktif (<%= customers.filter(c => c.status === 'active' && c.lat && c.lng).length %>)
         </button>
-        <button type="button" class="map-pill-btn" id="pillSuspended" onclick="applyStatusFilter('suspended')" title="Hanya ONU isolir">
+        <button type="button" class="map-pill-btn" id="pillSuspended" onclick="applyStatusFilter('suspended')" title="<%= t('admin.map.tip_isolir','Hanya ONU isolir') %>">
           <i class="bi bi-x-circle-fill text-danger"></i> Isolir (<%= customers.filter(c => c.status !== 'active' && c.lat && c.lng).length %>)
         </button>
-        <button type="button" class="map-pill-btn active" id="pillLabels" onclick="toggleMarkerLabels()" title="Sembunyikan/Tampilkan label nama di marker">
-          <i class="bi bi-tag-fill text-primary"></i> <span id="labelToggleText">Label: ON</span>
+        <button type="button" class="map-pill-btn active" id="pillLabels" onclick="toggleMarkerLabels()" title="<%= t('admin.map.tip_labels','Sembunyikan/Tampilkan label nama di marker') %>">
+          <i class="bi bi-tag-fill text-primary"></i> <span id="labelToggleText"><%= t('admin.map.label_on','Label: ON') %></span>
         </button>
-        <button type="button" class="map-pill-btn" onclick="fitAllMarkers()" title="Pusatkan peta ke semua titik">
+        <button type="button" class="map-pill-btn" onclick="fitAllMarkers()" title="<%= t('admin.map.tip_fit','Pusatkan peta ke semua titik') %>">
           <i class="bi bi-arrows-fullscreen"></i> Fit Peta
         </button>
         <select id="baseMapSelect" class="map-pill-btn" style="padding:6px 8px" onchange="switchBaseMap(this.value)" title="Pilih peta dasar">
-          <option value="hybrid" selected>Satelit (Hybrid)</option>
-          <option value="sat">Satelit (Bersih)</option>
+          <option value="hybrid" selected><%= t('admin.map.opt_hybrid','Satelit (Hybrid)') %></option>
+          <option value="sat"><%= t('admin.map.opt_sat','Satelit (Bersih)') %></option>
           <option value="osm">OpenStreetMap</option>
-          <option value="dark">Gelap (Dark)</option>
+          <option value="dark"><%= t('admin.map.opt_dark','Gelap (Dark)') %></option>
         </select>
       </div>
     </div>
@@ -760,12 +760,12 @@
       <div class="data-tabs-nav">
         <button type="button" class="tab-btn active" onclick="switchDataTab('onu-tab', this)">
           <i class="bi bi-router-fill"></i>
-          <span>Daftar ONU Pelanggan</span>
+          <span><%= t('admin.map.list_onu','Daftar ONU Pelanggan') %></span>
           <span class="tab-badge"><%= customers.length %></span>
         </button>
         <button type="button" class="tab-btn" onclick="switchDataTab('odp-tab', this)">
           <i class="bi bi-box-seam-fill"></i>
-          <span>Daftar ODP (Box)</span>
+          <span><%= t('admin.map.list_odp','Daftar ODP (Box)') %></span>
           <span class="tab-badge"><%= odps.length %></span>
         </button>
       </div>
@@ -779,16 +779,16 @@
               class="table-search-input" 
               style="width: 100%;"
               type="text" 
-              placeholder="Filter nama, PPPoE, HP, SN/Tag..."
+              placeholder="<%= t('admin.map.ph_filter','Filter nama, PPPoE, HP, SN/Tag...') %>"
             >
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
             <select id="customerGpsFilter" class="table-search-input" style="min-width: 160px;" onchange="filterCustomerTable()">
-              <option value="all">Semua Status GPS</option>
+              <option value="all"><%= t('admin.map.all_gps','Semua Status GPS') %></option>
               <option value="has_gps">Hanya Memiliki GPS (<%= customers.filter(c => c.lat && c.lng).length %>)</option>
-              <option value="no_gps">Tanpa Koordinat GPS (<%= customers.filter(c => !c.lat || !c.lng).length %>)</option>
-              <option value="active">Hanya Aktif</option>
-              <option value="suspended">Hanya Isolir</option>
+              <option value="no_gps">Tanpa <%= t('admin.map.th_gps','Koordinat GPS') %> (<%= customers.filter(c => !c.lat || !c.lng).length %>)</option>
+              <option value="active"><%= t('admin.map.only_active','Hanya Aktif') %></option>
+              <option value="suspended"><%= t('admin.map.only_isolir','Hanya Isolir') %></option>
             </select>
           </div>
         </div>
@@ -798,10 +798,10 @@
             <thead>
               <tr>
                 <th><%= t('common.customer','Pelanggan') %></th>
-                <th>PPPoE / Tag ONU</th>
+                <th><%= t('admin.map.th_pppoe','PPPoE / Tag ONU') %></th>
                 <th><%= t('common.status','Status') %></th>
-                <th>Paket & ODP</th>
-                <th>Koordinat GPS</th>
+                <th><%= t('admin.map.th_pkg_odp','Paket & ODP') %></th>
+                <th><%= t('admin.map.th_gps','Koordinat GPS') %></th>
                 <th style="text-align: right; width: 140px;"><%= t('common.actions','Aksi') %></th>
               </tr>
             </thead>
@@ -813,7 +813,7 @@
       <!-- TAB 2: DAFTAR ODP -->
       <div id="odp-tab" class="tab-content">
         <div class="panel-filter-bar">
-          <input id="odpSearch" class="table-search-input" type="text" placeholder="Cari ODP (nama / deskripsi)...">
+          <input id="odpSearch" class="table-search-input" type="text" placeholder="<%= t('admin.map.ph_odp','Cari ODP (nama / deskripsi)...') %>">
           <button type="button" class="btn btn-p btn-sm" onclick="openModal('addOdpModal')"><i class="bi bi-plus-circle"></i> Tambah ODP</button>
         </div>
         <div class="table-wrap">
@@ -932,7 +932,7 @@
 <script id="customers-data" type="application/json"><%- JSON.stringify(customers).replace(/<\/script/g, '<\\/script').replace(/<!--/g, '<\\!--') %></script>
 <script id="odps-data" type="application/json"><%- JSON.stringify(odps).replace(/<\/script/g, '<\\/script').replace(/<!--/g, '<\\!--') %></script>
 
-<!-- Bootstrap lazy-load peta (SEE MAPS / CLOSE MAPS) -->
+<!-- Bootstrap lazy-load peta (<%= t('admin.map.see_maps','LIHAT PETA') %> / CLOSE MAPS) -->
 <script>
   window.__billingMapLoaded = false;
   function loadMapScript() {
@@ -953,7 +953,7 @@
     if (showing) {
       content.style.display = 'none';
       if (ph) ph.style.display = '';
-      if (txt) txt.textContent = 'SEE MAPS';
+      if (txt) txt.textContent = '<%= t('admin.map.see_maps','LIHAT PETA') %>';
     } else {
       if (ph) ph.style.display = 'none';
       content.style.display = '';
@@ -1372,7 +1372,7 @@
               <div class="ms-item-info">
                 <div class="ms-item-name">
                   <span>${highlightMatch(c.name, query)}</span>
-                  ${!hasGps ? '<span style="color:#ef4444; font-size:10px; font-weight:700;"><i class="bi bi-exclamation-triangle"></i> Tanpa GPS</span>' : ''}
+                  ${!hasGps ? '<span style="color:#ef4444; font-size:10px; font-weight:700;"><i class="bi bi-exclamation-triangle"></i> <%= t('admin.map.no_gps','Tanpa GPS') %></span>' : ''}
                 </div>
                 <div class="ms-item-meta">
                   ${c.pppoe_username ? `<span>PPPoE: ${highlightMatch(c.pppoe_username, query)}</span> • ` : ''}
@@ -1589,7 +1589,7 @@
     if (showLabels) {
       mapEl.classList.remove('hide-marker-labels');
       btn.classList.add('active');
-      txt.textContent = 'Label: ON';
+      txt.textContent = '<%= t('admin.map.label_on','Label: ON') %>';
     } else {
       mapEl.classList.add('hide-marker-labels');
       btn.classList.remove('active');

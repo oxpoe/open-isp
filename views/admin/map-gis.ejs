@@ -268,7 +268,7 @@
           <input 
             type="text" 
             id="gisSearchInp" 
-            placeholder="Cari ODP, ODC, HTB, Pelanggan..." 
+            placeholder="<%= t('admin.gis.ph_search','Cari ODP, ODC, HTB, Pelanggan...') %>" 
             oninput="handleGisSearch(this.value)"
             class="w-full bg-slate-900/90 border border-slate-700/70 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500 transition"
           >
@@ -294,18 +294,18 @@
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition"
           >
             <i class="bi bi-layers text-sm"></i>
-            <span>Layer Peta</span>
+            <span><%= t('admin.gis.layers','Layer Peta') %></span>
             <i class="bi bi-chevron-down text-xs"></i>
           </button>
 
           <!-- Layer Dropdown Box -->
           <div id="gisLayersMenu" class="hidden absolute left-0 top-full mt-2 w-64 bg-slate-900/98 backdrop-blur-2xl border border-slate-700/90 rounded-xl shadow-[0_25px_60px_rgba(0,0,0,0.95)] p-3.5 z-[1050] space-y-2.5 text-xs max-h-[calc(100vh-200px)] overflow-y-auto ring-1 ring-white/10">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tampilkan Elemen</div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1"><%= t('admin.gis.show_elems','Tampilkan Elemen') %></div>
             
             <label class="flex items-center justify-between cursor-pointer py-1">
               <span class="flex items-center gap-2 text-slate-300">
                 <span class="w-2.5 h-2.5 rounded bg-blue-500"></span>
-                <span>Server & OLT</span>
+                <span><%= t('admin.gis.el_server','Server & OLT') %></span>
               </span>
               <input type="checkbox" id="chkLayerServer" checked onchange="toggleLayerVisibility('server')" class="rounded border-slate-700 text-blue-500 focus:ring-0">
             </label>
@@ -313,7 +313,7 @@
             <label class="flex items-center justify-between cursor-pointer py-1">
               <span class="flex items-center gap-2 text-slate-300">
                 <span class="w-2.5 h-2.5 rounded bg-amber-500"></span>
-                <span>ODC Feeder Hub</span>
+                <span><%= t('admin.gis.el_odc','ODC Feeder Hub') %></span>
               </span>
               <input type="checkbox" id="chkLayerOdc" checked onchange="toggleLayerVisibility('odc')" class="rounded border-slate-700 text-amber-500 focus:ring-0">
             </label>
@@ -321,7 +321,7 @@
             <label class="flex items-center justify-between cursor-pointer py-1">
               <span class="flex items-center gap-2 text-slate-300">
                 <span class="w-2.5 h-2.5 rounded bg-emerald-500"></span>
-                <span>ODP Distribusi</span>
+                <span><%= t('admin.gis.el_odp','ODP Distribusi') %></span>
               </span>
               <input type="checkbox" id="chkLayerOdp" checked onchange="toggleLayerVisibility('odp')" class="rounded border-slate-700 text-emerald-500 focus:ring-0">
             </label>
@@ -329,7 +329,7 @@
             <label class="flex items-center justify-between cursor-pointer py-1">
               <span class="flex items-center gap-2 text-slate-300">
                 <span class="w-2.5 h-2.5 rounded bg-fuchsia-500"></span>
-                <span>HTB Media Converter</span>
+                <span><%= t('admin.gis.el_htb','HTB Media Converter') %></span>
               </span>
               <input type="checkbox" id="chkLayerHtb" checked onchange="toggleLayerVisibility('htb')" class="rounded border-slate-700 text-fuchsia-500 focus:ring-0">
             </label>
@@ -346,7 +346,7 @@
               <label class="flex items-center justify-between cursor-pointer py-1">
                 <span class="flex items-center gap-2 text-slate-300">
                   <span class="w-3 h-0.5 bg-emerald-400"></span>
-                  <span>Jalur Kabel Fiber</span>
+                  <span><%= t('admin.gis.el_fiber','Jalur Kabel Fiber') %></span>
                 </span>
                 <input type="checkbox" id="chkLayerCables" checked onchange="toggleLayerVisibility('cables')" class="rounded border-slate-700 text-emerald-500 focus:ring-0">
               </label>
@@ -354,7 +354,7 @@
               <label class="flex items-center justify-between cursor-pointer py-1">
                 <span class="flex items-center gap-2 text-slate-300">
                   <span class="w-2.5 h-2.5 rounded-full border border-sky-400"></span>
-                  <span>Radius Sinyal (150m)</span>
+                  <span><%= t('admin.gis.el_radius','Radius Sinyal (150m)') %></span>
                 </span>
                 <input type="checkbox" id="chkLayerRadius" onchange="toggleLayerVisibility('radius')" class="rounded border-slate-700 text-sky-500 focus:ring-0">
               </label>
@@ -368,15 +368,15 @@
           onclick="toggleRulerTool()" 
           id="btnRulerTool"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition"
-          title="Ukur Jarak Kabel Fiber di Peta"
+          title="<%= t('admin.gis.tip_ruler','Ukur Jarak Kabel Fiber di Peta') %>"
         >
           <i class="bi bi-rulers text-sm"></i>
-          <span>Ukur Jarak</span>
+          <span><%= t('admin.gis.ruler','Ukur Jarak') %></span>
         </button>
 
       </div>
 
-      <!-- Right: Mode Switcher & Navigation to Workflow Map -->
+      <!-- Right: Mode Switcher & Navigation to <%= t('admin.gis.workflow','Workflow Map') %> -->
       <div class="flex items-center gap-2 flex-wrap">
         
         <!-- Recenter Map Button -->
@@ -384,19 +384,19 @@
           type="button" 
           onclick="resetMapCenter()" 
           class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/80 text-slate-300 flex items-center justify-center transition"
-          title="Pusatkan Peta ke Jaringan"
+          title="<%= t('admin.gis.tip_center','Pusatkan Peta ke Jaringan') %>"
         >
           <i class="bi bi-crosshair text-sm"></i>
         </button>
 
-        <!-- Switch to Visual Workflow Map -->
+        <!-- Switch to Visual <%= t('admin.gis.workflow','Workflow Map') %> -->
         <a 
           href="/admin/map" 
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600/20 border border-sky-500/30 hover:bg-sky-600/30 text-sky-300 text-xs font-semibold shadow-sm transition"
-          title="Buka Visual Workflow Mapping (n8n Style)"
+          title="<%= t('admin.gis.tip_workflow','Buka Visual Workflow Mapping (n8n Style)') %>"
         >
           <i class="bi bi-diagram-3 text-sm"></i>
-          <span>Workflow Map</span>
+          <span><%= t('admin.gis.workflow','Workflow Map') %></span>
         </a>
 
       </div>
@@ -412,7 +412,7 @@
           id="btnModeVector"
           onclick="setGisVisualMode('vector')" 
           class="gis-mode-pill-btn active"
-          title="Mode Vektor Gelap Berkontras Tinggi"
+          title="<%= t('admin.gis.tip_dark','Mode Vektor Gelap Berkontras Tinggi') %>"
         >
           Vector Mode
         </button>
@@ -421,7 +421,7 @@
           id="btnModeClean"
           onclick="setGisVisualMode('clean')" 
           class="gis-mode-pill-btn"
-          title="Mode Bersih Jalan & Bangunan Minimalis"
+          title="<%= t('admin.gis.tip_clean','Mode Bersih Jalan & Bangunan Minimalis') %>"
         >
           Clean Mode
         </button>
@@ -430,7 +430,7 @@
           id="btnModeFull"
           onclick="setGisVisualMode('full')" 
           class="gis-mode-pill-btn"
-          title="Mode Satelit Citra Udara Resolusi Tinggi"
+          title="<%= t('admin.gis.tip_sat','Mode Satelit Citra Udara Resolusi Tinggi') %>"
         >
           Full Satelit
         </button>
@@ -441,15 +441,15 @@
         <div class="flex items-center justify-between gap-3">
           <div class="font-bold text-sky-300 flex items-center gap-1.5">
             <i class="bi bi-rulers text-sm"></i>
-            <span>Pengukur Panjang Kabel</span>
+            <span><%= t('admin.gis.ruler_title','Pengukur Panjang Kabel') %></span>
           </div>
           <button type="button" onclick="clearMeasurement()" class="text-slate-400 hover:text-white text-xs">
             Reset
           </button>
         </div>
-        <div class="text-[11px] text-slate-300">Klik titik di peta untuk mengukur rute kabel optik.</div>
+        <div class="text-[11px] text-slate-300"><%= t('admin.gis.ruler_desc','Klik titik di peta untuk mengukur rute kabel optik.') %></div>
         <div class="pt-1 flex items-baseline gap-2">
-          <span class="text-slate-400">Total Panjang:</span>
+          <span class="text-slate-400"><%= t('admin.gis.total_length','Total Panjang:') %></span>
           <span id="rulerDistanceText" class="font-mono font-bold text-sm text-emerald-400">0 m</span>
         </div>
       </div>
@@ -458,7 +458,7 @@
       <div class="absolute bottom-4 right-4 z-[1000] hidden md:flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700/80 text-xs shadow-2xl text-slate-300">
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded bg-blue-500"></span>
-          <span>Server / OLT</span>
+          <span><%= t('admin.gis.legend_server','Server / OLT') %></span>
         </div>
         <div class="flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded bg-amber-500"></span>
@@ -697,7 +697,7 @@
 
       const m = L.marker([lat, lng], { icon: icon }).addTo(groupOdc);
       m.bindPopup(buildNodePopupHtml({
-        type: isCascade ? 'ODC Cascade Feeder' : 'ODC Feeder Hub',
+        type: isCascade ? 'ODC Cascade Feeder' : '<%= t('admin.gis.el_odc','ODC Feeder Hub') %>',
         title: odc.name,
         subtitle: `Kapasitas: ${odc.port_capacity || 4} Tray Out • PON ${odc.pon_port || 1}`,
         status: 'online',
@@ -768,7 +768,7 @@
 
         const m = L.marker([lat, lng], { icon: icon }).addTo(groupHtb);
         m.bindPopup(buildNodePopupHtml({
-          type: 'HTB Media Converter (P2P 1:1)',
+          type: '<%= t('admin.gis.el_htb','HTB Media Converter') %> (P2P 1:1)',
           title: odp.name,
           subtitle: `P2P Target: ${targetCust?.name || 'Belum Ada'}`,
           status: odpStatus,
@@ -820,7 +820,7 @@
 
         const m = L.marker([lat, lng], { icon: icon }).addTo(groupOdp);
         m.bindPopup(buildNodePopupHtml({
-          type: isCascade ? 'ODP Cascade' : 'ODP Distribusi',
+          type: isCascade ? 'ODP Cascade' : '<%= t('admin.gis.el_odp','ODP Distribusi') %>',
           title: odp.name,
           subtitle: `Port: ${totalCust}/${capacity} (${activeCust} Aktif)`,
           status: odpStatus,
@@ -972,7 +972,7 @@
         <div class="text-[11px] text-slate-300">${d.subtitle}</div>
 
         <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800 text-[10px] font-mono text-slate-400 flex items-center justify-between">
-          <span>Koordinat:</span>
+          <span><%= t('admin.gis.coord','Koordinat:') %></span>
           <span class="text-white">${d.lat ? d.lat.toFixed(6) : '-'}, ${d.lng ? d.lng.toFixed(6) : '-'}</span>
         </div>
 

@@ -2,7 +2,7 @@
 <html lang="<%= lang || 'id' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Pengeluaran | <%= company %></title>
+  <title><%= t('admin.exp.title','Pengeluaran') %> | <%= company %></title>
   <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
   <style>
@@ -17,11 +17,11 @@
 <%- include('../partials/sidebar', { activePage: 'expenses', company }) %>
 <div class="mw">
   <div class="topbar">
-    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-wallet2"></i> Pengeluaran (Cash Out)</div>
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-wallet2"></i> <%= t('admin.exp.heading','Pengeluaran (Cash Out)') %></div>
     <div class="tb-right">
       <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
       <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
-      <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> Catat Pengeluaran</button>
+      <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.exp.add','Catat Pengeluaran') %></button>
     </div>
   </div>
   <div class="page">
@@ -39,14 +39,14 @@
       <div class="val-box">
         <div class="val-icon" style="background:rgba(239, 68, 68, 0.1);color:#ef4444"><i class="bi bi-graph-down-arrow"></i></div>
         <div>
-          <div class="val-text">Pengeluaran Bulan Ini</div>
+          <div class="val-text"><%= t('admin.exp.month','Pengeluaran Bulan Ini') %></div>
           <div class="val-num">Rp <%= totalThisMonth.toLocaleString('id-ID') %></div>
         </div>
       </div>
       <div class="val-box">
         <div class="val-icon" style="background:rgba(99, 102, 241, 0.1);color:#6366f1"><i class="bi bi-wallet-fill"></i></div>
         <div>
-          <div class="val-text">Total Pengeluaran Dicatat</div>
+          <div class="val-text"><%= t('admin.exp.total','Total Pengeluaran Dicatat') %></div>
           <div class="val-num">Rp <%= totalAll.toLocaleString('id-ID') %></div>
         </div>
       </div>
@@ -54,7 +54,7 @@
 
     <!-- Table -->
     <div class="card">
-      <div class="card-hd"><h6><i class="bi bi-list-ul"></i> Riwayat Pengeluaran</h6></div>
+      <div class="card-hd"><h6><i class="bi bi-list-ul"></i> <%= t('admin.exp.history','Riwayat Pengeluaran') %></h6></div>
       <div class="tbl-wrap">
         <table class="dtbl">
           <thead>
@@ -62,10 +62,10 @@
               <th><%= t('common.date','Tanggal') %></th>
               <th><%= t('common.category','Kategori') %></th>
               <th><%= t('common.desc_note','Deskripsi / Catatan') %></th>
-              <th>Vendor/Toko</th>
-              <th>Metode</th>
+              <th><%= t('admin.exp.th_vendor','Vendor/Toko') %></th>
+              <th><%= t('admin.exp.th_method','Metode') %></th>
               <th class="num"><%= t('common.amount_qty','Jumlah') %></th>
-              <th>Pencatat</th>
+              <th><%= t('admin.exp.th_recorder','Pencatat') %></th>
               <th><%= t('common.actions','Aksi') %></th>
             </tr>
           </thead>
@@ -108,18 +108,18 @@
 <!-- Modal Add -->
 <div class="mo" id="addModal">
   <div class="mb">
-    <div class="mh"><span class="mt"><i class="bi bi-plus-circle"></i> Catat Pengeluaran Baru</span><button type="button" class="mc" onclick="closeModal('addModal')">&times;</button></div>
+    <div class="mh"><span class="mt"><i class="bi bi-plus-circle"></i> <%= t('admin.exp.modal','Catat Pengeluaran Baru') %></span><button type="button" class="mc" onclick="closeModal('addModal')">&times;</button></div>
     <form method="POST" action="/admin/finance/expenses">
       <div class="mbody">
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Tanggal Pengeluaran <span class="text-danger">*</span></label>
+            <label class="fl"><%= t('admin.exp.date','Tanggal Pengeluaran') %> <span class="text-danger">*</span></label>
             <input type="date" class="fc" name="date" required value="<%= getNowLocal().substring(0,10) %>" max="<%= getNowLocal().substring(0,10) %>">
           </div>
           <div class="fg">
             <label class="fl"><%= t('common.category','Kategori') %> <span class="text-danger">*</span></label>
             <select class="fc" name="category" required>
-              <option value="">-- Pilih Kategori --</option>
+              <option value=""><%= t('admin.exp.opt_category','-- Pilih Kategori --') %></option>
               <% categories.forEach(c => { %>
                 <option value="<%= c.name %>"><%= c.name %></option>
               <% }) %>
@@ -127,36 +127,36 @@
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Jumlah / Nominal (Rp) <span class="text-danger">*</span></label>
+          <label class="fl"><%= t('admin.exp.amount','Jumlah / Nominal (Rp)') %> <span class="text-danger">*</span></label>
           <input type="text" class="fc" name="amount" id="amountInput" required placeholder="Contoh: 150.000" style="font-size:16px;font-weight:bold" autocomplete="off">
         </div>
         <div class="fg">
           <label class="fl"><%= t('common.desc_note2','Deskripsi / Keterangan') %> <span class="text-danger">*</span></label>
-          <textarea class="fc" name="description" required placeholder="Beli Router Mikrotik RB750Gr3..."></textarea>
+          <textarea class="fc" name="description" required placeholder="<%= t('admin.exp.ph_desc','Beli Router Mikrotik RB750Gr3...') %>"></textarea>
         </div>
         <div class="form-row">
           <div class="fg">
-            <label class="fl">Nama Toko/Vendor (Opsional)</label>
-            <input type="text" class="fc" name="vendor" placeholder="Misal: Tokopedia / Toko Komputer X">
+            <label class="fl"><%= t('admin.exp.vendor','Nama Toko/Vendor (Opsional)') %></label>
+            <input type="text" class="fc" name="vendor" placeholder="<%= t('admin.exp.ph_vendor','Misal: Tokopedia / Toko Komputer X') %>">
           </div>
           <div class="fg">
-            <label class="fl">No. Nota / Kwitansi (Opsional)</label>
+            <label class="fl"><%= t('admin.exp.receipt','No. Nota / Kwitansi (Opsional)') %></label>
             <input type="text" class="fc" name="receipt_number" placeholder="INV-123456">
           </div>
         </div>
         <div class="fg">
-          <label class="fl">Metode Pembayaran</label>
+          <label class="fl"><%= t('admin.exp.method','Metode Pembayaran') %></label>
           <select class="fc" name="payment_method">
-            <option value="cash">Tunai (Cash)</option>
-            <option value="transfer">Transfer Bank</option>
-            <option value="ewallet">E-Wallet (OVO/Dana/Gopay)</option>
-            <option value="credit">Kredit / Paylater</option>
+            <option value="cash"><%= t('admin.exp.pay_cash','Tunai (Cash)') %></option>
+            <option value="transfer"><%= t('admin.exp.pay_transfer','Transfer Bank') %></option>
+            <option value="ewallet"><%= t('admin.exp.pay_ewallet','E-Wallet (OVO/Dana/Gopay)') %></option>
+            <option value="credit"><%= t('admin.exp.pay_credit','Kredit / Paylater') %></option>
           </select>
         </div>
       </div>
       <div class="mf">
         <button type="button" class="btn btn-g" onclick="closeModal('addModal')"><%= t('common.cancel','Batal') %></button>
-        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Pengeluaran</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> <%= t('admin.exp.save','Simpan Pengeluaran') %></button>
       </div>
     </form>
   </div>
