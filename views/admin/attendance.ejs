@@ -131,34 +131,34 @@
     <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="sc p">
         <i class="bi bi-people sc-icon"></i>
-        <div class="sc-label">Total Karyawan</div>
+        <div class="sc-label"><%= t('admin.att.total_staff','Total Karyawan') %></div>
         <div class="sc-val"><%= totalAll %></div>
-        <div class="sc-sub">Hari ini</div>
+        <div class="sc-sub"><%= t('admin.att.today','Hari ini') %></div>
       </div>
       <div class="sc s">
         <i class="bi bi-check-circle sc-icon"></i>
-        <div class="sc-label">Sedang Bekerja</div>
+        <div class="sc-label"><%= t('admin.att.working','Sedang Bekerja') %></div>
         <div class="sc-val"><%= checkedInAll %></div>
         <div class="sc-sub">Check-in</div>
       </div>
       <div class="sc p">
         <i class="bi bi-door-open sc-icon"></i>
-        <div class="sc-label">Sudah Pulang</div>
+        <div class="sc-label"><%= t('admin.att.checked_out','Sudah Pulang') %></div>
         <div class="sc-val"><%= checkedOutAll %></div>
         <div class="sc-sub">Check-out</div>
       </div>
       <div class="sc d">
         <i class="bi bi-clock-history sc-icon"></i>
-        <div class="sc-label">Terlambat</div>
+        <div class="sc-label"><%= t('admin.att.late','Terlambat') %></div>
         <div class="sc-val"><%= lateCheckIns.length %></div>
-        <div class="sc-sub">Setelah 08:30</div>
+        <div class="sc-sub"><%= t('admin.att.after_0830','Setelah 08:30') %></div>
       </div>
     </div>
 
     <!-- Breakdown by Type -->
     <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:16px">
       <div class="sc" style="border-left:3px solid #3b82f6">
-        <div class="sc-label"><i class="bi bi-person-workspace"></i> Teknisi</div>
+        <div class="sc-label"><i class="bi bi-person-workspace"></i> <%= t('admin.att.technician','Teknisi') %></div>
         <div class="sc-val"><%= techStats.total || 0 %></div>
         <div class="sc-sub">
           <span style="color:#22c55e"><%= techStats.checked_in || 0 %> aktif</span> • 
@@ -174,7 +174,7 @@
         </div>
       </div>
       <div class="sc" style="border-left:3px solid #22c55e">
-        <div class="sc-label"><i class="bi bi-cash-coin"></i> Kasir</div>
+        <div class="sc-label"><i class="bi bi-cash-coin"></i> <%= t('admin.att.cashier','Kasir') %></div>
         <div class="sc-val"><%= cashierStats.total || 0 %></div>
         <div class="sc-sub">
           <span style="color:#22c55e"><%= cashierStats.checked_in || 0 %> aktif</span> • 
@@ -195,7 +195,7 @@
     <% if (lateCheckIns.length > 0) { %>
     <div class="card" style="margin-top:20px;border-left:3px solid #ef4444">
       <div class="card-hd">
-        <h6><i class="bi bi-exclamation-triangle"></i> Terlambat Check-in (<%= lateCheckIns.length %>)</h6>
+        <h6><i class="bi bi-exclamation-triangle"></i> <%= t('admin.att.late_checkin','Terlambat Check-in') %> (<%= lateCheckIns.length %>)</h6>
       </div>
       <div class="tbl-wrap">
         <table class="dtbl">
@@ -203,8 +203,8 @@
             <tr>
               <th><%= t('pwa.field.name','Nama') %></th>
               <th><%= t('common.type','Tipe') %></th>
-              <th>Waktu Check-in</th>
-              <th>Terlambat</th>
+              <th><%= t('admin.att.checkin_time','Waktu Check-in') %></th>
+              <th><%= t('admin.att.late','Terlambat') %></th>
             </tr>
           </thead>
           <tbody>
@@ -231,7 +231,7 @@
     <% if (notCheckedOut.length > 0) { %>
     <div class="card" style="margin-top:20px;border-left:3px solid #f59e0b">
       <div class="card-hd">
-        <h6><i class="bi bi-bell"></i> Belum Check-out (<%= notCheckedOut.length %>)</h6>
+        <h6><i class="bi bi-bell"></i> <%= t('admin.att.not_checkout','Belum Check-out') %> (<%= notCheckedOut.length %>)</h6>
       </div>
       <div class="tbl-wrap">
         <table class="dtbl">
@@ -240,7 +240,7 @@
               <th><%= t('pwa.field.name','Nama') %></th>
               <th><%= t('common.type','Tipe') %></th>
               <th>Check-in</th>
-              <th>Durasi</th>
+              <th><%= t('admin.att.duration','Durasi') %></th>
             </tr>
           </thead>
           <tbody>
@@ -267,7 +267,7 @@
     <!-- All Attendance Records -->
     <div class="card" style="margin-top:20px">
       <div class="card-hd">
-        <h6><i class="bi bi-calendar-check"></i> Semua Absensi - <%= parseDateInTimezone(selectedDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></h6>
+        <h6><i class="bi bi-calendar-check"></i> <%= t('admin.att.all_attendance','Semua Absensi') %> - <%= parseDateInTimezone(selectedDate).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></h6>
       </div>
       
       <% if (attendances.length > 0) { %>
@@ -279,10 +279,10 @@
               <th><%= t('common.type','Tipe') %></th>
               <th>Check-in</th>
               <th>Check-out</th>
-              <th>Durasi</th>
+              <th><%= t('admin.att.duration','Durasi') %></th>
               <th><%= t('common.status','Status') %></th>
-              <th>Lokasi</th>
-              <th>Foto</th>
+              <th><%= t('admin.att.location','Lokasi') %></th>
+              <th><%= t('admin.att.photo','Foto') %></th>
               <th><%= t('common.actions','Aksi') %></th>
             </tr>
           </thead>
@@ -336,13 +336,13 @@
                   <div class="photo-stack">
                     <% if (att.check_in_photo) { %>
                       <a href="<%= att.check_in_photo %>" target="_blank" class="photo-item">
-                        <img src="<%= att.check_in_photo %>" alt="Foto check-in" class="photo-thumb">
+                        <img src="<%= att.check_in_photo %>" alt="<%= t('admin.att.photo','Foto') %> check-in" class="photo-thumb">
                         In
                       </a>
                     <% } %>
                     <% if (att.check_out_photo) { %>
                       <a href="<%= att.check_out_photo %>" target="_blank" class="photo-item">
-                        <img src="<%= att.check_out_photo %>" alt="Foto check-out" class="photo-thumb">
+                        <img src="<%= att.check_out_photo %>" alt="<%= t('admin.att.photo','Foto') %> check-out" class="photo-thumb">
                         Out
                       </a>
                     <% } %>
@@ -402,7 +402,7 @@
   }
 
   function editAttendance(id) {
-    const checkIn = prompt('Waktu Check-in (YYYY-MM-DD HH:MM:SS):');
+    const checkIn = prompt('<%= t('admin.att.checkin_time','Waktu Check-in') %> (YYYY-MM-DD HH:MM:SS):');
     if (!checkIn) return;
     
     const checkOut = prompt('Waktu Check-out (YYYY-MM-DD HH:MM:SS) - kosongkan jika belum:');

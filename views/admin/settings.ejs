@@ -315,7 +315,7 @@
             </div>
           </div>
           <div class="hint" style="margin:0 0 10px;padding:12px;border:1px dashed var(--border);border-radius:10px;background:var(--bg2)">
-            <i class="bi bi-robot"></i> <strong>Otomatisasi dipindah:</strong> Auto-Nonaktif, Auto-Hapus, Auto-Peringatan &amp; Auto-Lunas kini tertata di menu <a href="/admin/automation" style="color:var(--primary);font-weight:800">Automation &rarr;</a>
+            <i class="bi bi-robot"></i> <strong>Otomatisasi dipindah:</strong> Auto-Nonaktif, Auto-Hapus, Auto-Peringatan &amp; Auto-<%= t('admin.set.ew_paid','Lunas') %> kini tertata di menu <a href="/admin/automation" style="color:var(--primary);font-weight:800">Automation &rarr;</a>
           </div>
           <div class="hint" style="margin-top:6px;color:var(--warning)">
             <i class="bi bi-info-circle"></i> <strong><%= t('admin.set.colpay_label','Pembayaran Kolektor:') %></strong> <%= t('admin.set.colpay_desc','Pengaturan approval pembayaran kolektor sekarang diatur per akun kolektor pada menu Manajemen Kolektor, bukan dari pengaturan global.') %>
@@ -1031,7 +1031,7 @@ async function loadEwalletLogs() {
     if (!res.ok || !data.ok) throw new Error(data.error || 'Gagal memuat log');
     const rows = Array.isArray(data.rows) ? data.rows : [];
     if (rows.length === 0) {
-      body.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Belum ada data.</td></tr>';
+      body.innerHTML = '<tr><td colspan="7" class="text-center text-muted"><%= t('admin.set.no_data','Belum ada data.') %></td></tr>';
       return;
     }
     const newest = rows[0];
@@ -1056,9 +1056,9 @@ async function loadEwalletLogs() {
       const md = Number(r.matched_donation_order_id || 0) || 0;
       const isMatched = !!(mi || mv || md);
       let statusBadge;
-      if (!parsed) statusBadge = '<span class="ew-badge ew-gray">Bukan transaksi</span>';
-      else if (isMatched) statusBadge = '<span class="ew-badge ew-green">Lunas</span>';
-      else statusBadge = '<span class="ew-badge ew-amber">Belum cocok</span>';
+      if (!parsed) statusBadge = '<span class="ew-badge ew-gray"><%= t('admin.set.ew_not_tx','Bukan transaksi') %></span>';
+      else if (isMatched) statusBadge = '<span class="ew-badge ew-green"><%= t('admin.set.ew_paid','Lunas') %></span>';
+      else statusBadge = '<span class="ew-badge ew-amber"><%= t('admin.set.ew_unmatched','Belum cocok') %></span>';
       const amountHtml = (amountNum == null)
         ? '<span class="muted">—</span>'
         : ('<span class="mono" style="font-weight:800;' + (parsed ? 'color:var(--primary)' : 'color:var(--muted)') + '">Rp ' + amountNum.toLocaleString('id-ID') + '</span>');

@@ -2,7 +2,7 @@
 <html lang="<%= lang || 'id' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Approval Pembayaran Kolektor | <%= company %></title>
+  <title><%= t('admin.cpay.title','Approval Pembayaran Kolektor') %> | <%= company %></title>
   <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
 </head>
@@ -14,7 +14,7 @@
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
       <i class="bi bi-check2-square"></i>
-      <span>Approval Pembayaran Kolektor</span>
+      <span><%= t('admin.cpay.title','Approval Pembayaran Kolektor') %></span>
     </div>
     <div class="tb-right">
       <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? t('admin.role.cashier', 'Kasir') : t('admin.role.admin', 'Admin') %></span>
@@ -31,20 +31,20 @@
 
     <div class="card">
       <div class="card-hd">
-        <h6><i class="bi bi-list-ul"></i> Daftar Request (<%= (rows || []).length %>)</h6>
+        <h6><i class="bi bi-list-ul"></i> <%= t('admin.cpay.list','Daftar Request') %> (<%= (rows || []).length %>)</h6>
       </div>
       <div class="hint" style="padding:12px 16px 0 16px;font-size:12px;color:var(--muted)">
         Label proses membantu membedakan request yang memang menunggu approval, request yang otomatis langsung lunas oleh kolektor, dan request yang sudah diproses admin atau kasir.
       </div>
       <div style="padding:12px 16px 0 16px;display:flex;gap:10px;flex-wrap:wrap">
         <select id="processFilter" class="fs" style="max-width:220px">
-          <option value="all">Semua Proses</option>
-          <option value="pending">Butuh Approval</option>
-          <option value="auto">Auto Kolektor</option>
-          <option value="admin">Disetujui Admin</option>
-          <option value="cashier">Disetujui Kasir</option>
-          <option value="rejected">Ditolak Manual</option>
-          <option value="manual">Diproses Manual</option>
+          <option value="all"><%= t('admin.cpay.opt_all','Semua Proses') %></option>
+          <option value="pending"><%= t('admin.cpay.opt_pending','Butuh Approval') %></option>
+          <option value="auto"><%= t('admin.cpay.opt_auto','Auto Kolektor') %></option>
+          <option value="admin"><%= t('admin.cpay.opt_admin','Disetujui Admin') %></option>
+          <option value="cashier"><%= t('admin.cpay.opt_cashier','Disetujui Kasir') %></option>
+          <option value="rejected"><%= t('admin.cpay.opt_rejected','Ditolak Manual') %></option>
+          <option value="manual"><%= t('admin.cpay.opt_manual','Diproses Manual') %></option>
         </select>
       </div>
       <div class="tbl-wrap">
@@ -54,9 +54,9 @@
               <th><%= t('collector.col_time','Waktu') %></th>
               <th><%= t('collector.role','Kolektor') %></th>
               <th><%= t('common.customer','Pelanggan') %></th>
-              <th>Tagihan</th>
+              <th><%= t('admin.cpay.th_invoice','Tagihan') %></th>
               <th class="num"><%= t('collector.col_amount','Nominal') %></th>
-              <th>Proses</th>
+              <th><%= t('admin.cpay.th_process','Proses') %></th>
               <th><%= t('common.status','Status') %></th>
               <th><%= t('common.actions','Aksi') %></th>
             </tr>
@@ -119,12 +119,12 @@
                         <div class="act-menu" style="min-width:270px">
                           <form method="POST" action="/admin/collector-payments/<%= r.id %>/approve" style="display:flex;gap:6px;padding:4px 4px 6px">
                             <input class="fc" name="decided_note" placeholder="Catatan (opsional)" style="font-size:12px">
-                            <button class="btn btn-s btn-sm" type="submit" title="Approve"><i class="bi bi-check-lg"></i> Setujui</button>
+                            <button class="btn btn-s btn-sm" type="submit" title="Approve"><i class="bi bi-check-lg"></i> <%= t('admin.cpay.approve','Setujui') %></button>
                           </form>
                           <div class="act-sep"></div>
                           <form method="POST" action="/admin/collector-payments/<%= r.id %>/reject" style="display:flex;gap:6px;padding:4px">
                             <input class="fc" name="decided_note" placeholder="Alasan (opsional)" style="font-size:12px">
-                            <button class="btn btn-d btn-sm" type="submit" title="Reject"><i class="bi bi-x-lg"></i> Tolak</button>
+                            <button class="btn btn-d btn-sm" type="submit" title="Reject"><i class="bi bi-x-lg"></i> <%= t('admin.cpay.reject','Tolak') %></button>
                           </form>
                         </div>
                       </div>

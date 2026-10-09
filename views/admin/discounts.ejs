@@ -2,7 +2,7 @@
 <html lang="<%= lang || 'id' %>">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Diskon Tagihan | <%= company %></title>
+  <title><%= t('admin.disc.title','Diskon Tagihan') %> | <%= company %></title>
   <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
   <link rel="stylesheet" href="/css/admin.css">
   <style>
@@ -16,7 +16,7 @@
 <%- include('partials/sidebar', { activePage: 'discounts', company }) %>
 <div class="mw">
   <div class="topbar">
-    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-percent"></i> Diskon Tagihan</div>
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-percent"></i> <%= t('admin.disc.title','Diskon Tagihan') %></div>
     <div class="tb-right">
       <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session.isCashier) ? 'Kasir' : 'Admin' %></span>
       <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i></a>
@@ -33,42 +33,42 @@
     <form method="POST" action="/admin/discounts/apply" id="discForm">
       <!-- Konfigurasi diskon -->
       <div class="card mb16">
-        <div class="card-hd"><h6><i class="bi bi-sliders"></i> Pengaturan Diskon</h6></div>
+        <div class="card-hd"><h6><i class="bi bi-sliders"></i> <%= t('admin.disc.settings_title','Pengaturan Diskon') %></h6></div>
         <div class="card-bd">
           <div class="form-row">
             <div class="fg">
               <label class="fl">Target</label>
               <select class="fs" name="apply_mode" id="applyMode">
-                <option value="selected" selected>Pelanggan terpilih (batch)</option>
-                <option value="single">Satu pelanggan (1 per 1)</option>
-                <option value="all">Semua pelanggan aktif</option>
+                <option value="selected" selected><%= t('admin.disc.opt_selected','Pelanggan terpilih (batch)') %></option>
+                <option value="single"><%= t('admin.disc.opt_single','Satu pelanggan (1 per 1)') %></option>
+                <option value="all"><%= t('admin.disc.opt_all','Semua pelanggan aktif') %></option>
               </select>
             </div>
             <div class="fg" id="singleWrap" style="display:none">
-              <label class="fl">Pilih Pelanggan</label>
+              <label class="fl"><%= t('admin.disc.pick_customer','Pilih Pelanggan') %></label>
               <select class="fs" name="customer_id">
-                <option value="">-- pilih pelanggan --</option>
+                <option value=""><%= t('admin.disc.ph_pick_customer','-- pilih pelanggan --') %></option>
                 <% customers.forEach(function(c){ %>
                   <option value="<%= c.id %>"><%= c.customer_code || c.id %> — <%= c.name %><%= c.area ? ' ('+c.area+')' : '' %></option>
                 <% }); %>
               </select>
             </div>
             <div class="fg">
-              <label class="fl">Tipe Diskon</label>
+              <label class="fl"><%= t('admin.disc.disc_type','Tipe Diskon') %></label>
               <select class="fs" name="discount_type" id="discType">
-                <option value="percent">Persen (%)</option>
-                <option value="amount">Nominal (Rp)</option>
+                <option value="percent"><%= t('admin.disc.opt_percent','Persen (%)') %></option>
+                <option value="amount"><%= t('admin.disc.opt_amount','Nominal (Rp)') %></option>
               </select>
             </div>
             <div class="fg">
-              <label class="fl">Nilai Diskon</label>
-              <input class="fc" type="number" name="discount_value" id="discValue" min="1" step="1" placeholder="mis. 10 (persen) / 20000 (Rp)" required>
-              <div class="hint" id="discHint">Persen dihitung dari harga dasar (sebelum PPN/USO).</div>
+              <label class="fl"><%= t('admin.disc.disc_value','Nilai Diskon') %></label>
+              <input class="fc" type="number" name="discount_value" id="discValue" min="1" step="1" placeholder="<%= t('admin.disc.ph_value','mis. 10 (persen) / 20000 (Rp)') %>" required>
+              <div class="hint" id="discHint"><%= t('admin.disc.disc_hint','Persen dihitung dari harga dasar (sebelum PPN/USO).') %></div>
             </div>
           </div>
           <div class="form-row">
             <div class="fg">
-              <label class="fl">Periode Tagihan — Bulan</label>
+              <label class="fl"><%= t('admin.disc.period_month','Periode Tagihan — Bulan') %></label>
               <select class="fs" name="period_month">
                 <% const mNames=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
                    for(let m=1;m<=12;m++){ %>
@@ -77,7 +77,7 @@
               </select>
             </div>
             <div class="fg">
-              <label class="fl">Tahun</label>
+              <label class="fl"><%= t('admin.disc.year','Tahun') %></label>
               <select class="fs" name="period_year">
                 <% for(let y=(timeInfo.year||new Date().getFullYear())+1; y>=2023; y--){ %>
                   <option value="<%= y %>" <%= (timeInfo.year===y)?'selected':'' %>><%= y %></option>
@@ -85,13 +85,13 @@
               </select>
             </div>
             <div class="fg" style="flex:2">
-              <label class="fl">Catatan (opsional)</label>
-              <input class="fc" name="note" placeholder="mis. promo bulan kemerdekaan">
+              <label class="fl"><%= t('admin.disc.note_opt','Catatan (opsional)') %></label>
+              <input class="fc" name="note" placeholder="<%= t('admin.disc.ph_note','mis. promo bulan kemerdekaan') %>">
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px">
-            <div class="hint"><i class="bi bi-info-circle"></i> Diskon berlaku ke tagihan <b>belum bayar</b> pada periode terpilih. Tagihan lunas/hangus tidak diubah. Kode unik QRIS akan digenerate ulang dari nominal baru.</div>
-            <button type="submit" class="btn btn-p" id="applyBtn"><i class="bi bi-percent"></i> Terapkan Diskon</button>
+            <div class="hint"><i class="bi bi-info-circle"></i> <%- t('admin.disc.apply_hint','Diskon berlaku ke tagihan <b>belum bayar</b> pada periode terpilih. Tagihan lunas/hangus tidak diubah. Kode unik QRIS akan digenerate ulang dari nominal baru.') %></div>
+            <button type="submit" class="btn btn-p" id="applyBtn"><i class="bi bi-percent"></i> <%= t('admin.disc.apply','Terapkan Diskon') %></button>
           </div>
         </div>
       </div>
@@ -100,9 +100,9 @@
       <div class="card mb16" id="custCard">
         <div class="card-hd">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;width:100%">
-            <h6 style="margin:0"><i class="bi bi-people"></i> Pilih Pelanggan (<%= customers.length %>)</h6>
+            <h6 style="margin:0"><i class="bi bi-people"></i> <%= t('admin.disc.pick_customer','Pilih Pelanggan') %> (<%= customers.length %>)</h6>
             <div class="disc-filter">
-              <span class="disc-badge" id="selCount" title="Jumlah pelanggan terpilih">0 dipilih</span>
+              <span class="disc-badge" id="selCount" title="Jumlah pelanggan terpilih">0 <%= t('admin.disc.selected','dipilih') %></span>
               <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
                 <input type="checkbox" id="selectAll" style="width:16px;height:16px"> Pilih semua yang tampil
               </label>
@@ -146,7 +146,7 @@
 
     <!-- Riwayat -->
     <div class="card">
-      <div class="card-hd"><h6><i class="bi bi-clock-history"></i> Riwayat Diskon (100 terakhir)</h6></div>
+      <div class="card-hd"><h6><i class="bi bi-clock-history"></i> <%= t('admin.disc.history','Riwayat Diskon (100 terakhir)') %></h6></div>
       <div class="tbl-wrap">
         <table class="dtbl">
           <thead>
@@ -158,7 +158,7 @@
               <th class="num" style="width:120px">Potongan</th>
               <th class="num" style="width:120px">Awal → Akhir</th>
               <th style="width:110px">Oleh</th>
-              <th>Catatan</th>
+              <th><%= t('admin.disc.th_note','Catatan') %></th>
             </tr>
           </thead>
           <tbody>
@@ -201,7 +201,7 @@
 
     function syncHint(){
       hint.textContent = (type.value === 'percent')
-        ? 'Persen dihitung dari harga dasar (sebelum PPN/USO). Contoh: 10 = potong 10%.'
+        ? '<%= t('admin.disc.disc_hint','Persen dihitung dari harga dasar (sebelum PPN/USO).') %> Contoh: 10 = potong 10%.'
         : 'Nominal potongan langsung dalam Rupiah. Contoh: 20000 = potong Rp 20.000.';
     }
     type.addEventListener('change', syncHint); syncHint();
@@ -217,8 +217,8 @@
     var applyBtn = document.getElementById('applyBtn');
     function updateSelCount(){
       var n = document.querySelectorAll('#custTable .cust-sel:checked').length;
-      if (selCount) selCount.textContent = n + ' dipilih';
-      if (applyBtn) applyBtn.innerHTML = '<i class="bi bi-percent"></i> Terapkan Diskon' + ((mode.value === 'selected' && n) ? ' (' + n + ')' : '');
+      if (selCount) selCount.textContent = n + ' <%= t('admin.disc.selected','dipilih') %>';
+      if (applyBtn) applyBtn.innerHTML = '<i class="bi bi-percent"></i> <%= t('admin.disc.apply','Terapkan Diskon') %>' + ((mode.value === 'selected' && n) ? ' (' + n + ')' : '');
     }
     all.addEventListener('change', function(){ visibleBoxes().forEach(function(b){ b.checked = all.checked; }); updateSelCount(); });
     document.getElementById('custTable').addEventListener('change', function(e){ if (e.target && e.target.classList.contains('cust-sel')) updateSelCount(); });

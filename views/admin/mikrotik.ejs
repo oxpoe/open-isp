@@ -85,7 +85,7 @@
       </div>
       <div id="refresh-indicator" style="position:absolute;top:-8px;right:0;font-size:11px;color:var(--muted);display:none;align-items:center;gap:4px">
         <i class="bi bi-arrow-clockwise" style="animation:spin 1s linear infinite"></i>
-        <span>Memperbarui...</span>
+        <span><%= t('admin.mt.updating','Memperbarui...') %></span>
       </div>
     </div>
     <style>
@@ -250,7 +250,7 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="fg"><label class="fl">Limit Uptime (e.g. 1h)</label><input class="fc" id="h_uptime"></div>
+          <div class="fg"><label class="fl"><%= t('admin.mt.limit_uptime','Limit Uptime (e.g. 1h)') %></label><input class="fc" id="h_uptime"></div>
           <div class="fg"><label class="fl">MAC Address</label><input class="fc" id="h_mac"></div>
         </div>
         <div class="fg"><label class="fl">Comment</label><input class="fc" id="h_comment"></div>
@@ -267,7 +267,7 @@
 <div class="mo" id="onlineUsersModal">
   <div class="mb" style="max-width:900px">
     <div class="mh">
-      <span class="mt"><i class="bi bi-ethernet"></i> Daftar User PPPoE Online</span>
+      <span class="mt"><i class="bi bi-ethernet"></i> <%= t('admin.mt.online_list','Daftar User PPPoE Online') %></span>
       <button class="mc" onclick="closeModal('onlineUsersModal')">&times;</button>
     </div>
     <div class="mbody" style="max-height:500px;overflow-y:auto">
@@ -307,7 +307,7 @@
 <div class="mo" id="offlineUsersModal">
   <div class="mb" style="max-width:800px">
     <div class="mh">
-      <span class="mt"><i class="bi bi-plug"></i> Daftar User PPPoE Offline</span>
+      <span class="mt"><i class="bi bi-plug"></i> <%= t('admin.mt.offline_list','Daftar User PPPoE Offline') %></span>
       <button class="mc" onclick="closeModal('offlineUsersModal')">&times;</button>
     </div>
     <div class="mbody" style="max-height:500px;overflow-y:auto">
