@@ -192,6 +192,22 @@ db.exec(`
     created_at DATETIME DEFAULT (NOW_LOCAL())
   );
 
+  CREATE TABLE IF NOT EXISTS discount_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_id INTEGER,
+    customer_id INTEGER,
+    period_month INTEGER,
+    period_year INTEGER,
+    discount_type TEXT,
+    discount_value REAL,
+    discount_amount REAL,
+    amount_before REAL,
+    amount_after REAL,
+    applied_by TEXT DEFAULT '',
+    note TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_id INTEGER NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
