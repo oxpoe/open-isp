@@ -811,7 +811,8 @@ function initTelegram() {
     } catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
   });
   function tgPendapatanText() {
-    const today = Number(billingSvc.getTodayRevenue() || 0);
+    const tr = billingSvc.getTodayRevenue();
+    const today = Number((tr && tr.total != null) ? tr.total : (tr || 0)) || 0;
     const stats = billingSvc.getDashboardStats() || {};
     const month = Number(stats.thisMonth || 0);
     return `💰 *PENDAPATAN*\n\n📅 Hari ini: *Rp ${today.toLocaleString('id-ID')}*\n🗓️ Bulan ini: *Rp ${month.toLocaleString('id-ID')}*\n⏳ Belum dibayar: *${stats.unpaidCount || 0} tagihan*\n`;
