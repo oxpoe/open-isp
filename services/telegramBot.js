@@ -297,6 +297,8 @@ function initTelegram() {
         [{ text: '📊 Statistik', callback_data: 'menu_stats' }, { text: '👥 Pelanggan', callback_data: 'menu_cust' }],
         [{ text: '🎫 Voucher', callback_data: 'menu_vouch' }, { text: '💰 Tagihan', callback_data: 'menu_bill' }],
         [{ text: '⚙️ MikroTik Status', callback_data: 'menu_mt' }],
+        [{ text: '🖥️ Sistem', callback_data: 'menu_sys' }, { text: '💰 Tunggakan', callback_data: 'menu_arrears' }],
+        [{ text: '🎫 Tiket', callback_data: 'menu_tiket' }, { text: '📡 OLT', callback_data: 'menu_olt' }, { text: '📶 Trafik', callback_data: 'menu_trafik' }],
         [{ text: '🔄 Refresh', callback_data: 'menu_main' }]
       ]
     }
@@ -399,6 +401,28 @@ function initTelegram() {
           ]
         }
       });
+    }
+
+    else if (data === 'menu_sys') {
+      try { bot.sendMessage(chatId, tgSistemText(), { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] } }); }
+      catch (e) { bot.sendMessage(chatId, 'Gagal: ' + e.message); }
+    }
+    else if (data === 'menu_arrears') {
+      try { bot.sendMessage(chatId, tgTunggakanText(), { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] } }); }
+      catch (e) { bot.sendMessage(chatId, 'Gagal: ' + e.message); }
+    }
+    else if (data === 'menu_tiket') {
+      try { bot.sendMessage(chatId, tgTiketText(), { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] } }); }
+      catch (e) { bot.sendMessage(chatId, 'Gagal: ' + e.message); }
+    }
+    else if (data === 'menu_olt') {
+      bot.sendMessage(chatId, '📡 Mengambil status OLT, mohon tunggu…');
+      try { bot.sendMessage(chatId, await tgOltText(), { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] } }); }
+      catch (e) { bot.sendMessage(chatId, 'Gagal: ' + e.message); }
+    }
+    else if (data === 'menu_trafik') {
+      try { bot.sendMessage(chatId, await tgTrafikText(), { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] } }); }
+      catch (e) { bot.sendMessage(chatId, 'Gagal: ' + e.message); }
     }
 
     else if (data === 'mt_resource') {
@@ -684,73 +708,85 @@ function initTelegram() {
   });
 
 
-  // ── Monitoring (admin): /sistem /tunggakan /tiket /olt /trafik ──
+  // ── Monitoring (admin): helper + perintah /sistem /tunggakan /tiket /olt /trafik ──
+  function tgSistemText() {
+    const h = monitoringSvc.getHealthStatus();
+    const m = (h && h.metrics) ? h.metrics : monitoringSvc.getAllMetrics();
+    const sys = (m && m.system) || {};
+    const cpu = (sys.cpu && sys.cpu.usage != null) ? sys.cpu.usage : '-';
+    const cores = (sys.cpu && sys.cpu.cores) ? sys.cpu.cores : '-';
+    const ram = (sys.memory && sys.memory.percentage != null) ? sys.memory.percentage : '-';
+    const ramUsed = (sys.memory && sys.memory.used) ? sys.memory.used : '-';
+    const ramTotal = (sys.memory && sys.memory.total) ? sys.memory.total : '-';
+    const disk = (m && m.disk && m.disk.percentage) ? m.disk.percentage : '-';
+    const la = sys.loadAverage || {};
+    let t = `🖥️ *MONITORING SISTEM*\n\n`;
+    t += `⚙️ CPU : *${cpu}%* (${cores} core)\n`;
+    t += `🧠 RAM : *${ram}%* (${ramUsed}/${ramTotal})\n`;
+    t += `📀 Disk: *${disk}*\n`;
+    t += `⏳ Load: ${la['1min'] != null ? la['1min'] : '-'} / ${la['5min'] != null ? la['5min'] : '-'} / ${la['15min'] != null ? la['15min'] : '-'}\n`;
+    t += `🕒 Uptime: ${sys.uptime || '-'}\n`;
+    if (h && h.issues && h.issues.length) t += `\n🔴 *Masalah:*\n- ${h.issues.join('\n- ')}`;
+    if (h && h.warnings && h.warnings.length) t += `\n🟡 *Peringatan:*\n- ${h.warnings.join('\n- ')}`;
+    return t;
+  }
+
+  function tgTunggakanText() {
+    const row = db.prepare("SELECT COUNT(*) c, COALESCE(SUM(amount),0) s FROM invoices WHERE status='unpaid'").get();
+    const top = db.prepare("SELECT c.name, COALESCE(c.customer_code,'-') code, SUM(i.amount) t FROM invoices i JOIN customers c ON c.id=i.customer_id WHERE i.status='unpaid' GROUP BY i.customer_id ORDER BY t DESC LIMIT 8").all();
+    let t = `💰 *TUNGGAKAN*\n\nTotal: *${row.c} tagihan*\nNominal: *Rp ${Number(row.s).toLocaleString('id-ID')}*\n`;
+    if (top.length) { t += `\n*Top ${top.length}:*\n`; top.forEach((r, i) => { t += `${i + 1}. ${r.name} (${r.code}) — Rp ${Number(r.t).toLocaleString('id-ID')}\n`; }); }
+    return t;
+  }
+
+  function tgTiketText() {
+    const s = ticketSvc.getTicketStats();
+    const open = ticketSvc.getAllTickets('open') || [];
+    let t = `🎫 *TIKET*\n\nOpen: *${s.open}* · Proses: *${s.inProgress}* · Selesai: *${s.resolved}*\n`;
+    if (open.length) { t += `\n*Open terbaru:*\n`; open.slice(0, 8).forEach(x => { t += `#${x.id} ${x.subject} — ${x.customer_name || '-'}\n`; }); }
+    return t;
+  }
+
+  async function tgOltText() {
+    const o = await oltSvc.getAllOltsStats();
+    let t = `📡 *OLT STATUS*\n\nONU total: *${o.onus_total}*\n🟢 Online: *${o.onus_online}*\n🔴 Offline: *${o.onus_offline}*\n🟡 Lemah: *${o.onus_weak}*\n`;
+    if (o.error) t += `\n_Catatan: ${o.error}_`;
+    return t;
+  }
+
+  async function tgTrafikText() {
+    let count = 0;
+    try { const map = await mikrotikSvc.getAllActiveSessionsMap(); count = (map && map.size != null) ? map.size : ((map && map.length) || 0); } catch (e) {}
+    return `📶 *SESI AKTIF*\n\nPPPoE/Hotspot online: *${count}* sesi\n`;
+  }
+
+  const backBtn = { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] };
+
   bot.onText(/\/(sistem|monitor|health)/i, async (msg) => {
     if (!isAdmin(msg)) return;
-    try {
-      const h = monitoringSvc.getHealthStatus();
-      const m = (h && h.metrics) ? h.metrics : monitoringSvc.getAllMetrics();
-      const sys = (m && m.system) || {};
-      const cpu = (sys.cpu && sys.cpu.usage != null) ? sys.cpu.usage : '-';
-      const cores = (sys.cpu && sys.cpu.cores) ? sys.cpu.cores : '-';
-      const ram = (sys.memory && sys.memory.percentage != null) ? sys.memory.percentage : '-';
-      const ramUsed = (sys.memory && sys.memory.used) ? sys.memory.used : '-';
-      const ramTotal = (sys.memory && sys.memory.total) ? sys.memory.total : '-';
-      const disk = (m && m.disk && m.disk.percentage) ? m.disk.percentage : '-';
-      const la = sys.loadAverage || {};
-      let t = `🖥️ *MONITORING SISTEM*\n\n`;
-      t += `⚙️ CPU : *${cpu}%* (${cores} core)\n`;
-      t += `🧠 RAM : *${ram}%* (${ramUsed}/${ramTotal})\n`;
-      t += `📀 Disk: *${disk}*\n`;
-      t += `⏳ Load: ${la['1min'] != null ? la['1min'] : '-'} / ${la['5min'] != null ? la['5min'] : '-'} / ${la['15min'] != null ? la['15min'] : '-'}\n`;
-      t += `🕒 Uptime: ${sys.uptime || '-'}\n`;
-      if (h && h.issues && h.issues.length) t += `\n🔴 *Masalah:*\n- ${h.issues.join('\n- ')}`;
-      if (h && h.warnings && h.warnings.length) t += `\n🟡 *Peringatan:*\n- ${h.warnings.join('\n- ')}`;
-      bot.sendMessage(msg.chat.id, t, { parse_mode: 'Markdown' });
-    } catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
+    try { bot.sendMessage(msg.chat.id, tgSistemText(), { parse_mode: 'Markdown', reply_markup: backBtn }); }
+    catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
   });
-
   bot.onText(/\/tunggakan/i, async (msg) => {
     if (!isAdmin(msg)) return;
-    try {
-      const row = db.prepare("SELECT COUNT(*) c, COALESCE(SUM(amount),0) s FROM invoices WHERE status='unpaid'").get();
-      const top = db.prepare("SELECT c.name, COALESCE(c.customer_code,'-') code, SUM(i.amount) t FROM invoices i JOIN customers c ON c.id=i.customer_id WHERE i.status='unpaid' GROUP BY i.customer_id ORDER BY t DESC LIMIT 8").all();
-      let t = `💰 *TUNGGAKAN*\n\nTotal: *${row.c} tagihan*\nNominal: *Rp ${Number(row.s).toLocaleString('id-ID')}*\n`;
-      if (top.length) { t += `\n*Top ${top.length}:*\n`; top.forEach((r, i) => { t += `${i + 1}. ${r.name} (${r.code}) — Rp ${Number(r.t).toLocaleString('id-ID')}\n`; }); }
-      bot.sendMessage(msg.chat.id, t, { parse_mode: 'Markdown' });
-    } catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
+    try { bot.sendMessage(msg.chat.id, tgTunggakanText(), { parse_mode: 'Markdown', reply_markup: backBtn }); }
+    catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
   });
-
   bot.onText(/\/tiket/i, async (msg) => {
     if (!isAdmin(msg)) return;
-    try {
-      const s = ticketSvc.getTicketStats();
-      const open = ticketSvc.getAllTickets('open') || [];
-      let t = `🎫 *TIKET*\n\nOpen: *${s.open}* · Proses: *${s.inProgress}* · Selesai: *${s.resolved}*\n`;
-      if (open.length) { t += `\n*Open terbaru:*\n`; open.slice(0, 8).forEach(x => { t += `#${x.id} ${x.subject} — ${x.customer_name || '-'}\n`; }); }
-      bot.sendMessage(msg.chat.id, t, { parse_mode: 'Markdown' });
-    } catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
+    try { bot.sendMessage(msg.chat.id, tgTiketText(), { parse_mode: 'Markdown', reply_markup: backBtn }); }
+    catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
   });
-
   bot.onText(/\/(olt|oltstatus|olt-status)/i, async (msg) => {
     if (!isAdmin(msg)) return;
     bot.sendMessage(msg.chat.id, '📡 Mengambil status OLT, mohon tunggu…');
-    try {
-      const o = await oltSvc.getAllOltsStats();
-      let t = `📡 *OLT STATUS*\n\nONU total: *${o.onus_total}*\n🟢 Online: *${o.onus_online}*\n🔴 Offline: *${o.onus_offline}*\n🟡 Lemah: *${o.onus_weak}*\n`;
-      if (o.error) t += `\n_Catatan: ${o.error}_`;
-      bot.sendMessage(msg.chat.id, t, { parse_mode: 'Markdown' });
-    } catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
+    try { bot.sendMessage(msg.chat.id, await tgOltText(), { parse_mode: 'Markdown', reply_markup: backBtn }); }
+    catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
   });
-
   bot.onText(/\/(trafik|online)/i, async (msg) => {
     if (!isAdmin(msg)) return;
-    try {
-      let count = 0;
-      try { const map = await mikrotikSvc.getAllActiveSessionsMap(); count = (map && map.size != null) ? map.size : ((map && map.length) || 0); } catch (e) {}
-      const t = `📶 *SESI AKTIF*\n\nPPPoE/Hotspot online: *${count}* sesi\n`;
-      bot.sendMessage(msg.chat.id, t, { parse_mode: 'Markdown' });
-    } catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
+    try { bot.sendMessage(msg.chat.id, await tgTrafikText(), { parse_mode: 'Markdown', reply_markup: backBtn }); }
+    catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
   });
 
   bot.onText(/\/ringkasan/i, async (msg) => {
