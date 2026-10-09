@@ -943,7 +943,7 @@ async function autoDeactivateOverdueCustomers(months = 3, actor = null) {
       const parts = [];
       if (processed) parts.push(`${processed} pelanggan NONAKTIF (menunggak ${m} bln)`);
       if (removed.length) parts.push(`${removed.length} pelanggan DIHAPUS (menunggak > ${m} bln)`);
-      await waNotify.sendToStaff(`📋 *Auto-Tunggakan*
+      await waNotify.notifyAdmin(`📋 *Auto-Tunggakan*
 ${parts.join('; ')}.
 
 Nonaktif: ${names.join(', ') || '-'}

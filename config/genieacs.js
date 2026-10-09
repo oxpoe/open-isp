@@ -265,7 +265,7 @@ let sendMonitoringAlert = null;
 (async () => {
   try {
     const whatsappBot = await import('../services/whatsappBot.mjs');
-    sendMonitoringAlert = whatsappBot.sendMonitoringAlert;
+    sendMonitoringAlert = require('../services/waNotifyService').notifyAdmin;
     logger.info('[GenieACS] WhatsApp monitoring alert integration loaded');
   } catch (error) {
     logger.warn('[GenieACS] WhatsApp bot not available for monitoring alerts');

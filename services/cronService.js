@@ -824,7 +824,7 @@ async function sendAutoLunasRecap(pMonth, pYear) {
     const list = rows.map(function (r) { return '• ' + r.name + ' (Rp ' + Number(r.amount || 0).toLocaleString('id-ID') + ')'; }).join('\n');
     const total = rows.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
     const msg = '📋 *REKAP AUTO-LUNAS — Periode ' + m + '/' + y + '*\n\nJumlah  : *' + rows.length + ' pelanggan*\nNominal : *Rp ' + total.toLocaleString('id-ID') + '*\n\nDaftar:\n' + list + '\n\nWaktu   : ' + now.toLocaleString('id-ID');
-    const to = await waNotify.sendToStaff(msg);
+    const to = await waNotify.notifyAdmin(msg);
     logger.info('[CRON] Rekap auto-lunas ' + m + '/' + y + ' terkirim ke admin (' + rows.length + ' pelanggan).');
     return { sent: true, count: rows.length, period: m + '/' + y, to: to };
   } catch (e) { logger.error('[CRON] rekap auto-lunas error: ' + (e && e.message)); return { sent: false, error: e && e.message }; }

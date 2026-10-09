@@ -470,7 +470,7 @@ async function notifyAdminUnmatchedPayment(amount, rawText, service) {
       '',
       'Belum ada tagihan yang cocok. Cocokkan jam notif dengan bukti transfer pelanggan, lalu tandai lunas manual.'
     ];
-    await waNotify.sendToStaff(lines.join('\n'));
+    await waNotify.notifyAdmin(lines.join('\n'));
   } catch (e) {}
 }
 

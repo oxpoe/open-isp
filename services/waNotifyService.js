@@ -154,4 +154,16 @@ async function isConnected() {
   return val;
 }
 
-module.exports = { sendText, sendImage, sendDocument, sendToStaff, isConnected, gateway };
+// Notifikasi untuk ADMIN/monitoring → Telegram (utama). WA (sendToStaff) sebagai fallback.
+async function notifyAdmin(text) {
+  try {
+    const tg = require('./telegramBot');
+    if (tg && typeof tg.notifyAdmin === 'function') {
+      const ok = await tg.notifyAdmin(text);
+      if (ok) return true;
+    }
+  } catch (e) {}
+  return sendToStaff(text);
+}
+
+module.exports = { sendText, sendImage, sendDocument, sendToStaff, notifyAdmin, isConnected, gateway };

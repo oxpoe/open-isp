@@ -998,4 +998,18 @@ function initTelegram() {
 }
 
 // Export for manual re-init from settings
-module.exports = { initTelegram };
+async function notifyAdmin(text) {
+  try {
+    const adminId = String(getSetting('telegram_admin_id', '') || '').trim();
+    if (!bot || !adminId || !text) return false;
+    const ids = adminId.split(/[,s]+/).filter(Boolean);
+    let ok = false;
+    for (const id of ids) {
+      try { await bot.sendMessage(id, text, { parse_mode: 'Markdown' }); ok = true; }
+      catch (e) { try { await bot.sendMessage(id, String(text)); ok = true; } catch (e2) {} }
+    }
+    return ok;
+  } catch (e) { return false; }
+}
+
+module.exports = { initTelegram, notifyAdmin };

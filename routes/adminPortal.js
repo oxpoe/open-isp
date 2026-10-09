@@ -2144,7 +2144,7 @@ router.post('/customers/:id/generate-pppoe', requireAdminSession, async (req, re
         '🔒 *PPPoE Pass:* *' + g.password + '*\n' +
         '📍 *Alamat:* ' + ((cust && cust.address) || '-') + '\n\n' +
         'Silakan konfigurasi perangkat pelanggan dengan data di atas.';
-      await waNotify.sendToStaff(credMsg);
+      await waNotify.notifyAdmin(credMsg);
     } catch (e) {}
     req.session._msg = { type: 'success', text: 'Akun PPPoE dibuat: ' + g.username + ' / ' + g.password + ' (kredensial dikirim ke admin & teknisi).' };
   } catch (e) { req.session._msg = { type: 'error', text: 'Gagal generate PPPoE: ' + e.message }; }
@@ -4119,7 +4119,7 @@ router.post('/registrations/:id/approve', requireAdminSession, express.urlencode
           '🔒 *PPPoE Pass:* *' + (pppoePass || '-') + '*\n' +
           '📍 *Alamat:* ' + (cust.address || '-') + '\n\n' +
           'Silakan konfigurasi perangkat pelanggan dengan data di atas.';
-        await waNotify.sendToStaff(credMsg);
+        await waNotify.notifyAdmin(credMsg);
       }
     } catch (e) { try { logger.error('[RegApprove] staff cred error: ' + e.message); } catch (_) {} }
 
@@ -6749,7 +6749,7 @@ router.post('/whatsapp/preview/send', requireAdminSession, express.urlencoded({ 
     if (!m) throw new Error('Pesan tidak ditemukan');
     const waNotify = require('../services/waNotifyService');
     const txt = '[CONTOH] ' + m.title + '\n\n' + m.text;
-    const r = await waNotify.sendToStaff(txt);
+    const r = await waNotify.notifyAdmin(txt);
     return res.json({ ok: true, message: 'Contoh "' + m.title + '" terkirim ke WA admin (sent=' + ((r && r.sent) || 0) + ').' });
   } catch (e) {
     return res.status(500).json({ ok: false, message: e.message });
