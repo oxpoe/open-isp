@@ -3493,7 +3493,7 @@ router.post('/tickets/create', requireAdminSession, express.urlencoded({ extende
         const waNotify = require('../services/waNotifyService');
         const cust = custId ? customerSvc.getCustomerById(custId) : null;
         const techSvc = require('../services/techService');
-        const tech = techId ? techSvc.getTechnicianById(techId) : null;
+        const tech = techId ? techSvc.getTechById(techId) : null;
 
         const custName = cust ? cust.name : 'Tugas Umum / Maintenance Admin';
         const custPhone = cust ? cust.phone : '-';
@@ -3554,7 +3554,7 @@ router.post('/tickets/:id/update', requireAdminSession, express.urlencoded({ ext
         if (settings.whatsapp_enabled) {
           const waNotify = require('../services/waNotifyService');
           const techSvc = require('../services/techService');
-          const newTech = techSvc.getTechnicianById(techId);
+          const newTech = techSvc.getTechById(techId);
           const updatedTicket = ticketSvc.getTicketById(ticketId);
 
           if (newTech && newTech.phone && updatedTicket) {
