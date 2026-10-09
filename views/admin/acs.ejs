@@ -58,7 +58,7 @@
 <%- include('partials/sidebar', { activePage: 'acs_pro', company }) %>
 <div class="mw">
     <div class="topbar">
-        <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-hdd-network"></i> GenieACS Monitoring Pro</div>
+        <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-hdd-network"></i> <%= t('admin.acs.title','GenieACS Monitoring Pro') %></div>
         <div class="tb-right">
             <span class="adm-badge" style="font-size:12px;opacity:0.7;"><%= company %></span>
             <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= (typeof session !== 'undefined' && session && session.isCashier) ? 'Kasir' : 'Admin' %></span>
@@ -69,7 +69,7 @@
         <div class="acs-head" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:22px;">
             <h1 class="page-title" style="margin:0;"><%= t('admin.acs.monitoring','GenieACS Monitoring') %></h1>
             <div style="display:flex; gap:8px;">
-                <button class="btn btn-g" onclick="syncOnuTags()" title="Sinkron Tag ONU pelanggan dari device.id ACS (berdasarkan PPPoE user)">
+                <button class="btn btn-g" onclick="syncOnuTags()" title="<%= t('admin.acs.sync_title','Sinkron Tag ONU pelanggan dari device.id ACS (berdasarkan PPPoE user)') %>">
                     <i class="bi bi-tags"></i> Sync Tag ONU
                 </button>
                 <button class="btn btn-p" onclick="syncAllACS()">
@@ -97,7 +97,7 @@
 
         <div class="acs-box">
             <div class="tab-bar">
-                <button class="active" onclick="switchTab('devices', this)"><i class="bi bi-display"></i> Devices</button>
+                <button class="active" onclick="switchTab('devices', this)"><i class="bi bi-display"></i> <%= t('admin.acs.tab_devices','Perangkat') %></button>
                 <button onclick="switchTab('servers', this)"><i class="bi bi-hdd-rack"></i> ACS Servers</button>
                 <button onclick="switchTab('logs', this)"><i class="bi bi-clipboard-data"></i> Log</button>
             </div>
@@ -115,12 +115,12 @@
                         <% }); %>
                     </select>
                     <select class="fs" name="dev_status" style="width:150px" onchange="this.form.submit()">
-                        <option value="">Semua Status</option>
+                        <option value=""><%= t('admin.acs.all_status','Semua Status') %></option>
                         <option value="online" <%= (typeof filterDevStatus!=='undefined' && filterDevStatus==='online')?'selected':'' %>>Online</option>
                         <option value="offline" <%= (typeof filterDevStatus!=='undefined' && filterDevStatus==='offline')?'selected':'' %>>Offline</option>
                     </select>
                     <select class="fs" name="vendor" style="width:150px" onchange="this.form.submit()">
-                        <option value="">Semua Vendor</option>
+                        <option value=""><%= t('admin.acs.all_vendor','Semua Vendor') %></option>
                         <% (typeof vendors!=='undefined'?vendors:[]).forEach(v => { %><option value="<%= v %>" <%= (typeof filterVendor!=='undefined' && filterVendor===v)?'selected':'' %>><%= v %></option><% }) %>
                     </select>
                     <button class="btn btn-g btn-sm" type="submit"><i class="bi bi-search"></i> Search</button>
@@ -144,7 +144,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 40px;"><input type="checkbox" id="selectAllDevices" onchange="toggleSelectAll(this)"></th>
+                                <th style="width: 40px;"><input type="checkbox" id="selectAll<%= t('admin.acs.tab_devices','Perangkat') %>" onchange="toggleSelectAll(this)"></th>
                                 <th><%= t('admin.acs.device_id','Device ID / SN') %></th>
                                 <th><%= t('admin.acs.customer_name','Customer Name') %></th>
                                 <th>IP Address</th>
@@ -190,7 +190,7 @@
                                             <button type="button" class="act-item primary" onclick="refreshDevice('<%= d.id %>')"><i class="bi bi-arrow-repeat"></i> Refresh Device</button>
                                             <button type="button" class="act-item" onclick="openAddWanModal('<%= d.id %>', '<%= d.acs_server_id || selectedAcsId %>', '<%= d.sn %>', '<%= d.manufacturer || "" %>', '<%= d.model || "" %>')"><i class="bi bi-diagram-3"></i> Add WAN (All-in-One)</button>
                                             <div class="act-sep"></div>
-                                            <button type="button" class="act-item danger" onclick="deleteDevice('<%= d.id %>', '<%= d.acs_server_id || selectedAcsId %>')"><i class="bi bi-trash"></i> Hapus Perangkat</button>
+                                            <button type="button" class="act-item danger" onclick="deleteDevice('<%= d.id %>', '<%= d.acs_server_id || selectedAcsId %>')"><i class="bi bi-trash"></i> <%= t('admin.acs.del_device','Hapus Perangkat') %></button>
                                         </div>
                                     </div>
                                 </td>
@@ -204,7 +204,7 @@
             <div id="tab-servers" class="tab-pane">
                 <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                     <h3>ACS Servers</h3>
-                    <button class="btn btn-p btn-sm" onclick="openAddServerModal()"><i class="bi bi-plus-lg"></i> Add ACS Server</button>
+                    <button class="btn btn-p btn-sm" onclick="openAddServerModal()"><i class="bi bi-plus-lg"></i> <%= t('admin.acs.add_server','Tambah Server ACS') %></button>
                 </div>
                 <div class="table-container">
                     <table>
@@ -231,14 +231,14 @@
                                             <div class="act-menu">
                                                 <button type="button" class="act-item primary" onclick="openEditServerModal(this)" data-id="<%= s.id %>" data-name="<%= s.name %>" data-url="<%= s.url %>" data-username="<%= s.username || '' %>" data-location="<%= s.location || '' %>"><i class="bi bi-pencil-square"></i> Edit Server</button>
                                                 <div class="act-sep"></div>
-                                                <button type="button" class="act-item danger" onclick="deleteServer('<%= s.id %>')"><i class="bi bi-trash"></i> Hapus Server</button>
+                                                <button type="button" class="act-item danger" onclick="deleteServer('<%= s.id %>')"><i class="bi bi-trash"></i> <%= t('admin.acs.del_server','Hapus Server') %></button>
                                             </div>
                                         </div>
                                     <% } else { %>
                                         <div class="act" style="display:inline-block">
                                             <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
                                             <div class="act-menu">
-                                                <button type="button" class="act-item primary" onclick="openEditLegacyAcsModal()"><i class="bi bi-pencil-square"></i> Edit Default ACS</button>
+                                                <button type="button" class="act-item primary" onclick="openEditLegacyAcsModal()"><i class="bi bi-pencil-square"></i> <%= t('admin.acs.edit_default','Edit Default ACS') %></button>
                                                 <button type="button" class="act-item danger" disabled style="opacity:.5;cursor:not-allowed"><i class="bi bi-trash"></i> Hapus (tidak bisa)</button>
                                             </div>
                                         </div>
@@ -255,7 +255,7 @@
                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
                     <h3 style="margin:0;">Log Aktivitas ACS</h3>
                     <select class="fs" id="logServerFilter" style="width:220px;" onchange="loadAcsLogs()">
-                        <option value="all">Semua Server</option>
+                        <option value="all"><%= t('admin.acs.all_server','Semua Server') %></option>
                         <% acsServers.forEach(s => { %>
                         <option value="<%= s.id %>"><%= s.name %></option>
                         <% }); %>
@@ -263,10 +263,10 @@
                     <label style="display:flex; gap:6px; align-items:center; font-size:13px; color:var(--muted);">
                         <input type="checkbox" id="logOnlyError" onchange="loadAcsLogs()"> Hanya error / fault
                     </label>
-                    <button class="btn btn-p btn-sm" onclick="loadAcsLogs()"><i class="bi bi-arrow-clockwise"></i> Muat Ulang</button>
+                    <button class="btn btn-p btn-sm" onclick="loadAcsLogs()"><i class="bi bi-arrow-clockwise"></i> <%= t('admin.acs.reload','Muat Ulang') %></button>
                     <span style="font-size:12px; color:var(--muted);">Log diambil dari tiap ACS (Built-in: riwayat task; GenieACS: <code>/faults</code>).</span>
                 </div>
-                <div id="acsLogContainer"><div class="text-muted" style="padding:12px;">Pilih filter lalu klik "Muat Ulang" untuk memuat log.</div></div>
+                <div id="acsLogContainer"><div class="text-muted" style="padding:12px;">Pilih filter lalu klik "<%= t('admin.acs.reload','Muat Ulang') %>" untuk memuat log.</div></div>
             </div>
         </div>
         <footer style="margin-top: 30px; padding: 20px; text-align: center; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border);">
@@ -279,7 +279,7 @@
 <div class="mo" id="addWanModal">
   <div class="mb" style="max-width:650px">
     <div class="mh">
-      <span class="mt"><i class="bi bi-diagram-3"></i> Provisioning All-in-One WAN</span>
+      <span class="mt"><i class="bi bi-diagram-3"></i> <%= t('admin.acs.prov_title','Provisioning All-in-One WAN') %></span>
       <button class="mc" onclick="closeModal('addWanModal')">&times;</button>
     </div>
     <div class="mbody" style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
@@ -365,11 +365,11 @@
                         <h5 style="margin: 0 0 10px 0; font-size: 13px; color: var(--text); font-weight: 700;"><i class="bi bi-broadcast"></i> Wi-Fi 2.4GHz</h5>
                         <div class="form-row2">
                             <div class="fg" style="margin: 0;">
-                              <label class="fl">SSID (Nama Wi-Fi)</label>
-                              <input type="text" id="wifiSsid24" class="fc" placeholder="Mengunduh...">
+                              <label class="fl"><%= t('admin.acs.ssid','SSID (Nama Wi-Fi)') %></label>
+                              <input type="text" id="wifiSsid24" class="fc" placeholder="<%= t('admin.acs.loading','Mengunduh...') %>">
                             </div>
                             <div class="fg" style="margin: 0;">
-                              <label class="fl">Sandi Wi-Fi (WPA2)</label>
+                              <label class="fl"><%= t('admin.acs.wifi_pass','Sandi Wi-Fi (WPA2)') %></label>
                               <input type="password" id="wifiPass24" class="fc" placeholder="<%= t('admin.common.keep_empty','Biarkan kosong jika tidak diganti') %>">
                             </div>
                         </div>
@@ -379,11 +379,11 @@
                         <h5 style="margin: 0 0 10px 0; font-size: 13px; color: var(--text); font-weight: 700;"><i class="bi bi-lightning-charge"></i> Wi-Fi 5GHz</h5>
                         <div class="form-row2">
                             <div class="fg" style="margin: 0;">
-                              <label class="fl">SSID (Nama Wi-Fi)</label>
-                              <input type="text" id="wifiSsid5" class="fc" placeholder="Mengunduh...">
+                              <label class="fl"><%= t('admin.acs.ssid','SSID (Nama Wi-Fi)') %></label>
+                              <input type="text" id="wifiSsid5" class="fc" placeholder="<%= t('admin.acs.loading','Mengunduh...') %>">
                             </div>
                             <div class="fg" style="margin: 0;">
-                              <label class="fl">Sandi Wi-Fi (WPA2)</label>
+                              <label class="fl"><%= t('admin.acs.wifi_pass','Sandi Wi-Fi (WPA2)') %></label>
                               <input type="password" id="wifiPass5" class="fc" placeholder="<%= t('admin.common.keep_empty','Biarkan kosong jika tidak diganti') %>">
                             </div>
                         </div>
@@ -443,7 +443,7 @@
     <div class="mf">
       <button type="button" class="btn btn-g" onclick="closeModal('addWanModal')"><%= t('admin.acs.cancel','Batal') %></button>
       <button type="submit" form="addWanForm" class="btn btn-p" id="btn-save-add-wan">
-        <span class="btn-text"><i class="bi bi-save"></i> Jalankan Provisioning</span>
+        <span class="btn-text"><i class="bi bi-save"></i> <%= t('admin.acs.run_prov','Jalankan Provisioning') %></span>
         <span class="btn-loader" style="display:none"><i class="bi bi-arrow-clockwise spin"></i> Memproses...</span>
       </button>
     </div>
@@ -453,7 +453,7 @@
 <div class="mo" id="serverModal">
   <div class="mb" style="max-width:560px">
     <div class="mh">
-      <span class="mt" id="acsServerModalTitle"><i class="bi bi-server"></i> Add ACS Server</span>
+      <span class="mt" id="acsServerModalTitle"><i class="bi bi-server"></i> <%= t('admin.acs.add_server','Tambah Server ACS') %></span>
       <button class="mc" onclick="closeModal('serverModal')">&times;</button>
     </div>
     <div class="mbody">
@@ -552,7 +552,7 @@ document.querySelectorAll('.mo').forEach(m => m.addEventListener('click', e => {
 }));
 
 function openAddServerModal() {
-    document.getElementById('acsServerModalTitle').innerHTML = '<i class="bi bi-server"></i> Add ACS Server';
+    document.getElementById('acsServerModalTitle').innerHTML = '<i class="bi bi-server"></i> <%= t('admin.acs.add_server','Tambah Server ACS') %>';
     document.getElementById('sId').value = '';
     document.getElementById('sName').value = '';
     document.getElementById('sUrl').value = '';
@@ -582,7 +582,7 @@ function openEditServerModal(btn) {
 }
 
 function openEditLegacyAcsModal() {
-    document.getElementById('acsServerModalTitle').innerHTML = '<i class="bi bi-server"></i> Edit Default ACS';
+    document.getElementById('acsServerModalTitle').innerHTML = '<i class="bi bi-server"></i> <%= t('admin.acs.edit_default','Edit Default ACS') %>';
     document.getElementById('sId').value = 'legacy';
     document.getElementById('sName').value = 'Default ACS';
     document.getElementById('sUrl').value = '<%= (typeof settings !== "undefined" && settings.genieacs_url) ? String(settings.genieacs_url) : "" %>';
@@ -1017,11 +1017,11 @@ function updateBulkPanel() {
         countSpan.textContent = checkboxes.length;
     } else {
         panel.style.display = 'none';
-        document.getElementById('selectAllDevices').checked = false;
+        document.getElementById('selectAll<%= t('admin.acs.tab_devices','Perangkat') %>').checked = false;
     }
 }
 
-function getSelectedDevices() {
+function getSelected<%= t('admin.acs.tab_devices','Perangkat') %>() {
     const checkboxes = document.querySelectorAll('.device-checkbox:checked');
     const devices = [];
     checkboxes.forEach(cb => {
@@ -1034,7 +1034,7 @@ function getSelectedDevices() {
 }
 
 async function bulkSummon() {
-    const devices = getSelectedDevices();
+    const devices = getSelected<%= t('admin.acs.tab_devices','Perangkat') %>();
     if (devices.length === 0) return;
     if (!confirm(`Summon / Sinkronisasi ulang ${devices.length} perangkat?`)) return;
     
@@ -1053,7 +1053,7 @@ async function bulkSummon() {
 }
 
 async function bulkDelete() {
-    const devices = getSelectedDevices();
+    const devices = getSelected<%= t('admin.acs.tab_devices','Perangkat') %>();
     if (devices.length === 0) return;
     if (!confirm(`HAPUS ${devices.length} perangkat dari database ACS?\n(Tindakan ini tidak dapat dibatalkan)`)) return;
     
