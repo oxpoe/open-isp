@@ -441,18 +441,18 @@
     <div id="tab-content-nas" class="tab-pane" style="display:none;">
       <div class="card mb16">
         <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;">
-          <h6 style="margin:0;"><i class="bi bi-router"></i> Daftar Router NAS (Network Access Server)</h6>
-          <button type="button" class="btn btn-p btn-sm" onclick="showModal('addNasModal')"><i class="bi bi-plus-lg"></i> Tambah NAS Client</button>
+          <h6 style="margin:0;"><i class="bi bi-router"></i> <%= t('admin.rds.nas_title','Daftar Router NAS (Network Access Server)') %></h6>
+          <button type="button" class="btn btn-p btn-sm" onclick="showModal('addNasModal')"><i class="bi bi-plus-lg"></i> <%= t('admin.rds.nas_add','Tambah NAS Client') %></button>
         </div>
         <div class="card-bd" style="padding:0;">
           <div class="tbl-wrap">
             <table class="dtbl">
               <thead>
                 <tr>
-                  <th>IP Address NAS</th>
-                  <th>Nama Shortname</th>
-                  <th>Shared Secret</th>
-                  <th>Keterangan</th>
+                  <th><%= t('admin.rds.th_ipnas','IP Address NAS') %></th>
+                  <th><%= t('admin.rds.th_shortname','Nama Shortname') %></th>
+                  <th><%= t('admin.rds.th_secret','Shared Secret') %></th>
+                  <th><%= t('admin.rds.th_note','Keterangan') %></th>
                   <th><%= t('common.status','Status') %></th>
                   <th style="width:140px;text-align:right;"><%= t('common.actions','Aksi') %></th>
                 </tr>
@@ -474,14 +474,14 @@
                       </td>
                       <td style="text-align:right;white-space:nowrap;">
                         <form id="ntg-<%= nas.id %>" action="/admin/radius/nas/toggle" method="POST" style="display:none;"><input type="hidden" name="id" value="<%= nas.id %>"></form>
-                        <form id="ndl-<%= nas.id %>" action="/admin/radius/nas/delete" method="POST" style="display:none;" onsubmit="return confirm('Hapus NAS <%= nas.nasname %>?')"><input type="hidden" name="id" value="<%= nas.id %>"></form>
+                        <form id="ndl-<%= nas.id %>" action="/admin/radius/nas/delete" method="POST" style="display:none;" onsubmit="return confirm('<%= t('admin.rds.del_nas','Hapus NAS') %> <%= nas.nasname %>?')"><input type="hidden" name="id" value="<%= nas.id %>"></form>
                         <div class="act">
                           <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
                           <div class="act-menu">
-                            <button type="submit" form="ntg-<%= nas.id %>" class="act-item <%= nas.is_active ? 'warn' : 'success' %>"><i class="bi bi-<%= nas.is_active ? 'pause-circle' : 'play-circle' %>"></i> <%= nas.is_active ? 'Non-aktifkan' : 'Aktifkan' %></button>
-                            <button type="button" class="act-item primary" onclick='openEditNasModal(<%- JSON.stringify(nas).split('<').join('\\u003c') %>)'><i class="bi bi-pencil"></i> Edit NAS</button>
+                            <button type="submit" form="ntg-<%= nas.id %>" class="act-item <%= nas.is_active ? 'warn' : 'success' %>"><i class="bi bi-<%= nas.is_active ? 'pause-circle' : 'play-circle' %>"></i> <%= nas.is_active ? t('admin.rds.deactivate','Non-aktifkan') : t('admin.rds.activate','Aktifkan') %></button>
+                            <button type="button" class="act-item primary" onclick='openEditNasModal(<%- JSON.stringify(nas).split('<').join('\\u003c') %>)'><i class="bi bi-pencil"></i> <%= t('admin.rds.edit_nas','Edit NAS') %></button>
                             <div class="act-sep"></div>
-                            <button type="submit" form="ndl-<%= nas.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus NAS</button>
+                            <button type="submit" form="ndl-<%= nas.id %>" class="act-item danger"><i class="bi bi-trash"></i> <%= t('admin.rds.del_nas','Hapus NAS') %></button>
                           </div>
                         </div>
                       </td>
@@ -490,7 +490,7 @@
                 <% } else { %>
                   <tr>
                     <td colspan="6" class="text-center text-muted" style="padding:24px;">
-                      Belum ada NAS khusus terdaftar. Server akan menggunakan <strong>Global Shared Secret</strong> untuk semua request router.
+                      <%- t('admin.rds.nas_empty','Belum ada NAS khusus terdaftar. Server akan menggunakan <strong>Global Shared Secret</strong> untuk semua request router.') %>
                     </td>
                   </tr>
                 <% } %>
@@ -505,11 +505,11 @@
     <div id="tab-content-online" class="tab-pane">
       <div class="card mb16">
         <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;">
-          <h6 style="margin:0;"><i class="bi bi-wifi"></i> Sesi Aktif RADIUS (Active Connections)</h6>
+          <h6 style="margin:0;"><i class="bi bi-wifi"></i> <%= t('admin.rds.online_title','Sesi Aktif RADIUS (Active Connections)') %></h6>
           <% if (onlineSessions && onlineSessions.length > 0) { %>
-            <form action="/admin/radius/clear-stale" method="POST" onsubmit="return confirm('Bersihkan semua sesi aktif yang tidak ada pembaruan lebih dari 2 jam?')" style="margin:0;">
+            <form action="/admin/radius/clear-stale" method="POST" onsubmit="return confirm('<%= t('admin.rds.confirm_clear','Bersihkan semua sesi aktif yang tidak ada pembaruan lebih dari 2 jam?') %>')" style="margin:0;">
               <button type="submit" class="btn btn-w btn-sm" title="Tandai sesi yang sudah tidak ada pembaruan > 2 jam sebagai stopped">
-                <i class="bi bi-clock-history"></i> Bersihkan Sesi Usang
+                <i class="bi bi-clock-history"></i> <%= t('admin.rds.clear_stale','Bersihkan Sesi Usang') %>
               </button>
             </form>
           <% } %>
@@ -521,12 +521,12 @@
                 <tr>
                   <th>Username</th>
                   <th><%= t('iso.cust_name','Nama Pelanggan') %></th>
-                  <th>Framed IP</th>
-                  <th>NAS IP</th>
-                  <th>Upload (In)</th>
-                  <th>Download (Out)</th>
-                  <th>Durasi Sesi</th>
-                  <th>Waktu Update</th>
+                  <th><%= t('admin.rds.th_framed','Framed IP') %></th>
+                  <th><%= t('admin.rds.th_nasip','NAS IP') %></th>
+                  <th><%= t('admin.rds.th_up_in','Upload (In)') %></th>
+                  <th><%= t('admin.rds.th_down_out','Download (Out)') %></th>
+                  <th><%= t('admin.rds.th_duration','Durasi Sesi') %></th>
+                  <th><%= t('admin.rds.th_updated','Waktu Update') %></th>
                   <th style="width:110px;text-align:right;"><%= t('common.actions','Aksi') %></th>
                 </tr>
               </thead>
@@ -554,12 +554,12 @@
                       <td><code><%= stStr %></code></td>
                       <td><%= s.updated_at %></td>
                       <td style="text-align:right;white-space:nowrap;">
-                        <form action="/admin/radius/disconnect" method="POST" onsubmit="return confirm('Putuskan sesi aktif RADIUS untuk user \'<%= s.username %>\'?')" style="display:inline;">
+                        <form action="/admin/radius/disconnect" method="POST" onsubmit="return confirm('<%= t('admin.rds.confirm_disconnect','Putuskan sesi aktif RADIUS untuk user') %> \'<%= s.username %>\'?')" style="display:inline;">
                           <input type="hidden" name="username" value="<%= s.username %>">
                           <input type="hidden" name="session_id" value="<%= s.session_id %>">
                           <input type="hidden" name="nas_ip" value="<%= s.nas_ip %>">
-                          <button type="submit" class="btn btn-d btn-sm" title="Putuskan <%= t('admin.rds.tab_sessions','Sesi Active RADIUS') %>">
-                            <i class="bi bi-power"></i> Putuskan
+                          <button type="submit" class="btn btn-d btn-sm" title="<%= t('admin.rds.disconnect','Putuskan') %> <%= t('admin.rds.tab_sessions','Sesi Active RADIUS') %>">
+                            <i class="bi bi-power"></i> <%= t('admin.rds.disconnect','Putuskan') %>
                           </button>
                         </form>
                       </td>
@@ -567,7 +567,7 @@
                   <% }); %>
                 <% } else { %>
                   <tr>
-                    <td colspan="9" class="text-center text-muted" style="padding:24px;">Belum ada sesi online RADIUS yang terhubung.</td>
+                    <td colspan="9" class="text-center text-muted" style="padding:24px;"><%= t('admin.rds.online_empty','Belum ada sesi online RADIUS yang terhubung.') %></td>
                   </tr>
                 <% } %>
               </tbody>
@@ -581,7 +581,7 @@
     <div id="tab-content-accounting" class="tab-pane" style="display:none;">
       <div class="card mb16">
         <div class="card-hd">
-          <h6><i class="bi bi-journal-text"></i> <%= t('admin.rds.tab_log','Log Accounting') %> RADIUS (100 Terakhir)</h6>
+          <h6><i class="bi bi-journal-text"></i> <%= t('admin.rds.tab_log','Log Accounting') %> <%= t('admin.rds.acct_suffix','RADIUS (100 Terakhir)') %></h6>
         </div>
         <div class="card-bd" style="padding:0;">
           <div class="tbl-wrap">
@@ -591,7 +591,7 @@
                   <th>ID</th>
                   <th>Username</th>
                   <th>Session ID</th>
-                  <th>NAS IP</th>
+                  <th><%= t('admin.rds.th_nasip','NAS IP') %></th>
                   <th>Status Type</th>
                   <th>Upload</th>
                   <th>Download</th>
@@ -635,7 +635,7 @@
                   <% }); %>
                 <% } else { %>
                   <tr>
-                    <td colspan="9" class="text-center text-muted" style="padding:24px;">Belum ada data log accounting RADIUS.</td>
+                    <td colspan="9" class="text-center text-muted" style="padding:24px;"><%= t('admin.rds.acct_empty','Belum ada data log accounting RADIUS.') %></td>
                   </tr>
                 <% } %>
               </tbody>
@@ -652,31 +652,31 @@
 <div class="mo" id="addNasModal">
   <div class="mb">
     <div class="mh">
-      <div class="mt"><i class="bi bi-plus-circle"></i> Tambah NAS Client RADIUS</div>
+      <div class="mt"><i class="bi bi-plus-circle"></i> <%= t('admin.rds.modal_add','Tambah NAS Client RADIUS') %></div>
       <button type="button" class="mc" onclick="closeModal('addNasModal')">&times;</button>
     </div>
     <form action="/admin/radius/nas/add" method="POST">
       <div class="mbody">
         <div class="fg">
-          <label class="fl">IP Address Router NAS</label>
-          <input type="text" name="nasname" class="fc" placeholder="Contoh: 192.168.88.1 atau 0.0.0.0" required>
+          <label class="fl"><%= t('admin.rds.lbl_ipnas','IP Address Router NAS') %></label>
+          <input type="text" name="nasname" class="fc" placeholder="<%= t('admin.rds.ph_nas_ip','Contoh: 192.168.88.1 atau 0.0.0.0') %>" required>
         </div>
         <div class="fg">
-          <label class="fl">Nama Singkat Router (Shortname)</label>
-          <input type="text" name="shortname" class="fc" placeholder="Contoh: Router-Utama">
+          <label class="fl"><%= t('admin.rds.lbl_shortname','Nama Singkat Router (Shortname)') %></label>
+          <input type="text" name="shortname" class="fc" placeholder="<%= t('admin.rds.ph_shortname','Contoh: Router-Utama') %>">
         </div>
         <div class="fg">
-          <label class="fl">Shared Secret Router</label>
-          <input type="text" name="secret" class="fc" placeholder="Contoh: secret123" required>
+          <label class="fl"><%= t('admin.rds.lbl_secret_router','Shared Secret Router') %></label>
+          <input type="text" name="secret" class="fc" placeholder="<%= t('admin.rds.ph_secret','Contoh: secret123') %>" required>
         </div>
         <div class="fg">
           <label class="fl"><%= t('common.note_optional','Keterangan (Opsional)') %></label>
-          <input type="text" name="description" class="fc" placeholder="Lokasi / Catatan">
+          <input type="text" name="description" class="fc" placeholder="<%= t('admin.rds.ph_note','Lokasi / Catatan') %>">
         </div>
       </div>
       <div class="mf">
         <button type="button" class="btn btn-g" onclick="closeModal('addNasModal')"><%= t('common.cancel','Batal') %></button>
-        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> Simpan NAS Client</button>
+        <button type="submit" class="btn btn-p"><i class="bi bi-check-lg"></i> <%= t('admin.rds.save_nas','Simpan NAS Client') %></button>
       </div>
     </form>
   </div>
@@ -686,30 +686,30 @@
 <div class="mo" id="editNasModal">
   <div class="mb">
     <div class="mh">
-      <div class="mt"><i class="bi bi-pencil-square"></i> Edit NAS Client RADIUS</div>
+      <div class="mt"><i class="bi bi-pencil-square"></i> <%= t('admin.rds.modal_edit','Edit NAS Client RADIUS') %></div>
       <button type="button" class="mc" onclick="closeModal('editNasModal')">&times;</button>
     </div>
     <form action="/admin/radius/nas/edit" method="POST">
       <input type="hidden" name="id" id="edit_nas_id">
       <div class="mbody">
         <div class="fg">
-          <label class="fl">IP Address Router NAS</label>
-          <input type="text" name="nasname" id="edit_nas_nasname" class="fc" placeholder="Contoh: 192.168.88.1" required>
+          <label class="fl"><%= t('admin.rds.lbl_ipnas','IP Address Router NAS') %></label>
+          <input type="text" name="nasname" id="edit_nas_nasname" class="fc" placeholder="<%= t('admin.rds.ph_nas_ip2','Contoh: 192.168.88.1') %>" required>
         </div>
         <div class="fg">
-          <label class="fl">Nama Singkat Router (Shortname)</label>
-          <input type="text" name="shortname" id="edit_nas_shortname" class="fc" placeholder="Contoh: Router-Utama">
+          <label class="fl"><%= t('admin.rds.lbl_shortname','Nama Singkat Router (Shortname)') %></label>
+          <input type="text" name="shortname" id="edit_nas_shortname" class="fc" placeholder="<%= t('admin.rds.ph_shortname','Contoh: Router-Utama') %>">
         </div>
         <div class="fg">
-          <label class="fl">Shared Secret Router</label>
-          <input type="text" name="secret" id="edit_nas_secret" class="fc" placeholder="Contoh: secret123" required>
+          <label class="fl"><%= t('admin.rds.lbl_secret_router','Shared Secret Router') %></label>
+          <input type="text" name="secret" id="edit_nas_secret" class="fc" placeholder="<%= t('admin.rds.ph_secret','Contoh: secret123') %>" required>
         </div>
         <div class="fg">
           <label class="fl"><%= t('common.note_optional','Keterangan (Opsional)') %></label>
-          <input type="text" name="description" id="edit_nas_description" class="fc" placeholder="Lokasi / Catatan">
+          <input type="text" name="description" id="edit_nas_description" class="fc" placeholder="<%= t('admin.rds.ph_note','Lokasi / Catatan') %>">
         </div>
         <div class="fg">
-          <label class="fl">Status NAS Client</label>
+          <label class="fl"><%= t('admin.rds.lbl_status_nas','Status NAS Client') %></label>
           <select name="is_active" id="edit_nas_is_active" class="fs">
             <option value="1"><%= t('common.active','Aktif') %></option>
             <option value="0"><%= t('admin.common.non_active','Non-Aktif') %></option>
@@ -769,10 +769,10 @@
     if (!el) return;
     el.select();
     navigator.clipboard.writeText(el.value).then(() => {
-      alert('Script setup MikroTik & Isolir RADIUS berhasil disalin! Silakan tempelkan (paste) di Terminal MikroTik Anda.');
+      alert('<%- t('admin.rds.alert_copied','Script setup MikroTik & Isolir RADIUS berhasil disalin! Silakan tempelkan (paste) di Terminal MikroTik Anda.') %>');
     }).catch(() => {
       document.execCommand('copy');
-      alert('Script MikroTik berhasil disalin!');
+      alert('<%- t('admin.rds.alert_copied2','Script MikroTik berhasil disalin!') %>');
     });
   }
 
