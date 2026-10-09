@@ -298,6 +298,7 @@ function initTelegram() {
         [{ text: '🎫 Voucher', callback_data: 'menu_vouch' }, { text: '💰 Tagihan', callback_data: 'menu_bill' }],
         [{ text: '⚙️ MikroTik Status', callback_data: 'menu_mt' }],
         [{ text: '🖥️ Sistem', callback_data: 'menu_sys' }, { text: '💰 Tunggakan', callback_data: 'menu_arrears' }],
+        [{ text: '💰 Pendapatan', callback_data: 'menu_pendapatan' }],
         [{ text: '🎫 Tiket', callback_data: 'menu_tiket' }, { text: '📡 OLT', callback_data: 'menu_olt' }, { text: '📶 Trafik', callback_data: 'menu_trafik' }],
         [{ text: '🔄 Refresh', callback_data: 'menu_main' }]
       ]
@@ -425,6 +426,10 @@ function initTelegram() {
       catch (e) { bot.sendMessage(chatId, 'Gagal: ' + e.message); }
     }
 
+    else if (data === 'menu_pendapatan') {
+      try { bot.sendMessage(chatId, tgPendapatanText(), { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '⬅️ Kembali', callback_data: 'menu_main' }]] } }); }
+      catch (e) { bot.sendMessage(chatId, 'Gagal: ' + e.message); }
+    }
     else if (data === 'mt_resource') {
       try {
         const res = await mikrotikSvc.getSystemResource();
@@ -786,6 +791,34 @@ function initTelegram() {
   bot.onText(/\/(trafik|online)/i, async (msg) => {
     if (!isAdmin(msg)) return;
     try { bot.sendMessage(msg.chat.id, await tgTrafikText(), { parse_mode: 'Markdown', reply_markup: backBtn }); }
+    catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
+  });
+
+  bot.onText(/\/(offline|pppoeoffline|pppoe-offline)/i, async (msg) => {
+    if (!isAdmin(msg)) return;
+    try { const snap = await loadPppoeSnapshot(); bot.sendMessage(msg.chat.id, buildOfflineTelegramText(snap)); }
+    catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
+  });
+  bot.onText(/\/(aktif|pppoeonline|pppoe-online)/i, async (msg) => {
+    if (!isAdmin(msg)) return;
+    try {
+      const snap = await loadPppoeSnapshot();
+      const active = snap.active || [];
+      let t = `🟢 *PPPoE ONLINE*\n\nTotal Aktif: *${active.length}*\n`;
+      active.slice(0, 20).forEach((s, i) => { t += `${i + 1}. ${(s && (s.name || s.user)) || '-'}\n`; });
+      if (active.length > 20) t += `\n_...dan ${active.length - 20} lainnya._`;
+      bot.sendMessage(msg.chat.id, t, { parse_mode: 'Markdown', reply_markup: backBtn });
+    } catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
+  });
+  function tgPendapatanText() {
+    const today = Number(billingSvc.getTodayRevenue() || 0);
+    const stats = billingSvc.getDashboardStats() || {};
+    const month = Number(stats.thisMonth || 0);
+    return `💰 *PENDAPATAN*\n\n📅 Hari ini: *Rp ${today.toLocaleString('id-ID')}*\n🗓️ Bulan ini: *Rp ${month.toLocaleString('id-ID')}*\n⏳ Belum dibayar: *${stats.unpaidCount || 0} tagihan*\n`;
+  }
+  bot.onText(/\/(pendapatan|kas|revenue)/i, async (msg) => {
+    if (!isAdmin(msg)) return;
+    try { bot.sendMessage(msg.chat.id, tgPendapatanText(), { parse_mode: 'Markdown', reply_markup: backBtn }); }
     catch (e) { bot.sendMessage(msg.chat.id, 'Gagal: ' + e.message); }
   });
 
