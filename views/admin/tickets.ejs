@@ -64,7 +64,7 @@
             <input class="fc" name="search" placeholder="Cari pelanggan / subjek / pesan..." value="<%= (typeof filterSearch!=='undefined'?filterSearch:'') %>">
           </div>
           <select class="fs" name="tech_id" style="width:180px" onchange="this.form.submit()">
-            <option value="">Semua Teknisi</option>
+            <option value=""><%= t('admin.tk.all_techs','Semua Teknisi') %></option>
             <% (typeof technicians!=='undefined'?technicians:[]).forEach(t => { %><option value="<%= t.id %>" <%= (typeof filterTech!=='undefined' && String(filterTech)===String(t.id))?'selected':'' %>><%= t.name %></option><% }) %>
           </select>
           <select class="fs" name="status" style="width:160px" onchange="this.form.submit()">
@@ -160,7 +160,7 @@
         <div class="fg">
           <label class="fl">Pilih Pelanggan (Opsional)</label>
           <select class="fs" name="customer_id" id="createCustomerId">
-            <option value="0">-- Tugas Umum / Non-Pelanggan (Maintenance) --</option>
+            <option value="0"><%= t('admin.tk.general_task','-- Tugas Umum / Non-Pelanggan (Maintenance) --') %></option>
             <% if (typeof customers !== 'undefined' && customers) { %>
               <% customers.forEach(c => { %>
                 <option value="<%= c.id %>"><%= c.name %> (<%= c.phone || '-' %>) - <%= c.address || '' %></option>
@@ -179,7 +179,7 @@
         <div class="fg">
           <label class="fl">Tugaskan ke Teknisi (Opsional)</label>
           <select class="fs" name="technician_id">
-            <option value="">-- Belum Ditugaskan (Bebas) --</option>
+            <option value=""><%= t('admin.tk.unassigned','-- Belum Ditugaskan (Bebas) --') %></option>
             <% if (typeof technicians !== 'undefined' && technicians) { %>
               <% technicians.forEach(t => { %>
                 <option value="<%= t.id %>"><%= t.name %> (<%= t.phone || '-' %>)</option>
@@ -190,8 +190,8 @@
         <div class="fg">
           <label class="fl">Status Awal</label>
           <select class="fs" name="status">
-            <option value="open">Belum Ditangani (Open)</option>
-            <option value="in_progress">Sedang Dikerjakan (In Progress)</option>
+            <option value="open"><%= t('admin.tk.st_open','Belum Ditangani (Open)') %></option>
+            <option value="in_progress"><%= t('admin.tk.st_progress','Sedang Dikerjakan (In Progress)') %></option>
           </select>
         </div>
       </div>
@@ -214,7 +214,7 @@
         <div class="fg">
           <label class="fl"><i class="bi bi-person-badge me-1"></i><%= t('admin.tickets.table.technician', 'Tugaskan ke Teknisi') %></label>
           <select class="fs" name="technician_id" id="upTechnicianId">
-            <option value="">-- Belum Ditugaskan (Bebas) --</option>
+            <option value=""><%= t('admin.tk.unassigned','-- Belum Ditugaskan (Bebas) --') %></option>
             <% if (typeof technicians !== 'undefined' && technicians) { %>
               <% technicians.forEach(t => { %>
                 <option value="<%= t.id %>"><%= t.name %> (<%= t.phone || '-' %>)</option>

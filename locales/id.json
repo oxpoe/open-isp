@@ -1540,7 +1540,13 @@
       "btn_mass_delete": "Hapus Massal",
       "btn_del_bill": "Hapus Tagihan",
       "btn_invoice_pdf": "Invoice PDF",
-      "period_label": "• Periode:"
+      "period_label": "• Periode:",
+      "all_packages": "Semua Paket",
+      "all_areas": "Semua Area",
+      "all_routers": "Semua Router",
+      "all_collectors": "Semua Kolektor",
+      "opt_percent": "Persen (%)",
+      "opt_amount": "Nominal (Rp)"
     },
     "common": {
       "keep_empty": "Biarkan kosong jika tidak diganti",
@@ -1561,6 +1567,18 @@
       "end_date": "Tanggal Akhir",
       "gross": "Pemasukan (Bruto)",
       "net": "Laba Bersih"
+    },
+    "tk": {
+      "all_techs": "Semua Teknisi",
+      "general_task": "-- Tugas Umum / Non-Pelanggan (Maintenance) --",
+      "unassigned": "-- Belum Ditugaskan (Bebas) --",
+      "st_open": "Belum Ditangani (Open)",
+      "st_progress": "Sedang Dikerjakan (In Progress)"
+    },
+    "onu": {
+      "select_vendor": "Pilih Vendor",
+      "hint_rescan": "Klik \"Scan Ulang\" untuk mencari ONU yang belum terkonfigurasi",
+      "hint_reload": "Klik \"Muat Ulang / Scan\" untuk memantau status ONU terkonfigurasi via SNMP"
     }
   },
   "tech": {

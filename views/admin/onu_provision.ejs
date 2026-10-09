@@ -146,7 +146,7 @@
             <div class="fg">
               <label class="fl">Vendor OLT</label>
               <select class="fs" name="vendor" id="oltVendor" required onchange="toggleVendorFields()">
-                <option value="">Pilih Vendor</option>
+                <option value=""><%= t('admin.onu.select_vendor','Pilih Vendor') %></option>
                 <option value="ZTE" <%= oltConfig?.vendor === 'ZTE' ? 'selected' : '' %>>ZTE C300/C320</option>
                 <option value="Huawei" <%= oltConfig?.vendor === 'Huawei' ? 'selected' : '' %>>Huawei MA5800</option>
                 <option value="Fiberhome" <%= oltConfig?.vendor === 'Fiberhome' ? 'selected' : '' %>>Fiberhome AN5516</option>
@@ -236,7 +236,7 @@
           <div id="unconfiguredList" style="margin-top:20px">
             <div class="hint" style="text-align:center;padding:40px">
               <i class="bi bi-info-circle" style="font-size:32px;opacity:0.5"></i>
-              <p>Klik "Scan Ulang" untuk mencari ONU yang belum terkonfigurasi</p>
+              <p><%= t('admin.onu.hint_rescan','Klik "Scan Ulang" untuk mencari ONU yang belum terkonfigurasi') %></p>
             </div>
           </div>
         </div>
@@ -256,7 +256,7 @@
           <div id="configuredList">
             <div class="hint" style="text-align:center;padding:40px">
               <i class="bi bi-info-circle" style="font-size:32px;opacity:0.5"></i>
-              <p>Klik "Muat Ulang / Scan" untuk memantau status ONU terkonfigurasi via SNMP</p>
+              <p><%= t('admin.onu.hint_reload','Klik "Muat Ulang / Scan" untuk memantau status ONU terkonfigurasi via SNMP') %></p>
             </div>
           </div>
         </div>

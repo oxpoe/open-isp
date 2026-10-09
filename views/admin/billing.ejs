@@ -65,19 +65,19 @@
         <option value="void" <%= filterStatus==='void'?'selected':'' %>><%= t('admin.bill.st_void','Hangus') %></option>
       </select>
       <select class="fs" name="package_id" style="width:170px">
-        <option value="">Semua Paket</option>
+        <option value=""><%= t('admin.bill.all_packages','Semua Paket') %></option>
         <% (typeof packages !== 'undefined' ? packages : []).forEach(p => { %><option value="<%= p.id %>" <%= String(filterPackage)===String(p.id)?'selected':'' %>><%= p.name %></option><% }) %>
       </select>
       <select class="fs" name="area" style="width:150px">
-        <option value="">Semua Area</option>
+        <option value=""><%= t('admin.bill.all_areas','Semua Area') %></option>
         <% (typeof areas !== 'undefined' ? areas : []).forEach(a => { %><option value="<%= a %>" <%= filterArea===a?'selected':'' %>><%= a %></option><% }) %>
       </select>
       <select class="fs" name="router_id" style="width:150px">
-        <option value="">Semua Router</option>
+        <option value=""><%= t('admin.bill.all_routers','Semua Router') %></option>
         <% (typeof routers !== 'undefined' ? routers : []).forEach(r => { %><option value="<%= r.id %>" <%= String(filterRouter)===String(r.id)?'selected':'' %>><%= r.name %></option><% }) %>
       </select>
       <select class="fs" name="collector_id" style="width:160px">
-        <option value="">Semua Kolektor</option>
+        <option value=""><%= t('admin.bill.all_collectors','Semua Kolektor') %></option>
         <% (typeof collectors !== 'undefined' ? collectors : []).forEach(k => { %><option value="<%= k.id %>" <%= String(filterCollector)===String(k.id)?'selected':'' %>><%= k.name %></option><% }) %>
       </select>
       <button class="btn btn-g btn-sm" type="submit"><i class="bi bi-funnel"></i> <%= t('common.filter', 'Filter') %></button>
@@ -293,8 +293,8 @@
           <div class="fg">
             <label class="fl">Tipe Diskon</label>
             <select class="fs" name="discount_type" id="dmType">
-              <option value="percent">Persen (%)</option>
-              <option value="amount">Nominal (Rp)</option>
+              <option value="percent"><%= t('admin.bill.opt_percent','Persen (%)') %></option>
+              <option value="amount"><%= t('admin.bill.opt_amount','Nominal (Rp)') %></option>
             </select>
           </div>
           <div class="fg">

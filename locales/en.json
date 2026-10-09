@@ -1539,7 +1539,13 @@
       "btn_mass_delete": "Mass Delete",
       "btn_del_bill": "Delete Bill",
       "btn_invoice_pdf": "Invoice PDF",
-      "period_label": "• Period:"
+      "period_label": "• Period:",
+      "all_packages": "All Packages",
+      "all_areas": "All Areas",
+      "all_routers": "All Routers",
+      "all_collectors": "All Collectors",
+      "opt_percent": "Percent (%)",
+      "opt_amount": "Amount (Rp)"
     },
     "common": {
       "keep_empty": "Leave empty to keep unchanged",
@@ -1560,6 +1566,18 @@
       "end_date": "End Date",
       "gross": "Income (Gross)",
       "net": "Net Profit"
+    },
+    "tk": {
+      "all_techs": "All Technicians",
+      "general_task": "-- General / Non-Customer Task (Maintenance) --",
+      "unassigned": "-- Unassigned (Open) --",
+      "st_open": "Not Handled (Open)",
+      "st_progress": "In Progress"
+    },
+    "onu": {
+      "select_vendor": "Select Vendor",
+      "hint_rescan": "Click \"Rescan\" to find unconfigured ONUs",
+      "hint_reload": "Click \"Reload / Scan\" to monitor configured ONU status via SNMP"
     }
   },
   "tech": {
