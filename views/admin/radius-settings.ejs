@@ -110,7 +110,7 @@
       <div class="sc p">
         <i class="bi bi-broadcast sc-icon"></i>
         <div class="sc-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-          <span>Status RADIUS Server</span>
+          <span><%= t('admin.rds.card_status','Status RADIUS Server') %></span>
           <form action="/admin/radius/restart" method="POST" style="margin:0;">
             <button type="submit" class="btn btn-w btn-sm" style="font-size:10px;padding:2px 8px;height:auto;" title="Restart Service UDP RADIUS (1812/1813)">
               <i class="bi bi-arrow-clockwise"></i> Restart
@@ -129,39 +129,39 @@
 
       <div class="sc s">
         <i class="bi bi-wifi sc-icon"></i>
-        <div class="sc-label">User RADIUS Online</div>
+        <div class="sc-label"><%= t('admin.rds.card_online','User RADIUS Online') %></div>
         <div class="sc-val"><%= onlineSessions.length %></div>
-        <div class="sc-sub">Sesi Aktif Terhubung Saat Ini</div>
+        <div class="sc-sub"><%= t('admin.rds.card_online_sub','Sesi Aktif Terhubung Saat Ini') %></div>
       </div>
 
       <div class="sc i">
         <i class="bi bi-router sc-icon"></i>
         <div class="sc-label">NAS Router Client</div>
         <div class="sc-val"><%= nasList.length %></div>
-        <div class="sc-sub">Router NAS Terdaftar di Server</div>
+        <div class="sc-sub"><%= t('admin.rds.card_nas_sub','Router NAS Terdaftar di Server') %></div>
       </div>
 
       <div class="sc w">
         <i class="bi bi-activity sc-icon"></i>
-        <div class="sc-label">Trafik RADIUS Hari Ini</div>
+        <div class="sc-label"><%= t('admin.rds.card_traffic','Trafik RADIUS Hari Ini') %></div>
         <div class="sc-val"><%= typeof todayTrafficMB !== 'undefined' ? todayTrafficMB : '0.0' %><span style="font-size:14px;"> MB</span></div>
-        <div class="sc-sub"><%= typeof todayEvents !== 'undefined' ? todayEvents : 0 %> Log Accounting Hari Ini</div>
+        <div class="sc-sub"><%= typeof todayEvents !== 'undefined' ? todayEvents : 0 %> <%= t('admin.rds.card_log_today','Log Accounting Hari Ini') %></div>
       </div>
     </div>
 
     <!-- TABS NAVIGATION -->
     <div class="mtabs mb16">
       <button type="button" class="mtab active" id="tab-btn-online" onclick="switchTab('online')">
-        <i class="bi bi-wifi"></i> Sesi Active RADIUS (<%= onlineSessions.length %>)
+        <i class="bi bi-wifi"></i> <%= t('admin.rds.tab_sessions','Sesi Active RADIUS') %> (<%= onlineSessions.length %>)
       </button>
       <button type="button" class="mtab" id="tab-btn-settings" onclick="switchTab('settings')">
-        <i class="bi bi-sliders"></i> Pengaturan RADIUS
+        <i class="bi bi-sliders"></i> <%= t('admin.rds.tab_settings','Pengaturan RADIUS') %>
       </button>
       <button type="button" class="mtab" id="tab-btn-nas" onclick="switchTab('nas')">
-        <i class="bi bi-router"></i> Daftar NAS Router (<%= nasList.length %>)
+        <i class="bi bi-router"></i> <%= t('admin.rds.tab_nas','Daftar NAS Router') %> (<%= nasList.length %>)
       </button>
       <button type="button" class="mtab" id="tab-btn-accounting" onclick="switchTab('accounting')">
-        <i class="bi bi-journal-text"></i> Log Accounting
+        <i class="bi bi-journal-text"></i> <%= t('admin.rds.tab_log','Log Accounting') %>
       </button>
     </div>
 
@@ -173,25 +173,25 @@
           <!-- Card 1: Core Service Settings -->
           <div class="card mb16">
             <div class="card-hd">
-              <h6><i class="bi bi-cpu"></i> Layanan RADIUS Server</h6>
+              <h6><i class="bi bi-cpu"></i> <%= t('admin.rds.svc_title','Layanan RADIUS Server') %></h6>
             </div>
             <div class="card-bd">
               <div class="fg">
-                <label class="fl">Status Service RADIUS</label>
+                <label class="fl"><%= t('admin.rds.svc_status','Status Service RADIUS') %></label>
                 <select name="radius_enabled" class="fs">
-                  <option value="1" <%= radiusStatus.enabled ? 'selected' : '' %>>Aktif (Running Background UDP Service)</option>
-                  <option value="0" <%= !radiusStatus.enabled ? 'selected' : '' %>>Non-Aktif (Disabled)</option>
+                  <option value="1" <%= radiusStatus.enabled ? 'selected' : '' %>><%= t('admin.rds.opt_active_bg','Aktif (Running Background UDP Service)') %></option>
+                  <option value="0" <%= !radiusStatus.enabled ? 'selected' : '' %>><%= t('admin.rds.opt_inactive','Non-Aktif (Disabled)') %></option>
                 </select>
                 <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
-                  Mendengarkan request autentikasi & accounting dari Router NAS MikroTik.
+                  <%= t('admin.rds.desc_listen','Mendengarkan request autentikasi & accounting dari Router NAS MikroTik.') %>
                 </small>
               </div>
 
               <div class="fg">
-                <label class="fl">Global Shared Secret RADIUS</label>
+                <label class="fl"><%= t('admin.rds.secret','Global Shared Secret RADIUS') %></label>
                 <input type="text" name="radius_secret" class="fc" value="<%= radiusStatus.secret %>" required>
                 <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
-                  Secret default yang digunakan jika IP NAS tidak didaftarkan secara khusus.
+                  <%= t('admin.rds.secret_desc','Secret default yang digunakan jika IP NAS tidak didaftarkan secara khusus.') %>
                 </small>
               </div>
             </div>
@@ -200,18 +200,18 @@
           <!-- Card 2: Port UDP & Protocol -->
           <div class="card mb16">
             <div class="card-hd">
-              <h6><i class="bi bi-ethernet"></i> Port Jaringan UDP</h6>
+              <h6><i class="bi bi-ethernet"></i> <%= t('admin.rds.ports_title','Port Jaringan UDP') %></h6>
             </div>
             <div class="card-bd">
               <div class="form-row">
                 <div class="fg">
-                  <label class="fl">Port Auth (UDP)</label>
+                  <label class="fl"><%= t('admin.rds.port_auth','Port Auth (UDP)') %></label>
                   <input type="number" name="radius_auth_port" class="fc" value="<%= radiusStatus.authPort %>" required>
                   <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Default: 1812</small>
                 </div>
 
                 <div class="fg">
-                  <label class="fl">Port Acct (UDP)</label>
+                  <label class="fl"><%= t('admin.rds.port_acct','Port Acct (UDP)') %></label>
                   <input type="number" name="radius_acct_port" class="fc" value="<%= radiusStatus.acctPort %>" required>
                   <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Default: 1813</small>
                 </div>
@@ -222,25 +222,25 @@
           <!-- Card 3: Limitasi Koneksi & Sesi -->
           <div class="card mb16">
             <div class="card-hd">
-              <h6><i class="bi bi-speedometer2"></i> Limitasi Kecepatan & Sesi Aktif</h6>
+              <h6><i class="bi bi-speedometer2"></i> <%= t('admin.rds.limit_title','Limitasi Kecepatan & Sesi Aktif') %></h6>
             </div>
             <div class="card-bd">
               <div class="fg">
-                <label class="fl">Pembatasan Sesi Aktif Ganda (Simultaneous-Use)</label>
+                <label class="fl"><%= t('admin.rds.simuse','Pembatasan Sesi Aktif Ganda (Simultaneous-Use)') %></label>
                 <select name="radius_limit_simultaneous" class="fs">
-                  <option value="1" <%= (typeof radiusStatus.limitSimultaneous === 'undefined' || radiusStatus.limitSimultaneous) ? 'selected' : '' %>>Aktif - Batasi 1 Akun 1 Sesi Online (Rejek Login Ganda)</option>
-                  <option value="0" <%= (typeof radiusStatus.limitSimultaneous !== 'undefined' && !radiusStatus.limitSimultaneous) ? 'selected' : '' %>>Non-Aktif - Bebas Multi-Login</option>
+                  <option value="1" <%= (typeof radiusStatus.limitSimultaneous === 'undefined' || radiusStatus.limitSimultaneous) ? 'selected' : '' %>><%= t('admin.rds.opt_simuse_on','Aktif - Batasi 1 Akun 1 Sesi Online (Rejek Login Ganda)') %></option>
+                  <option value="0" <%= (typeof radiusStatus.limitSimultaneous !== 'undefined' && !radiusStatus.limitSimultaneous) ? 'selected' : '' %>><%= t('admin.rds.opt_simuse_off','Non-Aktif - Bebas Multi-Login') %></option>
                 </select>
                 <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
-                  Mencegah 1 akun dipakai secara bersamaan di banyak perangkat.
+                  <%= t('admin.rds.simuse_desc','Mencegah 1 akun dipakai secara bersamaan di banyak perangkat.') %>
                 </small>
               </div>
 
               <div class="fg">
-                <label class="fl">Default Rate Limit (Fallback Kecepatan)</label>
-                <input type="text" name="radius_default_rate_limit" class="fc" value="<%= typeof radiusStatus.defaultRateLimit !== 'undefined' ? radiusStatus.defaultRateLimit : '5M/10M' %>" placeholder="Contoh: 5M/10M">
+                <label class="fl"><%= t('admin.rds.rate_default','Default Rate Limit (Fallback Kecepatan)') %></label>
+                <input type="text" name="radius_default_rate_limit" class="fc" value="<%= typeof radiusStatus.defaultRateLimit !== 'undefined' ? radiusStatus.defaultRateLimit : '5M/10M' %>" placeholder="<%= t('admin.rds.ph_rate','Contoh: 5M/10M') %>">
                 <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
-                  Digunakan jika pengguna/pelanggan tidak terikat pada Paket Internet khusus. (Format: <code>Upload/Download</code>).
+                  <%- t('admin.rds.rate_desc','Digunakan jika pengguna/pelanggan tidak terikat pada Paket Internet khusus. (Format: <code>Upload/Download</code>).') %>
                 </small>
               </div>
             </div>
@@ -249,47 +249,47 @@
           <!-- Card 3: Isolir Settings -->
           <div class="card mb16">
             <div class="card-hd">
-              <h6><i class="bi bi-shield-slash"></i> Isolir & Suspended Policy RADIUS</h6>
+              <h6><i class="bi bi-shield-slash"></i> <%= t('admin.rds.isolir_title','Isolir & Suspended Policy RADIUS') %></h6>
             </div>
             <div class="card-bd">
               <div class="fg">
-                <label class="fl">Aksi Pelanggan Terisolir</label>
+                <label class="fl"><%= t('admin.rds.isolir_action','Aksi Pelanggan Terisolir') %></label>
                 <select name="radius_isolir_action" class="fs">
-                  <option value="pool" <%= radiusStatus.isolirAction === 'pool' ? 'selected' : '' %>>Access-Accept dengan Dynamic IP Pool Isolir (Rekomendasi)</option>
-                  <option value="reject" <%= radiusStatus.isolirAction === 'reject' ? 'selected' : '' %>>Access-Reject (Koneksi Ditolak Total)</option>
+                  <option value="pool" <%= radiusStatus.isolirAction === 'pool' ? 'selected' : '' %>><%= t('admin.rds.opt_isolir_pool','Access-Accept dengan Dynamic IP Pool Isolir (Rekomendasi)') %></option>
+                  <option value="reject" <%= radiusStatus.isolirAction === 'reject' ? 'selected' : '' %>><%= t('admin.rds.opt_isolir_reject','Access-Reject (Koneksi Ditolak Total)') %></option>
                 </select>
               </div>
 
               <div class="fg">
-                <label class="fl">Alokasi IP Pool Isolir oleh RADIUS Server</label>
+                <label class="fl"><%= t('admin.rds.isolir_pool_alloc','Alokasi IP Pool Isolir oleh RADIUS Server') %></label>
                 <select name="radius_isolir_ip_pool_enabled" class="fs">
-                  <option value="1" <%= (typeof radiusStatus.isolirIpPoolEnabled === 'undefined' || radiusStatus.isolirIpPoolEnabled) ? 'selected' : '' %>>Aktif - RADIUS Alokasikan IP Isolir Khusus Secara Otomatis</option>
-                  <option value="0" <%= (typeof radiusStatus.isolirIpPoolEnabled !== 'undefined' && !radiusStatus.isolirIpPoolEnabled) ? 'selected' : '' %>>Non-Aktif - Hanya Kirim Mikrotik-Group / Framed-Pool</option>
+                  <option value="1" <%= (typeof radiusStatus.isolirIpPoolEnabled === 'undefined' || radiusStatus.isolirIpPoolEnabled) ? 'selected' : '' %>><%= t('admin.rds.opt_isolir_pool_on','Aktif - RADIUS Alokasikan IP Isolir Khusus Secara Otomatis') %></option>
+                  <option value="0" <%= (typeof radiusStatus.isolirIpPoolEnabled !== 'undefined' && !radiusStatus.isolirIpPoolEnabled) ? 'selected' : '' %>><%= t('admin.rds.opt_isolir_pool_off','Non-Aktif - Hanya Kirim Mikrotik-Group / Framed-Pool') %></option>
                 </select>
-                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Pelanggan terisolir akan mendapatkan IP khusus dari subnet isolir RADIUS tanpa perlu user/pool di MikroTik.</small>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;"><%= t('admin.rds.isolir_pool_desc','Pelanggan terisolir akan mendapatkan IP khusus dari subnet isolir RADIUS tanpa perlu user/pool di MikroTik.') %></small>
               </div>
 
               <div class="form-row">
                 <div class="fg">
-                  <label class="fl">Rentang IP Pool Isolir (Awal)</label>
+                  <label class="fl"><%= t('admin.rds.isolir_start','Rentang IP Pool Isolir (Awal)') %></label>
                   <input type="text" name="radius_isolir_ip_pool_start" class="fc" value="<%= typeof radiusStatus.isolirIpPoolStart !== 'undefined' ? radiusStatus.isolirIpPoolStart : '10.10.99.2' %>" placeholder="10.10.99.2" required>
                 </div>
                 <div class="fg">
-                  <label class="fl">Rentang IP Pool Isolir (Akhir)</label>
+                  <label class="fl"><%= t('admin.rds.isolir_end','Rentang IP Pool Isolir (Akhir)') %></label>
                   <input type="text" name="radius_isolir_ip_pool_end" class="fc" value="<%= typeof radiusStatus.isolirIpPoolEnd !== 'undefined' ? radiusStatus.isolirIpPoolEnd : '10.10.99.254' %>" placeholder="10.10.99.254" required>
                 </div>
               </div>
 
               <div class="fg">
-                <label class="fl">Kecepatan Limit Pelanggan Terisolir (Rate-Limit)</label>
-                <input type="text" name="radius_isolir_rate_limit" class="fc" value="<%= typeof radiusStatus.isolirRateLimit !== 'undefined' ? radiusStatus.isolirRateLimit : '512k/512k' %>" placeholder="Contoh: 512k/512k atau 1M/1M" required>
-                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Format: <code>Upload/Download</code> (misal: 512k/512k, 1M/1M, 256k/512k). Dikirimkan langsung ke MikroTik saat pelanggan terisolir.</small>
+                <label class="fl"><%= t('admin.rds.isolir_rate','Kecepatan Limit Pelanggan Terisolir (Rate-Limit)') %></label>
+                <input type="text" name="radius_isolir_rate_limit" class="fc" value="<%= typeof radiusStatus.isolirRateLimit !== 'undefined' ? radiusStatus.isolirRateLimit : '512k/512k' %>" placeholder="<%= t('admin.rds.ph_isolir_rate','Contoh: 512k/512k atau 1M/1M') %>" required>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;"><%- t('admin.rds.isolir_rate_desc','Format: <code>Upload/Download</code> (misal: 512k/512k, 1M/1M, 256k/512k). Dikirimkan langsung ke MikroTik saat pelanggan terisolir.') %></small>
               </div>
 
               <div class="fg">
-                <label class="fl">Nama Pool / Group Isolir RADIUS (Attribute)</label>
+                <label class="fl"><%= t('admin.rds.isolir_pool_name','Nama Pool / Group Isolir RADIUS (Attribute)') %></label>
                 <input type="text" name="radius_isolir_pool" class="fc" value="<%= radiusStatus.isolirPool %>" required>
-                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">Atribut Mikrotik-Group / Framed-Pool tambahan untuk pelanggan terisolir.</small>
+                <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;"><%= t('admin.rds.isolir_pool_name_desc','Atribut Mikrotik-Group / Framed-Pool tambahan untuk pelanggan terisolir.') %></small>
               </div>
             </div>
           </div>
@@ -297,33 +297,33 @@
           <!-- Card 4: Dynamic IP Pool RADIUS -->
           <div class="card mb16">
             <div class="card-hd">
-              <h6><i class="bi bi-diagram-3-fill"></i> Pembagian IP Pool RADIUS Otomatis</h6>
+              <h6><i class="bi bi-diagram-3-fill"></i> <%= t('admin.rds.ipool_title','Pembagian IP Pool RADIUS Otomatis') %></h6>
             </div>
             <div class="card-bd">
               <div class="fg">
-                <label class="fl">Alokasi IP Dinamis oleh RADIUS Server</label>
+                <label class="fl"><%= t('admin.rds.ipool_alloc','Alokasi IP Dinamis oleh RADIUS Server') %></label>
                 <select name="radius_ip_pool_enabled" class="fs">
-                  <option value="1" <%= (typeof radiusStatus.ipPoolEnabled === 'undefined' || radiusStatus.ipPoolEnabled) ? 'selected' : '' %>>Aktif - RADIUS Bagikan IP Otomatis dari Rentang IP Pool (Rekomendasi)</option>
-                  <option value="0" <%= (typeof radiusStatus.ipPoolEnabled !== 'undefined' && !radiusStatus.ipPoolEnabled) ? 'selected' : '' %>>Non-Aktif - Gunakan Dynamic Pool dari MikroTik (Framed-Pool)</option>
+                  <option value="1" <%= (typeof radiusStatus.ipPoolEnabled === 'undefined' || radiusStatus.ipPoolEnabled) ? 'selected' : '' %>><%= t('admin.rds.opt_ipool_on','Aktif - RADIUS Bagikan IP Otomatis dari Rentang IP Pool (Rekomendasi)') %></option>
+                  <option value="0" <%= (typeof radiusStatus.ipPoolEnabled !== 'undefined' && !radiusStatus.ipPoolEnabled) ? 'selected' : '' %>><%= t('admin.rds.opt_ipool_off','Non-Aktif - Gunakan Dynamic Pool dari MikroTik (Framed-Pool)') %></option>
                 </select>
                 <small class="text-muted" style="font-size:11px;display:block;margin-top:4px;">
-                  Jika aktif, RADIUS akan membagikan IP dinamis otomatis ke pelanggan tanpa IP statis sehingga tidak tergantung pada pool lokal MikroTik.
+                  <%= t('admin.rds.ipool_desc','Jika aktif, RADIUS akan membagikan IP dinamis otomatis ke pelanggan tanpa IP statis sehingga tidak tergantung pada pool lokal MikroTik.') %>
                 </small>
               </div>
 
               <div class="form-row">
                 <div class="fg">
-                  <label class="fl">Rentang IP Pool Normal (Awal)</label>
+                  <label class="fl"><%= t('admin.rds.ipool_start','Rentang IP Pool Normal (Awal)') %></label>
                   <input type="text" name="radius_ip_pool_start" class="fc" value="<%= typeof radiusStatus.ipPoolStart !== 'undefined' ? radiusStatus.ipPoolStart : '10.10.10.2' %>" placeholder="10.10.10.2" required>
                 </div>
                 <div class="fg">
-                  <label class="fl">Rentang IP Pool Normal (Akhir)</label>
+                  <label class="fl"><%= t('admin.rds.ipool_end','Rentang IP Pool Normal (Akhir)') %></label>
                   <input type="text" name="radius_ip_pool_end" class="fc" value="<%= typeof radiusStatus.ipPoolEnd !== 'undefined' ? radiusStatus.ipPoolEnd : '10.10.10.254' %>" placeholder="10.10.10.254" required>
                 </div>
               </div>
 
               <div class="fg">
-                <label class="fl">Nama Framed Pool Default (Fallback)</label>
+                <label class="fl"><%= t('admin.rds.framed_pool','Nama Framed Pool Default (Fallback)') %></label>
                 <input type="text" name="radius_framed_pool" class="fc" value="<%= radiusStatus.framedPool %>" required>
               </div>
             </div>
@@ -332,34 +332,34 @@
           <!-- Card: Auto-Generate PPPoE -->
           <div class="card mb16">
             <div class="card-hd">
-              <h6><i class="bi bi-key-fill"></i> Auto-Generate Akun PPPoE (Pelanggan Baru)</h6>
+              <h6><i class="bi bi-key-fill"></i> <%= t('admin.rds.autogen_title','Auto-Generate Akun PPPoE (Pelanggan Baru)') %></h6>
             </div>
             <div class="card-bd">
-              <div class="hint" style="margin-bottom:10px">Dipakai saat admin <b>menyetujui pendaftar</b> atau menekan <b>Generate Akun PPPoE</b>. Berlaku untuk mode MikroTik maupun RADIUS.</div>
+              <div class="hint" style="margin-bottom:10px"><%- t('admin.rds.autogen_hint','Dipakai saat admin <b>menyetujui pendaftar</b> atau menekan <b>Generate Akun PPPoE</b>. Berlaku untuk mode MikroTik maupun RADIUS.') %></div>
               <div class="form-row">
                 <div class="fg">
-                  <label class="fl">Otomatis buat akun PPPoE</label>
+                  <label class="fl"><%= t('admin.rds.autogen_label','Otomatis buat akun PPPoE') %></label>
                   <select name="pppoe_auto_generate" class="fs">
-                    <option value="1" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_auto_generate)||'1')==='1')?'selected':'' %>>Ya (otomatis)</option>
-                    <option value="0" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_auto_generate)||'1')==='0')?'selected':'' %>>Tidak (isi manual)</option>
+                    <option value="1" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_auto_generate)||'1')==='1')?'selected':'' %>><%= t('admin.rds.opt_yes','Ya (otomatis)') %></option>
+                    <option value="0" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_auto_generate)||'1')==='0')?'selected':'' %>><%= t('admin.rds.opt_no_manual','Tidak (isi manual)') %></option>
                   </select>
                 </div>
                 <div class="fg">
-                  <label class="fl">Pola Username</label>
+                  <label class="fl"><%= t('admin.rds.pattern','Pola Username') %></label>
                   <select name="pppoe_username_pattern" class="fs">
                     <option value="name" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_username_pattern)||'name')==='name')?'selected':'' %>><%= t('iso.cust_name','Nama Pelanggan') %></option>
-                    <option value="customer_code" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_username_pattern)||'name')==='customer_code')?'selected':'' %>>ID Pelanggan (SKY-xxxxx)</option>
+                    <option value="customer_code" <%= (String((typeof settings!=='undefined'&&settings&&settings.pppoe_username_pattern)||'name')==='customer_code')?'selected':'' %>><%= t('admin.rds.opt_cust_code','ID Pelanggan (ISP-xxxxx)') %></option>
                   </select>
                 </div>
               </div>
               <div class="form-row">
                 <div class="fg">
                   <label class="fl">Domain / Realm</label>
-                  <input type="text" name="pppoe_domain" class="fc" value="<%= (typeof settings!=='undefined'&&settings&&settings.pppoe_domain)||'sky.id' %>" placeholder="sky.id">
-                  <div class="hint">Username = pola + @ + domain. Contoh: <span class="mono">budi_santoso@sky.id</span></div>
+                  <input type="text" name="pppoe_domain" class="fc" value="<%= (typeof settings!=='undefined'&&settings&&settings.pppoe_domain)||'openisp.id' %>" placeholder="openisp.id">
+                  <div class="hint"><%- t('admin.rds.username_hint','Username = pola + @ + domain. Contoh: <span class="mono">budi_santoso@openisp.id</span>') %></div>
                 </div>
                 <div class="fg">
-                  <label class="fl">Password Default</label>
+                  <label class="fl"><%= t('admin.rds.default_pass','Password Default') %></label>
                   <input type="text" name="pppoe_default_password" class="fc" value="<%= (typeof settings!=='undefined'&&settings&&settings.pppoe_default_password)||'openisp' %>" placeholder="openisp">
                 </div>
               </div>
@@ -368,14 +368,14 @@
 
           <!-- Card: Mode Profil MikroTik -->
           <div class="card mb16">
-            <div class="card-hd"><h6><i class="bi bi-sliders"></i> Mode Profil MikroTik (RADIUS)</h6></div>
+            <div class="card-hd"><h6><i class="bi bi-sliders"></i> <%= t('admin.rds.profile_title','Mode Profil MikroTik (RADIUS)') %></h6></div>
             <div class="card-bd">
-              <div class="hint" style="margin-bottom:10px">Jika <b>Ya</b>: RADIUS hanya mengautentikasi & mengirim <b>Mikrotik-Group</b> (nama paket) — <b>rate-limit & IP diambil dari profil PPP di MikroTik</b> (RADIUS tidak mengirim atribut Rate-Limit maupun IP). Pastikan nama profil di MikroTik = nama paket.</div>
+              <div class="hint" style="margin-bottom:10px"><%- t('admin.rds.profile_hint','Jika <b>Ya</b>: RADIUS hanya mengautentikasi & mengirim <b>Mikrotik-Group</b> (nama paket) — <b>rate-limit & IP diambil dari profil PPP di MikroTik</b> (RADIUS tidak mengirim atribut Rate-Limit maupun IP). Pastikan nama profil di MikroTik = nama paket.') %></div>
               <div class="fg">
-                <label class="fl">Gunakan Profil &amp; IP dari MikroTik</label>
+                <label class="fl"><%- t('admin.rds.profile_use','Gunakan Profil &amp; IP dari MikroTik') %></label>
                 <select name="radius_use_profile" class="fs">
-                  <option value="0" <%= (String((typeof settings!=='undefined'&&settings&&settings.radius_use_profile)||'0')==='0')?'selected':'' %>>Tidak (RADIUS atur rate-limit &amp; IP)</option>
-                  <option value="1" <%= (String((typeof settings!=='undefined'&&settings&&settings.radius_use_profile)||'0')==='1')?'selected':'' %>>Ya (ambil dari profil PPP MikroTik)</option>
+                  <option value="0" <%= (String((typeof settings!=='undefined'&&settings&&settings.radius_use_profile)||'0')==='0')?'selected':'' %>><%- t('admin.rds.opt_profile_off','Tidak (RADIUS atur rate-limit &amp; IP)') %></option>
+                  <option value="1" <%= (String((typeof settings!=='undefined'&&settings&&settings.radius_use_profile)||'0')==='1')?'selected':'' %>><%= t('admin.rds.opt_profile_on','Ya (ambil dari profil PPP MikroTik)') %></option>
                 </select>
               </div>
             </div>
@@ -384,17 +384,17 @@
           <!-- Card 5: Panduan Firewall Linux UFW & Script MikroTik -->
           <div class="card mb16">
             <div class="card-hd" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-              <h6 style="margin:0;"><i class="bi bi-terminal-fill"></i> Script Setup Otomatis MikroTik (RADIUS & Isolir)</h6>
+              <h6 style="margin:0;"><i class="bi bi-terminal-fill"></i> <%= t('admin.rds.script_title','Script Setup Otomatis MikroTik (RADIUS & Isolir)') %></h6>
               <div style="display:flex;align-items:center;gap:8px;">
-                <label style="font-size:12px;margin:0;color:var(--muted);white-space:nowrap;">IP Server Billing:</label>
+                <label style="font-size:12px;margin:0;color:var(--muted);white-space:nowrap;"><%= t('admin.rds.billing_ip','IP Server Billing:') %></label>
                 <input type="text" id="billing-ip-input" class="fc" value="<%= typeof serverIp !== 'undefined' ? serverIp : '192.168.8.88' %>" oninput="updateScriptIp(this.value)" style="width:140px;height:30px;font-size:12px;padding:3px 8px;" title="Ubah IP server jika router mengakses lewat IP lain/VPS">
-                <button type="button" class="btn btn-s btn-sm" onclick="copyMikrotikScript()"><i class="bi bi-clipboard-check"></i> Salin Script MikroTik</button>
+                <button type="button" class="btn btn-s btn-sm" onclick="copyMikrotikScript()"><i class="bi bi-clipboard-check"></i> <%= t('admin.rds.copy_script','Salin Script MikroTik') %></button>
               </div>
             </div>
             <div class="card-bd">
               <div class="fg" style="margin-bottom:14px;">
-                <label class="fl">1. Perintah Firewall Linux Server (UFW)</label>
-                <small class="text-muted" style="font-size:11px;display:block;margin-bottom:6px;">Jalankan perintah ini di terminal server Linux (VPS / Server Produksi) agar router dapat menghubungi server:</small>
+                <label class="fl"><%= t('admin.rds.ufw_title','1. Perintah Firewall Linux Server (UFW)') %></label>
+                <small class="text-muted" style="font-size:11px;display:block;margin-bottom:6px;"><%= t('admin.rds.ufw_desc','Jalankan perintah ini di terminal server Linux (VPS / Server Produksi) agar router dapat menghubungi server:') %></small>
                 <div style="background:var(--bg3);padding:10px 12px;border-radius:8px;border:1px solid var(--border);font-family:monospace;font-size:12px;color:var(--info);">
                   sudo ufw allow <%= radiusStatus.authPort %>/udp<br>
                   sudo ufw allow <%= radiusStatus.acctPort %>/udp
@@ -402,8 +402,8 @@
               </div>
 
               <div class="fg" style="margin-bottom:0;">
-                <label class="fl">2. Script Integrasi RADIUS & Isolir di MikroTik (RouterOS Terminal)</label>
-                <small class="text-muted" style="font-size:11px;display:block;margin-bottom:6px;">Copy dan pastekan seluruh script di bawah ini ke <strong>Terminal MikroTik</strong> (IP server otomatis terisi dari IP di atas):</small>
+                <label class="fl"><%= t('admin.rds.mt_title','2. Script Integrasi RADIUS & Isolir di MikroTik (RouterOS Terminal)') %></label>
+                <small class="text-muted" style="font-size:11px;display:block;margin-bottom:6px;"><%- t('admin.rds.mt_desc','Copy dan pastekan seluruh script di bawah ini ke <strong>Terminal MikroTik</strong> (IP server otomatis terisi dari IP di atas):') %></small>
                 <textarea id="mikrotik-script-area" class="fc" rows="14" style="font-family:monospace;font-size:11px;background:var(--bg3);color:#10b981;line-height:1.4;white-space:pre;" readonly># =========================================================
 # SCRIPT SETUP OTOMATIS RADIUS BILLING & ISOLIR MIKROTIK
 # =========================================================
@@ -432,7 +432,7 @@
         </div>
 
         <div>
-          <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> Simpan Konfigurasi RADIUS</button>
+          <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> <%= t('admin.rds.save','Simpan Konfigurasi RADIUS') %></button>
         </div>
       </form>
     </div>
@@ -558,7 +558,7 @@
                           <input type="hidden" name="username" value="<%= s.username %>">
                           <input type="hidden" name="session_id" value="<%= s.session_id %>">
                           <input type="hidden" name="nas_ip" value="<%= s.nas_ip %>">
-                          <button type="submit" class="btn btn-d btn-sm" title="Putuskan Sesi Active RADIUS">
+                          <button type="submit" class="btn btn-d btn-sm" title="Putuskan <%= t('admin.rds.tab_sessions','Sesi Active RADIUS') %>">
                             <i class="bi bi-power"></i> Putuskan
                           </button>
                         </form>
@@ -581,7 +581,7 @@
     <div id="tab-content-accounting" class="tab-pane" style="display:none;">
       <div class="card mb16">
         <div class="card-hd">
-          <h6><i class="bi bi-journal-text"></i> Log Accounting RADIUS (100 Terakhir)</h6>
+          <h6><i class="bi bi-journal-text"></i> <%= t('admin.rds.tab_log','Log Accounting') %> RADIUS (100 Terakhir)</h6>
         </div>
         <div class="card-bd" style="padding:0;">
           <div class="tbl-wrap">
