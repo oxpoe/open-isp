@@ -352,7 +352,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; <span id="year"></span> <%= brand %>. Seluruh hak cipta dilindungi.</span>
-      <span class="mono">OPEN-ISP v<%= (typeof appVersion !== 'undefined' ? appVersion : '0.5') %> (<%= (typeof appVersionName !== 'undefined' ? appVersionName : 'pickle-lime') %>) · ISC · oxpoe</span>
+      <span class="mono"><%= (typeof settings !== 'undefined' && settings && settings.company_header) ? settings.company_header : 'OPEN-ISP' %> v<%= (typeof appVersion !== 'undefined' ? appVersion : '0.5') %> (<%= (typeof appVersionName !== 'undefined' ? appVersionName : 'pickle-lime') %>) · ISC · oxpoe</span>
     </div>
   </div>
 </footer>

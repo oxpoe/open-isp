@@ -916,7 +916,7 @@
       </div>
       <div>
         <h1 class="font-bold text-base tracking-tight" style="font-family:'Space Grotesk',sans-serif;color:var(--text);">
-          <% if (brandName === 'OPEN-ISP') { %>SKY<span style="color:var(--lime);">FIBER</span><% } else { %><%= brandName %><% } %>
+          <%= brandName %>
         </h1>
         <p class="text-[10px]" style="color:var(--muted);margin-top:1px;"><%= t('pwa.title','Portal Pelanggan') %></p>
       </div>
@@ -959,7 +959,7 @@
             <img src="<%= brandLogo %>" alt="<%= brandName %>" style="width:100%;height:100%;object-fit:contain;padding:3px;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display=''"><i class="ph-bold ph-wifi-high" style="display:none;color:var(--lime);font-size:15px;"></i>
           </div>
           <span class="brand-word font-bold text-base tracking-tight" style="font-family:'Space Grotesk',sans-serif;color:var(--text);">
-            <% if (brandName === 'OPEN-ISP') { %>SKY<span style="color:var(--lime);">FIBER</span><% } else { %><%= brandName %><% } %>
+            <%= brandName %>
           </span>
         </div>
         <div class="hidden md:block desktop-title">
@@ -1014,7 +1014,7 @@
                     <div class="cc-brand-mark" style="overflow:hidden;">
                       <img src="<%= brandLogo %>" alt="<%= brandName %>" style="width:100%;height:100%;object-fit:contain;padding:2px;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display=''"><i class="ph-bold ph-wifi-high" style="display:none;font-size:11px;"></i>
                     </div>
-                    <span style="color:#fff;"><% if (brandName === 'OPEN-ISP') { %>SKY<span>FIBER</span><% } else { %><%= brandName %><% } %></span>
+                    <span style="color:#fff;"><%= brandName %></span>
                   </div>
                   <div class="cc-top-badges">
                     <span class="cc-status"><span class="dot"></span><%= portal.statusText %></span>
