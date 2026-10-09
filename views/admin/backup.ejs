@@ -20,7 +20,7 @@
     <div class="tb-title">
       <button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
       <i class="bi bi-hdd-stack"></i>
-      <span id="page-title">Backup & Recovery</span>
+      <span id="page-title"><%= t('admin.bk.title','Backup & Recovery') %></span>
     </div>
     <div class="tb-right">
       <span class="adm-badge">
@@ -46,42 +46,42 @@
     <div class="stat-grid">
       <div class="sc p">
         <i class="bi bi-files sc-icon"></i>
-        <div class="sc-label">Total Backup</div>
+        <div class="sc-label"><%= t('admin.bk.total','Total Backup') %></div>
         <div class="sc-val"><%= total %></div>
-        <div class="sc-sub">File tersimpan</div>
+        <div class="sc-sub"><%= t('admin.bk.files_saved','File tersimpan') %></div>
       </div>
       <div class="sc s">
         <i class="bi bi-database sc-icon"></i>
         <div class="sc-label">Database</div>
         <div class="sc-val"><%= backups.filter(b => b.type === 'database').length %></div>
-        <div class="sc-sub">Backup database</div>
+        <div class="sc-sub"><%= t('admin.bk.db_backup','Backup database') %></div>
       </div>
       <div class="sc w">
         <i class="bi bi-gear sc-icon"></i>
         <div class="sc-label">Settings</div>
         <div class="sc-val"><%= backups.filter(b => b.type === 'settings').length %></div>
-        <div class="sc-sub">Backup pengaturan</div>
+        <div class="sc-sub"><%= t('admin.bk.set_backup','Backup pengaturan') %></div>
       </div>
       <div class="sc i">
         <i class="bi bi-hdd sc-icon"></i>
         <div class="sc-label">Total Size</div>
         <div class="sc-val"><%= (backups.reduce((sum, b) => sum + b.sizeKB, 0) / 1024).toFixed(1) %><span style="font-size:14px"> MB</span></div>
-        <div class="sc-sub">Kapasitas digunakan</div>
+        <div class="sc-sub"><%= t('admin.bk.size_used','Kapasitas digunakan') %></div>
       </div>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
       <!-- Create Backup -->
       <div class="card">
-        <div class="card-hd"><h6><i class="bi bi-plus-circle"></i> Buat Backup Baru</h6></div>
+        <div class="card-hd"><h6><i class="bi bi-plus-circle"></i> <%= t('admin.bk.create','Buat Backup Baru') %></h6></div>
         <div class="card-bd">
           <form action="/admin/backup/create" method="POST">
             <div class="fg">
-              <label class="fl">Tipe Backup</label>
+              <label class="fl"><%= t('admin.bk.type','Tipe Backup') %></label>
               <select class="fs" name="type">
-                <option value="all">Semua (Database + Settings)</option>
-                <option value="database">Database Saja</option>
-                <option value="settings">Settings Saja</option>
+                <option value="all"><%= t('admin.bk.opt_all','Semua (Database + Settings)') %></option>
+                <option value="database"><%= t('admin.bk.opt_db','Database Saja') %></option>
+                <option value="settings"><%= t('admin.bk.opt_set','Settings Saja') %></option>
               </select>
             </div>
             <button type="submit" class="btn btn-p w-100">
@@ -93,11 +93,11 @@
 
       <!-- Upload & Restore -->
       <div class="card">
-        <div class="card-hd"><h6><i class="bi bi-upload"></i> Upload & Restore Backup</h6></div>
+        <div class="card-hd"><h6><i class="bi bi-upload"></i> <%= t('admin.bk.upload','Upload & Restore Backup') %></h6></div>
         <div class="card-bd">
           <form action="/admin/backup/upload-restore" method="POST" enctype="multipart/form-data" onsubmit="return confirm('PERINGATAN: Memulihkan file backup akan menimpa data/pengaturan aplikasi saat ini. Sistem akan membuat backup otomatis sebelum restore. Lanjutkan?')">
             <div class="fg">
-              <label class="fl">Pilih File Backup (.db / .json)</label>
+              <label class="fl"><%= t('admin.bk.pick_file','Pilih File Backup (.db / .json)') %></label>
               <input type="file" class="fc" name="backupFile" accept=".db,.sqlite,.json" required style="padding: 6px 10px;">
               <small class="text-muted" style="font-size: 10px; display: block; margin-top: 4px;">File .db (database) atau .json (settings)</small>
             </div>
@@ -110,11 +110,11 @@
 
       <!-- Cleanup -->
       <div class="card">
-        <div class="card-hd"><h6><i class="bi bi-trash"></i> Pembersihan Otomatis</h6></div>
+        <div class="card-hd"><h6><i class="bi bi-trash"></i> <%= t('admin.bk.auto_clean','Pembersihan Otomatis') %></h6></div>
         <div class="card-bd">
           <form action="/admin/backup/cleanup" method="POST">
             <div class="fg">
-              <label class="fl">Retensi (Hari)</label>
+              <label class="fl"><%= t('admin.bk.retention','Retensi (Hari)') %></label>
               <input type="number" class="fc" name="retentionDays" value="30" min="1" max="365">
               <small class="text-muted" style="font-size: 10px; display: block; margin-top: 4px;">Backup lebih lama dari periode ini akan dihapus</small>
             </div>
@@ -129,13 +129,13 @@
     <!-- Backup List -->
     <div class="card">
       <div class="card-hd">
-        <h6><i class="bi bi-list-ul"></i> Riwayat Backup</h6>
+        <h6><i class="bi bi-list-ul"></i> <%= t('admin.bk.history','Riwayat Backup') %></h6>
       </div>
       <div class="card-bd">
         <% if (backups.length === 0) { %>
           <div class="text-center py-5">
             <i class="bi bi-inbox text-muted" style="font-size: 40px; opacity: 0.3;"></i>
-            <p class="text-muted mt-2">Belum ada file backup tersedia</p>
+            <p class="text-muted mt-2"><%= t('admin.bk.empty','Belum ada file backup tersedia') %></p>
           </div>
         <% } else { %>
           <div class="tbl-wrap">

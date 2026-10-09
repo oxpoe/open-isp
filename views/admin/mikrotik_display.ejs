@@ -827,7 +827,7 @@
   <!-- Loading Overlay -->
   <div id="loading-overlay" class="noc-overlay">
     <div class="spinner"></div>
-    <div class="overlay-text">Menghubungkan ke MikroTik...</div>
+    <div class="overlay-text"><%= t('admin.md.connecting','Menghubungkan ke MikroTik...') %></div>
   </div>
 
   <div class="noc-container">
@@ -857,16 +857,16 @@
           <i class="bi bi-chevron-down router-select-icon"></i>
         </div>
 
-        <!-- Fullscreen Button -->
-        <button class="btn-action btn-fullscreen" onclick="toggleFullscreen()">
+        <!-- <%= t('admin.md.fullscreen','Layar Penuh') %> Button -->
+        <button class="btn-action btn-fullscreen" onclick="toggle<%= t('admin.md.fullscreen','Layar Penuh') %>()">
           <i class="bi bi-fullscreen" id="fs-btn-icon"></i>
-          <span id="fs-btn-text">Fullscreen</span>
+          <span id="fs-btn-text"><%= t('admin.md.fullscreen','Layar Penuh') %></span>
         </button>
 
         <!-- Back to Dashboard -->
         <a href="/admin/mikrotik" class="btn-action btn-back" style="text-decoration: none;">
           <i class="bi bi-box-arrow-left"></i>
-          <span>Keluar</span>
+          <span><%= t('admin.md.exit','Keluar') %></span>
         </a>
       </div>
     </header>
@@ -1079,22 +1079,22 @@
       }, 1000);
     }
 
-    // Toggle HTML5 Fullscreen Mode
-    function toggleFullscreen() {
+    // Toggle HTML5 <%= t('admin.md.fullscreen','Layar Penuh') %> Mode
+    function toggle<%= t('admin.md.fullscreen','Layar Penuh') %>() {
       const icon = document.getElementById('fs-btn-icon');
       const text = document.getElementById('fs-btn-text');
       
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().then(() => {
+        document.documentElement.request<%= t('admin.md.fullscreen','Layar Penuh') %>().then(() => {
           icon.className = 'bi bi-fullscreen-exit';
           text.textContent = 'Exit Screen';
         }).catch(err => {
           console.error(`Error enabling fullscreen: ${err.message}`);
         });
       } else {
-        document.exitFullscreen().then(() => {
+        document.exit<%= t('admin.md.fullscreen','Layar Penuh') %>().then(() => {
           icon.className = 'bi bi-fullscreen';
-          text.textContent = 'Fullscreen';
+          text.textContent = '<%= t('admin.md.fullscreen','Layar Penuh') %>';
         });
       }
     }

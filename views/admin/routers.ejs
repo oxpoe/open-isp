@@ -335,15 +335,15 @@
     <div class="card mb-3" style="border:none; background:transparent;">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <h5 class="fw-bold text-white mb-0"><i class="bi bi-cpu text-primary me-2"></i>Daftar Router MikroTik (<%= routers.length %>)</h5>
+          <h5 class="fw-bold text-white mb-0"><i class="bi bi-cpu text-primary me-2"></i><%= t('admin.rt.list','Daftar Router MikroTik') %> (<%= routers.length %>)</h5>
         </div>
         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <div class="d-flex gap-1 bg-dark p-1 rounded-3 border border-secondary border-opacity-25">
-            <button type="button" class="view-toggle-btn active" id="btn-view-grid" onclick="switchView('grid')"><i class="bi bi-grid-fill me-1"></i> Grid Kartu</button>
+            <button type="button" class="view-toggle-btn active" id="btn-view-grid" onclick="switchView('grid')"><i class="bi bi-grid-fill me-1"></i> <%= t('admin.rt.view_grid','Grid Kartu') %></button>
             <button type="button" class="view-toggle-btn" id="btn-view-table" onclick="switchView('table')"><i class="bi bi-table me-1"></i> Tabel</button>
           </div>
-          <button type="button" class="btn btn-outline-light btn-sm" onclick="openIsolirScriptModal()"><i class="bi bi-filetype-txt me-1"></i> Script Isolir</button>
-          <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg me-1"></i> Tambah Router</button>
+          <button type="button" class="btn btn-outline-light btn-sm" onclick="openIsolirScriptModal()"><i class="bi bi-filetype-txt me-1"></i> <%= t('admin.rt.script_isolir','Script Isolir') %></button>
+          <button class="btn btn-p btn-sm" onclick="openModal('addModal')"><i class="bi bi-plus-lg me-1"></i> <%= t('admin.rt.add','Tambah Router') %></button>
         </div>
       </div>
     </div>
@@ -354,7 +354,7 @@
         <div class="card p-4 text-center text-muted" style="grid-column: 1 / -1;">
           <i class="bi bi-hdd-network fs-1 mb-2"></i>
           <h6><%= t('admin.routers.empty', 'Belum ada router yang ditambahkan') %></h6>
-          <button class="btn btn-p btn-sm mt-2" onclick="openModal('addModal')"><i class="bi bi-plus-lg me-1"></i> Tambah Router Sekarang</button>
+          <button class="btn btn-p btn-sm mt-2" onclick="openModal('addModal')"><i class="bi bi-plus-lg me-1"></i> <%= t('admin.rt.add_now','Tambah Router Sekarang') %></button>
         </div>
       <% } %>
 
@@ -409,7 +409,7 @@
               </div>
               <div class="rc-spec-box">
                 <div class="rc-spec-val text-success" id="spec-pppoe-<%= r.id %>">-</div>
-                <div class="rc-spec-lbl">PPPoE Aktif</div>
+                <div class="rc-spec-lbl"><%= t('admin.rt.pppoe_active','PPPoE Aktif') %></div>
               </div>
               <div class="rc-spec-box">
                 <div class="rc-spec-val text-warning" id="spec-hs-<%= r.id %>">-</div>
@@ -419,13 +419,13 @@
           </div>
 
           <div class="rc-actions">
-            <button type="button" class="btn-detail-live flex-fill" title="Detail Live Status" onclick="openLiveDetailModal(<%= r.id %>)">
+            <button type="button" class="btn-detail-live flex-fill" title="<%= t('admin.rt.live_detail','Detail Live Status') %>" onclick="openLiveDetailModal(<%= r.id %>)">
               <i class="bi bi-cpu-fill me-1"></i> Detail Live
             </button>
             <button type="button" class="btn btn-g btn-sm" title="<%= t('admin.routers.actions.test', 'Test Koneksi') %>" onclick="testConn(<%= r.id %>)">
               <i class="bi bi-plug"></i>
             </button>
-            <button type="button" class="btn btn-g btn-sm" title="Setup Firewall Isolir" onclick="setupFirewall(<%= r.id %>)">
+            <button type="button" class="btn btn-g btn-sm" title="<%= t('admin.rt.setup_fw','Setup Firewall Isolir') %>" onclick="setupFirewall(<%= r.id %>)">
               <i class="bi bi-shield-lock"></i>
             </button>
             <button type="button" class="btn btn-g btn-sm" title="<%= t('common.edit', 'Edit') %>" onclick="editRouter(<%= i %>)">
@@ -473,12 +473,12 @@
                 <div class="act">
                   <button type="button" class="act-btn" title="Aksi" onclick="actToggle(event, this)"><i class="bi bi-three-dots-vertical"></i></button>
                   <div class="act-menu">
-                    <button type="button" class="act-item primary" onclick="openLiveDetailModal(<%= r.id %>)"><i class="bi bi-cpu"></i> Detail Live Status</button>
+                    <button type="button" class="act-item primary" onclick="openLiveDetailModal(<%= r.id %>)"><i class="bi bi-cpu"></i> <%= t('admin.rt.live_detail','Detail Live Status') %></button>
                     <button type="button" class="act-item" onclick="testConn(<%= r.id %>)"><i class="bi bi-plug"></i> <%= t('admin.dash.test_conn','Test Koneksi') %></button>
-                    <button type="button" class="act-item" onclick="setupFirewall(<%= r.id %>)"><i class="bi bi-shield-lock"></i> Setup Firewall Isolir</button>
+                    <button type="button" class="act-item" onclick="setupFirewall(<%= r.id %>)"><i class="bi bi-shield-lock"></i> <%= t('admin.rt.setup_fw','Setup Firewall Isolir') %></button>
                     <div class="act-sep"></div>
-                    <button type="button" class="act-item" onclick="editRouter(<%= i %>)"><i class="bi bi-pencil"></i> Edit Router</button>
-                    <button type="submit" form="rdel-<%= r.id %>" class="act-item danger"><i class="bi bi-trash"></i> Hapus Router</button>
+                    <button type="button" class="act-item" onclick="editRouter(<%= i %>)"><i class="bi bi-pencil"></i> <%= t('admin.rt.edit','Edit Router') %></button>
+                    <button type="submit" form="rdel-<%= r.id %>" class="act-item danger"><i class="bi bi-trash"></i> <%= t('admin.rt.del','Hapus Router') %></button>
                   </div>
                 </div>
               </td>
@@ -495,7 +495,7 @@
 <div class="mo" id="routerLiveModal">
   <div class="mb" style="max-width: 740px;">
     <div class="mh">
-      <span class="mt"><i class="bi bi-cpu-fill text-primary me-2"></i> <span id="modal-router-name">Detail Live Router</span></span>
+      <span class="mt"><i class="bi bi-cpu-fill text-primary me-2"></i> <span id="modal-router-name"><%= t('admin.rt.live_title','Detail Live Router') %></span></span>
       <button class="mc" onclick="closeModal('routerLiveModal')">&times;</button>
     </div>
     <div class="mbody" id="modal-router-body" style="min-height:360px;">
@@ -511,7 +511,7 @@
   </div>
 </div>
 
-<!-- Modal Script & Setup Firewall Isolir Portal -->
+<!-- Modal Script & <%= t('admin.rt.setup_fw','Setup Firewall Isolir') %> Portal -->
 <div class="mo" id="isolirScriptModal">
   <div class="mb" style="max-width:740px">
     <div class="mh">
@@ -836,7 +836,7 @@ async function openLiveDetailModal(id) {
 
         <div class="mt-stats">
           <div class="mt-stat"><span>Pelanggan DB</span><b>${l.customersCount}</b></div>
-          <div class="mt-stat"><span>PPPoE Aktif</span><b class="mt-ok">${l.activePppoe}</b></div>
+          <div class="mt-stat"><span><%= t('admin.rt.pppoe_active','PPPoE Aktif') %></span><b class="mt-ok">${l.activePppoe}</b></div>
           <div class="mt-stat"><span>Hotspot Aktif</span><b class="mt-warn">${l.activeHotspot}</b></div>
         </div>
       </div>

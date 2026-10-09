@@ -59,9 +59,9 @@
               <i class="bi bi-shield-check" style="font-size: 16px;"></i> Anti-Banned Aktif (Spintax + Jeda Mengetik)
             </div>
             <div style="font-size: 12px; line-height: 1.5; color: var(--text);">
-              • <strong>Variasi Kata Spintax:</strong> Gunakan <code>{Halo|Selamat Pagi|Yth.}</code> agar isi pesan otomatis diacak & tidak dianggap spam.<br>
-              • <strong>Jeda Mengetik Manusiawi:</strong> Sebelum dikirim, sistem menunggu sejenak (menyesuaikan panjang pesan) meniru tempo menulis manusia.<br>
-              • <strong>Jeda Acak & Batching:</strong> Dikirim dengan jeda acak dinamis dan jeda istirahat otomatis antar batch.
+              • <strong><%= t('admin.bc.spintax','Variasi Kata Spintax:') %></strong> <%- t('admin.bc.spintax_desc','Gunakan <code>{Halo|Selamat Pagi|Yth.}</code> agar isi pesan otomatis diacak & tidak dianggap spam.') %><br>
+              • <strong><%= t('admin.bc.human_delay','Jeda Mengetik Manusiawi:') %></strong> <%= t('admin.bc.human_delay_desc','Sebelum dikirim, sistem menunggu sejenak (menyesuaikan panjang pesan) meniru tempo menulis manusia.') %><br>
+              • <strong><%= t('admin.bc.random_batch','Jeda Acak & Batching:') %></strong> <%= t('admin.bc.random_batch_desc','Dikirim dengan jeda acak dinamis dan jeda istirahat otomatis antar batch.') %>
             </div>
           </div>
 
@@ -114,11 +114,11 @@
     </div>
 
     <div class="card mb16">
-      <div class="card-hd"><h6><i class="bi bi-send-check"></i> Kirim Tagihan Sekarang (Manual — bila Auto OFF)</h6></div>
+      <div class="card-hd"><h6><i class="bi bi-send-check"></i> <%= t('admin.bc.send_title','Kirim Tagihan Sekarang (Manual — bila Auto OFF)') %></h6></div>
       <form method="POST" action="/admin/whatsapp/send-billing-now" onsubmit="return confirm('Kirim tagihan sekarang ke pelanggan belum bayar?');">
         <div class="card-bd">
           <div style="display:flex;gap:14px;flex-wrap:wrap">
-            <div class="fg"><label class="fl"><i class="bi bi-calendar-event"></i> Tanggal Isolir</label>
+            <div class="fg"><label class="fl"><i class="bi bi-calendar-event"></i> <%= t('admin.bc.isolir_date','Tanggal Isolir') %></label>
               <select class="fs" name="isolate_day">
                 <option value="0"><%= t('collector.filter_all','Semua') %></option>
                 <% (isolateDays||[]).forEach(function(d){ %><option value="<%= d %>">Tgl <%= d %></option><% }); %>
@@ -131,11 +131,11 @@
             </div>
             <div class="fg"><label class="fl"><i class="bi bi-clock-history"></i> Interval</label>
               <select class="fs" name="interval_mode" id="bsMode" onchange="bsToggle()">
-                <option value="static">Statis</option>
-                <option value="random">Random (anti-ban)</option>
+                <option value="static"><%= t('admin.bc.opt_static','Statis') %></option>
+                <option value="random"><%= t('admin.bc.opt_random','Random (anti-ban)') %></option>
               </select>
             </div>
-            <div class="fg" id="bsStatic"><label class="fl">Jeda (detik)</label>
+            <div class="fg" id="bsStatic"><label class="fl"><%= t('admin.bc.delay_sec','Jeda (detik)') %></label>
               <input class="fc" type="number" name="interval_value" value="15" min="3" max="600">
             </div>
             <div class="fg" id="bsRandom" style="display:none"><label class="fl">Jeda acak (min–max detik)</label>
@@ -150,8 +150,8 @@
         <div class="card-bd" style="border-top:1px solid var(--border);background:var(--bg2);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
           <div id="bsResult" style="font-size:12px" class="text-muted"></div>
           <div style="display:flex;gap:8px">
-            <button type="button" class="btn btn-g" onclick="bsStop()"><i class="bi bi-stop-circle"></i> Hentikan</button>
-            <button type="submit" class="btn btn-p"><i class="bi bi-send"></i> Kirim Tagihan Sekarang</button>
+            <button type="button" class="btn btn-g" onclick="bsStop()"><i class="bi bi-stop-circle"></i> <%= t('admin.bc.stop','Hentikan') %></button>
+            <button type="submit" class="btn btn-p"><i class="bi bi-send"></i> <%= t('admin.bc.send','Kirim Tagihan Sekarang') %></button>
           </div>
         </div>
       </form>
