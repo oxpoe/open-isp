@@ -74,7 +74,7 @@ const MENU_DEFINITIONS = [
   ] },
 
   { key: 'grp_system', section: 'system', href: '/admin/settings', icon: 'bi bi-gear', labelKey: 'admin.nav.grp_system', labelDefault: 'Sistem', roles: ['admin'], activePages: ['update', 'service_notice', 'settings', 'ewallet_logs', 'backup', 'audit_logs'], children: [
-    { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update GitHub', roles: ['admin'], activePages: ['update'] },
+    { key: 'update', section: 'system', href: '/admin/update', icon: 'bi bi-cloud-arrow-down', labelKey: 'admin.nav.update', labelDefault: 'Update Gitea', roles: ['admin'], activePages: ['update'] },
     { key: 'service_notice', section: 'system', href: '/admin/service-notice', icon: 'bi bi-megaphone-fill', labelKey: 'admin.nav.service_notice', labelDefault: 'Status Layanan', roles: ['admin'], activePages: ['service_notice'] },
     { key: 'settings', section: 'system', href: '/admin/settings', icon: 'bi bi-gear', labelKey: 'admin.nav.settings', labelDefault: 'Pengaturan', roles: ['admin'], activePages: ['settings'] },
     { key: 'ewallet_logs', section: 'system', href: '/admin/ewallet-logs', icon: 'bi bi-journal-text', labelKey: 'admin.nav.log_rekap', labelDefault: 'Log & Rekap', roles: ['admin'], activePages: ['ewallet_logs'] },

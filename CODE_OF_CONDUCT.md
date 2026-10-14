@@ -30,6 +30,6 @@ Kode Etik ini berlaku di seluruh ruang proyek (repositori, issues, PR) dan saat 
 
 ## Penegakan
 
-Perilaku yang tidak dapat diterima dapat dilaporkan kepada pengelola melalui **GitHub** (buat issue privat/mention `@oxpoe`). Semua laporan akan ditinjau dan ditangani secara adil dan rahasia.
+Perilaku yang tidak dapat diterima dapat dilaporkan kepada pengelola melalui **Gitea** (buat issue privat/mention `@oxpoe`). Semua laporan akan ditinjau dan ditangani secara adil dan rahasia.
 
 Teks ini diadaptasi dari [Contributor Covenant](https://www.contributor-covenant.org), versi 2.1.

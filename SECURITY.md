@@ -10,7 +10,7 @@
 
 **Jangan** membuka Issue publik untuk masalah keamanan.
 
-Gunakan tab **Security → Report a vulnerability** (GitHub Security Advisories) pada repositori ini, atau hubungi pengelola secara privat melalui GitHub.
+Gunakan tab **Security → Report a vulnerability** (Gitea Security Advisories) pada repositori ini, atau hubungi pengelola secara privat melalui Gitea.
 
 Sertakan: deskripsi, langkah reproduksi, dampak, dan (bila ada) saran perbaikan. Kami akan berusaha merespons secepatnya.
 

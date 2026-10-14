@@ -46,7 +46,7 @@
       <a href="/lang/id" style="<%= (typeof lang !== 'undefined' && lang === 'id') ? 'color:var(--primary);font-weight:700' : '' %>">ID</a>
       <a href="/lang/en" style="<%= (typeof lang !== 'undefined' && lang === 'en') ? 'color:var(--primary);font-weight:700' : '' %>">EN</a>
       <% if (_upt) { %><a href="<%= _upt %>" target="_blank" rel="noopener"><i class="bi bi-activity"></i> <%= t('landing.nav.status','Status') %></a><% } %>
-      <% if (projectUrl) { %><a href="<%= projectUrl %>" target="_blank" rel="noopener" title="Repositori Open Source"><i class="bi bi-github"></i> <%= t('landing.footer.github','GitHub') %></a><% } %>
+      <% if (projectUrl) { %><a href="<%= projectUrl %>" target="_blank" rel="noopener" title="Repositori Open Source"><i class="bi bi-git"></i> <%= t('landing.footer.github','Gitea') %></a><% } %>
     </nav>
     <div class="header-actions">
       <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema"><i class="bi bi-moon-stars-fill" id="themeIcon"></i></button>
@@ -64,7 +64,7 @@
       <a href="#testimoni" onclick="toggleMenu()"><%= t('landing.testi.eyebrow','Testimoni') %></a>
       <a href="#faq" onclick="toggleMenu()"><%= t('landing.nav.faq','FAQ') %></a>
       <% if (_upt) { %><a href="<%= _upt %>" target="_blank" rel="noopener" onclick="toggleMenu()"><i class="bi bi-activity"></i> <%= t('landing.footer.server_status','Status Server') %></a><% } %>
-      <% if (projectUrl) { %><a href="<%= projectUrl %>" target="_blank" rel="noopener" onclick="toggleMenu()"><i class="bi bi-github"></i> <%= t('landing.footer.repo_gh','Repositori (GitHub)') %></a><% } %>
+      <% if (projectUrl) { %><a href="<%= projectUrl %>" target="_blank" rel="noopener" onclick="toggleMenu()"><i class="bi bi-git"></i> <%= t('landing.footer.repo_gh','Repositori (Gitea)') %></a><% } %>
       <% if (projectUrl) { %><a href="<%= projectUrl %>/wiki" target="_blank" rel="noopener" onclick="toggleMenu()"><i class="bi bi-journal-text"></i> <%= t('landing.footer.wiki2','Wiki / Dokumentasi') %></a><% } %>
       <a href="/customer/login"><i class="bi bi-box-arrow-in-right"></i> <%= t('landing.nav.cust_login','Masuk Pelanggan') %></a>
       <a href="/customer/check-billing"><i class="bi bi-receipt"></i> <%= t('landing.hero.check','Cek Tagihan') %></a>
@@ -332,7 +332,7 @@
       <div>
         <h4><%= t('landing.footer.opensource','Open Source') %></h4>
         <div class="foot-links">
-          <a href="<%= projectUrl %>" target="_blank" rel="noopener"><i class="bi bi-github"></i> <%= t('landing.footer.repo','Repositori') %></a>
+          <a href="<%= projectUrl %>" target="_blank" rel="noopener"><i class="bi bi-git"></i> <%= t('landing.footer.repo','Repositori') %></a>
           <a href="<%= projectUrl %>/issues/new/choose" target="_blank" rel="noopener"><i class="bi bi-bug"></i> <%= t('landing.footer.issues','Laporkan Masalah / Form') %></a>
           <a href="<%= projectUrl %>/wiki" target="_blank" rel="noopener"><i class="bi bi-journal-text"></i> <%= t('landing.footer.wiki','Wiki & Dokumentasi') %></a>
           <a href="<%= projectUrl %>/blob/main/LICENSE" target="_blank" rel="noopener"><i class="bi bi-shield-check"></i> <%= t('landing.footer.license','Lisensi ISC') %></a>

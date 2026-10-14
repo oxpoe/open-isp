@@ -10,7 +10,7 @@
 <%- include('partials/sidebar', { activePage: activePage || 'update', company }) %>
 <div class="mw">
   <div class="topbar">
-    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-cloud-arrow-down"></i> <%= t('admin.update.title', 'Update GitHub') %></div>
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-cloud-arrow-down"></i> <%= t('admin.update.title', 'Update Gitea') %></div>
     <div class="tb-right">
       <span class="adm-badge"><i class="bi bi-person-fill"></i> <%= t('admin.role.admin', 'Admin') %></span>
       <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> <%= t('common.logout', 'Logout') %></a>
@@ -49,9 +49,9 @@
             </div>
           </div>
           <div class="fg">
-            <label class="fl"><%= t('admin.update.github_version_prefix', 'Versi GitHub (') %><%= info?.repo || 'origin' %>/<%= info?.branch || '-' %><%= t('admin.update.github_version_suffix', ')') %></label>
+            <label class="fl"><%= t('admin.update.github_version_prefix', 'Versi Gitea (') %><%= info?.repo || 'origin' %>/<%= info?.branch || '-' %><%= t('admin.update.github_version_suffix', ')') %></label>
             <div class="fc" style="display:flex;align-items:center;gap:8px">
-              <i class="bi bi-github"></i>
+              <i class="bi bi-git"></i>
               <span style="font-weight:800"><%= info?.remoteVersion || '-' %></span>
               <% if (info?.needsUpdate) { %>
                 <span class="badge badge-d" style="margin-left:8px"><i class="bi bi-arrow-up-circle"></i> <%= t('admin.update.has_update', 'Ada update') %></span>
@@ -92,7 +92,7 @@
 
 <script>
   function confirmUpdate() {
-    return confirm("<%= t('admin.update.confirm', 'Jalankan update dari GitHub sekarang? Pastikan koneksi internet aman dan aplikasi akan direstart setelah selesai.') %>");
+    return confirm("<%= t('admin.update.confirm', 'Jalankan update dari Gitea sekarang? Pastikan koneksi internet aman dan aplikasi akan direstart setelah selesai.') %>");
   }
 </script>
 </body>

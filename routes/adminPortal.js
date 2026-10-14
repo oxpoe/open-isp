@@ -407,7 +407,7 @@ function getUpdateInfo(repoRoot) {
     ? runCmd('git', ['show', 'FETCH_HEAD:version.txt'], repoRoot)
     : runCmd('git', ['show', `origin/${branch}:version.txt`], repoRoot);
   if (!remote.ok) {
-    info.error = `Tidak bisa membaca version.txt dari GitHub (origin/${branch}).`;
+    info.error = `Tidak bisa membaca version.txt dari Gitea (origin/${branch}).`;
     return info;
   }
 
@@ -4643,7 +4643,7 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
     ? runCmd('git', ['show', 'FETCH_HEAD:version.txt'], repoRoot)
     : runCmd('git', ['show', `origin/${branch}:version.txt`], repoRoot);
     pushCmd(`git show origin/${branch}:version.txt`, remote);
-    if (!remote.ok) throw new Error('Tidak bisa membaca version.txt dari GitHub.');
+    if (!remote.ok) throw new Error('Tidak bisa membaca version.txt dari Gitea.');
     const remoteVersion = String(remote.stdout || '').trim() || '-';
 
     if (remoteVersion !== '-' && remoteVersion === localBefore) {

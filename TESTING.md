@@ -2,7 +2,7 @@
 
 ## 1. Uji manual cepat
 
-1. **Landing** `/` — hero, paket, switcher **ID/EN**, link GitHub/Wiki/Lisensi.
+1. **Landing** `/` — hero, paket, switcher **ID/EN**, link Gitea/Wiki/Lisensi.
 2. **Login admin** `/admin/login` → `admin` / `demo-isp123` → dashboard.
 3. **Pelanggan** `/customer/login` → masukkan nomor HP demo **`081200000001`** (login pelanggan hanya butuh nomor HP) → dashboard & tagihan.
 4. **Health** `/health` · versi `/version.txt`.

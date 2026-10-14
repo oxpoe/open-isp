@@ -532,7 +532,7 @@ db.exec(`
 
 /**
  * Memastikan menu-menu utama (WA, Settings, dll) selalu terbuka (Visible)
- * meskipun setelah update dari GitHub yang mungkin mengunci menu tersebut secara default.
+ * meskipun setelah update dari Gitea yang mungkin mengunci menu tersebut secara default.
  */
 function forceUnlockCoreMenus() {
   try {

@@ -57,7 +57,7 @@ const createSqliteSessionStore = require('./config/sqliteSessionStore');
 const { getSetting, getSettingsWithCache, ensureDefaultSettings, getNowLocal, formatDateLocal, formatTimeLocal, parseDateInTimezone } = require('./config/settingsManager');
 const { SUPPORTED_LANGS, FALLBACK_LANG, normalizeLang, t } = require('./config/i18n');
 
-// Pastikan semua default settings ada (untuk migrasi/update dari GitHub)
+// Pastikan semua default settings ada (untuk migrasi/update dari Gitea)
 if (typeof ensureDefaultSettings === 'function') {
   ensureDefaultSettings();
 }
