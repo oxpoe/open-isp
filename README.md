@@ -1,4 +1,4 @@
-> 🪞 **Mirror.** Repo asli & pengembangan ada di **Gitea**: https://gitea.oxpoe.qzz.io/oxpoe/open-isp
+> 🪞 **Mirror.** Repo asli, pengembangan & **rilis/unduhan** ada di **Gitea**: https://gitea.oxpoe.qzz.io/oxpoe/open-isp/releases · GitHub hanya cermin kode.
 
 <p align="center">
   <img src="docs/assets/banner.png" alt="OPEN-ISP" width="100%">
