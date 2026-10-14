@@ -50,12 +50,12 @@
   },
   "author": "oxpoe",
   "license": "ISC",
-  "homepage": "https://github.com/oxpoe/open-isp#readme",
+  "homepage": "https://gitea.oxpoe.qzz.io/oxpoe/open-isp#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oxpoe/open-isp.git"
+    "url": "git+https://gitea.oxpoe.qzz.io/oxpoe/open-isp.git"
   },
   "bugs": {
-    "url": "https://github.com/oxpoe/open-isp/issues"
+    "url": "https://gitea.oxpoe.qzz.io/oxpoe/open-isp/issues"
   }
 }

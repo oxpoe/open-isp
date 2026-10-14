@@ -24,10 +24,10 @@ Rilis pertama OPEN-ISP: sistem **billing & manajemen ISP (fiber optic)** open-so
 ## Kredit
 - Base kode & repo: [alijayanet/billing-rtrw](https://github.com/alijayanet/billing-rtrw) oleh **Alijaya Net** — terima kasih.
 - Add-on: GoWA, LibreSpeed/OpenSpeedTest, Uptime Kuma, notification-forwarder.
-- Dikembangkan oleh [oxpoe](https://github.com/oxpoe) — **code by DeepSeek V4.1 Flash — max, on opencode**.
+- Dikembangkan oleh [oxpoe](https://gitea.oxpoe.qzz.io/oxpoe) — **code by DeepSeek V4.1 Flash — max, on opencode**.
 
 ## Instalasi singkat
 ```bash
-git clone https://github.com/oxpoe/open-isp.git && cd open-isp
+git clone https://gitea.oxpoe.qzz.io/oxpoe/open-isp.git && cd open-isp
 docker compose up -d     # http://localhost:3001 (admin / demo-isp123)
 ```

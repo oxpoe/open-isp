@@ -62,4 +62,4 @@ Rilis open-source perdana.
 
 ### Kredit
 - Base kode & repo: [alijayanet/billing-rtrw](https://github.com/alijayanet/billing-rtrw) oleh **Alijaya Net**.
-- Dikembangkan menjadi OPEN-ISP oleh [oxpoe](https://github.com/oxpoe).
+- Dikembangkan menjadi OPEN-ISP oleh [oxpoe](https://gitea.oxpoe.qzz.io/oxpoe).

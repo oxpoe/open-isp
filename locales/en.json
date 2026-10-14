@@ -189,7 +189,7 @@
         "cashiers": "Cashiers",
         "agents": "Agents",
         "agent_reports": "Agent Reports",
-        "update": "Update GitHub",
+        "update": "Update Gitea",
         "settings": "Settings",
         "cashiers_reports": "Cashier Reports",
         "collector_payments": "Collector Approval",
@@ -1052,7 +1052,7 @@
       "cashiers": "Cashiers",
       "agents": "Agents",
       "agent_reports": "Agent Reports",
-      "update": "GitHub Update",
+      "update": "Gitea Update",
       "settings": "Settings",
       "automation": "Automation",
       "network": "Network",
@@ -1065,10 +1065,10 @@
       "invoices_list": "Invoices"
     },
     "update": {
-      "title": "GitHub Update",
+      "title": "Gitea Update",
       "status_title": "Version Status",
       "server_version": "Server Version (version.txt)",
-      "github_version_prefix": "GitHub Version (origin/",
+      "github_version_prefix": "Gitea Version (origin/",
       "github_version_suffix": ")",
       "has_update": "Update available",
       "latest": "Up to date",
@@ -1076,7 +1076,7 @@
       "run": "Update Now",
       "keep_files": "Files not overwritten during update: settings.json and database folder. After update completes, restart the app to activate the new version.",
       "log_title": "Update Log",
-      "confirm": "Run update from GitHub now? Make sure the internet connection is stable and the app will be restarted after completion."
+      "confirm": "Run update from Gitea now? Make sure the internet connection is stable and the app will be restarted after completion."
     },
     "acs": {
       "monitoring": "GenieACS Monitoring",
@@ -1888,7 +1888,7 @@
       "speed_mode": "Display Mode on Customer Dashboard",
       "sp_mode_iframe": "Embed / iframe — for providers that allow it",
       "sp_mode_tab": "New Tab — for providers that block iframes",
-      "repo_link": "Project Repository Link (GitHub)",
+      "repo_link": "Project Repository Link (Gitea)",
       "uptime_link": "Website Uptime Link (Status)",
       "qris_status": "Static QRIS Status",
       "qris_url": "QRIS Static QR URL",
@@ -3447,8 +3447,8 @@
       "check": "Check Bill",
       "server_status": "Server Status",
       "status": "Status",
-      "github": "GitHub",
-      "repo_gh": "Repository (GitHub)",
+      "github": "Gitea",
+      "repo_gh": "Repository (Gitea)",
       "area_nav": "Service Area",
       "testi_nav": "Testimonials"
     },

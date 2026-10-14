@@ -14,9 +14,9 @@
   <img src="https://img.shields.io/badge/versi-0.5.1_pickle--lime-ADFF2F" alt="Versi 0.5.1 (pickle-lime)">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-339933" alt="Node.js >= 20">
   <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
-  <img src="https://img.shields.io/github/stars/oxpoe/open-isp?style=flat" alt="Stars">
-  <img src="https://img.shields.io/github/forks/oxpoe/open-isp?style=flat" alt="Forks">
-  <img src="https://img.shields.io/github/issues/oxpoe/open-isp?style=flat" alt="Issues">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.qzz.io%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.stars_count&label=stars&style=flat&color=blue&logo=gitea" alt="Stars">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.qzz.io%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.forks_count&label=forks&style=flat&color=lightgrey&logo=gitea" alt="Forks">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.qzz.io%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.open_issues_count&label=issues&style=flat&color=orange&logo=gitea" alt="Issues">
 </p>
 
 ---
@@ -56,7 +56,7 @@
 </tr>
 </table>
 
-Selengkapnya: **[Wiki OPEN-ISP](https://github.com/oxpoe/open-isp/wiki)**.
+Selengkapnya: **[Wiki OPEN-ISP](https://gitea.oxpoe.qzz.io/oxpoe/open-isp/wiki)**.
 
 ## Mulai Cepat
 
@@ -69,7 +69,7 @@ Klik badge di atas untuk membuka **Codespaces** — dependensi & data demo disia
 ### Docker (disarankan)
 
 ```bash
-git clone https://github.com/oxpoe/open-isp.git
+git clone https://gitea.oxpoe.qzz.io/oxpoe/open-isp.git
 cd open-isp
 docker compose up -d
 ```
@@ -105,8 +105,8 @@ Dukungan sukarela tetap diterima lewat menu **Dukung OPEN-ISP** di aplikasi.
 ## Dokumentasi
 
 - [`docs/`](docs/) — referensi teknis (skema database, OID OLT, integrasi RADIUS/MikroTik, checklist backup, dll.).
-- [Wiki](https://github.com/oxpoe/open-isp/wiki) — panduan instalasi, konfigurasi, tutorial, FAQ (sedang disusun).
-- [Issues](https://github.com/oxpoe/open-isp/issues) — laporan bug & permintaan fitur.
+- [Wiki](https://gitea.oxpoe.qzz.io/oxpoe/open-isp/wiki) — panduan instalasi, konfigurasi, tutorial, FAQ (sedang disusun).
+- [Issues](https://gitea.oxpoe.qzz.io/oxpoe/open-isp/issues) — laporan bug & permintaan fitur.
 
 ## Teknologi
 
@@ -118,7 +118,7 @@ Dirilis dengan lisensi **ISC** — bebas digunakan, dimodifikasi, dan didistribu
 
 - **Base kode &amp; repo**: [alijayanet/billing-rtrw](https://github.com/alijayanet/billing-rtrw) — dibuat oleh **Alijaya Net**. Terima kasih banyak atas base kode dan repo yang bermanfaat.
 - **Add-on**: GoWA (WhatsApp gateway), LibreSpeed & OpenSpeedTest (speed test), Uptime Kuma (monitoring, opsional), notification-forwarder.
-- **Dikembangkan oleh** [oxpoe](https://github.com/oxpoe) — **code by DeepSeek V4.1 Flash — max, on opencode**.
+- **Dikembangkan oleh** [oxpoe](https://gitea.oxpoe.qzz.io/oxpoe) — **code by DeepSeek V4.1 Flash — max, on opencode**.
 - Terima kasih untuk para kontributor dan komunitas ISP Indonesia.
 
 ## Dukungan &amp; Donasi

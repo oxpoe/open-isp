@@ -189,7 +189,7 @@
         "cashiers": "Kasir",
         "agents": "Agent",
         "agent_reports": "Laporan Agent",
-        "update": "Update GitHub",
+        "update": "Update Gitea",
         "settings": "Pengaturan",
         "cashiers_reports": "Laporan Kasir",
         "collector_payments": "Approval Kolektor",
@@ -1052,7 +1052,7 @@
       "cashiers": "Kasir",
       "agents": "Agent",
       "agent_reports": "Laporan Agent",
-      "update": "Update GitHub",
+      "update": "Update Gitea",
       "settings": "Pengaturan",
       "automation": "Automation",
       "network": "Jaringan",
@@ -1065,10 +1065,10 @@
       "invoices_list": "Data Tagihan"
     },
     "update": {
-      "title": "Update GitHub",
+      "title": "Update Gitea",
       "status_title": "Status Versi",
       "server_version": "Versi Server (version.txt)",
-      "github_version_prefix": "Versi GitHub (origin/",
+      "github_version_prefix": "Versi Gitea (origin/",
       "github_version_suffix": ")",
       "has_update": "Ada update",
       "latest": "Terbaru",
@@ -1076,7 +1076,7 @@
       "run": "Update Sekarang",
       "keep_files": "File yang tidak ditimpa saat update: settings.json dan folder database. Setelah update selesai, restart aplikasi agar versi baru aktif.",
       "log_title": "Log Update",
-      "confirm": "Jalankan update dari GitHub sekarang? Pastikan koneksi internet aman dan aplikasi akan direstart setelah selesai."
+      "confirm": "Jalankan update dari Gitea sekarang? Pastikan koneksi internet aman dan aplikasi akan direstart setelah selesai."
     },
     "acs": {
       "monitoring": "Monitoring GenieACS",
@@ -1889,7 +1889,7 @@
       "speed_mode": "Mode Tampilan di Dashboard Pelanggan",
       "sp_mode_iframe": "Embed / iframe — untuk provider yang mengizinkan",
       "sp_mode_tab": "Buka Tab Baru — untuk provider yang memblokir iframe",
-      "repo_link": "Link Repositori Proyek (GitHub)",
+      "repo_link": "Link Repositori Proyek (Gitea)",
       "uptime_link": "Link Uptime Website (Status)",
       "qris_status": "Status QRIS Statis",
       "qris_url": "QRIS Static QR URL",
@@ -3448,8 +3448,8 @@
       "check": "Cek Tagihan",
       "server_status": "Status Server",
       "status": "Status",
-      "github": "GitHub",
-      "repo_gh": "Repositori (GitHub)",
+      "github": "Gitea",
+      "repo_gh": "Repositori (Gitea)",
       "area_nav": "Area Layanan",
       "testi_nav": "Testimoni"
     },
