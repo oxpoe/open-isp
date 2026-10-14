@@ -396,7 +396,7 @@ function getUpdateInfo(repoRoot) {
   const _repo = String(getSetting('update_repo', 'oxpoe/open-isp') || '').trim();
   info.repo = _repo || 'origin';
   const fetch = _repo
-    ? runCmd('git', ['fetch', '--prune', 'https://github.com/' + _repo + '.git', branch], repoRoot)
+    ? runCmd('git', ['fetch', '--prune', 'https://gitea.oxpoe.qzz.io/' + _repo + '.git', branch], repoRoot)
     : runCmd('git', ['fetch', '--prune'], repoRoot);
   if (!fetch.ok) {
     info.error = 'Gagal git fetch: ' + (fetch.stderr || fetch.stdout || '').trim();
@@ -4634,7 +4634,7 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
     const _repo = String(getSetting('update_repo', 'oxpoe/open-isp') || '').trim();
   info.repo = _repo || 'origin';
   const fetch = _repo
-    ? runCmd('git', ['fetch', '--prune', 'https://github.com/' + _repo + '.git', branch], repoRoot)
+    ? runCmd('git', ['fetch', '--prune', 'https://gitea.oxpoe.qzz.io/' + _repo + '.git', branch], repoRoot)
     : runCmd('git', ['fetch', '--prune'], repoRoot);
     pushCmd('git fetch --prune', fetch);
     if (!fetch.ok) throw new Error('Gagal git fetch.');
