@@ -1,6 +1,6 @@
 {
   "name": "open-isp",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "OPEN-ISP — sistem billing & manajemen ISP open-source (PWA pelanggan, multi-OLT, RADIUS, WhatsApp, QRIS)",
   "main": "app-customer.js",
   "scripts": {
