@@ -1,3 +1,5 @@
+> 🪞 **Mirror.** Repo asli & pengembangan ada di **Gitea**: https://gitea.oxpoe.qzz.io/oxpoe/open-isp
+
 <p align="center">
   <img src="docs/assets/banner.png" alt="OPEN-ISP" width="100%">
 </p>
