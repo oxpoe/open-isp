@@ -270,6 +270,11 @@
             <input class="fc" name="company_header" value="<%= settings.company_header || '' %>">
           </div>
           <div class="fg">
+            <label class="fl">Nama PT / Sub-header (kop invoice &amp; PDF)</label>
+            <input class="fc" name="company_subheader" value="<%= settings.company_subheader || '' %>" placeholder="Contoh: PT Nama Perusahaan">
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Dipakai pada kop invoice/PDF. Bisa berbeda tiap instalasi.</div>
+          </div>
+          <div class="fg">
             <label class="fl"><%= t('admin.set.public_url','URL Publik Aplikasi (Public Base URL)') %></label>
             <input class="fc" name="public_base_url" value="<%= settings.public_base_url || '' %>" placeholder="https://portal.domain-anda.com">
             <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.link_hint','Digunakan untuk menyusun tautan login pelanggan yang dikirim via WhatsApp. Contoh: ') %><span class="mono">https://portal.domain-anda.com</span></div>

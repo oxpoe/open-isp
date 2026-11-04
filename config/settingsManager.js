@@ -293,6 +293,7 @@ function ensureDefaultSettings() {
       custom_ai_base_url: '',
       custom_ai_model: 'llama3',
       ai_self_healing_enabled: false,
+      company_subheader: '',
       update_base_url: 'https://gitea.oxpoe.xyz',
       update_repo: 'oxpoe/open-isp',
       // RADIUS Server settings (ditambahkan untuk update dari Gitea)

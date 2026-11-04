@@ -315,7 +315,7 @@
         </a>
         <p class="muted" style="font-size:14px;max-width:40ch"><%= t('landing.footer.tagline','Micro Internet Provider dan Server Platform.') %></p>
         <p class="muted" style="font-size:13px;margin-top:8px;max-width:40ch">Internet Freedom — We Are Open-Source.</p>
-        <p class="muted" style="font-size:12.5px;margin-top:12px">Made with <i class="bi bi-heart-fill" style="color:#e5484d"></i> from Oxpoe in INA.</p>
+        <p class="muted" style="font-size:12.5px;margin-top:12px"><% if (typeof settings !== 'undefined' && settings && settings.company_subheader) { %><%= settings.company_subheader %><% } else { %>Made with <i class="bi bi-heart-fill" style="color:#e5484d"></i> from Oxpoe in INA.<% } %></p>
       </div>
       <div>
         <h4><%= t('landing.footer.nav','Navigasi') %></h4>
