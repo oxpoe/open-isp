@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Check syntax (semua file JS)
+        shell: bash
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            node --check "$f" || { echo "SYNTAX FAIL: $f"; fail=1; }
+          done < <(find . -name '*.js' -not -path './node_modules/*' -not -path './.git/*' -not -path './public/vendor/*')
+          exit $fail
+
+      - name: Unit tests
+        run: node tests/unit/area-access.test.js

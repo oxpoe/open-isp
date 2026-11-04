@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build archive & release
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          API: ${{ github.server_url }}/api/v1/repos/${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
+          NOTES="docs/RELEASE_NOTES_v${VERSION}.md"
+
+          python3 - "$TAG" "$NOTES" > payload.json <<'PY'
+          import json, os, sys
+          tag, notes = sys.argv[1], sys.argv[2]
+          body = open(notes, encoding="utf-8").read() if os.path.exists(notes) else "Rilis " + tag
+          print(json.dumps({"tag_name": tag, "name": tag, "body": body, "draft": False, "prerelease": False}))
+          PY
+
+          git archive --format=zip --prefix="open-isp-${VERSION}/" -o "/tmp/open-isp-${VERSION}.zip" HEAD
+
+          ID=$(curl -fsS -X POST "$API/releases" \
+            -H "Authorization: token $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @payload.json | python3 -c 'import sys, json; print(json.load(sys.stdin)["id"])')
+
+          curl -fsS -X POST "$API/releases/$ID/assets?name=open-isp-${VERSION}.zip" \
+            -H "Authorization: token $TOKEN" \
+            -H "Content-Type: application/zip" \
+            --data-binary "@/tmp/open-isp-${VERSION}.zip"
+
+          echo "Release $TAG dibuat dengan asset open-isp-${VERSION}.zip"

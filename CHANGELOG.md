@@ -2,7 +2,24 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
-## [Unreleased] — setelah v0.5.1
+## [0.5.3] — 2026-11-05 — "forge-lime"
+
+### Ditambahkan
+- **Pembatasan wilayah kerja**: teknisi & kolektor hanya melihat/menangani pelanggan, tiket, perangkat, dan tagihan di area tugasnya (dukung multi-area). Admin/root tetap penuh.
+- **Inventaris gudang**: alur stok keluar (FIFO / serial number), retur barang bekas, stock opname dengan selisih otomatis, detail unit per barang, statistik stok, serta harga & supplier.
+- **Edit slip payroll**: rincian gaji (tunjangan, potongan, bonus, lembur) dapat diubah selama status masih draft; total dihitung ulang otomatis.
+- **AI & Self-Healing**: provider AI OpenAI-compatible (DeepSeek default, OpenAI, Groq, OpenRouter, custom/Ollama), bot Telegram menjawab pertanyaan admin, dan auto-repair jaringan (status isolir vs tagihan, secret PPPoE hilang/tertukar profil, sesi RADIUS menggantung, IP ACS kosong) dengan **toggle on/off** di Pengaturan.
+- **Security Watchdog**: deteksi brute-force login admin/kasir/teknisi/kolektor dan MikroTik, blokir IP sementara, alert suara (TTS soundbox) + notifikasi admin.
+- **Batas sesi login**: admin/kasir/teknisi/kolektor maksimal 2 sesi per akun, pelanggan 3 sesi; sesi lama diputus otomatis dan session ID dirotasi saat login.
+
+### Diperbaiki
+- Tab **Status** di halaman login pelanggan kini mengikuti setting `uptime_url` (sebelumnya selalu menuju URL lama `status.skyfiber.qzz.io`).
+- Kolom API key AI disamarkan (`type=password`) agar tidak tampil di layar/screenshot.
+
+### Dokumentasi
+- 10 screenshot aplikasi (desktop + mobile) di `docs/screenshots/`.
+
+## [0.5.2] — 2026-10-14 — "mirror-gitea"
 
 ### Diperbaiki
 - Kolom **IP Address** di **GenieACS Pro** kini tampil saat **mode pencarian** (sebelumnya kosong).

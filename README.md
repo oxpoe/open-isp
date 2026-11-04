@@ -1,4 +1,4 @@
-> 🪞 **Mirror.** Repo asli, pengembangan & **rilis/unduhan** ada di **Gitea**: https://gitea.oxpoe.qzz.io/oxpoe/open-isp/releases · GitHub hanya cermin kode.
+> 🪞 **Repositori utama:** [Gitea](https://gitea.oxpoe.xyz/oxpoe/open-isp) · [Forgejo](https://forgejo.oxpoe.xyz/oxpoe/open-isp) — rilis & unduhan ada di sana. GitHub hanya cermin kode.
 
 <p align="center">
   <img src="docs/assets/banner.png" alt="OPEN-ISP" width="100%">
@@ -11,17 +11,33 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/lisensi-ISC-ADFF2F" alt="Lisensi: ISC">
-  <img src="https://img.shields.io/badge/versi-0.5.1_pickle--lime-ADFF2F" alt="Versi 0.5.1 (pickle-lime)">
+  <img src="https://img.shields.io/badge/versi-0.5.3_forge--lime-ADFF2F" alt="Versi 0.5.3 (forge-lime)">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-339933" alt="Node.js >= 20">
   <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
-  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.qzz.io%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.stars_count&label=stars&style=flat&color=blue&logo=gitea" alt="Stars">
-  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.qzz.io%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.forks_count&label=forks&style=flat&color=lightgrey&logo=gitea" alt="Forks">
-  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.qzz.io%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.open_issues_count&label=issues&style=flat&color=orange&logo=gitea" alt="Issues">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.xyz%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.stars_count&label=stars&style=flat&color=blue&logo=gitea" alt="Stars">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.xyz%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.forks_count&label=forks&style=flat&color=lightgrey&logo=gitea" alt="Forks">
+  <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.xyz%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.open_issues_count&label=issues&style=flat&color=orange&logo=gitea" alt="Issues">
 </p>
 
 ---
 
 **OPEN-ISP** adalah aplikasi billing dan manajemen ISP yang lengkap: tagihan otomatis, isolir otomatis, pembayaran (QRIS/webhook), perangkat MikroTik (PPPoE & hotspot), OLT PON multi-vendor, TR-069 (GenieACS/ACS), RADIUS, peta jaringan, notifikasi WhatsApp & Telegram, hingga portal self-service pelanggan dalam satu platform — semuanya berjalan mandiri (self-hosted) dengan SQLite sebagai basis data. **NOTE:** dibuat dan ditulis oleh AI ([Deepseek](https://github.com/deepseek-ai)), on [opencode](https://github.com/anomalyco/opencode).
+
+## Tangkapan Layar
+
+| Dashboard Admin | Daftar Pelanggan |
+|---|---|
+| ![Dashboard](docs/screenshots/03-admin-dashboard.png) | ![Pelanggan](docs/screenshots/04-admin-customers.png) |
+
+| Inventaris & Stok Keluar | Pengaturan AI & Self-Healing |
+|---|---|
+| ![Inventaris](docs/screenshots/05-admin-inventory.png) | ![AI](docs/screenshots/07-admin-settings-ai.png) |
+
+| Login Pelanggan | Dashboard Pelanggan |
+|---|---|
+| ![Login](docs/screenshots/08-customer-login.png) | ![Dashboard Pelanggan](docs/screenshots/09-customer-dashboard.png) |
+
+Selengkapnya (10 gambar, desktop + mobile): [`docs/screenshots/`](docs/screenshots/).
 
 ## Fitur
 
@@ -37,7 +53,11 @@
 - **Speed test** — server internal maupun eksternal (preset provider diatur admin), mode embed/tab, tombol Muat Ulang & Bersihkan Cache.
 - **PWA** — dapat dipasang di HP, offline, pembaruan otomatis (bar "versi baru tersedia").
 - **Bilingual** — antarmuka Indonesia / English (bisa diganti dari UI).
-- **Lain-lain** — inventaris gudang, tiket dukungan, laporan, monitoring sistem (CPU/RAM/disk), ODP, backup/restore database, audit log.
+- **Inventaris gudang** — stok masuk, keluar (FIFO / serial number), retur, stock opname, detail unit, harga & supplier, statistik stok.
+- **AI & otomatisasi** — provider AI OpenAI-compatible (DeepSeek/OpenAI/Groq/OpenRouter/custom), bot Telegram AI, dan **self-healing** jaringan dengan toggle on/off.
+- **Keamanan** — security watchdog brute-force (app + MikroTik), batas sesi login per akun (staff 2, pelanggan 3), rotasi session ID, alert suara/Telegram.
+- **Pembatasan wilayah** — teknisi & kolektor hanya mengakses pelanggan/tiket/perangkat di area tugasnya.
+- **Lain-lain** — tiket dukungan, laporan, monitoring sistem (CPU/RAM/disk), ODP, backup/restore database, audit log.
 
 ## Tangkapan Layar
 
@@ -56,7 +76,7 @@
 </tr>
 </table>
 
-Selengkapnya: **[Wiki OPEN-ISP](https://gitea.oxpoe.qzz.io/oxpoe/open-isp/wiki)**.
+Selengkapnya: **[Wiki OPEN-ISP](https://gitea.oxpoe.xyz/oxpoe/open-isp/wiki)**.
 
 ## Mulai Cepat
 
@@ -69,7 +89,7 @@ Klik badge di atas untuk membuka **Codespaces** — dependensi & data demo disia
 ### Docker (disarankan)
 
 ```bash
-git clone https://gitea.oxpoe.qzz.io/oxpoe/open-isp.git
+git clone https://gitea.oxpoe.xyz/oxpoe/open-isp.git
 cd open-isp
 docker compose up -d
 ```
@@ -105,8 +125,8 @@ Dukungan sukarela tetap diterima lewat menu **Dukung OPEN-ISP** di aplikasi.
 ## Dokumentasi
 
 - [`docs/`](docs/) — referensi teknis (skema database, OID OLT, integrasi RADIUS/MikroTik, checklist backup, dll.).
-- [Wiki](https://gitea.oxpoe.qzz.io/oxpoe/open-isp/wiki) — panduan instalasi, konfigurasi, tutorial, FAQ (sedang disusun).
-- [Issues](https://gitea.oxpoe.qzz.io/oxpoe/open-isp/issues) — laporan bug & permintaan fitur.
+- [Wiki](https://gitea.oxpoe.xyz/oxpoe/open-isp/wiki) — panduan instalasi, konfigurasi, tutorial, FAQ (sedang disusun).
+- [Issues](https://gitea.oxpoe.xyz/oxpoe/open-isp/issues) — laporan bug & permintaan fitur.
 
 ## Teknologi
 
@@ -118,7 +138,7 @@ Dirilis dengan lisensi **ISC** — bebas digunakan, dimodifikasi, dan didistribu
 
 - **Base kode &amp; repo**: [alijayanet/billing-rtrw](https://github.com/alijayanet/billing-rtrw) — dibuat oleh **Alijaya Net**. Terima kasih banyak atas base kode dan repo yang bermanfaat.
 - **Add-on**: GoWA (WhatsApp gateway), LibreSpeed & OpenSpeedTest (speed test), Uptime Kuma (monitoring, opsional), notification-forwarder.
-- **Dikembangkan oleh** [oxpoe](https://gitea.oxpoe.qzz.io/oxpoe) — **code by DeepSeek V4.1 Flash — max, on opencode**.
+- **Dikembangkan oleh** [oxpoe](https://gitea.oxpoe.xyz/oxpoe) — **code by DeepSeek V4.1 Flash — max, on opencode**.
 - Terima kasih untuk para kontributor dan komunitas ISP Indonesia.
 
 ## Dukungan &amp; Donasi
