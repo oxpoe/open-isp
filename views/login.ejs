@@ -43,7 +43,8 @@
       <a href="#features"><%= t('landing.nav.features','Keunggulan') %></a>
       <a href="/customer/check-billing"><%= t('landing.hero.check','Cek Tagihan') %></a>
       <% if (voucherOn) { %><a href="/customer/voucher"><%= t('login.voucher_nav','Voucher') %></a><% } %>
-      <% if (typeof settings !== 'undefined' && settings && settings.status_url) { %><a href="<%= settings.status_url %>" target="_blank" rel="noopener">Status</a><% } %>
+      <% var _statusUrl = (typeof settings !== 'undefined' && settings) ? (settings.uptime_url || settings.status_url || '') : ''; %>
+      <% if (_statusUrl) { %><a href="<%= _statusUrl %>" target="_blank" rel="noopener">Status</a><% } %>
     </nav>
     <div class="header-actions">
       <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema"><i class="bi bi-moon-stars-fill" id="themeIcon"></i></button>
@@ -59,7 +60,7 @@
       <a href="/customer/check-billing" onclick="toggleMenu()"><i class="bi bi-receipt"></i> <%= t('landing.hero.check','Cek Tagihan') %></a>
       <% if (voucherOn) { %><a href="/customer/voucher" onclick="toggleMenu()"><i class="bi bi-ticket-perforated"></i> <%= t('login.voucher_short','Beli Voucher') %></a><% } %>
       <a href="/customer/register" onclick="toggleMenu()"><i class="bi bi-person-plus"></i> <%= t('login.register_new','Daftar Baru') %></a>
-      <% if (typeof settings !== 'undefined' && settings && settings.status_url) { %><a href="<%= settings.status_url %>" target="_blank" rel="noopener" onclick="toggleMenu()"><i class="bi bi-activity"></i> Status Server</a><% } %>
+      <% if (_statusUrl) { %><a href="<%= _statusUrl %>" target="_blank" rel="noopener" onclick="toggleMenu()"><i class="bi bi-activity"></i> Status Server</a><% } %>
     </div>
   </div>
 </header>
@@ -223,7 +224,7 @@
           <a href="/customer/tos"><%= t('customer.footer.tos', 'Syarat & Ketentuan') %></a>
           <a href="/customer/privacy"><%= t('customer.footer.privacy', 'Kebijakan Privasi') %></a>
           <a href="/customer/tos#refund"><%= t('customer.footer.refund', 'Kebijakan Refund') %></a>
-          <% if (typeof settings !== 'undefined' && settings && settings.status_url) { %><a href="<%= settings.status_url %>" target="_blank" rel="noopener"><%= t('login.status_full','Status Server & Uptime') %></a><% } %>
+          <% if (_statusUrl) { %><a href="<%= _statusUrl %>" target="_blank" rel="noopener"><%= t('login.status_full','Status Server & Uptime') %></a><% } %>
         </div>
       </div>
     </div>

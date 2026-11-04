@@ -57,6 +57,7 @@ const backupSvc = require('../services/backupService');
 const monitoringSvc = require('../services/monitoringService');
 const inventorySvc = require('../services/inventoryService');
 const securityWatchdog = require('../services/securityWatchdogService');
+const sessionLimit = require('../services/sessionLimitService');
 const auditSvc = require('../services/auditTrailService');
 const whatsappService = require('../services/whatsappService');
 const { parseMikhmonOnLogin } = require('../utils/mikhmonParser');
@@ -568,8 +569,13 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   const { username, password } = req.body;
   if (username === getSetting('admin_username', 'admin') && password === getSetting('admin_password', 'demo-isp123')) {
     await securityWatchdog.recordAppLoginAttempt({ type: 'admin', username, ip, success: true });
+    await sessionLimit.rotateSession(req);
     req.session.isAdmin = true;
     req.session.adminUser = username;
+    sessionLimit.registerLoginSession(req, {
+      role: 'admin', accountId: username, limit: 2,
+      ip, userAgent: req.get('user-agent')
+    });
     return res.redirect('/admin');
   }
   
@@ -577,6 +583,11 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   const cashier = adminSvc.authenticateCashier(username, password);
   if (cashier) {
     await securityWatchdog.recordAppLoginAttempt({ type: 'cashier', username, ip, success: true });
+    await sessionLimit.rotateSession(req);
+    sessionLimit.registerLoginSession(req, {
+      role: 'cashier', accountId: cashier.id, limit: 2,
+      ip, userAgent: req.get('user-agent')
+    });
     req.session.isCashier = true;
     req.session.cashierId = cashier.id;
     req.session.cashierName = cashier.name;
@@ -594,7 +605,11 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   res.render('admin/login', { title: 'Admin Login', company: company(), error: 'Username atau password salah' });
 });
 
-router.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/admin/login'); });
+router.get('/logout', (req, res) => {
+  sessionLimit.removeLoginSession(req);
+  req.session.destroy();
+  res.redirect('/admin/login');
+});
 
 // ─── OLT MANAGEMENT ────────────────────────────────────────────────────────
 router.get('/olts', requireAdminSession, async (req, res) => {

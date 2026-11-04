@@ -1,4 +1,5 @@
 const express = require('express');
+const sessionLimit = require('../services/sessionLimitService');
 const router = express.Router();
 const customerDevice = require('../services/customerDeviceService');
 const { getSettingsWithCache, getNowLocal, getCurrentTimeInfo, getNowLocalISO, formatDateLocal, formatTimeLocal } = require('../config/settingsManager');
@@ -1791,6 +1792,14 @@ router.post('/login', loginRateLimiter, async (req, res) => {
 
   // --- DIRECT LOGIN ---
   logger.info('[Login] Login direct berhasil.');
+  await sessionLimit.rotateSession(req);
+  sessionLimit.registerLoginSession(req, {
+    role: 'customer',
+    accountId: customer ? customer.id : String(customerPhone || '').replace(/\D/g, ''),
+    limit: 3,
+    ip: req.ip || req.connection?.remoteAddress || '',
+    userAgent: req.get('user-agent')
+  });
   req.session.phone = customerPhone; // Nomor telepon untuk findCustomerByAny()
   req.session.pppoe_username = pppoeUsername; // PPPoE username untuk GenieACS & MikroTik
   if (customer && customer.status === 'suspended') {
@@ -1805,7 +1814,7 @@ router.get('/login-otp', (req, res) => {
   res.render('login_otp', { error: null, settings, phone: req.session.pending_login.phone });
 });
 
-router.post('/login-otp', loginRateLimiter, (req, res) => {
+router.post('/login-otp', loginRateLimiter, async (req, res) => {
   const { otp } = req.body;
   const settings = getSettingsWithCache();
   const pending = req.session.pending_login;
@@ -1824,6 +1833,15 @@ router.post('/login-otp', loginRateLimiter, (req, res) => {
 
   if (otp === pending.otp) {
     logger.info('[Login] OTP berhasil diverifikasi.');
+    await sessionLimit.rotateSession(req);
+    const custForLimit = customerSvc.findCustomerByAny(pending.phone);
+    sessionLimit.registerLoginSession(req, {
+      role: 'customer',
+      accountId: custForLimit ? custForLimit.id : String(pending.phone || '').replace(/\D/g, ''),
+      limit: 3,
+      ip: req.ip || req.connection?.remoteAddress || '',
+      userAgent: req.get('user-agent')
+    });
     req.session.phone = pending.phone; // Nomor telepon customer
     req.session.pppoe_username = pending.pppoeUsername; // PPPoE username untuk GenieACS & MikroTik
     delete req.session.pending_login;
@@ -2591,6 +2609,7 @@ router.post('/change-tag', async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
+  sessionLimit.removeLoginSession(req);
   req.session.destroy(() => {
     res.redirect('/customer/login');
   });

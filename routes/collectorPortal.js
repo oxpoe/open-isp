@@ -6,6 +6,7 @@ const db = require('../config/database');
 const billingSvc = require('../services/billingService');
 const customerSvc = require('../services/customerService');
 const securityWatchdog = require('../services/securityWatchdogService');
+const sessionLimit = require('../services/sessionLimitService');
 const adminSvc = require('../services/adminService');
 const attendanceSvc = require('../services/attendanceService');
 const pdfSvc = require('../services/pdfInvoiceService');
@@ -65,7 +66,12 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   const collector = adminSvc.authenticateCollector(username, password);
   if (collector) {
     await securityWatchdog.recordAppLoginAttempt({ type: 'collector', username, ip, success: true });
+    await sessionLimit.rotateSession(req);
     req.session.isCollector = true;
+    sessionLimit.registerLoginSession(req, {
+      role: 'collector', accountId: collector.id, limit: 2,
+      ip, userAgent: req.get('user-agent')
+    });
     req.session.collectorId = collector.id;
     req.session.collectorName = collector.name;
     req.session.collectorUsername = collector.username;
@@ -83,6 +89,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
 });
 
 router.get('/logout', (req, res) => {
+  sessionLimit.removeLoginSession(req);
   req.session.destroy();
   res.redirect('/collector/login');
 });

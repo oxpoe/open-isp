@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const techSvc = require('../services/techService');
 const securityWatchdog = require('../services/securityWatchdogService');
+const sessionLimit = require('../services/sessionLimitService');
 const customerSvc = require('../services/customerService');
 const odpSvc = require('../services/odpService');
 const { getSetting, getNowLocal, getCurrentDateInTimezone, getNowLocalISO, formatDateLocal, getSettings, formatTimeLocal, parseDateInTimezone } = require('../config/settingsManager');
@@ -155,7 +156,12 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   const tech = techSvc.authenticate(username, password);
   if (tech) {
     await securityWatchdog.recordAppLoginAttempt({ type: 'technician', username, ip, success: true });
+    await sessionLimit.rotateSession(req);
     req.session.isTechnician = true;
+    sessionLimit.registerLoginSession(req, {
+      role: 'technician', accountId: tech.id, limit: 2,
+      ip, userAgent: req.get('user-agent')
+    });
     req.session.techId = tech.id;
     req.session.techName = tech.name;
     return res.redirect('/tech');
@@ -171,6 +177,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
 });
 
 router.get('/logout', (req, res) => {
+  sessionLimit.removeLoginSession(req);
   req.session.destroy();
   res.redirect('/tech/login');
 });
