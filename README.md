@@ -63,16 +63,16 @@ Selengkapnya (10 gambar, desktop + mobile): [`docs/screenshots/`](docs/screensho
 
 <table>
 <tr>
-<td align="center"><b>Dashboard Admin</b><br><img src="docs/screenshots/admin-dashboard.jpg" width="420"></td>
-<td align="center"><b>Data Pelanggan</b><br><img src="docs/screenshots/admin-customers.jpg" width="420"></td>
+<td align="center"><b>Dashboard Admin</b><br><img src="docs/screenshots/admin-dashboard.webp" width="420"></td>
+<td align="center"><b>Data Pelanggan</b><br><img src="docs/screenshots/admin-customers.webp" width="420"></td>
 </tr>
 <tr>
-<td align="center"><b>Tagihan &amp; Pembayaran</b><br><img src="docs/screenshots/admin-billing.jpg" width="420"></td>
-<td align="center"><b>OLT (PON)</b><br><img src="docs/screenshots/admin-olts.jpg" width="420"></td>
+<td align="center"><b>Tagihan &amp; Pembayaran</b><br><img src="docs/screenshots/admin-billing.webp" width="420"></td>
+<td align="center"><b>OLT (PON)</b><br><img src="docs/screenshots/admin-olts.webp" width="420"></td>
 </tr>
 <tr>
-<td align="center"><b>Portal Pelanggan (PWA)</b><br><img src="docs/screenshots/customer-dashboard.jpg" width="250"></td>
-<td align="center"><b>Tagihan Pelanggan</b><br><img src="docs/screenshots/customer-billing.jpg" width="250"></td>
+<td align="center"><b>Portal Pelanggan (PWA)</b><br><img src="docs/screenshots/customer-dashboard.webp" width="250"></td>
+<td align="center"><b>Tagihan Pelanggan</b><br><img src="docs/screenshots/customer-billing.webp" width="250"></td>
 </tr>
 </table>
 
