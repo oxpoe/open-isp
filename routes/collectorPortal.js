@@ -5,6 +5,7 @@ const { logger } = require('../config/logger');
 const db = require('../config/database');
 const billingSvc = require('../services/billingService');
 const customerSvc = require('../services/customerService');
+const securityWatchdog = require('../services/securityWatchdogService');
 const adminSvc = require('../services/adminService');
 const attendanceSvc = require('../services/attendanceService');
 const pdfSvc = require('../services/pdfInvoiceService');
@@ -49,11 +50,21 @@ router.get('/login', (req, res) => {
   res.render('collector/login', { title: 'Login Kolektor', company: company(), error: null });
 });
 
-router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), (req, res) => {
+router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), async (req, res) => {
+  const ip = req.ip || req.connection?.remoteAddress || '127.0.0.1';
+  if (securityWatchdog.isIpBlocked(ip)) {
+    return res.render('collector/login', {
+      title: 'Login Kolektor',
+      company: company(),
+      error: 'Akses login diblokir sementara karena terlalu banyak percobaan gagal. Coba lagi nanti.'
+    });
+  }
+
   const username = String(req.body.username || '').trim();
   const password = String(req.body.password || '');
   const collector = adminSvc.authenticateCollector(username, password);
   if (collector) {
+    await securityWatchdog.recordAppLoginAttempt({ type: 'collector', username, ip, success: true });
     req.session.isCollector = true;
     req.session.collectorId = collector.id;
     req.session.collectorName = collector.name;
@@ -61,6 +72,13 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
     req.session.collectorArea = collector.area || '';
     return res.redirect('/collector');
   }
+  await securityWatchdog.recordAppLoginAttempt({
+    type: 'collector',
+    username,
+    ip,
+    success: false,
+    userAgent: req.get('user-agent')
+  });
   return res.render('collector/login', { title: 'Login Kolektor', company: company(), error: 'Username atau password salah!' });
 });
 

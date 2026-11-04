@@ -56,6 +56,7 @@ const promoUpload = multer({
 const backupSvc = require('../services/backupService');
 const monitoringSvc = require('../services/monitoringService');
 const inventorySvc = require('../services/inventoryService');
+const securityWatchdog = require('../services/securityWatchdogService');
 const auditSvc = require('../services/auditTrailService');
 const whatsappService = require('../services/whatsappService');
 const { parseMikhmonOnLogin } = require('../utils/mikhmonParser');
@@ -554,9 +555,19 @@ router.get('/login', (req, res) => {
   res.render('admin/login', { title: 'Admin Login', company: company(), error: null });
 });
 
-router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), (req, res) => {
+router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), async (req, res) => {
+  const ip = req.ip || req.connection?.remoteAddress || '127.0.0.1';
+  if (securityWatchdog.isIpBlocked(ip)) {
+    return res.render('admin/login', {
+      title: 'Admin Login',
+      company: company(),
+      error: 'Akses login diblokir sementara karena terlalu banyak percobaan gagal. Coba lagi nanti.'
+    });
+  }
+
   const { username, password } = req.body;
   if (username === getSetting('admin_username', 'admin') && password === getSetting('admin_password', 'demo-isp123')) {
+    await securityWatchdog.recordAppLoginAttempt({ type: 'admin', username, ip, success: true });
     req.session.isAdmin = true;
     req.session.adminUser = username;
     return res.redirect('/admin');
@@ -565,6 +576,7 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
   // Check Cashier
   const cashier = adminSvc.authenticateCashier(username, password);
   if (cashier) {
+    await securityWatchdog.recordAppLoginAttempt({ type: 'cashier', username, ip, success: true });
     req.session.isCashier = true;
     req.session.cashierId = cashier.id;
     req.session.cashierName = cashier.name;
@@ -572,6 +584,13 @@ router.post('/login', loginRateLimiter, express.urlencoded({ extended: true }), 
     return res.redirect('/admin');
   }
 
+  await securityWatchdog.recordAppLoginAttempt({
+    type: 'admin',
+    username: username || '',
+    ip,
+    success: false,
+    userAgent: req.get('user-agent')
+  });
   res.render('admin/login', { title: 'Admin Login', company: company(), error: 'Username atau password salah' });
 });
 
@@ -5206,6 +5225,33 @@ router.get('/api/inventory/serials/:itemId', requireAdminSession, (req, res) => 
     res.json({ success: true, serials: inventorySvc.getAvailableSerialNumbers(req.params.itemId) });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/api/soundbox/poll', requireAdminSession, (req, res) => {
+  try {
+    const soundboxSvc = require('../services/soundboxService');
+    const events = soundboxSvc.getLatestEvents(Number(req.query.afterId || 0), 15);
+    res.json({ success: true, events });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, events: [] });
+  }
+});
+
+router.post('/api/soundbox/test', requireAdminSession, express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    const soundboxSvc = require('../services/soundboxService');
+    const amount = Number(req.body?.amount || 50000);
+    const id = soundboxSvc.queueSoundboxEvent({
+      type: 'test',
+      title: 'Uji Suara Kasir',
+      speechText: req.body?.speechText || ('Uji coba speaker kasir berhasil. Pembayaran sebesar ' + soundboxSvc.formatRupiahSpoken(amount) + ' diterima.'),
+      amount,
+      customerName: 'Admin Soundbox'
+    });
+    res.json({ success: true, eventId: id });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

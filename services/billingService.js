@@ -397,6 +397,19 @@ function markAsPaid(invoiceId, paidByName, notes, actor = null) {
     UPDATE invoices SET status='paid', paid_at=NOW_LOCAL(), paid_by_name=?, notes=? WHERE id=? AND status != 'paid'
   `).run(paidByName || 'Admin', finalNotes, invId);
 
+  if (result.changes > 0) {
+    try {
+      const soundboxSvc = require('./soundboxService');
+      const cust = db.prepare('SELECT name FROM customers WHERE id=?').get(existing.customer_id);
+      soundboxSvc.queueSoundboxEvent({
+        type: 'invoice',
+        title: 'Tagihan #' + invId,
+        amount: existing.amount,
+        customerName: cust?.name || 'Pelanggan'
+      });
+    } catch (e) { /* soundbox opsional */ }
+  }
+
   if (result.changes > 0 && existing.customer_id) {
     renewCustomerPrepaidValidity(existing.customer_id, 1);
     try { db.prepare("UPDATE customers SET unpaid_streak = 0, deactivate_cause = '', deactivated_at = NULL WHERE id = ?").run(existing.customer_id); } catch (e) {}
