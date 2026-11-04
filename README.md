@@ -1,7 +1,7 @@
 > 🪞 **Repositori utama:** [Gitea](https://gitea.oxpoe.xyz/oxpoe/open-isp) · [Forgejo](https://forgejo.oxpoe.xyz/oxpoe/open-isp) — rilis & unduhan ada di sana. GitHub hanya cermin kode.
 
 <p align="center">
-  <img src="docs/assets/banner.png" alt="OPEN-ISP" width="100%">
+  <img src="docs/assets/banner.webp" alt="OPEN-ISP" width="100%">
 </p>
 
 <p align="center">
@@ -27,15 +27,15 @@
 
 | Dashboard Admin | Daftar Pelanggan |
 |---|---|
-| ![Dashboard](docs/screenshots/03-admin-dashboard.png) | ![Pelanggan](docs/screenshots/04-admin-customers.png) |
+| ![Dashboard](docs/screenshots/03-admin-dashboard.webp) | ![Pelanggan](docs/screenshots/04-admin-customers.webp) |
 
 | Inventaris & Stok Keluar | Pengaturan AI & Self-Healing |
 |---|---|
-| ![Inventaris](docs/screenshots/05-admin-inventory.png) | ![AI](docs/screenshots/07-admin-settings-ai.png) |
+| ![Inventaris](docs/screenshots/05-admin-inventory.webp) | ![AI](docs/screenshots/07-admin-settings-ai.webp) |
 
 | Login Pelanggan | Dashboard Pelanggan |
 |---|---|
-| ![Login](docs/screenshots/08-customer-login.png) | ![Dashboard Pelanggan](docs/screenshots/09-customer-dashboard.png) |
+| ![Login](docs/screenshots/08-customer-login.webp) | ![Dashboard Pelanggan](docs/screenshots/09-customer-dashboard.webp) |
 
 Selengkapnya (10 gambar, desktop + mobile): [`docs/screenshots/`](docs/screenshots/).
 
