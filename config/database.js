@@ -1107,6 +1107,18 @@ try {
   for (const [n, def] of _add) { if (!_have.has(n)) db.exec('ALTER TABLE packages ADD COLUMN ' + n + ' ' + def); }
 } catch (e) { console.error('Failed to migrate packages ip columns:', e); }
 
+// Safe migration: kolom tambahan inventaris (harga/supplier + log penerima & sisa stok)
+try {
+  const stockCols = db.prepare("PRAGMA table_info(inventory_stock)").all();
+  if (!stockCols.find(c => c.name === 'price')) db.exec("ALTER TABLE inventory_stock ADD COLUMN price INTEGER DEFAULT 0");
+  if (!stockCols.find(c => c.name === 'supplier')) db.exec("ALTER TABLE inventory_stock ADD COLUMN supplier TEXT DEFAULT ''");
+
+  const logCols = db.prepare("PRAGMA table_info(inventory_logs)").all();
+  if (!logCols.find(c => c.name === 'remaining_stock')) db.exec("ALTER TABLE inventory_logs ADD COLUMN remaining_stock INTEGER DEFAULT 0");
+  if (!logCols.find(c => c.name === 'recipient')) db.exec("ALTER TABLE inventory_logs ADD COLUMN recipient TEXT DEFAULT ''");
+  if (!logCols.find(c => c.name === 'reference_no')) db.exec("ALTER TABLE inventory_logs ADD COLUMN reference_no TEXT DEFAULT ''");
+} catch (e) { console.error('Failed to migrate inventory columns:', e); }
+
 module.exports = db;
 module.exports.getAppSetting = getAppSetting;
 module.exports.saveAppSetting = saveAppSetting;

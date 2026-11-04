@@ -435,6 +435,67 @@ function getAvailablePeriods() {
   `).all();
 }
 
+
+function updateSlip(id, data) {
+  const slip = getSlipById(id);
+  if (!slip) throw new Error('Slip tidak ditemukan');
+  if (slip.status !== 'draft') throw new Error('Hanya slip berstatus draft yang dapat diedit');
+
+  const pickInt = (key, fallback) => (data[key] !== undefined && data[key] !== '') ? parseInt(data[key], 10) || 0 : fallback;
+  const pickFloat = (key, fallback) => (data[key] !== undefined && data[key] !== '') ? parseFloat(data[key]) || 0 : fallback;
+
+  const baseSalary = pickInt('base_salary', slip.base_salary);
+  const transportAllowance = pickInt('transport_allowance', slip.transport_allowance);
+  const mealAllowance = pickInt('meal_allowance', slip.meal_allowance);
+  const phoneAllowance = pickInt('phone_allowance', slip.phone_allowance);
+  const otherAllowance = pickInt('other_allowance', slip.other_allowance);
+  const otherAllowanceNote = data.other_allowance_note !== undefined ? String(data.other_allowance_note) : slip.other_allowance_note;
+
+  const workingDays = pickInt('working_days', slip.working_days);
+  const absentDays = pickInt('absent_days', slip.absent_days);
+  const lateDays = pickInt('late_days', slip.late_days);
+  const overtimeHours = pickFloat('overtime_hours', slip.overtime_hours);
+  const overtimeBonus = pickInt('overtime_bonus', slip.overtime_bonus);
+  const ticketBonus = pickInt('ticket_bonus', slip.ticket_bonus);
+  const collectionCommission = pickInt('collection_commission', slip.collection_commission);
+
+  const absenceDeduction = pickInt('absence_deduction', slip.absence_deduction);
+  const lateDeduction = pickInt('late_deduction', slip.late_deduction);
+  const otherDeduction = pickInt('other_deduction', slip.other_deduction);
+  const otherDeductionNote = data.other_deduction_note !== undefined ? String(data.other_deduction_note) : slip.other_deduction_note;
+  const notes = data.notes !== undefined ? String(data.notes) : slip.notes;
+
+  const grossSalary = baseSalary + transportAllowance + mealAllowance + phoneAllowance + otherAllowance + ticketBonus + collectionCommission + overtimeBonus;
+  const totalDeductions = absenceDeduction + lateDeduction + otherDeduction;
+  const netSalary = Math.max(0, grossSalary - totalDeductions);
+
+  db.prepare(`
+    UPDATE payroll_slips SET
+      base_salary = ?, transport_allowance = ?, meal_allowance = ?,
+      phone_allowance = ?, other_allowance = ?, other_allowance_note = ?,
+      working_days = ?, absent_days = ?, late_days = ?,
+      overtime_hours = ?, overtime_bonus = ?,
+      ticket_bonus = ?, collection_commission = ?,
+      absence_deduction = ?, late_deduction = ?,
+      other_deduction = ?, other_deduction_note = ?,
+      gross_salary = ?, total_deductions = ?, net_salary = ?,
+      notes = ?
+    WHERE id = ?
+  `).run(
+    baseSalary, transportAllowance, mealAllowance,
+    phoneAllowance, otherAllowance, otherAllowanceNote || '',
+    workingDays, absentDays, lateDays,
+    overtimeHours, overtimeBonus,
+    ticketBonus, collectionCommission,
+    absenceDeduction, lateDeduction,
+    otherDeduction, otherDeductionNote || '',
+    grossSalary, totalDeductions, netSalary,
+    notes || '', id
+  );
+
+  return getSlipById(id);
+}
+
 module.exports = {
   EMPLOYEE_TYPES,
   getPayrollSetting, getAllPayrollSettings, upsertPayrollSetting, deletePayrollSetting,
@@ -442,7 +503,7 @@ module.exports = {
   getTicketsResolvedCount, getCollectionAmount, getAttendanceData,
   generateSlip, generateAllSlips,
   getSlipById, getSlipsByPeriod, getSlipsByEmployee,
-  updateSlipDeductions, approveSlip, markSlipPaid,
+  updateSlipDeductions, updateSlip, approveSlip, markSlipPaid,
   bulkApprove, bulkMarkPaid,
   deleteSlip, deleteSlipsByPeriod,
   getPayrollSummary, getAvailablePeriods

@@ -5096,7 +5096,8 @@ router.post('/backup/cleanup', requireAdminSession, express.urlencoded({ extende
 router.get('/inventory', requireAdminSession, requireSidebarMenuAccess('inventory'), (req, res) => {
   const items = inventorySvc.getAllItems(req.query.q);
   const categories = inventorySvc.getAllCategories();
-  const logs = inventorySvc.getInventoryLogs(100);
+  const logs = inventorySvc.getInventoryLogs({ limit: 100 });
+  const stats = inventorySvc.getInventoryStats();
 
   res.render('admin/inventory', {
     title: 'Manajemen Inventaris',
@@ -5105,7 +5106,8 @@ router.get('/inventory', requireAdminSession, requireSidebarMenuAccess('inventor
     msg: flashMsg(req),
     items,
     categories,
-    logs
+    logs,
+    stats
   });
 });
 
@@ -5157,6 +5159,54 @@ router.post('/inventory/stock/add', requireAdminSession, express.urlencoded({ ex
     req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
   }
   res.redirect('/admin/inventory');
+});
+
+router.post('/inventory/stock/out', requireAdminSession, express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    const result = inventorySvc.issueStock(req.body, req.session.adminUser || 'Admin');
+    req.session._msg = { type: 'success', text: `Stok keluar dicatat. Sisa tersedia: ${result.remainingStock}.` };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
+  }
+  res.redirect('/admin/inventory');
+});
+
+router.post('/inventory/stock/return', requireAdminSession, express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    inventorySvc.returnStock(req.body, req.session.adminUser || 'Admin');
+    req.session._msg = { type: 'success', text: 'Retur barang berhasil dicatat.' };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
+  }
+  res.redirect('/admin/inventory');
+});
+
+router.post('/inventory/stock/adjust', requireAdminSession, express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    const result = inventorySvc.adjustStock(req.body, req.session.adminUser || 'Admin');
+    req.session._msg = { type: 'success', text: result.message || `Opname disimpan. Selisih: ${result.diff}, stok fisik: ${result.remainingStock}.` };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal: ' + e.message };
+  }
+  res.redirect('/admin/inventory');
+});
+
+router.get('/api/inventory/item/:id', requireAdminSession, (req, res) => {
+  try {
+    const detail = inventorySvc.getItemDetail(req.params.id);
+    if (!detail) return res.status(404).json({ success: false, message: 'Barang tidak ditemukan' });
+    res.json({ success: true, ...detail });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/api/inventory/serials/:itemId', requireAdminSession, (req, res) => {
+  try {
+    res.json({ success: true, serials: inventorySvc.getAvailableSerialNumbers(req.params.itemId) });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
 router.get('/audit-logs', requireAdminSession, requireSidebarMenuAccess('audit_logs'), restrictToAdmin, (req, res) => {
@@ -7788,6 +7838,16 @@ router.post('/payroll/slip/:id/deduction', requireAdmin, express.json(), (req, r
   } catch (e) {
     res.json({ success: false, message: e.message });
   }
+});
+
+router.post('/payroll/slip/:id/update', requireAdmin, express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    payrollSvc.updateSlip(req.params.id, req.body);
+    req.session._msg = { type: 'success', text: 'Rincian slip gaji berhasil diperbarui.' };
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal memperbarui slip: ' + e.message };
+  }
+  res.redirect('back');
 });
 
 router.post('/payroll/slip/:id/approve', requireAdmin, (req, res) => {
