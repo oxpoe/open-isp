@@ -936,7 +936,7 @@
         <i class="ph ph-user-circle nav-icon"></i><%= t('pwa.nav.account','Akun') %></button>
     </nav>
     <div class="p-3 mt-auto" style="border-top:1px solid var(--border);">
-      <div class="flex items-center gap-3 p-3 rounded-[14px] press cursor-pointer">
+      <button type="button" onclick="switchTab('profile')" class="flex items-center gap-3 p-3 rounded-[14px] press cursor-pointer w-full text-left" style="background:transparent;border:0;" aria-label="<%= t('pwa.nav.account','Akun') %>">
         <div class="avatar-ring" style="width:38px;height:38px;padding:2px;">
           <span class="avatar-init" style="width:34px;height:34px;font-size:13px;" role="img" aria-label="<%= portal.name %>"><%= portal.initials %></span>
         </div>
@@ -945,7 +945,7 @@
           <p class="text-[11px] truncate" style="color:var(--muted);"><%= portal.packageName %><%= portal.speedDown !== '-' ? ' · ' + portal.speedDown + ' Mbps' : '' %></p>
         </div>
         <i class="ph ph-caret-right text-sm" style="color:var(--muted-2);"></i>
-      </div>
+      </button>
     </div>
   </aside>
 
@@ -976,9 +976,9 @@
             <i class="ph-fill ph-bell text-lg" style="color:var(--text);"></i>
             <span class="notif-dot"<%= (portal.notifications && portal.notifications.length) ? '' : ' style="display:none"' %>></span>
           </button>
-          <div class="mobile-only md:hidden avatar-ring" style="padding:2px;cursor:pointer;" onclick="switchTab('profile')">
+          <button type="button" class="mobile-only md:hidden avatar-ring press" style="padding:2px;cursor:pointer;background:transparent;border:0;" onclick="switchTab('profile')" aria-label="<%= t('pwa.nav.account','Akun') %>">
             <span class="avatar-init" style="width:32px;height:32px;font-size:12px;" role="img" aria-label="<%= portal.name %>"><%= portal.initials %></span>
-          </div>
+          </button>
         </div>
       </div>
     </header>
