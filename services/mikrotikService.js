@@ -2128,6 +2128,44 @@ async function getBackup(routerId = null) {
   }
 }
 
+
+// ─── KOMPATIBILITAS AI / SELF-HEALING ───────────────────────────────────────
+async function getActivePppoeUsers() {
+  const map = await getActivePppoeSessionsMap();
+  const out = [];
+  map.forEach((v, user) => out.push({
+    user,
+    address: v.ip || '',
+    uptime: v.uptime || '',
+    callerId: v.callerId || '',
+    routerId: v.routerId ?? null,
+    routerName: v.routerName || ''
+  }));
+  return out;
+}
+
+async function isolateCustomerPppoe(routerId, username, opts = {}) {
+  const profile = String(opts.pppoeProfile || 'ISOLIR');
+  await setPppoeProfile(username, profile, routerId ?? null);
+  await kickPppoeUser(username, routerId ?? null).catch(() => {});
+  return true;
+}
+
+async function unisolateCustomerPppoe(routerId, username) {
+  const name = String(username || '').trim();
+  if (!name) return false;
+  const row = db.prepare(`
+    SELECT p.name as package_name
+    FROM customers c
+    LEFT JOIN packages p ON c.package_id = p.id
+    WHERE c.pppoe_username = ? COLLATE NOCASE
+    LIMIT 1
+  `).get(name);
+  const profile = row && row.package_name ? row.package_name : 'default';
+  await setPppoeProfile(name, profile, routerId ?? null);
+  return true;
+}
+
 module.exports = {
   checkConnection,
   getConnection,
@@ -2149,6 +2187,9 @@ module.exports = {
   getHotspotProfiles,
   getPppoeActive,
   getActivePppoeSessionsMap,
+  getActivePppoeUsers,
+  isolateCustomerPppoe,
+  unisolateCustomerPppoe,
   getAllActiveSessionsMap,
   getHotspotActive,
   getIpPools,

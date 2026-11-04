@@ -208,6 +208,55 @@
           </div>
         </div>
 
+
+        <div class="card mb16">
+          <div class="card-hd"><h6><i class="bi bi-robot"></i> AI &amp; Self-Healing</h6></div>
+          <div class="card-bd settings-grid">
+            <div>
+              <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-cpu"></i> Provider AI</h6>
+              <div class="fg">
+                <label class="fl">Provider</label>
+                <select class="fs" name="ai_provider">
+                  <% const _aiProv = String(settings.ai_provider || 'deepseek'); %>
+                  <option value="deepseek" <%= _aiProv === 'deepseek' ? 'selected' : '' %>>DeepSeek</option>
+                  <option value="openai" <%= _aiProv === 'openai' ? 'selected' : '' %>>OpenAI</option>
+                  <option value="groq" <%= _aiProv === 'groq' ? 'selected' : '' %>>Groq</option>
+                  <option value="openrouter" <%= _aiProv === 'openrouter' ? 'selected' : '' %>>OpenRouter</option>
+                  <option value="custom" <%= _aiProv === 'custom' ? 'selected' : '' %>>Custom (OpenAI-compatible)</option>
+                </select>
+                <div style="font-size:10px;color:var(--muted);margin-top:4px">Semua provider di atas memakai format API OpenAI (chat/completions).</div>
+              </div>
+              <div class="fg"><label class="fl">DeepSeek API Key</label><input class="fc" name="deepseek_api_key" value="<%= settings.deepseek_api_key || '' %>" placeholder="sk-..."></div>
+              <div class="fg"><label class="fl">DeepSeek Model</label><input class="fc" name="deepseek_model" value="<%= settings.deepseek_model || 'deepseek-chat' %>"></div>
+              <div class="fg"><label class="fl">OpenAI API Key</label><input class="fc" name="openai_api_key" value="<%= settings.openai_api_key || '' %>" placeholder="sk-..."></div>
+              <div class="fg"><label class="fl">OpenAI Model</label><input class="fc" name="openai_model" value="<%= settings.openai_model || 'gpt-4o-mini' %>"></div>
+              <div class="fg"><label class="fl">Groq API Key</label><input class="fc" name="groq_api_key" value="<%= settings.groq_api_key || '' %>"></div>
+              <div class="fg"><label class="fl">Groq Model</label><input class="fc" name="groq_model" value="<%= settings.groq_model || 'llama-3.3-70b-versatile' %>"></div>
+              <div class="fg"><label class="fl">OpenRouter API Key</label><input class="fc" name="openrouter_api_key" value="<%= settings.openrouter_api_key || '' %>"></div>
+              <div class="fg"><label class="fl">OpenRouter Model</label><input class="fc" name="openrouter_model" value="<%= settings.openrouter_model || '' %>"></div>
+              <div class="fg"><label class="fl">Custom Base URL</label><input class="fc" name="custom_ai_base_url" value="<%= settings.custom_ai_base_url || '' %>" placeholder="http://localhost:11434/v1"></div>
+              <div class="fg"><label class="fl">Custom API Key</label><input class="fc" name="custom_ai_api_key" value="<%= settings.custom_ai_api_key || '' %>" placeholder="opsional untuk Ollama"></div>
+              <div class="fg"><label class="fl">Custom Model</label><input class="fc" name="custom_ai_model" value="<%= settings.custom_ai_model || 'llama3' %>"></div>
+            </div>
+            <div>
+              <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-activity"></i> Auto Repair</h6>
+              <div class="fg">
+                <label class="fl">Jalankan Self-Healing otomatis (tiap 30 menit)</label>
+                <select class="fs" name="ai_self_healing_enabled">
+                  <option value="false" <%= (settings.ai_self_healing_enabled === true || settings.ai_self_healing_enabled === 'true') ? '' : 'selected' %>>Nonaktif</option>
+                  <option value="true" <%= (settings.ai_self_healing_enabled === true || settings.ai_self_healing_enabled === 'true') ? 'selected' : '' %>>Aktif</option>
+                </select>
+                <div style="font-size:10px;color:var(--muted);margin-top:4px">Saat aktif, sistem memeriksa &amp; memperbaiki: status isolir vs tagihan, secret PPPoE hilang/tertukar profil, sesi RADIUS menggantung, dan IP modem ACS kosong.</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button type="button" class="btn btn-g" onclick="selfHeal('diagnose')"><i class="bi bi-search"></i> Diagnosa</button>
+                <button type="button" class="btn btn-p" onclick="selfHeal('run')"><i class="bi bi-wrench-adjustable"></i> Perbaiki Sekarang</button>
+              </div>
+              <pre id="selfheal-out" class="mono" style="display:none;margin-top:12px;max-height:280px;overflow:auto;font-size:11px;white-space:pre-wrap"></pre>
+            </div>
+          </div>
+        </div>
+
         <div class="card mb16">
           <div class="card-hd"><h6><i class="bi bi-sliders"></i> <%= t('admin.settings.system_title', 'Pengaturan Sistem') %></h6></div>
           <div class="card-bd settings-grid">
@@ -1186,6 +1235,21 @@ function setSearch(q) {
   if (clr) clr.addEventListener('click', function () { var el = document.getElementById('setSearch'); if (el) el.value = ''; setSearch(''); });
   document.querySelectorAll('.set-tab').forEach(function (b) { b.addEventListener('click', function () { setSetTab(this.getAttribute('data-cat')); }); });
 })();
+</script>
+
+<script>
+async function selfHeal(mode) {
+  const out = document.getElementById('selfheal-out');
+  out.style.display = 'block';
+  out.textContent = mode === 'run' ? 'Menjalankan perbaikan...' : 'Mendiagnosa...';
+  try {
+    const res = await fetch('/admin/api/self-heal/' + (mode === 'run' ? 'run' : 'diagnose'), { method: mode === 'run' ? 'POST' : 'GET' });
+    const data = await res.json();
+    out.textContent = JSON.stringify(data, null, 2);
+  } catch (e) {
+    out.textContent = 'Gagal: ' + e.message;
+  }
+}
 </script>
 </body>
 </html>

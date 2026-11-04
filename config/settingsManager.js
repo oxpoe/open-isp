@@ -285,6 +285,14 @@ function ensureDefaultSettings() {
     
     // Default settings yang wajib ada
     const defaultSettings = {
+      // AI (OpenAI-compatible) & self-healing
+      ai_provider: 'deepseek',
+      deepseek_model: 'deepseek-chat',
+      openai_model: 'gpt-4o-mini',
+      groq_model: 'llama-3.3-70b-versatile',
+      custom_ai_base_url: '',
+      custom_ai_model: 'llama3',
+      ai_self_healing_enabled: false,
       // RADIUS Server settings (ditambahkan untuk update dari Gitea)
       radius_enabled: '0',
       radius_secret: 'secret123',

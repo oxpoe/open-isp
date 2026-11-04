@@ -808,6 +808,33 @@ function startCronJobs() {
     } catch (e) { logger.error('[CRON] Retensi notif webhook error: ' + e.message); }
   }, { timezone: getSetting('timezone', 'Asia/Jakarta') });
 
+  // AI Self-Healing & Network Auto-Repair (tiap 30 menit, bisa dimatikan dari Pengaturan)
+  cron.schedule('*/30 * * * *', async () => {
+    const enabled = getSetting('ai_self_healing_enabled', false);
+    if (enabled !== true && enabled !== 'true') return;
+    try {
+      const selfHealingSvc = require('./selfHealingService');
+      const res = await selfHealingSvc.autoRepair('AI Autonomous Watchdog');
+      if (res && res.stats && res.stats.anomaliesRepaired > 0) {
+        logger.info('[CRON-AI-HEAL] Memperbaiki ' + res.stats.anomaliesRepaired + ' anomali: ' + (res.repairs || []).join('; '));
+      }
+    } catch (e) {
+      logger.error('[CRON-AI-HEAL] Error: ' + e.message);
+    }
+  }, { timezone: getSetting('timezone', 'Asia/Jakarta') });
+
+  // Security Watchdog - scan login gagal MikroTik (tiap 2 menit)
+  cron.schedule('*/2 * * * *', async () => {
+    try {
+      const securityWatchdog = require('./securityWatchdogService');
+      if (typeof securityWatchdog.scanMikrotikLoginFailures === 'function') {
+        await securityWatchdog.scanMikrotikLoginFailures();
+      }
+    } catch (e) {
+      logger.error('[CRON-SECURITY-WATCHDOG] Error: ' + e.message);
+    }
+  }, { timezone: getSetting('timezone', 'Asia/Jakarta') });
+
   logger.info('[CRON] Semua tugas penjadwalan telah aktif.');
 }
 

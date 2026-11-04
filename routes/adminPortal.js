@@ -4760,6 +4760,12 @@ router.post('/settings', requireAdminSession, express.urlencoded({ extended: tru
     if (newSettings.voucher_enabled === 'true') newSettings.voucher_enabled = true;
     else if (newSettings.voucher_enabled === 'false') newSettings.voucher_enabled = false;
 
+    newSettings.ai_provider = String(newSettings.ai_provider || 'deepseek').trim().toLowerCase();
+    newSettings.ai_self_healing_enabled = newSettings.ai_self_healing_enabled === 'true' || newSettings.ai_self_healing_enabled === 'on';
+    for (const k of ['deepseek_api_key','openai_api_key','groq_api_key','openrouter_api_key','custom_ai_api_key','custom_ai_base_url','custom_ai_model','deepseek_model','openai_model','groq_model','openrouter_model']) {
+      if (newSettings[k] !== undefined) newSettings[k] = String(newSettings[k]).trim();
+    }
+
     if (newSettings.qris_static_enabled === 'true') newSettings.qris_static_enabled = true;
     else if (newSettings.qris_static_enabled === 'false') newSettings.qris_static_enabled = false;
 
@@ -5223,6 +5229,26 @@ router.get('/api/inventory/item/:id', requireAdminSession, (req, res) => {
 router.get('/api/inventory/serials/:itemId', requireAdminSession, (req, res) => {
   try {
     res.json({ success: true, serials: inventorySvc.getAvailableSerialNumbers(req.params.itemId) });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/api/self-heal/diagnose', requireAdminSession, restrictToAdmin, async (req, res) => {
+  try {
+    const svc = require('../services/selfHealingService');
+    const result = await svc.diagnose();
+    res.json({ success: true, ...result });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.post('/api/self-heal/run', requireAdminSession, restrictToAdmin, async (req, res) => {
+  try {
+    const svc = require('../services/selfHealingService');
+    const result = await svc.autoRepair(req.session.adminUser || 'Web Admin');
+    res.json({ success: true, ...result });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }

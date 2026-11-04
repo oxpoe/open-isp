@@ -312,10 +312,25 @@ function initTelegram() {
 
   bot.on('message', async (msg) => {
     if (!isAdmin(msg)) return;
-    const text = msg.text;
-    if (text === '/start' || text === '/menu') return; // Handled by onText
-    
-    // Logika handle text manual jika diperlukan (misal untuk perintah kick/edit)
+    const text = String(msg.text || '').trim();
+    if (!text || text.startsWith('/')) return; // command ditangani onText
+    if (text === '/start' || text === '/menu') return;
+
+    try {
+      bot.sendChatAction(msg.chat.id, 'typing').catch(() => {});
+      const telegramAi = require('./telegramAiService');
+      const answer = await telegramAi.askAi({
+        question: text,
+        senderName: (msg.from && msg.from.first_name) || 'Admin',
+        isAdmin: true
+      });
+      if (!answer) return;
+      const clean = typeof telegramAi.cleanAiResponse === 'function' ? telegramAi.cleanAiResponse(answer) : answer;
+      await bot.sendMessage(msg.chat.id, clean, { parse_mode: 'Markdown', reply_to_message_id: msg.message_id })
+        .catch(() => bot.sendMessage(msg.chat.id, clean, { reply_to_message_id: msg.message_id }));
+    } catch (e) {
+      logger.error('[TelegramBot] AI error: ' + e.message);
+    }
   });
 
   // Callback Query Handling
