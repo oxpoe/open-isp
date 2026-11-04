@@ -3,7 +3,7 @@ const { getSetting, getSettings, saveSettings } = require('../config/settingsMan
 const { getAppSetting, saveAppSetting } = require('../config/database');
 
 const FEATURE_PASSWORD_HASH = 'af03458614be223016c5bc1c0788eaefc6a6bfd0c11cdcd4bc520f49d0cb474a'; // sha256 kode aktivasi — plaintext hanya di settings.json (activation_code), tidak di repo
-const FEATURE_CONTACT_PHONE = '081947215703';
+const FEATURE_CONTACT_PHONE = '';
 
 function getFeaturePasswordHash() {
   return getSetting('feature_password_hash', FEATURE_PASSWORD_HASH);
@@ -115,16 +115,16 @@ const DEFAULT_MENU_STATES = {
   cashiers_reports: STATE_VISIBLE,
   collector_payments: STATE_VISIBLE,
   tickets: STATE_VISIBLE,
-  inventory: STATE_LOCKED,
-  attendance: STATE_LOCKED,
-  payroll: STATE_LOCKED,
+  inventory: STATE_VISIBLE,
+  attendance: STATE_VISIBLE,
+  payroll: STATE_VISIBLE,
   cash_in: STATE_VISIBLE,
   expenses: STATE_VISIBLE,
   expense_categories: STATE_VISIBLE,
   cashier_attendance: STATE_VISIBLE,
-  technicians: STATE_LOCKED,
-  cashiers: STATE_LOCKED,
-  collectors: STATE_LOCKED,
+  technicians: STATE_VISIBLE,
+  cashiers: STATE_VISIBLE,
+  collectors: STATE_VISIBLE,
   areas: STATE_VISIBLE,
   update: STATE_VISIBLE,
   vouchers_discounts: STATE_VISIBLE,
@@ -259,7 +259,7 @@ function enrichMenu(menu, states) {
     locked,
     hidden,
     hrefResolved: menu.href,
-    lockedMessage: locked ? `Menu "${menu.labelDefault}" terkunci. Hubungi ${getFeatureContactPhone()} untuk mendapatkan password aktivasi.` : ''
+    lockedMessage: locked ? `Menu "${menu.labelDefault}" terkunci. Buka dari Pengaturan Sidebar.` : ''
   };
   if (Array.isArray(menu.children)) {
     out.children = menu.children.map((ch) => enrichMenu(ch, states));

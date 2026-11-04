@@ -47,7 +47,7 @@ Rilis ini menggabungkan pembaruan fitur dari repo upstream (`alijayanet/billing-
 - Kolom API key AI disamarkan di halaman Pengaturan.
 
 ## Dokumentasi
-- 10 screenshot (desktop + mobile) di `docs/screenshots/`.
+- 10 screenshot (desktop + mobile) di `docs/screenshots/` (format WebP, ringan).
 
 ## Cara upgrade
 

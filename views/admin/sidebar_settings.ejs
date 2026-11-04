@@ -43,7 +43,7 @@
         </div>
         <div class="card-bd">
           <p class="hint" style="margin-top:0">
-            <%= t('admin.sb.intro', 'Setiap menu bisa diatur menjadi Tampil, Sembunyikan, atau Kunci. Menu yang dikunci akan meminta password khusus sebelum dibuka.') %>
+            <%= t('admin.sb.intro', 'Setiap menu bisa diatur menjadi Tampil atau Sembunyikan.') %>
           </p>
 
           <% if (canManageSidebar) { %>
@@ -76,7 +76,7 @@
                           <select class="fs" name="menu_state[<%= menu.key %>]">
                             <option value="visible" <%= menu.state === 'visible' ? 'selected' : '' %>><%= t('admin.sb.st_visible', 'Tampil') %></option>
                             <option value="hidden" <%= menu.state === 'hidden' ? 'selected' : '' %>><%= t('admin.sb.st_hidden', 'Sembunyikan') %></option>
-                            <option value="locked" <%= menu.state === 'locked' ? 'selected' : '' %>><%= t('admin.sb.st_locked', 'Kunci') %></option>
+                            
                           </select>
                         </td>
                       </tr>
@@ -97,7 +97,7 @@
                           <select class="fs" name="menu_state[<%= ch.key %>]">
                             <option value="visible" <%= ch.state === 'visible' ? 'selected' : '' %>><%= t('admin.sb.st_visible', 'Tampil') %></option>
                             <option value="hidden" <%= ch.state === 'hidden' ? 'selected' : '' %>><%= t('admin.sb.st_hidden', 'Sembunyikan') %></option>
-                            <option value="locked" <%= ch.state === 'locked' ? 'selected' : '' %>><%= t('admin.sb.st_locked', 'Kunci') %></option>
+                            
                           </select>
                         </td>
                       </tr>
@@ -108,12 +108,9 @@
               </div>
               <div class="sidebar-settings-save-grid" style="margin-top:16px">
                 <div class="fg" style="margin:0">
-                  <label class="fl"><%= t('admin.sb.pass_label', 'Password Aktivasi (Seikhlasnya)') %></label>
-                  <input type="password" class="fc" name="feature_password" placeholder="<%= t('admin.sb.pass_ph', 'Masukkan password aktivasi sebelum menyimpan') %>" required>
-                  <div class="hint" style="margin-top:6px"><%= t('admin.sb.pass_hint', 'Perubahan status menu sidebar hanya akan disimpan jika password aktivasi benar.') %></div>
                 </div>
                 <div class="hint" style="align-self:center">
-                  <%= t('admin.sb.no_pass', 'Belum punya kode aktivasi?') %> <a href="/donate" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;"><i class="bi bi-heart-fill me-1"></i> <%= t('admin.sb.get_donation', 'Dapatkan kode aktivasi GRATIS di halaman Dukungan OPEN-ISP') %></a> <%= t('admin.sb.or_contact', 'atau hubungi') %> <strong><%= featureContactPhone %></strong>.
+                  <%= t('admin.sb.no_pass', 'Menu bisa ditampilkan/disembunyikan dari halaman ini.') %> <a href="/donate" target="_blank" rel="noopener" style="color:var(--primary);font-weight:700;"><i class="bi bi-heart-fill me-1"></i> <%= t('admin.sb.get_donation', 'Dukung pengembangan OPEN-ISP') %></a>.
                 </div>
               </div>
               <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap">
@@ -138,12 +135,12 @@
         </div>
         <div class="card-bd">
           <div class="alert alert-s" style="margin-bottom:12px">
-            <i class="bi bi-info-circle"></i> <%= t('admin.sb.note_lock', 'Jika menu berstatus Kunci diklik dari sidebar, sistem menampilkan cara mengambil kode aktivasi GRATIS atau menghubungi') %> <strong><%= featureContactPhone %></strong>.
+            <i class="bi bi-info-circle"></i> <%= t('admin.sb.note_lock', 'Menu berstatus Kunci tidak dapat dibuka sampai diaktifkan dari halaman ini.') %>
           </div>
           <ul style="margin:0;padding-left:18px;display:grid;gap:8px">
             <li><%= t('admin.sb.note1', 'Status Sembunyikan akan menghilangkan menu dari sidebar dan menolak akses URL langsung.') %></li>
             <li><%= t('admin.sb.note2', 'Status Kunci tetap menampilkan menu, tetapi tidak bisa dibuka sampai statusnya diubah di halaman ini.') %></li>
-            <li><%= t('admin.sb.note3', 'Perubahan status menu hanya dapat disimpan setelah memasukkan password aktivasi yang benar.') %></li>
+            
           </ul>
         </div>
       </div>

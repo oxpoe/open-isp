@@ -317,7 +317,7 @@ function requireSidebarMenuAccess(menuKey) {
     }
 
     if (access.reason === 'locked') {
-      req.session._msg = { type: 'error', text: `Menu "${access.menu.labelDefault}" terkunci. Hubungi ${sidebarMenuSvc.FEATURE_CONTACT_PHONE} untuk mendapatkan password.` };
+      req.session._msg = { type: 'error', text: `Menu "${access.menu.labelDefault}" terkunci. Buka dari Pengaturan Sidebar.` };
       return res.redirect('/admin/sidebar-settings');
     }
 
@@ -3989,11 +3989,6 @@ router.get('/sidebar-settings', requireAdminSession, (req, res) => {
 
 router.post('/sidebar-settings', requireAdminSession, restrictToAdmin, express.urlencoded({ extended: true }), (req, res) => {
   try {
-    const featurePassword = String(req.body.feature_password || '').trim();
-    if (!sidebarMenuSvc.isFeaturePasswordValid(featurePassword)) {
-      throw new Error(`Password aktivasi salah. Hubungi ${sidebarMenuSvc.getFeatureContactPhone()} untuk mendapatkan password yang benar.`);
-    }
-
     const menuStates = sidebarMenuSvc.sanitizeMenuStates(req.body.menu_state || {});
     const success = sidebarMenuSvc.saveMenuStates(menuStates);
     if (!success) throw new Error('Gagal menyimpan pengaturan sidebar');
