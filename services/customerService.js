@@ -71,6 +71,59 @@ function calculateExpiredAt(startDateStr, durationDays = 30) {
   return `${y}-${m}-${day} 23:59:59`;
 }
 
+/**
+ * Batas wilayah tugas kolektor (dukung multi-area dipisah koma).
+ * area kosong / "semua" / "all" = tanpa batas wilayah.
+ */
+function getCollectorCustomerWhere(collector, tableAlias = 'c') {
+  let col = collector;
+  if (typeof collector === 'number' || typeof collector === 'string') {
+    col = db.prepare('SELECT id, area FROM collectors WHERE id = ?').get(Number(collector));
+  }
+  const colId = Number(col?.id || 0);
+  const areas = String(col?.area || '')
+    .split(',')
+    .map(a => a.trim().toLowerCase())
+    .filter(a => a.length > 0 && a !== 'semua' && a !== 'all');
+
+  if (areas.length > 0) {
+    const placeholders = areas.map(() => '?').join(', ');
+    return {
+      where: `(LOWER(TRIM(${tableAlias}.area)) IN (${placeholders}) AND (${tableAlias}.collector_id = ? OR ${tableAlias}.collector_id IS NULL OR ${tableAlias}.collector_id = 0))`,
+      params: [...areas, colId],
+      isRestricted: true,
+      areas,
+    };
+  }
+  return {
+    where: `(${tableAlias}.collector_id = ? OR ${tableAlias}.collector_id IS NULL OR ${tableAlias}.collector_id = 0)`,
+    params: [colId],
+    isRestricted: false,
+    areas: [],
+  };
+}
+
+function canCollectorAccessCustomer(collector, customer) {
+  if (!collector || !customer) return false;
+  let col = collector;
+  if (typeof collector === 'number' || typeof collector === 'string') {
+    col = db.prepare('SELECT id, area FROM collectors WHERE id = ?').get(Number(collector));
+  }
+  const colId = Number(col?.id || 0);
+  const custColId = Number(customer?.collector_id || 0);
+  if (custColId > 0 && custColId !== colId) return false;
+
+  const areas = String(col?.area || '')
+    .split(',')
+    .map(a => a.trim().toLowerCase())
+    .filter(a => a.length > 0 && a !== 'semua' && a !== 'all');
+  if (areas.length > 0) {
+    const custArea = String(customer?.area || '').trim().toLowerCase();
+    return !!custArea && areas.includes(custArea);
+  }
+  return true;
+}
+
 function getAllCustomers(search = '', routerId = null, filterStatus = '', filterArea = '', opts = {}) {
   const now = getCurrentDateInTimezone();
   const month = now.getMonth() + 1;
@@ -955,7 +1008,7 @@ Dihapus: ${removed.join(', ') || '-'}`);
 }
 
 module.exports = {
-  getAllCustomers, getAllCustomerAreas, getCustomerById, createCustomer, updateCustomer, deleteCustomer, bulkDeleteCustomers, getCustomerStats,
+  getAllCustomers, getAllCustomerAreas, getCollectorCustomerWhere, canCollectorAccessCustomer, getCustomerById, createCustomer, updateCustomer, deleteCustomer, bulkDeleteCustomers, getCustomerStats,
   getAllPackages, getPackageById, createPackage, updatePackage, deletePackage,
   suspendCustomer, activateCustomer, autoDeactivateOverdueCustomers, generatePppoeAccount, findCustomerByAny, findCustomerForLogin, updateCustomerCablePath,
   resetPromoCyclesUsed, getEffectiveRouterId

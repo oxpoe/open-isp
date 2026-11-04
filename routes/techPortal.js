@@ -176,7 +176,7 @@ router.get('/', requireTechSession, (req, res) => {
 
 // --- OPEN TICKETS (Pool) ---
 router.get('/pool', requireTechSession, (req, res) => {
-  const openTickets = techSvc.getOpenTickets();
+  const openTickets = techSvc.getOpenTickets(req.session.techId);
   res.render('tech/pool', {
     title: 'Tiket Baru', 
     company: company(), 
@@ -201,8 +201,15 @@ router.get('/history', requireTechSession, (req, res) => {
 
 // --- NETWORK MAP ---
 router.get('/map', requireTechSession, (req, res) => {
-  const customers = customerSvc.getAllCustomers();
-  const odps = odpSvc.getAllOdps();
+  const tech = techSvc.getTechById(req.session.techId);
+  let customers = customerSvc.getAllCustomers();
+  let odps = odpSvc.getAllOdps();
+
+  const filter = tech ? techSvc.getTechAreaWhere(tech, 'c') : null;
+  if (filter && filter.isRestricted) {
+    customers = customers.filter(c => filter.areas.includes(String(c.area || '').trim().toLowerCase()));
+    odps = odps.filter(o => !o.area || filter.areas.includes(String(o.area || '').trim().toLowerCase()));
+  }
   
   res.render('tech/map', { 
     title: 'Peta Jaringan', 
@@ -346,7 +353,12 @@ router.get('/monitoring', requireTechSession, async (req, res) => {
 // --- CREATE CUSTOMER (Technician) ---
 router.get('/customers/new', requireTechSession, (req, res) => {
   const packages = customerSvc.getAllPackages();
-  const odps = odpSvc.getAllOdps();
+  let odps = odpSvc.getAllOdps();
+  const tech = techSvc.getTechById(req.session.techId);
+  const filter = tech ? techSvc.getTechAreaWhere(tech, 'c') : null;
+  if (filter && filter.isRestricted) {
+    odps = odps.filter(o => !o.area || filter.areas.includes(String(o.area || '').trim().toLowerCase()));
+  }
   const routers = mikrotikService.getAllRouters();
   const olts = oltSvc.getAllOlts();
   res.render('tech/create_customer', {
@@ -366,8 +378,20 @@ router.post('/customers', requireTechSession, express.urlencoded({ extended: tru
     const name = String(req.body.name || '').trim();
     if (!name) throw new Error('Nama pelanggan wajib diisi');
 
+    const tech = techSvc.getTechById(req.session.techId);
+    const areaFilter = tech ? techSvc.getTechAreaWhere(tech, 'c') : null;
+    let areaInput = String(req.body.area || '').trim();
+    if (areaFilter && areaFilter.isRestricted) {
+      if (!areaInput) {
+        areaInput = areaFilter.areas[0];
+      } else if (!areaFilter.areas.includes(areaInput.toLowerCase())) {
+        throw new Error(`Anda hanya dapat mendaftarkan pelanggan di wilayah tugas Anda (${tech.area})`);
+      }
+    }
+
     const customerData = {
       name,
+      area: areaInput,
       phone: String(req.body.phone || '').trim(),
       email: String(req.body.email || '').trim(),
       nik: String(req.body.nik || '').trim(),
@@ -461,6 +485,16 @@ router.post('/customers', requireTechSession, express.urlencoded({ extended: tru
 // API Endpoints for Technician
 const customerDevice = require('../services/customerDeviceService');
 
+// Teknisi hanya boleh menyentuh perangkat pelanggan di wilayahnya.
+function checkTechTagAccess(req, tag) {
+  const tech = req.session?.techId ? techSvc.getTechById(req.session.techId) : null;
+  const filter = tech ? techSvc.getTechAreaWhere(tech, 'c') : null;
+  if (!filter || !filter.isRestricted) return true;
+  const cust = customerSvc.findCustomerByAny(tag);
+  if (!cust) return true;
+  return filter.areas.includes(String(cust.area || '').trim().toLowerCase());
+}
+
 router.get('/api/mikrotik/pppoe-users', requireTechSession, async (req, res) => {
   try {
     const routerId = req.query.routerId ? Number(req.query.routerId) : null;
@@ -499,10 +533,15 @@ router.get('/api/odps/:id/ports', requireTechSession, (req, res) => {
 router.get('/api/devices', requireTechSession, async (req, res) => {
   try {
     const { search, status, acs, limit = 999999, offset = 0 } = req.query;
-    const customers = db.prepare('SELECT id, name, phone, pppoe_username, genieacs_tag FROM customers').all();
+    const tech = techSvc.getTechById(req.session.techId);
+    const areaFilter = tech ? techSvc.getTechAreaWhere(tech, 'c') : null;
+    const customers = db.prepare('SELECT id, name, phone, pppoe_username, genieacs_tag, area FROM customers').all();
+    const allowedCustomerIds = new Set();
     const byPppoe = new Map();
     const byTag = new Map();
     for (const c of customers) {
+      if (areaFilter && areaFilter.isRestricted && !areaFilter.areas.includes(String(c.area || '').trim().toLowerCase())) continue;
+      allowedCustomerIds.add(c.id);
       const pu = String(c.pppoe_username || '').trim().toLowerCase();
       const tg = String(c.genieacs_tag || '').trim();
       if (pu) byPppoe.set(pu, c);
@@ -549,6 +588,10 @@ router.get('/api/devices', requireTechSession, async (req, res) => {
       };
     });
 
+    if (areaFilter && areaFilter.isRestricted) {
+      devices = devices.filter(d => d.customerId && allowedCustomerIds.has(d.customerId));
+    }
+
     if (search) {
       const s = search.toLowerCase();
       devices = devices.filter(d => 
@@ -575,6 +618,7 @@ router.get('/api/devices', requireTechSession, async (req, res) => {
 
 router.get('/api/device/:tag', requireTechSession, async (req, res) => {
   try {
+    if (!checkTechTagAccess(req, req.params.tag)) return res.status(403).json({ error: 'Perangkat di luar wilayah tugas Anda' });
     const data = await customerDevice.getCustomerDeviceData(req.params.tag);
     if (!data || data.status === 'Tidak ditemukan') return res.status(404).json({ error: 'Device not found' });
     res.json(data);
@@ -584,6 +628,7 @@ router.get('/api/device/:tag', requireTechSession, async (req, res) => {
 });
 
 router.post('/api/device/:tag/ssid', requireTechSession, express.json(), async (req, res) => {
+  if (!checkTechTagAccess(req, req.params.tag)) return res.status(403).json({ error: 'Perangkat di luar wilayah tugas Anda' });
   const { ssid } = req.body;
   if (!ssid) return res.status(400).json({ error: 'SSID required' });
   const ok = await customerDevice.updateSSID(req.params.tag, ssid);
@@ -616,6 +661,7 @@ router.post('/api/device/:tag/ssid', requireTechSession, express.json(), async (
 });
 
 router.post('/api/device/:tag/password', requireTechSession, express.json(), async (req, res) => {
+  if (!checkTechTagAccess(req, req.params.tag)) return res.status(403).json({ error: 'Perangkat di luar wilayah tugas Anda' });
   const { password } = req.body;
   if (!password || password.length < 8) return res.status(400).json({ error: 'Password minimal 8 karakter' });
   const ok = await customerDevice.updatePassword(req.params.tag, password);
@@ -648,6 +694,7 @@ router.post('/api/device/:tag/password', requireTechSession, express.json(), asy
 });
 
 router.post('/api/device/:tag/reboot', requireTechSession, async (req, res) => {
+  if (!checkTechTagAccess(req, req.params.tag)) return res.status(403).json({ error: 'Perangkat di luar wilayah tugas Anda' });
   const result = await customerDevice.requestReboot(req.params.tag);
   res.json(result);
 });

@@ -177,16 +177,10 @@ router.get('/', requireCollectorSession, (req, res) => {
   const todayDay = now.getDate();
 
   const collectorId = Number(req.session.collectorId || 0);
-  const collectorObj = db.prepare('SELECT area FROM collectors WHERE id = ?').get(collectorId);
-  const collectorArea = String(collectorObj?.area || req.session.collectorArea || '').trim();
-  req.session.collectorArea = collectorArea;
+  const collectorObj = db.prepare('SELECT id, area FROM collectors WHERE id = ?').get(collectorId);
+  req.session.collectorArea = String(collectorObj?.area || req.session.collectorArea || '').trim();
 
-  let collectorWhere = '(c.collector_id = ? OR c.collector_id IS NULL)';
-  let collectorParams = [collectorId];
-  if (collectorArea) {
-    collectorWhere = '(c.collector_id = ? OR ((c.collector_id IS NULL OR c.collector_id = 0) AND LOWER(TRIM(c.area)) = LOWER(TRIM(?))))';
-    collectorParams = [collectorId, collectorArea];
-  }
+  const { where: collectorWhere, params: collectorParams } = customerSvc.getCollectorCustomerWhere(collectorObj, 'c');
   
   let q = `
     SELECT c.id as customer_id,
@@ -351,6 +345,14 @@ router.post('/payment-request', requireCollectorSession, express.urlencoded({ ex
     if (!inv) throw new Error('Tagihan tidak ditemukan');
     if (String(inv.status || '').toLowerCase() === 'paid') throw new Error('Tagihan sudah lunas');
 
+    {
+      const collectorIdCheck = Number(req.session.collectorId || 0);
+      const invCust = customerSvc.getCustomerById(inv.customer_id);
+      if (!customerSvc.canCollectorAccessCustomer(collectorIdCheck, invCust)) {
+        throw new Error('Tagihan ini di luar wilayah/tugas Anda');
+      }
+    }
+
     const existingPending = db.prepare(`
       SELECT id FROM collector_payment_requests
       WHERE invoice_id = ? AND status = 'pending'
@@ -472,6 +474,9 @@ router.get('/invoice/:id/print-thermal', requireCollectorSession, (req, res) => 
 
     const customer = customerSvc.getCustomerById(invoice.customer_id);
     if (!customer) return res.status(404).send('Data pelanggan tidak ditemukan');
+    if (!customerSvc.canCollectorAccessCustomer(Number(req.session.collectorId || 0), customer)) {
+      return res.status(403).send('Invoice di luar wilayah tugas Anda');
+    }
     const settings = getSettings();
 
     res.render('collector/print_thermal', {
@@ -498,6 +503,9 @@ router.post('/invoice/:id/send-pdf-wa', requireCollectorSession, async (req, res
 
     const customer = customerSvc.getCustomerById(inv.customer_id);
     if (!customer || !customer.phone) return res.json({ success: false, message: 'Nomor HP pelanggan tidak valid' });
+    if (!customerSvc.canCollectorAccessCustomer(Number(req.session.collectorId || 0), customer)) {
+      return res.json({ success: false, message: 'Invoice di luar wilayah tugas Anda' });
+    }
 
     const settings = getSettings();
     const pdfBuffer = await pdfSvc.generateInvoicePdfBuffer(inv, customer, settings);

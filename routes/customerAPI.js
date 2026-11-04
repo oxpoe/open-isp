@@ -740,6 +740,13 @@ router.get('/app/collector/dashboard', requireCollectorApiAuth, (req, res) => {
     const curMonth = now.getMonth() + 1;
     const curYear = now.getFullYear();
 
+    const isFullAdmin = req.collector?.role === 'admin' || req.collector?.role === 'root';
+    const collectorId = Number(req.collector?.collectorId || req.collector?.id || 0);
+    const collector = collectorId
+      ? db.prepare('SELECT id, name, area, auto_approve FROM collectors WHERE id = ?').get(collectorId)
+      : null;
+    const colFilter = (!isFullAdmin && collector) ? customerSvc.getCollectorCustomerWhere(collector, 'c') : null;
+
     let q = `
       SELECT c.id, c.name, c.phone, c.address, c.status, c.area, c.isolate_day, c.pppoe_username,
              p.name as package_name, p.price as package_price,
@@ -751,6 +758,11 @@ router.get('/app/collector/dashboard', requireCollectorApiAuth, (req, res) => {
       WHERE 1=1
     `;
     const params = [curMonth, curYear];
+
+    if (colFilter) {
+      q += ` AND ${colFilter.where}`;
+      params.push(...colFilter.params);
+    }
 
     if (filterStatus === 'unpaid') {
       q += ` AND (i.status = 'unpaid' OR i.status IS NULL)`;
@@ -770,6 +782,7 @@ router.get('/app/collector/dashboard', requireCollectorApiAuth, (req, res) => {
     q += ` ORDER BY (CASE WHEN c.status = 'suspended' THEN 0 WHEN i.status = 'unpaid' THEN 1 ELSE 2 END), c.name ASC LIMIT 150`;
     const list = db.prepare(q).all(...params) || [];
 
+    const statsWhere = colFilter ? ` WHERE ${colFilter.where}` : '';
     const stats = db.prepare(`
       SELECT 
         SUM(CASE WHEN (i.status = 'unpaid' OR i.status IS NULL) THEN 1 ELSE 0 END) as unpaid_count,
@@ -779,7 +792,8 @@ router.get('/app/collector/dashboard', requireCollectorApiAuth, (req, res) => {
       FROM customers c
       LEFT JOIN packages p ON p.id = c.package_id
       LEFT JOIN invoices i ON i.customer_id = c.id AND i.period_month = ? AND i.period_year = ?
-    `).get(todayDay, curMonth, curYear) || {};
+      ${statsWhere}
+    `).get(todayDay, curMonth, curYear, ...(colFilter ? colFilter.params : [])) || {};
 
     res.json({
       success: true,
@@ -819,7 +833,17 @@ router.post('/app/collector/pay-bill', requireCollectorApiAuth, async (req, res)
     if (!inv) return res.status(404).json({ success: false, message: 'Tagihan tidak ditemukan' });
 
     const collectorId = Number(req.collector?.collectorId || req.collector?.id || 0);
-    const collector = collectorId ? db.prepare('SELECT id, name, auto_approve FROM collectors WHERE id = ?').get(collectorId) : null;
+    const collector = collectorId ? db.prepare('SELECT id, name, area, auto_approve FROM collectors WHERE id = ?').get(collectorId) : null;
+
+    const isFullAdmin = req.collector?.role === 'admin' || req.collector?.role === 'root';
+    if (!isFullAdmin && collector) {
+      const cust = customerSvc.getCustomerById(inv.customer_id);
+      if (!cust) return res.status(404).json({ success: false, message: 'Pelanggan tidak ditemukan' });
+      if (!customerSvc.canCollectorAccessCustomer(collector, cust)) {
+        return res.status(403).json({ success: false, message: 'Akses ditolak: pelanggan di luar wilayah/tugas Anda' });
+      }
+    }
+
     const collectorName = collector?.name || req.collector?.name || 'Kolektor Lapangan';
     const isAutoApprove = collector && collector.auto_approve === 1;
 
