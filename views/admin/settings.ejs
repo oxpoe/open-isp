@@ -226,16 +226,16 @@
                 </select>
                 <div style="font-size:10px;color:var(--muted);margin-top:4px">Semua provider di atas memakai format API OpenAI (chat/completions).</div>
               </div>
-              <div class="fg"><label class="fl">DeepSeek API Key</label><input class="fc" name="deepseek_api_key" value="<%= settings.deepseek_api_key || '' %>" placeholder="sk-..."></div>
+              <div class="fg"><label class="fl">DeepSeek API Key</label><input class="fc" type="password" autocomplete="new-password" name="deepseek_api_key" value="<%= settings.deepseek_api_key || '' %>" placeholder="sk-..."></div>
               <div class="fg"><label class="fl">DeepSeek Model</label><input class="fc" name="deepseek_model" value="<%= settings.deepseek_model || 'deepseek-chat' %>"></div>
-              <div class="fg"><label class="fl">OpenAI API Key</label><input class="fc" name="openai_api_key" value="<%= settings.openai_api_key || '' %>" placeholder="sk-..."></div>
+              <div class="fg"><label class="fl">OpenAI API Key</label><input class="fc" type="password" autocomplete="new-password" name="openai_api_key" value="<%= settings.openai_api_key || '' %>" placeholder="sk-..."></div>
               <div class="fg"><label class="fl">OpenAI Model</label><input class="fc" name="openai_model" value="<%= settings.openai_model || 'gpt-4o-mini' %>"></div>
-              <div class="fg"><label class="fl">Groq API Key</label><input class="fc" name="groq_api_key" value="<%= settings.groq_api_key || '' %>"></div>
+              <div class="fg"><label class="fl">Groq API Key</label><input class="fc" type="password" autocomplete="new-password" name="groq_api_key" value="<%= settings.groq_api_key || '' %>"></div>
               <div class="fg"><label class="fl">Groq Model</label><input class="fc" name="groq_model" value="<%= settings.groq_model || 'llama-3.3-70b-versatile' %>"></div>
-              <div class="fg"><label class="fl">OpenRouter API Key</label><input class="fc" name="openrouter_api_key" value="<%= settings.openrouter_api_key || '' %>"></div>
+              <div class="fg"><label class="fl">OpenRouter API Key</label><input class="fc" type="password" autocomplete="new-password" name="openrouter_api_key" value="<%= settings.openrouter_api_key || '' %>"></div>
               <div class="fg"><label class="fl">OpenRouter Model</label><input class="fc" name="openrouter_model" value="<%= settings.openrouter_model || '' %>"></div>
               <div class="fg"><label class="fl">Custom Base URL</label><input class="fc" name="custom_ai_base_url" value="<%= settings.custom_ai_base_url || '' %>" placeholder="http://localhost:11434/v1"></div>
-              <div class="fg"><label class="fl">Custom API Key</label><input class="fc" name="custom_ai_api_key" value="<%= settings.custom_ai_api_key || '' %>" placeholder="opsional untuk Ollama"></div>
+              <div class="fg"><label class="fl">Custom API Key</label><input class="fc" type="password" autocomplete="new-password" name="custom_ai_api_key" value="<%= settings.custom_ai_api_key || '' %>" placeholder="opsional untuk Ollama"></div>
               <div class="fg"><label class="fl">Custom Model</label><input class="fc" name="custom_ai_model" value="<%= settings.custom_ai_model || 'llama3' %>"></div>
             </div>
             <div>
