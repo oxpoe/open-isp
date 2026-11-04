@@ -1973,13 +1973,8 @@ function ensureDonationOrderQrisUnique(baseAmount, donorPhone, donorName, notes)
 
 // Halaman Publik Donasi QRIS Statis
 app.get(['/donasi', '/donate', '/public/donasi'], (req, res) => {
-  const settings = getSettingsWithCache();
-  res.render('donate', {
-    settings,
-    company: settings.company_header || 'OPEN-ISP',
-    lang: req.session?.lang || 'id',
-    t: res.locals.t || ((k, d) => d)
-  });
+  // Halaman dukungan dialihkan ke situs eksternal agar bisa dikustomisasi.
+  return res.redirect(302, 'https://oxpoe.xyz');
 });
 
 // Endpoint Buat Pesanan Donasi dengan Kode Unik
