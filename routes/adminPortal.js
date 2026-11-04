@@ -396,9 +396,11 @@ function getUpdateInfo(repoRoot) {
   info.branch = branch;
 
   const _repo = String(getSetting('update_repo', 'oxpoe/open-isp') || '').trim();
+  const _base = String(getSetting('update_base_url', 'https://gitea.oxpoe.xyz') || '').trim().replace(/\/+$/, '');
   info.repo = _repo || 'origin';
+  info.baseUrl = _base;
   const fetch = _repo
-    ? runCmd('git', ['fetch', '--prune', 'https://gitea.oxpoe.qzz.io/' + _repo + '.git', branch], repoRoot)
+    ? runCmd('git', ['fetch', '--prune', _base + '/' + _repo + '.git', branch], repoRoot)
     : runCmd('git', ['fetch', '--prune'], repoRoot);
   if (!fetch.ok) {
     info.error = 'Gagal git fetch: ' + (fetch.stderr || fetch.stdout || '').trim();
@@ -4666,9 +4668,11 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
     if (!inside.ok) throw new Error('Folder ini belum menjadi git repository.');
 
     const _repo = String(getSetting('update_repo', 'oxpoe/open-isp') || '').trim();
+  const _base = String(getSetting('update_base_url', 'https://gitea.oxpoe.xyz') || '').trim().replace(/\/+$/, '');
   info.repo = _repo || 'origin';
+  info.baseUrl = _base;
   const fetch = _repo
-    ? runCmd('git', ['fetch', '--prune', 'https://gitea.oxpoe.qzz.io/' + _repo + '.git', branch], repoRoot)
+    ? runCmd('git', ['fetch', '--prune', _base + '/' + _repo + '.git', branch], repoRoot)
     : runCmd('git', ['fetch', '--prune'], repoRoot);
     pushCmd('git fetch --prune', fetch);
     if (!fetch.ok) throw new Error('Gagal git fetch.');
@@ -4775,6 +4779,12 @@ router.post('/settings', requireAdminSession, express.urlencoded({ extended: tru
     if (newSettings.voucher_enabled === 'true') newSettings.voucher_enabled = true;
     else if (newSettings.voucher_enabled === 'false') newSettings.voucher_enabled = false;
 
+    if (newSettings.update_base_url !== undefined) {
+      newSettings.update_base_url = String(newSettings.update_base_url).trim().replace(/\/+$/, '');
+    }
+    if (newSettings.update_repo !== undefined) {
+      newSettings.update_repo = String(newSettings.update_repo).trim().replace(/^\/+|\/+$/g, '');
+    }
     newSettings.ai_provider = String(newSettings.ai_provider || 'deepseek').trim().toLowerCase();
     newSettings.ai_self_healing_enabled = newSettings.ai_self_healing_enabled === 'true' || newSettings.ai_self_healing_enabled === 'on';
     for (const k of ['deepseek_api_key','openai_api_key','groq_api_key','openrouter_api_key','custom_ai_api_key','custom_ai_base_url','custom_ai_model','deepseek_model','openai_model','groq_model','openrouter_model']) {

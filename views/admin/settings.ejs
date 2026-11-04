@@ -640,8 +640,17 @@
               </script>
               <div class="fg">
                 <label class="fl"><%= t('admin.set.repo_link','Link Repositori Proyek (Gitea)') %></label>
-                <input class="fc" name="project_url" value="<%= settings.project_url || 'https://gitea.oxpoe.qzz.io/oxpoe/open-isp' %>" placeholder="https://gitea.oxpoe.qzz.io/oxpoe/open-isp">
+                <input class="fc" name="project_url" value="<%= settings.project_url || 'https://gitea.oxpoe.xyz/oxpoe/open-isp' %>" placeholder="https://gitea.oxpoe.xyz/oxpoe/open-isp">
                 <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.repo_hint','Dipakai untuk tautan ') %><b>Repo</b>, <b>Form/Issue</b> (<code>/issues/new/choose</code>), <b>Wiki</b>, dan <b>Lisensi</b> di landing page.</div>
+              </div>
+              <div class="fg">
+                <label class="fl">Sumber Update (host Git)</label>
+                <input class="fc" name="update_base_url" value="<%= settings.update_base_url || 'https://gitea.oxpoe.xyz' %>" placeholder="https://gitea.oxpoe.xyz">
+                <div style="font-size:10px; color:var(--muted); margin-top:4px">Dipakai menu <b>Update</b> untuk <code>git fetch</code>. Bisa Gitea (<code>https://gitea.oxpoe.xyz</code>) atau Forgejo (<code>https://forgejo.oxpoe.xyz</code>).</div>
+              </div>
+              <div class="fg">
+                <label class="fl">Repo Update (owner/nama)</label>
+                <input class="fc" name="update_repo" value="<%= settings.update_repo || 'oxpoe/open-isp' %>" placeholder="oxpoe/open-isp">
               </div>
               <div class="fg">
                 <label class="fl"><%= t('admin.set.uptime_link','Link Uptime Website (Status)') %></label>
