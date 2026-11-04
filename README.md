@@ -1,4 +1,4 @@
-> 🪞 **Repositori utama:** [Gitea](https://gitea.oxpoe.xyz/oxpoe/open-isp) · [Forgejo](https://forgejo.oxpoe.xyz/oxpoe/open-isp) — rilis & unduhan ada di sana. GitHub hanya cermin kode.
+> 🪞 **Repositori utama:** [Gitea](https://gitea.oxpoe.xyz/oxpoe/open-isp). — rilis & unduhan ada di sana. GitHub hanya cermin kode.
 
 <p align="center">
   <img src="docs/assets/banner.png" alt="OPEN-ISP" width="100%">
