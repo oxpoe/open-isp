@@ -4019,6 +4019,8 @@ router.get('/custom-qr', requireAdminSession, requireSidebarMenuAccess('custom_q
   let detail = null;
   const detailId = Number(req.query.id) || 0;
   if (detailId > 0) { try { detail = svc.getById(detailId); } catch (e) {} }
+  const filterFrom = String(req.query.from || '').trim();
+  const filterTo = String(req.query.to || '').trim();
   const settings = getSettings();
   const baseUrl = String(settings.public_base_url || ((req.headers['x-forwarded-proto'] || req.protocol) + '://' + req.get('host'))).replace(/\/+$/, '');
   res.render('admin/custom_qr', {
@@ -4026,7 +4028,8 @@ router.get('/custom-qr', requireAdminSession, requireSidebarMenuAccess('custom_q
     company: company(),
     activePage: 'custom_qr',
     msg: flashMsg(req),
-    rows: svc.list(150),
+    rows: svc.list(200, { from: filterFrom, to: filterTo }),
+    filterFrom, filterTo,
     stats: svc.stats(),
     detail,
     baseUrl,
@@ -4084,6 +4087,19 @@ router.post('/custom-qr/reset', requireAdminSession, restrictToAdmin, requireSid
     req.session._msg = { type: 'success', text: `Histori QR custom direset (${n} data dihapus).` };
   } catch (e) { req.session._msg = { type: 'error', text: e.message }; }
   res.redirect('/admin/custom-qr');
+});
+
+router.post('/custom-qr/delete-bulk', requireAdminSession, restrictToAdmin, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    if (!_checkAdminPassword(req)) throw new Error('Password admin salah.');
+    const ids = Array.isArray(req.body.ids) ? req.body.ids : [req.body.ids];
+    const n = require('../services/customQrService').removeMany(ids);
+    req.session._msg = { type: 'success', text: `${n} QR custom dihapus.` };
+  } catch (e) { req.session._msg = { type: 'error', text: e.message }; }
+  const q = [];
+  if (req.body.from) q.push('from=' + encodeURIComponent(req.body.from));
+  if (req.body.to) q.push('to=' + encodeURIComponent(req.body.to));
+  res.redirect('/admin/custom-qr' + (q.length ? ('?' + q.join('&')) : ''));
 });
 
 router.post('/custom-qr/:id/regenerate', requireAdminSession, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {

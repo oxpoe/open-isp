@@ -75,9 +75,17 @@ function getByToken(token) {
   return db.prepare('SELECT * FROM custom_qr_payments WHERE share_token=?').get(String(token || ''));
 }
 
-function list(limit = 100) {
+function list(limit = 100, opts = {}) {
   sweepExpired();
-  return db.prepare('SELECT * FROM custom_qr_payments ORDER BY id DESC LIMIT ?').all(Math.max(1, Math.min(500, Number(limit) || 100)));
+  const where = [];
+  const params = [];
+  if (opts.from) { where.push('date(created_at) >= date(?)'); params.push(String(opts.from)); }
+  if (opts.to) { where.push('date(created_at) <= date(?)'); params.push(String(opts.to)); }
+  const sql = 'SELECT * FROM custom_qr_payments' +
+    (where.length ? (' WHERE ' + where.join(' AND ')) : '') +
+    ' ORDER BY id DESC LIMIT ?';
+  params.push(Math.max(1, Math.min(500, Number(limit) || 100)));
+  return db.prepare(sql).all(...params);
 }
 
 function stats() {
@@ -120,6 +128,16 @@ function acceptWarning(id, actor, note) {
 
 function remove(id) {
   const r = db.prepare('DELETE FROM custom_qr_payments WHERE id=?').run(Number(id) || 0);
+  return r.changes || 0;
+}
+
+function removeMany(ids) {
+  const list = (Array.isArray(ids) ? ids : [ids])
+    .map(function (x) { return Number(x); })
+    .filter(function (n) { return Number.isFinite(n) && n > 0; });
+  if (!list.length) return 0;
+  const marks = list.map(function () { return '?'; }).join(',');
+  const r = db.prepare('DELETE FROM custom_qr_payments WHERE id IN (' + marks + ')').run(...list);
   return r.changes || 0;
 }
 
@@ -207,6 +225,7 @@ module.exports = {
   acceptWarning,
   regenerate,
   remove,
+  removeMany,
   clearAll,
   reject,
   markPaidFromWebhook,

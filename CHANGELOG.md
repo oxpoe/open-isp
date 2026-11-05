@@ -2,6 +2,13 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.6] — 2026-11-06 — "qr-custom-bulk"
+
+### Ditambahkan
+- **Filter tanggal** (dari/sampai) pada histori QR-Custom Payment.
+- **Pilih semua / per baris** + tombol **Hapus Terpilih** (batch remove) dengan password admin.
+- **Reset Histori** tetap tersedia untuk menghapus semua data.
+
 ## [0.6.5] — 2026-11-06 — "qr-custom-delete"
 
 ### Ditambahkan

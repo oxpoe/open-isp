@@ -127,15 +127,34 @@
           <button class="btn btn-g btn-sm"><i class="bi bi-trash3"></i> Reset Histori</button>
         </form>
       </div>
+      <div class="card-bd" style="border-bottom:1px solid var(--border)">
+        <form method="GET" action="/admin/custom-qr" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <div class="fg"><label class="fl">Dari tanggal</label><input class="fc" type="date" name="from" value="<%= filterFrom || '' %>"></div>
+          <div class="fg"><label class="fl">Sampai tanggal</label><input class="fc" type="date" name="to" value="<%= filterTo || '' %>"></div>
+          <button class="btn btn-p btn-sm" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+          <a class="btn btn-g btn-sm" href="/admin/custom-qr"><i class="bi bi-x-circle"></i> Reset Filter</a>
+        </form>
+      </div>
+      <form id="cqBulkForm" method="POST" action="/admin/custom-qr/delete-bulk"></form>
+      <div class="card-bd" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input type="checkbox" id="cqAll" onclick="cqToggleAll(this)"> Pilih semua
+        </label>
+        <input form="cqBulkForm" class="fc" type="password" name="password" required placeholder="Password admin" style="max-width:180px">
+        <input form="cqBulkForm" type="hidden" name="from" value="<%= filterFrom || '' %>">
+        <input form="cqBulkForm" type="hidden" name="to" value="<%= filterTo || '' %>">
+        <button form="cqBulkForm" class="btn btn-g btn-sm" onclick="return confirm('Hapus QR yang dipilih?')"><i class="bi bi-trash"></i> Hapus Terpilih</button>
+      </div>
       <div class="card-bd" style="overflow:auto">
         <table class="table" style="width:100%;font-size:12.5px">
-          <thead><tr><th>Judul</th><th>Kategori</th><th>Nominal</th><th>Status</th><th>Dibuat</th><th>Kedaluwarsa</th><th>Aksi</th></tr></thead>
+          <thead><tr><th style="width:30px"></th><th>Judul</th><th>Kategori</th><th>Nominal</th><th>Status</th><th>Dibuat</th><th>Kedaluwarsa</th><th>Aksi</th></tr></thead>
           <tbody>
           <% if (!rows || rows.length === 0) { %>
-            <tr><td colspan="7" class="muted" style="text-align:center;padding:20px">Belum ada QR custom.</td></tr>
+            <tr><td colspan="8" class="muted" style="text-align:center;padding:20px">Belum ada QR custom.</td></tr>
           <% } %>
           <% rows.forEach(function(r) { %>
             <tr>
+              <td><input type="checkbox" class="cq-check" form="cqBulkForm" name="ids" value="<%= r.id %>"></td>
               <td><b><%= r.title %></b><% if (r.note) { %><div class="muted" style="font-size:11px"><%= r.note %></div><% } %></td>
               <td><%= r.category || '-' %></td>
               <td>Rp <%= Number(r.amount_unique||0).toLocaleString('id-ID') %></td>
@@ -166,6 +185,10 @@
   </div>
 </div>
 <script>
+  function cqToggleAll(el) {
+    var on = !!(el && el.checked);
+    document.querySelectorAll('.cq-check').forEach(function (c) { c.checked = on; });
+  }
   function copyCqLink() {
     var el = document.getElementById('cqLink');
     if (!el) return;
