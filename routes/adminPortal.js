@@ -6770,6 +6770,16 @@ router.post('/whatsapp/gateway-settings', requireAdminSession, express.urlencode
   res.redirect('/admin/whatsapp');
 });
 
+router.post('/whatsapp/test-gowa-connection', requireAdminSession, async (req, res) => {
+  try {
+    const gowaSvc = require('../services/gowaWhatsappService');
+    const r = await gowaSvc.testReachability();
+    return res.json(Object.assign({ ok: r.reachable, success: r.reachable }, r));
+  } catch (e) {
+    return res.status(500).json({ ok: false, success: false, message: e.message });
+  }
+});
+
 router.post('/whatsapp/test-gowa', requireAdminSession, express.json(), async (req, res) => {
   try {
     const { phone, message } = req.body;

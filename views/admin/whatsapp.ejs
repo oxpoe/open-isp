@@ -199,6 +199,8 @@
             <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px"><%- t('admin.wa.qr_hint','Klik tombol, lalu buka WhatsApp &rarr; Perangkat Tertaut &rarr; Tautkan perangkat, scan QR. QR berlaku ~30 detik &amp; diperbarui otomatis.') %></div>
             <button type="button" class="btn btn-p btn-sm" onclick="showGowaQr()"><i class="bi bi-qr-code-scan"></i> Tampilkan QR</button>
             <a href="<%= gowaUiUrl %>" target="_blank" rel="noopener" class="btn btn-g btn-sm" style="margin-left:6px"><i class="bi bi-box-arrow-up-right"></i> Buka UI GOWA</a>
+            <button type="button" class="btn btn-g btn-sm" style="margin-left:6px" onclick="testGowaConn(this)"><i class="bi bi-plug"></i> Test Koneksi</button>
+            <div id="gowa_conn_status" style="display:none;margin-top:8px;font-size:12px;line-height:1.5"></div>
             <div id="gowa_qr_wrap" style="display:none;margin-top:10px;text-align:center">
               <img id="gowa_qr_img" alt="QR GOWA" style="max-width:240px;background:#fff;padding:10px;border-radius:12px" onerror="var s=document.getElementById('gowa_qr_status');if(s)s.textContent='Gambar QR gagal dimuat — cek log server (base URL/kredensial GOWA).'">
               <div id="gowa_qr_status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
@@ -237,6 +239,25 @@
     </div>
 
     <script>
+      async function testGowaConn(btn) {
+        var el = document.getElementById('gowa_conn_status');
+        var old = btn ? btn.innerHTML : '';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menguji...'; }
+        if (el) { el.style.display = 'block'; el.style.color = 'var(--muted)'; el.textContent = 'Menghubungi ' + (document.querySelector('input[name="gowa_base_url"]') || {}).value + ' ...'; }
+        try {
+          var r = await fetch('/admin/whatsapp/test-gowa-connection', { method: 'POST' });
+          var d = await r.json();
+          if (el) {
+            el.textContent = d.message || (d.ok ? 'GOWA terjangkau.' : 'GOWA tidak terjangkau.');
+            el.style.color = (d.ok && d.authOk) ? 'var(--success)' : (d.ok ? '#f59e0b' : 'var(--danger)');
+          }
+        } catch (e) {
+          if (el) { el.style.color = 'var(--danger)'; el.textContent = 'Gagal menguji koneksi: ' + e.message; }
+        } finally {
+          if (btn) { btn.disabled = false; btn.innerHTML = old; }
+        }
+      }
+
       function toggleGowaMode() {
         var mode = (document.getElementById('gowa_mode') || {}).value || 'cloud';
         var hint = document.getElementById('gowa_mode_hint');

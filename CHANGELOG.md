@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.11] — 2026-11-05 — "gowa-test"
+
+### Ditambahkan
+- Tombol **Test Koneksi** di Admin → WhatsApp → GOWA: menampilkan apakah GOWA terjangkau, status `/health`, kecocokan username/password Basic Auth, dan jumlah device terdaftar.
+
 ## [0.5.10] — 2026-11-05 — "gowa-mode"
 
 ### Ditambahkan

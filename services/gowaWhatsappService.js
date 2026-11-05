@@ -131,6 +131,41 @@ async function sendGowaDocument(toPhone, documentBuffer, filename = 'file.pdf', 
   });
   return { success: true, gateway: 'gowa', raw: json };
 }
+async function testReachability() {
+  const base = baseUrl();
+  const out = { baseUrl: base, reachable: false, healthStatus: 0, authOk: false, devices: 0, message: '' };
+  try {
+    const res = await fetch(base + '/health');
+    out.healthStatus = res.status;
+    out.reachable = res.ok;
+  } catch (e) {
+    out.message = 'Tidak terjangkau: ' + e.message;
+    return out;
+  }
+  if (!out.reachable) {
+    out.message = 'GOWA menjawab, tetapi /health mengembalikan HTTP ' + out.healthStatus;
+    return out;
+  }
+  try {
+    const res = await fetch(base + '/devices', { headers: commonHeaders() });
+    out.authStatus = res.status;
+    const json = await res.json().catch(function () { return null; });
+    const list = (json && Array.isArray(json.results)) ? json.results : [];
+    if (res.ok) {
+      out.authOk = true;
+      out.devices = list.length;
+      out.message = 'GOWA terjangkau' + (list.length ? ' — ' + list.length + ' device terdaftar' : ' — belum ada device, scan QR untuk menautkan');
+    } else if (res.status === 401) {
+      out.message = 'GOWA terjangkau, tetapi username/password Basic Auth salah atau kosong';
+    } else {
+      out.message = 'GOWA terjangkau, tetapi /devices membalas HTTP ' + res.status;
+    }
+  } catch (e) {
+    out.message = 'GOWA terjangkau, tetapi gagal cek kredensial: ' + e.message;
+  }
+  return out;
+}
+
 async function testGowaConnection(phone, message) {
   return await sendGowaMessage(phone, message || 'Tes koneksi GOWA berhasil ✅');
 }
@@ -225,4 +260,4 @@ async function getLastQrImage() {
   }
 }
 
-module.exports = { sendGowaMessage, sendGowaImage, sendGowaDocument, testGowaConnection, gowaStatus, listDevices, ensureDevice, getLoginQr, getLastQrImage, normalizePhoneJid, baseUrl, resolveDeviceId, invalidateDeviceCache };
+module.exports = { sendGowaMessage, sendGowaImage, sendGowaDocument, testGowaConnection, testReachability, gowaStatus, listDevices, ensureDevice, getLoginQr, getLastQrImage, normalizePhoneJid, baseUrl, resolveDeviceId, invalidateDeviceCache };
