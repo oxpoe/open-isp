@@ -2,6 +2,14 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.17] — 2026-11-06 — "gowa-connected"
+
+### Diperbaiki
+- Status GOWA membaca array `/devices` (banyak device) sehingga tidak lagi selalu menampilkan **Belum Terhubung** ketika Device ID belum diisi.
+- Device yang terhubung disimpan otomatis sebagai `gowa_device_id` — tidak perlu menyalin ID manual dari UI GOWA.
+- Setelah scan QR, halaman memantau status tiap 3 detik; QR otomatis disembunyikan dan status berubah **Terhubung** saat berhasil.
+- Pengiriman memilih device yang benar-benar terhubung bila ada lebih dari satu device.
+
 ## [0.5.16] — 2026-11-05 — "restart-help"
 
 ### Ditambahkan

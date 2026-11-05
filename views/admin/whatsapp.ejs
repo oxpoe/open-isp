@@ -290,12 +290,38 @@
       // Cooldown QR disinkronkan dengan GoWA: interval mengikuti qr_duration dari server.
       var _gowaQrRefresh = null;   // penjadwal ambil QR berikutnya (timeout)
       var _gowaQrTick = null;      // interval hitung mundur 1 detik
+      var _gowaQrPoll = null;      // pantau status setelah scan
       function showGowaQr() {
         var wrap = document.getElementById('gowa_qr_wrap');
         if (wrap) wrap.style.display = 'block';
         var st = document.getElementById('gowa_qr_status');
-        if (st) st.textContent = 'Memuat QR...';
+        if (st) { st.style.color = 'var(--muted)'; st.textContent = 'Memuat QR...'; }
         gowaQrCycle();
+        startGowaPoll();
+      }
+      function stopGowaPoll() {
+        if (_gowaQrPoll) { clearInterval(_gowaQrPoll); _gowaQrPoll = null; }
+      }
+      function startGowaPoll() {
+        stopGowaPoll();
+        _gowaQrPoll = setInterval(async function () {
+          try {
+            var r = await fetch('/admin/api/whatsapp/status', { cache: 'no-store' });
+            var s = await r.json();
+            var st = document.getElementById('gowa_qr_status');
+            if (s && s.connection === 'open') {
+              if (_gowaQrRefresh) { clearTimeout(_gowaQrRefresh); _gowaQrRefresh = null; }
+              if (_gowaQrTick) { clearInterval(_gowaQrTick); _gowaQrTick = null; }
+              stopGowaPoll();
+              var img = document.getElementById('gowa_qr_img'); if (img) img.src = '';
+              var wrap = document.getElementById('gowa_qr_wrap'); if (wrap) wrap.style.display = 'none';
+              if (st) { st.style.color = 'var(--success)'; st.textContent = '✅ Terhubung ke WhatsApp.'; }
+              if (typeof checkStatus === 'function') checkStatus();
+            } else if (s && s.connection === 'connecting') {
+              if (st) { st.style.color = 'var(--warning, #f59e0b)'; st.textContent = 'Terautentikasi, sedang menyinkronkan...'; }
+            }
+          } catch (e) {}
+        }, 3000);
       }
       function gowaQrCycle() {
         fetch('/admin/whatsapp/gowa/qr', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {

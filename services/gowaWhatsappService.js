@@ -44,7 +44,11 @@ async function resolveDeviceId(force) {
   try { list = await listDevices(); } catch (e) { list = []; }
   const has = function (id) { return list.some(function (d) { return String(d.id) === id; }); };
   let chosen;
+  const connected = list.find(function (d) {
+    return d && (d.state === 'connected' || d.is_connected || d.is_logged_in || d.connected);
+  });
   if (configured && has(configured)) chosen = configured;              // device id diset & ada -> pakai itu
+  else if (connected) chosen = String(connected.id);                  // utamakan device yang benar-benar terhubung
   else if (list.length === 1) chosen = String(list[0].id);            // cuma 1 device -> otomatis
   else if (list.length > 1) chosen = configured || String(list[0].id); // >1 device -> pakai yg diset / pertama
   else chosen = configured;                                          // GOWA tak beri list -> serahkan ke GOWA

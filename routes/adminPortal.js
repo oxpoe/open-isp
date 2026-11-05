@@ -7388,11 +7388,27 @@ router.get('/api/whatsapp/status', requireAdmin, async (req, res) => {
       } else if (gatewayType === 'gowa') {
         let st = null;
         try { st = await require('../services/gowaWhatsappService').gowaStatus(); } catch (e) { st = { ok: false, error: e.message }; }
-        const rr = (st && st.data && st.data.results) || {};
-        const loggedIn = !!(rr.is_logged_in || rr.isConnected || rr.connected);
-        const isConn = !!(rr.is_connected || rr.connected);
+        // /devices mengembalikan array (banyak device); /devices/:id/status mengembalikan objek.
+        const raw = st && st.data && st.data.results;
+        const list = Array.isArray(raw) ? raw : ((raw && typeof raw === 'object') ? [raw] : []);
+        const pick = list.find(function (d) {
+          return d && (d.is_connected || d.is_logged_in || d.connected ||
+            d.state === 'connected' || d.state === 'logged_in');
+        }) || list[0] || {};
+        const loggedIn = !!(pick.is_logged_in || pick.is_connected || pick.connected ||
+          pick.state === 'connected' || pick.state === 'logged_in');
+        const isConn = !!(pick.is_connected || pick.connected || pick.state === 'connected');
         const conn = isConn ? 'open' : (loggedIn ? 'connecting' : 'close');
-        res.json({ connection: conn, gateway: 'gowa', loggedIn: loggedIn, user: { id: 'gowa_gateway', name: loggedIn ? 'GOWA (WhatsApp)' : 'GOWA Gateway' }, lastUpdate: new Date().toISOString() });
+        const deviceId = String(pick.device_id || pick.id || '').trim();
+        // Simpan otomatis device id agar status berikutnya memakai /devices/:id/status.
+        if (deviceId && !String(getSetting('gowa_device_id', '') || '').trim()) {
+          try { saveSettings({ gowa_device_id: deviceId }); } catch (e) {}
+        }
+        res.json({
+          connection: conn, gateway: 'gowa', loggedIn: loggedIn, deviceId: deviceId,
+          user: { id: deviceId || 'gowa_gateway', name: loggedIn ? 'GOWA (WhatsApp)' : 'GOWA Gateway' },
+          lastUpdate: new Date().toISOString()
+        });
       } else if (gatewayType === 'baileys') {
         const { whatsappStatus, startWhatsAppBot, isBotRunning } = await import('../services/whatsappBot.mjs');
         if (getSetting('whatsapp_enabled', true) && !isBotRunning() && whatsappStatus.connection !== 'open' && whatsappStatus.connection !== 'qr') {
