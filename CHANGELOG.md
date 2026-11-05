@@ -2,6 +2,13 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.13] — 2026-11-05 — "lunas-notify"
+
+### Diperbaiki
+- Notifikasi WA **LUNAS** memakai gateway aktif (GOWA/Fonnte/Meta/Baileys), bukan hanya Baileys.
+- Deteksi koneksi GOWA membaca status device dari `/devices` (array) — sebelumnya dianggap tidak terhubung bila Device ID kosong, sehingga notifikasi lunas dilewati.
+- Approve pembayaran kolektor dari APK admin dan pencocokan notifikasi pembayaran manual kini mengirim WA lunas ke pelanggan.
+
 ## [0.5.12] — 2026-11-05 — "gowa-test-unsaved"
 
 ### Diperbaiki

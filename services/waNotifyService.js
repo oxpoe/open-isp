@@ -140,8 +140,12 @@ async function isConnected() {
   try {
     if (gw === 'gowa') {
       const st = await require('./gowaWhatsappService').gowaStatus();
-      const d = (st && st.data && st.data.results) || (st && st.data) || {};
-      val = !!(d.is_connected || d.is_logged_in || d.connected);
+      const raw = (st && st.data && st.data.results) || (st && st.data) || {};
+      const list = Array.isArray(raw) ? raw : [raw];
+      val = list.some(function (d) {
+        return !!(d && (d.is_connected || d.is_logged_in || d.connected ||
+          d.state === 'connected' || d.state === 'logged_in'));
+      });
     } else if (gw === 'baileys') {
       const mod = await import('./whatsappBot.mjs');
       const s = mod.whatsappStatus;

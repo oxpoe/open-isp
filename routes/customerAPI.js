@@ -2359,6 +2359,37 @@ router.post('/app/admin/collector-payments/approve', requireAdminApiAuth, async 
       if (unpaidCount === 0) {
         try { await customerSvc.activateCustomer(pay.customer_id); } catch (_) {}
       }
+
+      // Notifikasi WA lunas ke pelanggan (gateway aktif)
+      try {
+        const customer = customerSvc.getCustomerById(pay.customer_id);
+        const inv = billingSvc.getInvoiceById(pay.invoice_id);
+        if (customer && customer.phone && inv) {
+          const settings = getSettingsWithCache();
+          const waNotify = require('../services/waNotifyService');
+          const whatsappService = require('../services/whatsappService');
+          const pkg = customer.package_id ? customerSvc.getPackageById(customer.package_id) : null;
+          const appUrl = String(settings.public_base_url || '').replace(/\/$/, '');
+          const template = db.getAppSetting('whatsapp_payment_success_message', '');
+          const msg = whatsappService.formatPaymentSuccessMessage({
+            customerName: customer.name,
+            invoiceId: inv.id,
+            customerUsername: customer.pppoe_username || customer.id || '-',
+            customerCode: customer.customer_code || '',
+            packageName: pkg?.name || customer.package_name || '-',
+            periodMonth: inv.period_month,
+            periodYear: inv.period_year,
+            amount: inv.amount,
+            paymentMethod: collectorLabel,
+            paidAt: new Date(),
+            companyName: settings.company_header || 'OPEN-ISP',
+            companyPhone: settings.company_phone || '',
+            portalUrl: appUrl ? appUrl + '/customer' : '',
+            customTemplate: template
+          });
+          await waNotify.sendText(customer.phone, msg);
+        }
+      } catch (_) {}
     }
     res.json({ success: true, message: 'Pembayaran berhasil di-approve dan tagihan ditandai LUNAS' });
   } catch (e) { res.status(500).json({ success: false, message: e.message }); }

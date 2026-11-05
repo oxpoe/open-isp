@@ -4925,6 +4925,29 @@ router.post('/payment-unmatched/:id/match', requireAdminSession, express.urlenco
         if (!unpaid) await customerSvc.activateCustomer(inv.customer_id);
       }
     } catch (e) {}
+
+    // Notifikasi WA lunas ke pelanggan
+    try {
+      const cust = customerSvc.getCustomerById(inv.customer_id);
+      if (cust && cust.phone) {
+        const pkg = cust.package_id ? customerSvc.getPackageById(cust.package_id) : null;
+        await sendPaymentSuccessWA(
+          cust.phone,
+          cust.name,
+          `${inv.period_month}/${inv.period_year}`,
+          Number(inv.amount || 0).toLocaleString('id-ID'),
+          'Manual (Webhook)',
+          {
+            customerId: cust.id,
+            invoiceId: inv.id,
+            username: cust.pppoe_username || cust.id,
+            customerCode: cust.customer_code || '',
+            packageName: pkg?.name || cust.package_name || '-',
+            paidAt: new Date(), method: 'Manual (Webhook)'
+          }
+        );
+      }
+    } catch (e) {}
     req.session._msg = { type: 'success', text: 'Invoice #' + invId + ' ditandai LUNAS & notif dicocokkan.' };
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal cocokkan: ' + e.message };

@@ -628,8 +628,8 @@ async function trySendWaPaymentSuccess(settings, invoiceId, methodLabel) {
     if (!inv) return;
     const phone = String(inv.customer_phone || '').trim();
     if (!phone) return;
-    const { sendWA, whatsappStatus } = await import('./services/whatsappBot.mjs');
-    if (whatsappStatus.connection !== 'open') throw new Error('Bot WhatsApp belum terhubung');
+    // Pakai gateway aktif (GOWA/Fonnte/Meta/Baileys), bukan hanya Baileys.
+    const waNotify = require('./services/waNotifyService');
 
     const appUrl = (settings.public_base_url || '').replace(/\/$/, '');
     const portalUrl = appUrl ? `${appUrl}/customer` : '';
@@ -654,7 +654,7 @@ async function trySendWaPaymentSuccess(settings, invoiceId, methodLabel) {
     });
 
     logger.info(`[WEBHOOK][payment-notif] Sending WA success notif to ${phone} inv=${invoiceId} method=${metode}`);
-    await sendWA(phone, msg);
+    await waNotify.sendText(phone, msg);
   } catch (e) {
     logger.error(`[WEBHOOK][payment-notif] WA success notif failed: ${e?.message || e}`);
   }
