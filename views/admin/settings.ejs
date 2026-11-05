@@ -815,7 +815,7 @@
             <div style="margin-top: 15px; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 15px;">
               <h6 style="font-size:11px; margin-bottom: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-phone"></i> Hubungkan Webhook Notifikasi E-Wallet (Mode 2)</h6>
               <% 
-                const _base = (settings.public_base_url || '').replace(/\/+$/, '');
+                const _base = String(typeof webhookBaseUrl !== 'undefined' && webhookBaseUrl ? webhookBaseUrl : (settings.public_base_url || '')).replace(/\/+$/, '');
                 const _secret = String(settings.webhook_secret || '');
                 const macroWebhookUrlFull = _base + '/api/webhook/v1/payment-notif?secret_key=' + encodeURIComponent(_secret);
               %>
@@ -841,6 +841,7 @@
                   <option value="false" <%= (settings.webhook_unmatched_notify_enabled === undefined ? true : settings.webhook_unmatched_notify_enabled) ? '' : 'selected' %>><%= t('common.inactive','Nonaktif') %></option>
                 </select>
                 <div class="hint"><%= t('admin.set.wh_wa_hint','Kirim WA ke admin tiap ada pembayaran terdeteksi tapi belum cocok (untuk dicocokkan manual via jam notif vs bukti transfer).') %></div>
+              <div class="hint" style="margin-top:6px"><i class="bi bi-info-circle"></i> Secret dibuat otomatis jika kosong. URL memakai <b>Public Base URL</b>; bila kosong memakai host saat ini. Salin URL + token ke aplikasi notification forwarder.</div>
               </div>
               <div class="fg" style="margin-top:10px">
                 <label class="fl"><i class="bi bi-clock-history"></i> <%= t('admin.set.wh_retention','Retensi Notifikasi Webhook (Otomasi)') %></label>

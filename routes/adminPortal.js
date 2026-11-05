@@ -4490,15 +4490,17 @@ router.post('/automation/send-now', requireAdminSession, express.urlencoded({ ex
 });
 
 router.get('/settings', requireAdminSession, requireSidebarMenuAccess('settings'), (req, res) => {
-  const settings = getSettings();
+  let settings = getSettings();
+  try { require('../config/settingsManager').ensureWebhookSecret(); settings = getSettings(); } catch (e) {}
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.get('host');
-  const baseUrl = (settings && settings.app_url ? String(settings.app_url) : `${protocol}://${host}`).replace(/\/+$/, '');
+  const baseUrl = (settings.public_base_url || (settings && settings.app_url) || `${protocol}://${host}`).toString().replace(/\/+$/, '');
   const paymentWebhookUrl = `${baseUrl}/customer/payment/callback`;
   res.render('admin/settings', {
     title: 'Pengaturan Sistem', company: company(), activePage: 'settings',
     settings, msg: flashMsg(req),
-    paymentWebhookUrl
+    paymentWebhookUrl,
+    webhookBaseUrl: baseUrl
   });
 });
 

@@ -61,6 +61,7 @@ const { SUPPORTED_LANGS, FALLBACK_LANG, normalizeLang, t } = require('./config/i
 if (typeof ensureDefaultSettings === 'function') {
   ensureDefaultSettings();
   try { require('./config/settingsManager').ensureGowaWebhookSecret(); } catch (e) {}
+  try { require('./config/settingsManager').ensureWebhookSecret(); } catch (e) {}
   // Proses baru = kode terbaru sudah dimuat; hapus penanda restart.
   try { fs.rmSync(path.join(__dirname, '.restart-required'), { force: true }); } catch (e) {}
 }
@@ -901,7 +902,7 @@ app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
   gotTrim = gotTrim.replace(/^[\"'\s]+|[\"'\s]+$/g, '');
   if (/^bearer\s+/i.test(gotTrim)) gotTrim = gotTrim.replace(/^bearer\s+/i, '').trim();
 
-  const isSecretValid = (gotTrim === expectedTrim) || (gotTrim === 'billing-rtrw-secret-key');
+  const isSecretValid = gotTrim === expectedTrim;
 
   if (!isSecretValid) {
     logger.warn(`[WEBHOOK][payment-notif] Forbidden: secret_key mismatch. service=${String(service || '-')} (gotLen=${gotTrim.length}${gotTrim ? ', ***' + gotTrim.slice(-3) : ', empty'}, expectedLen=${expectedTrim.length}, ***${expectedTrim.slice(-3)})`);

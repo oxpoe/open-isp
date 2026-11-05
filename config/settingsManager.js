@@ -282,6 +282,14 @@ function formatTimeLocal(date) {
  * Pastikan gowa_webhook_secret tidak memakai default 'secret'.
  * Dibuat otomatis (32 byte hex) bila kosong/default/terlalu pendek.
  */
+function ensureWebhookSecret(force) {
+  const current = String(getSetting('webhook_secret', '') || '').trim();
+  if (!force && current && current !== 'billing-rtrw-secret-key' && current.length >= 24) return current;
+  const secret = crypto.randomBytes(32).toString('hex');
+  saveSettings({ webhook_secret: secret });
+  return secret;
+}
+
 function ensureGowaWebhookSecret(force) {
   const current = String(getSetting('gowa_webhook_secret', '') || '').trim();
   if (!force && current && current !== 'secret' && current.length >= 24) return current;
@@ -374,5 +382,6 @@ module.exports = {
   parseDateInTimezone,
   startSettingsWatcher,
   ensureDefaultSettings,
-  ensureGowaWebhookSecret
+  ensureGowaWebhookSecret,
+  ensureWebhookSecret
 };

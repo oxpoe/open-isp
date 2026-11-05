@@ -2,6 +2,13 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.3] — 2026-11-06 — "webhook-secret-auto"
+
+### Diperbaiki
+- **Secret Token webhook pembayaran** dibuat otomatis (64 hex) bila kosong/default, ditampilkan di Pengaturan dan langsung dipakai pada URL webhook.
+- URL webhook memakai **Public Base URL**; bila kosong memakai host saat ini (tidak lagi menghasilkan URL relatif).
+- Default lama `billing-rtrw-secret-key` tidak lagi diterima — forwarder harus memakai secret dari Pengaturan.
+
 ## [0.6.2] — 2026-11-06 — "webhook-diag"
 
 ### Diperbaiki
