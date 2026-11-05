@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>Sistem billing &amp; manajemen ISP (fiber optic) — open source, self-hosted.</b><br>
+  <b>Sistem billing &amp; manajemen ISP (fiber optic) — open source, self-hosted builtin AI.</b><br>
   PWA pelanggan · Panel admin · Portal teknisi &amp; kolektor · Multi-OLT · RADIUS · WhatsApp/Telegram · QRIS
 </p>
 
@@ -23,6 +23,9 @@
 
 ---
 
+**[demo](https://demo-openisp.oxpoe.xyz) · [donate](https://oxpoe.xyz) · [main repo](https://gitea.oxpoe.xyz/oxpoe/open-isp)**
+
+---
 **OPEN-ISP** adalah aplikasi billing dan manajemen ISP yang lengkap: tagihan otomatis, isolir otomatis, pembayaran (QRIS/webhook), perangkat MikroTik (PPPoE & hotspot), OLT PON multi-vendor, TR-069 (GenieACS/ACS), RADIUS, peta jaringan, notifikasi WhatsApp & Telegram, hingga portal self-service pelanggan dalam satu platform — semuanya berjalan mandiri (self-hosted) dengan SQLite sebagai basis data. **NOTE:** dibuat dan ditulis oleh AI ([Deepseek](https://github.com/deepseek-ai)), on [opencode](https://github.com/anomalyco/opencode).
 
 ## Tangkapan Layar
