@@ -4663,10 +4663,8 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
     if (!inside.ok) throw new Error('Folder ini belum menjadi git repository.');
 
     const _repo = String(getSetting('update_repo', 'oxpoe/open-isp') || '').trim();
-  const _base = String(getSetting('update_base_url', 'https://gitea.oxpoe.xyz') || '').trim().replace(/\/+$/, '');
-  info.repo = _repo || 'origin';
-  info.baseUrl = _base;
-  const fetch = _repo
+    const _base = String(getSetting('update_base_url', 'https://gitea.oxpoe.xyz') || '').trim().replace(/\/+$/, '');
+    const fetch = _repo
     ? runCmd('git', ['fetch', '--prune', _base + '/' + _repo + '.git', branch], repoRoot, 120000)
     : runCmd('git', ['fetch', '--prune'], repoRoot);
     pushCmd('git fetch --prune', fetch);
