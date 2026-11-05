@@ -30,11 +30,10 @@ function isQrisAmountTaken(amount, opts = {}) {
   return false;
 }
 
-function ensureInvoiceQris(inv, baseAmountOverride) {
+function ensureInvoiceQris(inv) {
   const settings = getSettings() || {};
   const invId = Number((inv && inv.id) || 0);
-  // baseAmountOverride dipakai bila nominal QRIS = total beberapa tagihan
-  const base = Number(baseAmountOverride || (inv && inv.amount) || 0);
+  const base = Number((inv && inv.amount) || 0);
   if (!invId || base <= 0) return { uniqueCode: 0, amount: base, payload: '' };
 
   let code = Number(inv.qris_unique_code || 0);

@@ -1011,21 +1011,7 @@ app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
           const custId = Number(inv.customer_id || 0);
           if (invId > 0) {
             const noteLine = `AUTO-QRIS: cocok nominal unik Rp ${amount} (service=${String(service || '-')}, notif=${notifId || '-'})`;
-            // QRIS multi-tagihan: nominal = total semua tagihan + kode unik yang disimpan
-            // di salah satu invoice. Lunaskan semuanya, jangan hanya invoice pemilik kode.
-            const unpaidRows = custId > 0
-              ? db.prepare("SELECT id, amount FROM invoices WHERE customer_id=? AND status='unpaid' ORDER BY period_year ASC, period_month ASC, id ASC").all(custId)
-              : [];
-            const totalUnpaid = unpaidRows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
-            const qrisCode = Number(inv.qris_unique_code || 0) || 0;
-            if (qrisCode > 0 && unpaidRows.length > 1 && totalUnpaid + qrisCode === Number(amount)) {
-              const noteBundle = `${noteLine} — lunas ${unpaidRows.length} tagihan`;
-              const payOne = db.prepare(`UPDATE invoices SET status='paid', paid_at=NOW_LOCAL(), paid_by_name=?, notes=CASE WHEN notes IS NULL OR TRIM(notes) = '' THEN ? ELSE notes || '\n' || ? END, qris_paid_notif_id=? WHERE id=? AND status='unpaid'`);
-              for (const row of unpaidRows) payOne.run('QRIS', noteBundle, noteBundle, notifId || null, row.id);
-              logger.info(`[WEBHOOK][payment-notif] MATCH bundle invoice=${invId} invoices=${unpaidRows.length} total=${totalUnpaid} amount=${amount}`);
-            } else {
-              markInvoicePaidAppendNote.run('QRIS', noteLine, noteLine, notifId || null, invId);
-            }
+            markInvoicePaidAppendNote.run('QRIS', noteLine, noteLine, notifId || null, invId);
             matchedInvoiceId = invId;
 
             if (notifId) {

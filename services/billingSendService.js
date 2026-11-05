@@ -40,8 +40,8 @@ function spintax(t) {
   });
 }
 
-function buildMessage(tplRaw, c, inv, qr, totalAmount) {
-  const amount = Number(totalAmount || inv.amount || 0);
+function buildMessage(tplRaw, c, inv, qr) {
+  const amount = Number(inv.amount || 0);
   const qrisAmount = Number((qr && qr.amount) || 0) || amount;
   const qrisCode = Number((qr && qr.uniqueCode) || 0) || 0;
   const qrisAttached = !!(qr && qr.payload);
@@ -76,9 +76,8 @@ function buildTargets(isolateDay) {
     try { invs = billingSvc.getUnpaidInvoicesByCustomerId(c.id) || []; } catch (e) {}
     if (!invs.length) continue;
     if (!c.phone || String(c.phone).replace(/\D/g, '').length < 9) continue;
-    // invoice terurut dari periode terlama; tagih yang paling lama dulu
-    const total = invs.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
-    targets.push({ c, inv: invs[0], total });
+    // skema hangus: hanya tagihan terbaru yang valid; tagihan lama otomatis void saat tagihan baru terbit
+    targets.push({ c, inv: invs[invs.length - 1] });
   }
   return targets;
 }
@@ -119,10 +118,10 @@ async function start(opts = {}) {
   (async () => {
     for (let i = 0; i < targets.length; i++) {
       if (STATUS.stopped) break;
-      const { c, inv, total } = targets[i];
+      const { c, inv } = targets[i];
       try {
-        const qr = (isQris && ensureInvoiceQris) ? (ensureInvoiceQris(inv, total) || {}) : null;
-        const caption = buildMessage(tplRaw, c, inv, qr, total);
+        const qr = (isQris && ensureInvoiceQris) ? (ensureInvoiceQris(inv) || {}) : null;
+        const caption = buildMessage(tplRaw, c, inv, qr);
         if (isQris && QRCode && qr && qr.payload) {
           const url = await QRCode.toDataURL(qr.payload, { errorCorrectionLevel: 'M', margin: 1, width: 520 });
           const buf = Buffer.from(String(url).split(',')[1], 'base64');
