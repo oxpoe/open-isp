@@ -40,15 +40,19 @@ function spintax(t) {
   });
 }
 
-function buildMessage(tplRaw, c, inv) {
+function buildMessage(tplRaw, c, inv, qr) {
   const amount = Number(inv.amount || 0);
+  const qrisAmount = Number((qr && qr.amount) || 0) || amount;
+  const qrisCode = Number((qr && qr.uniqueCode) || 0) || 0;
+  const qrisAttached = !!(qr && qr.payload);
   const period = inv.period_month + '/' + inv.period_year;
   return spintax(String(tplRaw || '')
     .replace(/{{id_pelanggan}}/gi, c.customer_code || ('ID:' + c.id))
     .replace(/{{nama}}/gi, c.name || 'Pelanggan')
     .replace(/{{paket}}/gi, inv.package_name || '-')
     .replace(/{{tagihan}}/gi, amount.toLocaleString('id-ID'))
-    .replace(/{{qris_nominal}}/gi, amount.toLocaleString('id-ID'))
+    .replace(/{{qris_nominal}}/gi, qrisAmount.toLocaleString('id-ID'))
+    .replace(/{{qris_kode}}/gi, String(qrisCode).padStart(3, '0'))
     .replace(/{{rincian}}/gi, period)
     .replace(/{{periode}}/gi, period)
     .replace(/{{bulan_nunggak}}/gi, String(c.unpaid_streak || 0))
@@ -57,7 +61,7 @@ function buildMessage(tplRaw, c, inv) {
     .replace(/{{link_portal}}/gi, portalLink())
     .replace(/{{company}}/gi, getSetting('company_header', '') || '-')
     .replace(/{{company_phone}}/gi, getSetting('company_phone', '') || '-')
-    .replace(/{{qris_qr}}/gi, 'QRIS terlampir'));
+    .replace(/{{qris_qr}}/gi, qrisAttached ? 'QRIS terlampir' : ('Portal Pelanggan: ' + portalLink())));
 }
 
 function buildTargets(isolateDay) {
@@ -72,7 +76,8 @@ function buildTargets(isolateDay) {
     try { invs = billingSvc.getUnpaidInvoicesByCustomerId(c.id) || []; } catch (e) {}
     if (!invs.length) continue;
     if (!c.phone || String(c.phone).replace(/\D/g, '').length < 9) continue;
-    targets.push({ c, inv: invs[invs.length - 1] });
+    // invoice terurut dari periode terlama; tagih yang paling lama dulu
+    targets.push({ c, inv: invs[0] });
   }
   return targets;
 }
@@ -108,23 +113,19 @@ async function start(opts = {}) {
 
   const waNotify = require('./waNotifyService');
   let QRCode = null, ensureInvoiceQris = null;
-  if (isQris) { try { QRCode = require('/opt/billing-rtrw/node_modules/qrcode'); } catch (e) {} try { ensureInvoiceQris = require('./invoiceQrisService').ensureInvoiceQris; } catch (e) {} }
+  if (isQris) { try { QRCode = require('qrcode'); } catch (e) {} try { ensureInvoiceQris = require('./invoiceQrisService').ensureInvoiceQris; } catch (e) {} }
 
   (async () => {
     for (let i = 0; i < targets.length; i++) {
       if (STATUS.stopped) break;
       const { c, inv } = targets[i];
       try {
-        const caption = buildMessage(tplRaw, c, inv);
-        if (isQris && QRCode && ensureInvoiceQris) {
-          const qr = ensureInvoiceQris(inv) || {};
-          if (qr.payload) {
-            const url = await QRCode.toDataURL(qr.payload, { errorCorrectionLevel: 'M', margin: 1, width: 520 });
-            const buf = Buffer.from(String(url).split(',')[1], 'base64');
-            await waNotify.sendImage(c.phone, buf, caption);
-          } else {
-            await waNotify.sendText(c.phone, caption);
-          }
+        const qr = (isQris && ensureInvoiceQris) ? (ensureInvoiceQris(inv) || {}) : null;
+        const caption = buildMessage(tplRaw, c, inv, qr);
+        if (isQris && QRCode && qr && qr.payload) {
+          const url = await QRCode.toDataURL(qr.payload, { errorCorrectionLevel: 'M', margin: 1, width: 520 });
+          const buf = Buffer.from(String(url).split(',')[1], 'base64');
+          await waNotify.sendImage(c.phone, buf, caption);
         } else {
           await waNotify.sendText(c.phone, caption);
         }

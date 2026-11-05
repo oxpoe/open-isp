@@ -2,6 +2,15 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.5] — 2026-11-05 — "qris-fix"
+
+### Diperbaiki
+- **QRIS multi-tagihan**: pembayaran dengan nominal total beberapa tagihan kini melunaskan **semua** tagihan pelanggan (sebelumnya hanya invoice yang menyimpan kode unik, sisanya tetap menunggak).
+- **Kode unik bentrok**: pengecekan nominal unik sekarang mencakup invoice, voucher, dan donasi sekaligus — mencegah pembayaran dianggap ambigu oleh webhook (dulu bisa tidak diproses sama sekali).
+- **Kirim tagihan QRIS manual**: gambar QR benar-benar terlampir (path `qrcode` tidak lagi hardcoded ke `/opt/billing-rtrw`), nominal di pesan memakai nominal unik, dan placeholder `{{qris_kode}}` didukung.
+- **Kirim tagihan manual** memilih tagihan paling lama lebih dulu (sebelumnya tagihan terbaru).
+- Pesan **pengingat manual** kini jujur saat tidak dikirim (WA/notifikasi OFF, gateway belum siap, atau tidak ada target hari ini), bukan “dijalankan: target 0”.
+
 ## [0.5.4] — 2026-11-05 — "wa-notice"
 
 ### Ditambahkan

@@ -72,6 +72,7 @@ const _jimpMod = require('jimp');
 const Jimp = _jimpMod.Jimp || _jimpMod;
 const jsQR = require('jsqr');
 const qrisUtil = require('../utils/qrisUtil');
+const qrisUniq = require('../services/invoiceQrisService');
 const { MultiFormatReader, BarcodeFormat, DecodeHintType, BinaryBitmap, HybridBinarizer, RGBLuminanceSource } = require('@zxing/library');
 const QRCode = require('qrcode');
 const acsPortal = require('./acsPortal');
@@ -3105,7 +3106,6 @@ router.post('/billing/:id/qris-assign', requireAdminSession, (req, res) => {
     const baseAmount = Number(inv.amount || 0);
     if (!Number.isFinite(baseAmount) || baseAmount <= 0) throw new Error('Nominal tagihan tidak valid');
 
-    const exists = db.prepare('SELECT id FROM invoices WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1');
     const update = db.prepare(`
       UPDATE invoices
       SET qris_unique_code=?, qris_amount_unique=?, qris_assigned_at=(NOW_LOCAL())
@@ -3118,7 +3118,7 @@ router.post('/billing/:id/qris-assign', requireAdminSession, (req, res) => {
     for (let i = 0; i < 50; i++) {
       const code = 1 + Math.floor(Math.random() * 999);
       const amount = baseAmount + code;
-      if (!exists.get('unpaid', amount, invId)) {
+      if (!qrisUniq.isQrisAmountTaken(amount, { excludeInvoiceId: invId })) {
         chosenCode = code;
         chosenAmount = amount;
         break;
@@ -3128,7 +3128,7 @@ router.post('/billing/:id/qris-assign', requireAdminSession, (req, res) => {
     if (!chosenAmount) {
       for (let code = 1; code <= 999; code++) {
         const amount = baseAmount + code;
-        if (!exists.get('unpaid', amount, invId)) {
+        if (!qrisUniq.isQrisAmountTaken(amount, { excludeInvoiceId: invId })) {
           chosenCode = code;
           chosenAmount = amount;
           break;
@@ -3202,7 +3202,6 @@ router.post('/billing/:id/whatsapp', requireAdminSession, async (req, res) => {
     if (hasStaticQris && String(inv.status) === 'unpaid' && (!qrisAmountUnique || !qrisCode || (qrisAmountUnique - qrisCode !== baseAmount))) {
       const invId = Number(inv.id);
       if (Number.isFinite(invId) && invId > 0 && Number.isFinite(baseAmount) && baseAmount > 0) {
-        const exists = db.prepare('SELECT id FROM invoices WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1');
         const update = db.prepare(`
           UPDATE invoices
           SET qris_unique_code=?, qris_amount_unique=?, qris_assigned_at=(NOW_LOCAL())
@@ -3214,7 +3213,7 @@ router.post('/billing/:id/whatsapp', requireAdminSession, async (req, res) => {
 
         if (chosenCode > 0) {
           const pAmt = baseAmount + chosenCode;
-          if (!exists.get('unpaid', pAmt, invId)) {
+          if (!qrisUniq.isQrisAmountTaken(pAmt, { excludeInvoiceId: invId })) {
             chosenAmount = pAmt;
           }
         }
@@ -3223,7 +3222,7 @@ router.post('/billing/:id/whatsapp', requireAdminSession, async (req, res) => {
           for (let i = 0; i < 50; i++) {
             const code = 1 + Math.floor(Math.random() * 999);
             const amount = baseAmount + code;
-            if (!exists.get('unpaid', amount, invId)) {
+            if (!qrisUniq.isQrisAmountTaken(amount, { excludeInvoiceId: invId })) {
               chosenCode = code;
               chosenAmount = amount;
               break;
@@ -3233,7 +3232,7 @@ router.post('/billing/:id/whatsapp', requireAdminSession, async (req, res) => {
         if (!chosenAmount) {
           for (let code = 1; code <= 999; code++) {
             const amount = baseAmount + code;
-            if (!exists.get('unpaid', amount, invId)) {
+            if (!qrisUniq.isQrisAmountTaken(amount, { excludeInvoiceId: invId })) {
               chosenCode = code;
               chosenAmount = amount;
               break;
@@ -7235,8 +7234,14 @@ router.post('/whatsapp/auto-billing', requireAdminSession, express.urlencoded({ 
 router.post('/whatsapp/run-reminder-now', requireAdminSession, async (req, res) => {
   try {
     const r = await require('../services/cronService').runAutoBillingReminder();
+    const skipLabels = {
+      disabled: 'pengingat otomatis sedang OFF',
+      wa_disabled: 'WhatsApp atau notifikasi tagihan sedang OFF',
+      gateway: 'gateway WhatsApp belum siap',
+      no_targets: 'tidak ada pelanggan pada jadwal pengingat hari ini'
+    };
     const msg = (r && r.skipped)
-      ? ('Pengingat dilewati (' + r.skipped + '). Pastikan opsi otomatis & WA aktif.')
+      ? ('Pengingat tidak dikirim: ' + (skipLabels[r.skipped] || r.skipped) + '.')
       : ('Pengingat dijalankan: target ' + ((r && r.target) || 0) + ', terkirim ' + ((r && r.sent) || 0) + ', gagal ' + ((r && r.failed) || 0) + '.');
     return res.json({ ok: true, message: msg, data: r || null });
   } catch (e) {

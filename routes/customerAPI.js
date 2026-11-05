@@ -18,6 +18,7 @@ const adminSvc = require('../services/adminService');
 const techSvc = require('../services/techService');
 const mikrotikService = require('../services/mikrotikService');
 const qrisUtil = require('../utils/qrisUtil');
+const qrisUniq = require('../services/invoiceQrisService');
 const QRCode = require('qrcode');
 
 // Helper Token JWT / HMAC
@@ -3675,7 +3676,6 @@ function ensureCustomerApiInvoiceQrisUnique(inv) {
     return { uniqueCode: currentCode, amountUnique: currentAmount };
   }
 
-  const exists = db.prepare('SELECT id FROM invoices WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1');
   let chosenCode = 0;
   let chosenAmount = 0;
 
@@ -3683,7 +3683,7 @@ function ensureCustomerApiInvoiceQrisUnique(inv) {
   if (custId > 0) {
     const prefCode = (custId % 499 === 0) ? 499 : (custId % 499);
     const prefAmount = baseAmount + prefCode;
-    if (!exists.get('unpaid', prefAmount, invId)) {
+    if (!qrisUniq.isQrisAmountTaken(prefAmount, { excludeInvoiceId: invId })) {
       chosenCode = prefCode;
       chosenAmount = prefAmount;
     }
@@ -3693,7 +3693,7 @@ function ensureCustomerApiInvoiceQrisUnique(inv) {
   if (!chosenAmount) {
     for (let code = 1; code <= 499; code++) {
       const amount = baseAmount + code;
-      if (!exists.get('unpaid', amount, invId)) {
+      if (!qrisUniq.isQrisAmountTaken(amount, { excludeInvoiceId: invId })) {
         chosenCode = code;
         chosenAmount = amount;
         break;
@@ -3705,7 +3705,7 @@ function ensureCustomerApiInvoiceQrisUnique(inv) {
   if (!chosenAmount) {
     for (let code = 500; code <= 999; code++) {
       const amount = baseAmount + code;
-      if (!exists.get('unpaid', amount, invId)) {
+      if (!qrisUniq.isQrisAmountTaken(amount, { excludeInvoiceId: invId })) {
         chosenCode = code;
         chosenAmount = amount;
         break;

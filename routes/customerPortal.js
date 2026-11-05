@@ -26,6 +26,7 @@ const QRCode = require('qrcode');
 const _jimpMod = require('jimp');
 const Jimp = _jimpMod.Jimp || _jimpMod;
 const qrisUtil = require('../utils/qrisUtil');
+const qrisUniq = require('../services/invoiceQrisService');
 const whatsappService = require('../services/whatsappService');
 const { BinaryBitmap, HybridBinarizer, RGBLuminanceSource, MultiFormatReader, BarcodeFormat, DecodeHintType } = require('@zxing/library');
 let loginRateLimiter = (req, res, next) => next();
@@ -437,16 +438,10 @@ function getBaseUrl(req, settings) {
 function isQrisAmountAvailable(amount, opts = {}) {
   const amt = Number(amount || 0);
   if (!Number.isFinite(amt) || amt <= 0) return false;
-  const excludeInvoiceId = Number(opts.excludeInvoiceId || 0);
-  const excludeVoucherOrderId = Number(opts.excludeVoucherOrderId || 0);
-
-  const inv = db.prepare('SELECT id FROM invoices WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1').get('unpaid', amt, excludeInvoiceId);
-  if (inv && inv.id) return false;
-
-  const ord = db.prepare('SELECT id FROM public_voucher_orders WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1').get('pending', amt, excludeVoucherOrderId);
-  if (ord && ord.id) return false;
-
-  return true;
+  return !qrisUniq.isQrisAmountTaken(amt, {
+    excludeInvoiceId: opts.excludeInvoiceId,
+    excludeVoucherOrderId: opts.excludeVoucherOrderId
+  });
 }
 
 router.get('/qris/static.jpg', async (req, res) => {

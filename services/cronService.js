@@ -11,6 +11,7 @@ const usageSvc = require('./usageService');
 const { getSetting } = require('../config/settingsManager');
 const db = require('../config/database');
 const qrisUtil = require('../utils/qrisUtil');
+const qrisUniq = require('./invoiceQrisService');
 const { formatUnpaidInvoicesSummary } = require('./whatsappService');
 
 // Helper: Random delay generator untuk smart rate limiting
@@ -60,7 +61,7 @@ async function runAutoBillingReminder() {
     const enabled = getSetting('whatsapp_auto_billing_enabled', false);
     const waEnabled = getSetting('whatsapp_enabled', false);
     const billingEnabled = getSetting('whatsapp_billing_to_customer_enabled', true);
-    if (!enabled || !waEnabled || !billingEnabled) return { target: 0, sent: 0, failed: 0, skipped: 'disabled' };
+    if (!enabled || !waEnabled || !billingEnabled) return { target: 0, sent: 0, failed: 0, skipped: (!waEnabled || !billingEnabled) ? 'wa_disabled' : 'disabled' };
 
     const gatewayType = getSetting('wa_gateway_type', 'gowa');
     const waSvc = require('./whatsappService');
@@ -70,13 +71,13 @@ async function runAutoBillingReminder() {
       const token = getSetting('meta_access_token', '');
       if (!phoneId || !token) {
         logger.warn('[CRON] Kredensial Meta API belum diisi, pengingat tagihan otomatis dilewati.');
-        return;
+        return { target: 0, sent: 0, failed: 0, skipped: 'gateway' };
       }
     } else if (gatewayType === 'fonnte') {
       const token = getSetting('fonnte_token', '');
       if (!token) {
         logger.warn('[CRON] Token Fonnte belum diisi, pengingat tagihan otomatis dilewati.');
-        return;
+        return { target: 0, sent: 0, failed: 0, skipped: 'gateway' };
       }
     } else {
       // Gateway gowa/baileys/lainnya → cek koneksi gateway aktif (gateway-aware)
@@ -84,7 +85,7 @@ async function runAutoBillingReminder() {
       const connected = await waNotify.isConnected().catch(() => false);
       if (!connected) {
         logger.warn('[CRON] WhatsApp gateway belum terhubung, pengingat tagihan otomatis dilewati.');
-        return;
+        return { target: 0, sent: 0, failed: 0, skipped: 'gateway' };
       }
     }
 
@@ -213,14 +214,13 @@ async function runAutoBillingReminder() {
 
               // Jika amt tidak ada atau amt tidak cocok dengan akumulasi total tagihan + kode, buat/perbarui nominal unik
               if ((!code || !amt || (amt - code !== baseAmount)) && invId > 0 && baseAmount > 0) {
-                const exists = db.prepare('SELECT id FROM invoices WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1');
                 const custId = Number(c?.id || inv?.customer_id || 0);
                 let tryCode = 0;
                 let tryAmt = 0;
 
                 if (code > 0) {
                   const pAmt = baseAmount + code;
-                  if (!exists.get('unpaid', pAmt, invId)) {
+                  if (!qrisUniq.isQrisAmountTaken(pAmt, { excludeInvoiceId: invId })) {
                     tryCode = code;
                     tryAmt = pAmt;
                   }
@@ -229,7 +229,7 @@ async function runAutoBillingReminder() {
                 if (!tryAmt && custId > 0) {
                   const prefCode = (custId % 499 === 0) ? 499 : (custId % 499);
                   const pAmt = baseAmount + prefCode;
-                  if (!exists.get('unpaid', pAmt, invId)) {
+                  if (!qrisUniq.isQrisAmountTaken(pAmt, { excludeInvoiceId: invId })) {
                     tryCode = prefCode;
                     tryAmt = pAmt;
                   }
@@ -238,7 +238,7 @@ async function runAutoBillingReminder() {
                 if (!tryAmt) {
                   for (let randCode = 1; randCode <= 499; randCode++) {
                     const pAmt = baseAmount + randCode;
-                    if (!exists.get('unpaid', pAmt, invId)) {
+                    if (!qrisUniq.isQrisAmountTaken(pAmt, { excludeInvoiceId: invId })) {
                       tryCode = randCode;
                       tryAmt = pAmt;
                       break;
