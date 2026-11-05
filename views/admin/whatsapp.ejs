@@ -220,7 +220,10 @@
               </div>
               <div class="fg" style="flex:1;">
                 <label class="fl">Webhook Secret (HMAC)</label>
-                <input class="fc" name="gowa_webhook_secret" value="<%= gowaSettings.gowa_webhook_secret %>" placeholder="otomatis dibuat">
+                <div style="display:flex;gap:8px;">
+                  <input class="fc" id="gowa_webhook_secret" name="gowa_webhook_secret" value="<%= gowaSettings.gowa_webhook_secret %>" placeholder="otomatis dibuat">
+                  <button type="button" class="btn btn-g" onclick="copyGowaSecret(this)" title="Salin webhook secret"><i class="bi bi-copy"></i></button>
+                </div>
                 <div style="font-size:11px;color:var(--muted);margin-top:4px">Dibuat otomatis (32 byte). Samakan dengan <code>WHATSAPP_WEBHOOK_SECRET</code> di GOWA.</div>
               </div>
             </div>
@@ -347,6 +350,21 @@
         render();
         _gowaQrTick = setInterval(function () { remaining--; if (remaining < 0) remaining = 0; render(); }, 1000);
       }
+function copyGowaSecret(btn) {
+  var el = document.getElementById('gowa_webhook_secret');
+  if (!el) return;
+  var val = String(el.value || '');
+  try { el.select(); document.execCommand('copy'); } catch (e) {}
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(val).catch(function () {});
+  }
+  if (btn) {
+    var old = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check2"></i>';
+    setTimeout(function () { btn.innerHTML = old; }, 1200);
+  }
+}
+
 function copyGowaWebhook() {
   var el = document.getElementById('gowa_webhook_url');
   if (!el) return;

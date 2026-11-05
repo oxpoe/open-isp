@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.20] — 2026-11-06 — "copy-secret"
+
+### Ditambahkan
+- Tombol **salin** di samping **Webhook Secret** GOWA (sama seperti tombol salin Webhook URL), dengan umpan balik ikon centang.
+
 ## [0.5.19] — 2026-11-06 — "restart-notice"
 
 ### Ditambahkan
