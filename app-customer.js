@@ -60,6 +60,7 @@ const { SUPPORTED_LANGS, FALLBACK_LANG, normalizeLang, t } = require('./config/i
 // Pastikan semua default settings ada (untuk migrasi/update dari Gitea)
 if (typeof ensureDefaultSettings === 'function') {
   ensureDefaultSettings();
+  try { require('./config/settingsManager').ensureGowaWebhookSecret(); } catch (e) {}
 }
 
 // Inisialisasi aplikasi Express

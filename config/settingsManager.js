@@ -278,6 +278,18 @@ function formatTimeLocal(date) {
  * Memastikan semua setting wajib ada di settings.json dengan default value.
  * Dijalankan saat startup aplikasi untuk migrasi/inisialisasi setting baru.
  */
+/**
+ * Pastikan gowa_webhook_secret tidak memakai default 'secret'.
+ * Dibuat otomatis (32 byte hex) bila kosong/default/terlalu pendek.
+ */
+function ensureGowaWebhookSecret(force) {
+  const current = String(getSetting('gowa_webhook_secret', '') || '').trim();
+  if (!force && current && current !== 'secret' && current.length >= 24) return current;
+  const secret = crypto.randomBytes(32).toString('hex');
+  saveSettings({ gowa_webhook_secret: secret });
+  return secret;
+}
+
 function ensureDefaultSettings() {
   try {
     const currentSettings = getSettings();
@@ -361,5 +373,6 @@ module.exports = {
   getNowLocalISO,
   parseDateInTimezone,
   startSettingsWatcher,
-  ensureDefaultSettings
+  ensureDefaultSettings,
+  ensureGowaWebhookSecret
 };

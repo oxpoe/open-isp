@@ -181,7 +181,8 @@
             </div>
             <div class="fg" style="flex:1;">
               <label class="fl"><%= t('admin.wa.ph_deviceid','Device ID (opsional)') %></label>
-              <input class="fc" name="gowa_device_id" value="<%= gowaSettings.gowa_device_id %>" placeholder="multi-device (mis. device1)">
+              <input class="fc" name="gowa_device_id" value="<%= gowaSettings.gowa_device_id %>" placeholder="kosongkan = ikuti device yang terhubung">
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Kosongkan untuk otomatis mengikuti device yang login via QR. Isi hanya bila ingin menunjuk device GOWA tertentu.</div>
             </div>
           </div>
           <div class="form-row mb12">
@@ -219,7 +220,8 @@
               </div>
               <div class="fg" style="flex:1;">
                 <label class="fl">Webhook Secret (HMAC)</label>
-                <input class="fc" name="gowa_webhook_secret" value="<%= gowaSettings.gowa_webhook_secret %>" placeholder="secret">
+                <input class="fc" name="gowa_webhook_secret" value="<%= gowaSettings.gowa_webhook_secret %>" placeholder="otomatis dibuat">
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">Dibuat otomatis (32 byte). Samakan dengan <code>WHATSAPP_WEBHOOK_SECRET</code> di GOWA.</div>
               </div>
             </div>
           </div>

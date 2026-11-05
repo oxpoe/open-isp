@@ -2,6 +2,12 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.18] — 2026-11-06 — "gowa-autodevice"
+
+### Diperbaiki
+- **Device ID kosong** = otomatis mengikuti device yang terhubung lewat QR dashboard (tidak lagi dipin/disimpan otomatis). Isi Device ID hanya untuk menunjuk device GOWA tertentu.
+- **Webhook secret GOWA** dibuat otomatis (32 byte hex) bila kosong atau masih default `secret`, lalu ditampilkan di pengaturan untuk disamakan dengan `WHATSAPP_WEBHOOK_SECRET` di GOWA.
+
 ## [0.5.17] — 2026-11-06 — "gowa-connected"
 
 ### Diperbaiki

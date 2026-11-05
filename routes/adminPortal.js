@@ -6738,7 +6738,7 @@ router.get('/whatsapp/gowa/qr', requireAdminSession, async (req, res) => {
   try {
     const gowa = require('../services/gowaWhatsappService');
     const dev = await gowa.ensureDevice();
-    if (dev && dev !== getSetting('gowa_device_id', '')) saveSettings({ gowa_device_id: dev });
+    // Jangan simpan otomatis: device id kosong = ikuti device yang terhubung via QR.
     const r = await gowa.getLoginQr(dev);
     if (!r.ok) {
       const detail = r.message || r.code || 'pastikan GOWA berjalan & username/password Basic Auth benar';
@@ -6782,13 +6782,15 @@ router.get('/whatsapp', requireAdminSession, requireSidebarMenuAccess('whatsapp'
     fonnte_country_code: getSetting('fonnte_country_code', '62')
   };
   const gowaBaseUrl = getSetting('gowa_base_url', 'http://127.0.0.1:3000');
+  let gowaWebhookSecret = getSetting('gowa_webhook_secret', '');
+  try { gowaWebhookSecret = require('../config/settingsManager').ensureGowaWebhookSecret(); } catch (e) {}
   const gowaSettings = {
     gowa_mode: getSetting('gowa_mode', /^https:/i.test(String(gowaBaseUrl)) ? 'cloud' : 'local'),
     gowa_base_url: gowaBaseUrl,
     gowa_username: getSetting('gowa_username', ''),
     gowa_password: getSetting('gowa_password', ''),
     gowa_device_id: getSetting('gowa_device_id', ''),
-    gowa_webhook_secret: getSetting('gowa_webhook_secret', 'secret')
+    gowa_webhook_secret: gowaWebhookSecret
   };
   const gowaWebhookUrl = String(getSetting('app_url', '') || ((req.headers['x-forwarded-proto'] || req.protocol) + '://' + req.get('host'))).replace(/\/+$/, '') + '/api/webhook/gowa';
   const gowaUiHost = String(req.get('host') || '').split(':')[0];
@@ -6844,7 +6846,10 @@ router.post('/whatsapp/gateway-settings', requireAdminSession, express.urlencode
       gowa_username: String(gowa_username || '').trim(),
       gowa_password: String(gowa_password || '').trim(),
       gowa_device_id: String(gowa_device_id || '').trim(),
-      gowa_webhook_secret: String(gowa_webhook_secret || 'secret').trim()
+      gowa_webhook_secret: (function () {
+        const v = String(gowa_webhook_secret || '').trim();
+        return (v && v !== 'secret' && v.length >= 24) ? v : crypto.randomBytes(32).toString('hex');
+      })()
     });
 
     if ((wa_gateway_type || 'baileys') === 'baileys') {
@@ -7400,10 +7405,7 @@ router.get('/api/whatsapp/status', requireAdmin, async (req, res) => {
         const isConn = !!(pick.is_connected || pick.connected || pick.state === 'connected');
         const conn = isConn ? 'open' : (loggedIn ? 'connecting' : 'close');
         const deviceId = String(pick.device_id || pick.id || '').trim();
-        // Simpan otomatis device id agar status berikutnya memakai /devices/:id/status.
-        if (deviceId && !String(getSetting('gowa_device_id', '') || '').trim()) {
-          try { saveSettings({ gowa_device_id: deviceId }); } catch (e) {}
-        }
+        // device id kosong = selalu ikuti device yang terhubung (tidak dipin otomatis)
         res.json({
           connection: conn, gateway: 'gowa', loggedIn: loggedIn, deviceId: deviceId,
           user: { id: deviceId || 'gowa_gateway', name: loggedIn ? 'GOWA (WhatsApp)' : 'GOWA Gateway' },
