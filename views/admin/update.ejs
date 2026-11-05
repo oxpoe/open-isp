@@ -79,6 +79,26 @@
       </div>
     </div>
 
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-arrow-repeat"></i> <%= t('admin.update.restart_title', 'Cara Restart Aplikasi') %></h6></div>
+      <div class="card-bd" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;font-size:12px">
+        <div style="border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:rgba(255,255,255,.02);line-height:1.75">
+          <div style="font-weight:800;margin-bottom:8px"><i class="bi bi-server"></i> <%= t('admin.update.restart_selfhosted', 'Self-hosted') %></div>
+          <div><b>PM2</b><br><code>pm2 restart all</code> <span style="color:var(--muted)">(atau <code>pm2 restart open-isp</code>)</span></div>
+          <div style="margin-top:8px"><b>Manual (tanpa PM2)</b><br><code>pkill -f "node app-customer.js"</code><br><code>nohup node app-customer.js &gt; logs/run.log 2&gt;&amp;1 &amp;</code></div>
+          <div style="margin-top:8px"><b>Quadlet / systemd</b><br><code>systemctl --user restart open-isp</code> <span style="color:var(--muted)">(user)</span><br><code>sudo systemctl restart open-isp</code> <span style="color:var(--muted)">(system)</span></div>
+          <div style="margin-top:8px"><b>Docker / Podman Compose</b><br><code>docker compose restart</code><br><code>podman compose restart</code> <span style="color:var(--muted)">(atau <code>up -d</code> bila env berubah)</span></div>
+          <div style="margin-top:8px;color:var(--muted)">Jalankan dari folder aplikasi, lalu muat ulang halaman ini.</div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:rgba(59,130,246,.06);line-height:1.75">
+          <div style="font-weight:800;margin-bottom:8px"><i class="bi bi-cloud"></i> <%= t('admin.update.restart_cloud', 'Cloud / managed') %></div>
+          <div><i class="bi bi-check2-circle" style="color:var(--success)"></i> Restart dilakukan <b>otomatis pada update berikutnya</b>.</div>
+          <div style="margin-top:8px"><i class="bi bi-headset"></i> Butuh restart sekarang? <b>Hubungi admin server</b> — jangan jalankan perintah restart sendiri.</div>
+          <div style="margin-top:8px;color:var(--muted)">Cocok untuk instance yang dikelola penyedia/hosting bersama.</div>
+        </div>
+      </div>
+    </div>
+
     <% if (log) { %>
       <div class="card mb16">
         <div class="card-hd"><h6><i class="bi bi-terminal"></i> <%= t('admin.update.log_title', 'Log Update') %></h6></div>

@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.16] — 2026-11-05 — "restart-help"
+
+### Ditambahkan
+- Kotak panduan **Cara Restart Aplikasi** di halaman Update: self-hosted (PM2, manual, quadlet/systemd, Docker/Podman Compose) dan cloud/managed (restart otomatis pada update berikutnya atau hubungi admin server).
+
 ## [0.5.15] — 2026-11-05 — "update-keep-env"
 
 ### Diperbaiki
