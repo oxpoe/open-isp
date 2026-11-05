@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.2] — 2026-11-06 — "webhook-diag"
+
+### Diperbaiki
+- Respons webhook pembayaran kini menyertakan `matched_custom_qr_id` untuk memudahkan diagnosis QR-Custom Payment.
+
 ## [0.6.1] — 2026-11-06 — "qr-custom-gate"
 
 ### Diperbaiki
