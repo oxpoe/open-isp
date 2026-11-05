@@ -2,6 +2,14 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.19] — 2026-11-06 — "restart-notice"
+
+### Ditambahkan
+- Setelah update sukses, aplikasi menulis penanda `.restart-required`.
+- **Floating notification** di semua halaman admin: "Billing perlu restart" berisi versi yang sudah diterapkan dan tautan cara restart.
+- Banner di halaman Update menjelaskan bahwa versi sudah terbaru tetapi kode lama masih berjalan sampai restart.
+- Penanda otomatis dihapus saat proses aplikasi baru start, jadi notifikasi hilang setelah restart.
+
 ## [0.5.18] — 2026-11-06 — "gowa-autodevice"
 
 ### Diperbaiki

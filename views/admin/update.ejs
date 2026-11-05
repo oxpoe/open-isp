@@ -23,6 +23,18 @@
       </div>
     <% } %>
 
+    <% if (typeof restartPending !== 'undefined' && restartPending) { %>
+      <div class="alert alert-d" style="display:flex;gap:10px;align-items:flex-start">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:18px;margin-top:1px"></i>
+        <div>
+          <b>Restart diperlukan.</b>
+          Update ke versi <b><%= restartPending.version || '-' %></b> sudah diterapkan ke file,
+          tetapi aplikasi masih menjalankan kode lama. Fitur/fix baru belum aktif sampai aplikasi di-restart.
+          <a href="#restart-help" style="color:inherit;text-decoration:underline;font-weight:700">Lihat cara restart</a>.
+        </div>
+      </div>
+    <% } %>
+
     <div class="card mb16">
       <div class="card-hd"><h6><i class="bi bi-git"></i> <%= t('admin.update.status_title', 'Status Versi') %></h6></div>
       <div class="card-bd">
@@ -79,7 +91,7 @@
       </div>
     </div>
 
-    <div class="card mb16">
+    <div class="card mb16" id="restart-help">
       <div class="card-hd"><h6><i class="bi bi-arrow-repeat"></i> <%= t('admin.update.restart_title', 'Cara Restart Aplikasi') %></h6></div>
       <div class="card-bd" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;font-size:12px">
         <div style="border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:rgba(255,255,255,.02);line-height:1.75">

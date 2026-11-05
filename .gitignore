@@ -86,3 +86,6 @@ public/downloads/logo-*
 
 # penanda restore tertunda (runtime)
 database/.restore-pending
+
+# penanda update menunggu restart
+.restart-required

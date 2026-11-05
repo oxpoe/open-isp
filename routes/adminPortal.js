@@ -4598,14 +4598,32 @@ router.post('/settings/regenerate-icons', requireAdminSession, async (req, res) 
 router.get('/update', requireAdminSession, requireSidebarMenuAccess('update'), restrictToAdmin, (req, res) => {
   const repoRoot = path.resolve(__dirname, '..');
   const info = getUpdateInfo(repoRoot);
+  let restartPending = null;
+  try {
+    const markerPath = path.join(repoRoot, '.restart-required');
+    if (fs.existsSync(markerPath)) restartPending = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+  } catch (e) { restartPending = null; }
   res.render('admin/update', {
     title: 'Update Aplikasi',
     company: company(),
     activePage: 'update',
     msg: flashMsg(req),
     info,
+    restartPending,
     log: popUpdateLog(req)
   });
+});
+
+router.get('/api/restart-required', requireAdminSession, (req, res) => {
+  const repoRoot = path.resolve(__dirname, '..');
+  try {
+    const markerPath = path.join(repoRoot, '.restart-required');
+    if (fs.existsSync(markerPath)) {
+      const d = JSON.parse(fs.readFileSync(markerPath, 'utf8'));
+      return res.json({ pending: true, version: d.version || '', from: d.from || '', at: d.at || '' });
+    }
+  } catch (e) {}
+  return res.json({ pending: false });
 });
 
 router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
@@ -4753,7 +4771,17 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
     }
 
     const localAfter = readTextFileSafe(versionPath) || '-';
-    req.session._msg = { type: 'success', text: `Update selesai. Versi: ${localBefore} → ${localAfter}. Silakan restart aplikasi.` };
+    try {
+      fs.writeFileSync(
+        path.join(repoRoot, '.restart-required'),
+        JSON.stringify({ version: localAfter, from: localBefore, at: new Date().toISOString() }),
+        'utf8'
+      );
+      log.push('$ restart-required marker ditulis');
+    } catch (markerErr) {
+      log.push('$ restart-required marker gagal: ' + String(markerErr?.message || markerErr));
+    }
+    req.session._msg = { type: 'success', text: `Update selesai. Versi: ${localBefore} → ${localAfter}. Restart aplikasi diperlukan agar perubahan aktif.` };
     req.session._updateLog = log.join('\n');
   } catch (e) {
     if (repoChanged) {

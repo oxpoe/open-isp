@@ -61,6 +61,8 @@ const { SUPPORTED_LANGS, FALLBACK_LANG, normalizeLang, t } = require('./config/i
 if (typeof ensureDefaultSettings === 'function') {
   ensureDefaultSettings();
   try { require('./config/settingsManager').ensureGowaWebhookSecret(); } catch (e) {}
+  // Proses baru = kode terbaru sudah dimuat; hapus penanda restart.
+  try { fs.rmSync(path.join(__dirname, '.restart-required'), { force: true }); } catch (e) {}
 }
 
 // Inisialisasi aplikasi Express

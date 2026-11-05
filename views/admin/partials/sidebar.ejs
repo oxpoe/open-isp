@@ -241,3 +241,31 @@ document.addEventListener('DOMContentLoaded', () => {
     return false;
   };
 </script>
+
+<div id="restart-fab" style="display:none;position:fixed;right:18px;bottom:84px;z-index:9999;max-width:330px">
+  <div style="background:#7c2d12;color:#fff;border:1px solid #f59e0b;border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:13px;line-height:1.45">
+    <b><i class="bi bi-exclamation-triangle-fill"></i> Billing perlu restart</b>
+    <div id="restart-fab-text" style="margin-top:4px;color:#fde68a">Update sudah diterapkan, tetapi kode lama masih berjalan.</div>
+    <a href="/admin/update" style="display:inline-block;margin-top:8px;background:#f59e0b;color:#111;font-weight:700;padding:6px 10px;border-radius:8px;text-decoration:none">Cara restart</a>
+  </div>
+</div>
+<script>
+(function () {
+  function checkRestartRequired() {
+    fetch('/admin/api/restart-required', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var el = document.getElementById('restart-fab');
+        if (!el) return;
+        el.style.display = (d && d.pending) ? 'block' : 'none';
+        if (d && d.pending && d.version) {
+          var t = document.getElementById('restart-fab-text');
+          if (t) t.textContent = 'Update v' + d.version + ' sudah diterapkan. Restart aplikasi agar fitur/fix baru aktif.';
+        }
+      })
+      .catch(function () {});
+  }
+  checkRestartRequired();
+  setInterval(checkRestartRequired, 30000);
+})();
+</script>
