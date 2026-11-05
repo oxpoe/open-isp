@@ -2,6 +2,14 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.4] — 2026-11-05 — "wa-notice"
+
+### Ditambahkan
+- **WA ke pelanggan saat tiket gangguan dibuat** (web & aplikasi): konfirmasi laporan diterima beserta nomor tiket `#TCK-…`.
+- **Notifikasi WA pada Status Layanan**: centang "Kirim notifikasi WhatsApp" saat mode berubah ke **Gangguan Masal**/**Perbaikan**, dengan target semua pelanggan aktif, per area, atau per router.
+- **WA "Layanan Kembali Normal"** otomatis saat mode dikembalikan ke NORMAL.
+- Pengiriman broadcast berjalan di latar belakang dengan jeda acak mengikuti `whatsapp_broadcast_delay`, nomor duplikat digabung, dan hasilnya dicatat di log (`[NoticeWA]`).
+
 ## [0.5.3] — 2026-11-05 — "forge-lime"
 
 ### Ditambahkan

@@ -4015,13 +4015,16 @@ router.post('/sidebar-settings', requireAdminSession, restrictToAdmin, express.u
 });
 
 router.get('/service-notice', requireAdminSession, requireSidebarMenuAccess('service_notice'), (req, res) => {
+  let routers = [];
+  try { routers = db.prepare('SELECT id, name FROM routers WHERE is_active = 1 ORDER BY name ASC').all(); } catch (_) {}
   res.render('admin/service_notice', {
     title: 'Status Layanan & Pengumuman', company: company(), activePage: 'service_notice',
-    settings: getSettings(), msg: flashMsg(req)
+    settings: getSettings(), msg: flashMsg(req),
+    areas: customerSvc.getAllCustomerAreas(), routers
   });
 });
 
-router.post('/service-notice', requireAdminSession, requireSidebarMenuAccess('service_notice'), express.urlencoded({ extended: true }), (req, res) => {
+router.post('/service-notice', requireAdminSession, requireSidebarMenuAccess('service_notice'), express.urlencoded({ extended: true }), async (req, res) => {
   try {
     const allowed = ['NORMAL', 'GANGGUAN_MASAL', 'PERBAIKAN'];
     let mode = String(req.body.notice_mode || 'NORMAL').trim().toUpperCase();
@@ -4029,6 +4032,7 @@ router.post('/service-notice', requireAdminSession, requireSidebarMenuAccess('se
     let interval = parseInt(req.body.notice_interval_hours, 10);
     if (!interval || interval < 1) interval = 5;
     if (interval > 168) interval = 168;
+    const prevMode = String(getSetting('notice_mode', 'NORMAL') || 'NORMAL').toUpperCase();
     saveSettings({
       notice_mode: mode,
       notice_start: String(req.body.notice_start || '').trim(),
@@ -4038,7 +4042,27 @@ router.post('/service-notice', requireAdminSession, requireSidebarMenuAccess('se
     const noticeSvc = require('../services/serviceNoticeService');
     const n = noticeSvc.computeNotice();
     const detail = n.active ? (n.label + (n.estimateText ? ' — estimasi ' + n.estimateText : '')) : 'Normal (tanpa pengumuman)';
-    req.session._msg = { type: 'success', text: 'Status layanan diperbarui: ' + detail };
+    let waInfo = '';
+    if (req.body.notice_wa === '1') {
+      if (mode === prevMode) {
+        waInfo = ' Notifikasi WA dilewati (mode tidak berubah).';
+      } else {
+        try {
+          const r = await require('../services/serviceNoticeNotifyService').broadcastNotice({
+            mode,
+            target: String(req.body.notice_wa_target || 'all'),
+            area: String(req.body.notice_wa_area || ''),
+            routerId: parseInt(req.body.notice_wa_router, 10) || 0,
+            notice: n
+          });
+          if (r.ok) waInfo = ` Notifikasi WA dikirim ke ${r.total} pelanggan (latar belakang).`;
+          else waInfo = ` Notifikasi WA tidak dikirim: ${r.reason === 'empty' ? 'tidak ada nomor valid' : r.reason === 'busy' ? 'proses lain masih berjalan' : 'WhatsApp belum aktif'}.`;
+        } catch (waErr) {
+          waInfo = ' Notifikasi WA gagal: ' + waErr.message;
+        }
+      }
+    }
+    req.session._msg = { type: 'success', text: 'Status layanan diperbarui: ' + detail + '.' + waInfo };
   } catch (e) {
     req.session._msg = { type: 'error', text: 'Gagal menyimpan status layanan: ' + e.message };
   }

@@ -68,6 +68,43 @@
               <input class="fc" name="notice_note" id="n_note" value="<%= settings.notice_note || '' %>" placeholder="<%= t('admin.service_notice.note_ph', 'Kosongkan untuk teks bawaan') %>">
             </div>
           </div>
+          <div class="form-row" style="margin-top:4px">
+            <div class="fg">
+              <label class="fl" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" name="notice_wa" value="1" id="n_wa">
+                Kirim notifikasi WhatsApp ke pelanggan saat status berubah
+              </label>
+              <div class="hint">Terkirim otomatis saat mode diubah (gangguan/perbaikan, atau kembali NORMAL = layanan pulih).</div>
+            </div>
+            <div class="fg">
+              <label class="fl">Target Notifikasi</label>
+              <select class="fs" name="notice_wa_target" id="n_wa_target">
+                <option value="all">Semua pelanggan aktif</option>
+                <option value="area">Per area</option>
+                <option value="router">Per router</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row" id="n_wa_extra" style="display:none">
+            <div class="fg" id="n_wa_area_wrap">
+              <label class="fl">Area</label>
+              <select class="fs" name="notice_wa_area">
+                <option value="">— pilih area —</option>
+                <% (areas || []).forEach(function(a){ %>
+                  <option value="<%= a %>"><%= a %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="fg" id="n_wa_router_wrap" style="display:none">
+              <label class="fl">Router</label>
+              <select class="fs" name="notice_wa_router">
+                <option value="">— pilih router —</option>
+                <% (routers || []).forEach(function(r){ %>
+                  <option value="<%= r.id %>"><%= r.name %></option>
+                <% }); %>
+              </select>
+            </div>
+          </div>
         </div>
         <div class="card-bd" style="border-top:1px solid var(--border);padding-top:16px;text-align:right">
           <button type="submit" class="btn btn-p"><i class="bi bi-save"></i> <%= t('common.save', 'Simpan') %></button>
@@ -140,6 +177,19 @@
     [els.mode, els.start, els.interval, els.note].forEach(function(el){ el.addEventListener(ev, render); });
   });
   render();
+
+  var waTarget = document.getElementById('n_wa_target');
+  var waExtra = document.getElementById('n_wa_extra');
+  var waArea = document.getElementById('n_wa_area_wrap');
+  var waRouter = document.getElementById('n_wa_router_wrap');
+  function renderWaTarget(){
+    var v = waTarget.value;
+    waExtra.style.display = v === 'all' ? 'none' : 'flex';
+    waArea.style.display = v === 'area' ? '' : 'none';
+    waRouter.style.display = v === 'router' ? '' : 'none';
+  }
+  waTarget.addEventListener('change', renderWaTarget);
+  renderWaTarget();
 </script>
 </body>
 </html>

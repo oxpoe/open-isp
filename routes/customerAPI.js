@@ -3509,6 +3509,11 @@ router.post('/tickets/create', requireCustomerApiAuth, async (req, res) => {
         for (const digits of recipients) {
           try { await waNotify.sendText(digits, waMsg); } catch (_) {}
         }
+
+        // WA konfirmasi ke pelanggan yang membuat tiket
+        try {
+          await require('../services/serviceNoticeNotifyService').notifyTicketCreated(customer, ticketId, subject);
+        } catch (_) {}
       }
     } catch (waErr) {
       logger.error(`[CustomerAPI] Ticket WA Notification Error: ${waErr.message}`);

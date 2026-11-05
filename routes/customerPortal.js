@@ -3002,6 +3002,11 @@ router.post('/tickets/create', uploadCustomer.array('photos', 5), async (req, re
           if (!shouldSendWa(key)) continue;
           await waNotify.sendText(digits, waMsg);
         }
+
+        // WA konfirmasi ke pelanggan yang membuat tiket
+        try {
+          await require('../services/serviceNoticeNotifyService').notifyTicketCreated(customer, ticketId, subject);
+        } catch (_) {}
       }
     } catch (waErr) {
       logger.error(`[Ticket] WA Notification Error: ${waErr.message}`);
