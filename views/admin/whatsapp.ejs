@@ -181,7 +181,7 @@
             <button type="button" class="btn btn-p btn-sm" onclick="showGowaQr()"><i class="bi bi-qr-code-scan"></i> Tampilkan QR</button>
             <a href="<%= gowaUiUrl %>" target="_blank" rel="noopener" class="btn btn-g btn-sm" style="margin-left:6px"><i class="bi bi-box-arrow-up-right"></i> Buka UI GOWA</a>
             <div id="gowa_qr_wrap" style="display:none;margin-top:10px;text-align:center">
-              <img id="gowa_qr_img" alt="QR GOWA" style="max-width:240px;background:#fff;padding:10px;border-radius:12px">
+              <img id="gowa_qr_img" alt="QR GOWA" style="max-width:240px;background:#fff;padding:10px;border-radius:12px" onerror="var s=document.getElementById('gowa_qr_status');if(s)s.textContent='Gambar QR gagal dimuat — cek log server (base URL/kredensial GOWA).'">
               <div id="gowa_qr_status" style="font-size:12px;color:var(--muted);margin-top:6px"></div>
             </div>
           </div>

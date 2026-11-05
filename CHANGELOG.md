@@ -2,6 +2,13 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.9] — 2026-11-05 — "gowa-qr-image"
+
+### Diperbaiki
+- QR GOWA dikirim sebagai **data URI** sehingga gambar tetap tampil walau app berjalan multi-proses atau request gambar terpisah gagal.
+- `qr_link` dari GOWA yang menunjuk host internal (`127.0.0.1`/container) ditulis ulang memakai base URL publik yang dikonfigurasi.
+- Log peringatan `[GOWA] Gagal ambil gambar QR` bila pengambilan gambar gagal.
+
 ## [0.5.8] — 2026-11-05 — "gowa-qr-error"
 
 ### Diperbaiki

@@ -6654,7 +6654,16 @@ router.get('/whatsapp/gowa/qr', requireAdminSession, async (req, res) => {
       const detail = r.message || r.code || 'pastikan GOWA berjalan & username/password Basic Auth benar';
       return res.json({ ok: false, status: r.status || 0, message: 'Gagal membuat QR: ' + (r.status ? 'HTTP ' + r.status + ' — ' : '') + detail + '.' });
     }
-    return res.json({ ok: true, image: '/admin/whatsapp/gowa/qr.png?v=' + Date.now(), device_id: r.device_id, duration: r.duration });
+    // Kirim gambar langsung sebagai data URI: tidak bergantung pada request
+    // kedua /qr.png (aman bila app berjalan multi-proses) dan tidak kena cache.
+    let image = '/admin/whatsapp/gowa/qr.png?v=' + Date.now();
+    try {
+      const img = await gowa.getLastQrImage();
+      if (img && img.buffer && img.buffer.length) {
+        image = 'data:' + (img.contentType || 'image/png') + ';base64,' + img.buffer.toString('base64');
+      }
+    } catch (e) {}
+    return res.json({ ok: true, image, device_id: r.device_id, duration: r.duration });
   } catch (e) { return res.json({ ok: false, message: e.message }); }
 });
 

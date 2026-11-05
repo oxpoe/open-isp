@@ -192,14 +192,37 @@ async function getLoginQr(deviceId) {
     return { ok: false, status: 0, code: null, message: e.message };
   }
 }
+// GOWA bisa mengembalikan qr_link absolut ke host internal (127.0.0.1 / nama
+// container). Ambil path-nya saja lalu tempel ke base URL yang dikonfigurasi,
+// supaya gambar tetap bisa diambil saat GOWA diakses lewat domain/reverse proxy.
+function resolveQrLink(link) {
+  const l = String(link || '').trim();
+  if (!l) return '';
+  if (/^data:/i.test(l)) return l;
+  try {
+    const u = new URL(l, baseUrl() + '/');
+    const base = new URL(baseUrl());
+    return base.origin + u.pathname + u.search;
+  } catch (e) {
+    return baseUrl() + (l.charAt(0) === '/' ? l : '/' + l);
+  }
+}
+
 async function getLastQrImage() {
   if (!_lastQr.link) return null;
+  const url = resolveQrLink(_lastQr.link);
   try {
-    const res = await fetch(_lastQr.link, { headers: commonHeaders() });
-    if (!res.ok) return null;
+    const res = await fetch(url, { headers: commonHeaders() });
+    if (!res.ok) {
+      logger.warn(`[GOWA] Gagal ambil gambar QR: HTTP ${res.status} (${url})`);
+      return null;
+    }
     const buf = Buffer.from(await res.arrayBuffer());
     return { buffer: buf, contentType: res.headers.get('content-type') || 'image/png' };
-  } catch (e) { return null; }
+  } catch (e) {
+    logger.warn(`[GOWA] Gagal ambil gambar QR: ${e.message} (${url})`);
+    return null;
+  }
 }
 
 module.exports = { sendGowaMessage, sendGowaImage, sendGowaDocument, testGowaConnection, gowaStatus, listDevices, ensureDevice, getLoginQr, getLastQrImage, normalizePhoneJid, baseUrl, resolveDeviceId, invalidateDeviceCache };
