@@ -30,7 +30,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 services:
   gowa:
-    image: aldinokemal2104/go-whatsapp-web-multidevice:v9.8.0
+    image: docker.io/aldinokemal2104/go-whatsapp-web-multidevice:v9.8.0
     container_name: gowa
     restart: unless-stopped
     ports:
