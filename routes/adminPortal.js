@@ -4062,6 +4062,30 @@ router.post('/custom-qr/:id/manual-paid', requireAdminSession, requireSidebarMen
   res.redirect('/admin/custom-qr?id=' + Number(req.params.id));
 });
 
+function _checkAdminPassword(req) {
+  const pass = String((req.body && req.body.password) || '');
+  const expected = String(getSetting('admin_password', 'demo-isp123') || 'demo-isp123');
+  return !!expected && pass === expected;
+}
+
+router.post('/custom-qr/:id/delete', requireAdminSession, restrictToAdmin, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    if (!_checkAdminPassword(req)) throw new Error('Password admin salah.');
+    const n = require('../services/customQrService').remove(req.params.id);
+    req.session._msg = n ? { type: 'success', text: 'QR custom dihapus.' } : { type: 'error', text: 'Data tidak ditemukan.' };
+  } catch (e) { req.session._msg = { type: 'error', text: e.message }; }
+  res.redirect('/admin/custom-qr');
+});
+
+router.post('/custom-qr/reset', requireAdminSession, restrictToAdmin, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    if (!_checkAdminPassword(req)) throw new Error('Password admin salah.');
+    const n = require('../services/customQrService').clearAll();
+    req.session._msg = { type: 'success', text: `Histori QR custom direset (${n} data dihapus).` };
+  } catch (e) { req.session._msg = { type: 'error', text: e.message }; }
+  res.redirect('/admin/custom-qr');
+});
+
 router.post('/custom-qr/:id/regenerate', requireAdminSession, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
   try {
     const row = require('../services/customQrService').regenerate(req.params.id, resolvePaidByName(req, 'Admin'));

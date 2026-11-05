@@ -2,6 +2,12 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.5] — 2026-11-06 — "qr-custom-delete"
+
+### Ditambahkan
+- **Hapus satu QR custom** dari detail (wajib password admin).
+- **Reset seluruh histori QR custom** dari header tabel (wajib password admin, konfirmasi).
+
 ## [0.6.4] — 2026-11-06 — "qr-custom-ux"
 
 ### Diperbaiki

@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/lisensi-ISC-ADFF2F" alt="Lisensi: ISC">
-  <img src="https://img.shields.io/badge/versi-0.6.4_qr--ux-ADFF2F" alt="Versi 0.6.4 (qr-custom-ux)">
+  <img src="https://img.shields.io/badge/versi-0.6.5_qr--delete-ADFF2F" alt="Versi 0.6.5 (qr-custom-delete)">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-339933" alt="Node.js >= 20">
   <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
   <a href="https://demo-openisp.oxpoe.xyz"><img src="https://img.shields.io/badge/demo-live-ADFF2F?logo=googlechrome&logoColor=black" alt="Demo"></a>

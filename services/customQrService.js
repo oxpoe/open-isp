@@ -118,6 +118,16 @@ function acceptWarning(id, actor, note) {
   return getById(id);
 }
 
+function remove(id) {
+  const r = db.prepare('DELETE FROM custom_qr_payments WHERE id=?').run(Number(id) || 0);
+  return r.changes || 0;
+}
+
+function clearAll() {
+  const r = db.prepare('DELETE FROM custom_qr_payments').run();
+  return r.changes || 0;
+}
+
 function regenerate(id, actor) {
   const old = getById(id);
   if (!old) throw new Error('Data tidak ditemukan.');
@@ -196,6 +206,8 @@ module.exports = {
   markManualPaid,
   acceptWarning,
   regenerate,
+  remove,
+  clearAll,
   reject,
   markPaidFromWebhook,
   markWarningFromWebhook,
