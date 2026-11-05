@@ -6770,10 +6770,15 @@ router.post('/whatsapp/gateway-settings', requireAdminSession, express.urlencode
   res.redirect('/admin/whatsapp');
 });
 
-router.post('/whatsapp/test-gowa-connection', requireAdminSession, async (req, res) => {
+router.post('/whatsapp/test-gowa-connection', requireAdminSession, express.json(), async (req, res) => {
   try {
     const gowaSvc = require('../services/gowaWhatsappService');
-    const r = await gowaSvc.testReachability();
+    const b = req.body || {};
+    const r = await gowaSvc.testReachability({
+      baseUrl: b.gowa_base_url,
+      username: b.gowa_username,
+      password: b.gowa_password
+    });
     return res.json(Object.assign({ ok: r.reachable, success: r.reachable }, r));
   } catch (e) {
     return res.status(500).json({ ok: false, success: false, message: e.message });

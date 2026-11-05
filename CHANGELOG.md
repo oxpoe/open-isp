@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.12] — 2026-11-05 — "gowa-test-unsaved"
+
+### Diperbaiki
+- **Test Koneksi GOWA** kini memakai nilai yang sedang diisi di form (base URL, username, password), jadi tidak perlu simpan pengaturan dulu.
+
 ## [0.5.11] — 2026-11-05 — "gowa-test"
 
 ### Ditambahkan

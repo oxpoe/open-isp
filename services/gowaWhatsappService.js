@@ -131,8 +131,15 @@ async function sendGowaDocument(toPhone, documentBuffer, filename = 'file.pdf', 
   });
   return { success: true, gateway: 'gowa', raw: json };
 }
-async function testReachability() {
-  const base = baseUrl();
+async function testReachability(opts = {}) {
+  // Nilai form boleh dipakai tanpa menyimpan pengaturan lebih dulu.
+  const base = String(opts.baseUrl || baseUrl()).trim().replace(/\/+$/, '') || baseUrl();
+  const headers = {};
+  if (opts.username && opts.password) {
+    headers.Authorization = 'Basic ' + Buffer.from(opts.username + ':' + opts.password).toString('base64');
+  } else {
+    Object.assign(headers, commonHeaders());
+  }
   const out = { baseUrl: base, reachable: false, healthStatus: 0, authOk: false, devices: 0, message: '' };
   try {
     const res = await fetch(base + '/health');
@@ -147,7 +154,7 @@ async function testReachability() {
     return out;
   }
   try {
-    const res = await fetch(base + '/devices', { headers: commonHeaders() });
+    const res = await fetch(base + '/devices', { headers: headers });
     out.authStatus = res.status;
     const json = await res.json().catch(function () { return null; });
     const list = (json && Array.isArray(json.results)) ? json.results : [];

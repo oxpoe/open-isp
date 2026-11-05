@@ -245,7 +245,16 @@
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menguji...'; }
         if (el) { el.style.display = 'block'; el.style.color = 'var(--muted)'; el.textContent = 'Menghubungi ' + (document.querySelector('input[name="gowa_base_url"]') || {}).value + ' ...'; }
         try {
-          var r = await fetch('/admin/whatsapp/test-gowa-connection', { method: 'POST' });
+          var payload = {
+            gowa_base_url: (document.querySelector('input[name="gowa_base_url"]') || {}).value || '',
+            gowa_username: (document.querySelector('input[name="gowa_username"]') || {}).value || '',
+            gowa_password: (document.querySelector('input[name="gowa_password"]') || {}).value || ''
+          };
+          var r = await fetch('/admin/whatsapp/test-gowa-connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
           var d = await r.json();
           if (el) {
             el.textContent = d.message || (d.ok ? 'GOWA terjangkau.' : 'GOWA tidak terjangkau.');
