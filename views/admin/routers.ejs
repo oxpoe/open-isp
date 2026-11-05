@@ -527,6 +527,9 @@
         <button type="button" class="btn btn-sm btn-g" id="tab-btn-script" onclick="switchIsolirTab('script')">
           <i class="bi bi-filetype-txt me-1"></i> Copy Script RouterOS (.rsc)
         </button>
+        <button type="button" class="btn btn-sm btn-g" id="tab-btn-cloud" onclick="switchIsolirTab('cloud')">
+          <i class="bi bi-cloud-arrow-up me-1"></i> Cloud (Sederhana)
+        </button>
       </div>
 
       <!-- TAB 1: Auto Setup via API -->
@@ -554,6 +557,23 @@
         <div id="isolir-auto-setup-result" style="display:none;"></div>
       </div>
 
+      <!-- TAB 3: Billing Cloud (script sederhana) -->
+      <div id="isolir-tab-cloud" style="display:none;">
+        <div class="alert alert-info p-3 small mb-3" style="background:rgba(56,189,248,0.10); border:1px solid rgba(56,189,248,0.3); color:#e0f2fe;">
+          <h6 class="fw-bold mb-1"><i class="bi bi-cloud me-1"></i> Billing di Cloud</h6>
+          <p class="mb-1 small">Script sederhana: DNS diarahkan ke router, HTTP pelanggan isolir di-NAT ke <b>redirector billing</b>, HTTPS ditolak agar browser fallback ke HTTP.</p>
+          <p class="mb-0 small">Syarat: port redirector (default <b>8099</b>) harus bisa diakses dari publik, dan <code>ISOLIR_REDIRECT_URL</code> di billing diisi <code>https://domain/isolated</code>.</p>
+        </div>
+        <div class="form-row" style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="fg" style="flex:2;min-width:200px"><label class="fl">Domain / IP publik billing (disarankan IP origin, bukan CDN)</label><input class="fc" id="ic-host" value="<%= typeof defaultPublicBase !== 'undefined' ? defaultPublicBase : '' %>" placeholder="https://billing.domain.com"></div>
+          <div class="fg" style="flex:1;min-width:100px"><label class="fl">Port redirector</label><input class="fc" id="ic-port" type="number" value="8099"></div>
+          <div class="fg" style="flex:1;min-width:100px"><label class="fl">Profil PPPoE</label><input class="fc" id="ic-profile" value="isolir"></div>
+        </div>
+        <button type="button" class="btn btn-p btn-sm my-2" onclick="loadIsolirCloudScript(this)"><i class="bi bi-magic"></i> Generate Script Cloud</button>
+        <div id="isolir-cloud-meta" class="small text-muted mb-2"></div>
+        <textarea id="isolir-cloud-body" class="fc" readonly rows="18" style="width:100%;font-family:ui-monospace,monospace;font-size:12px;background:rgba(15,23,42,0.9);color:#818cf8;border-radius:8px;"></textarea>
+      </div>
+
       <!-- TAB 2: RouterOS Manual Script (.rsc) -->
       <div id="isolir-tab-script" style="display:none;">
         <p class="small text-muted mb-2"><%= t('admin.rt.script_hint','Script ini di-generate otomatis berdasarkan IP server & URL billing (app_url). Anda dapat menyalin dan menempelkannya di Winbox Terminal MikroTik.') %></p>
@@ -563,6 +583,7 @@
     </div>
     <div class="mf">
       <button type="button" class="btn btn-g" onclick="closeModal('isolirScriptModal')"><%= t('common.close', 'Tutup') %></button>
+      <button type="button" class="btn btn-p" id="btn-copy-cloud-modal" style="display:none;" onclick="copyIsolirCloudScript()"><i class="bi bi-clipboard me-1"></i> Salin Script Cloud</button>
       <button type="button" class="btn btn-p" id="btn-copy-script-modal" style="display:none;" onclick="copyIsolirScript()"><i class="bi bi-clipboard me-1"></i> <%= t('admin.routers.isolir_script_copy', 'Salin script') %></button>
     </div>
   </div>
@@ -891,25 +912,58 @@ async function testConn(id) {
 }
 
 function switchIsolirTab(tab) {
-  const autoTab = document.getElementById('isolir-tab-auto');
-  const scriptTab = document.getElementById('isolir-tab-script');
-  const autoBtn = document.getElementById('tab-btn-auto');
-  const scriptBtn = document.getElementById('tab-btn-script');
-  const copyBtn = document.getElementById('btn-copy-script-modal');
+  const panels = {
+    auto: document.getElementById('isolir-tab-auto'),
+    script: document.getElementById('isolir-tab-script'),
+    cloud: document.getElementById('isolir-tab-cloud')
+  };
+  const btns = {
+    auto: document.getElementById('tab-btn-auto'),
+    script: document.getElementById('tab-btn-script'),
+    cloud: document.getElementById('tab-btn-cloud')
+  };
+  const copyScript = document.getElementById('btn-copy-script-modal');
+  const copyCloud = document.getElementById('btn-copy-cloud-modal');
+  Object.keys(panels).forEach(function (k) {
+    if (panels[k]) panels[k].style.display = (k === tab) ? 'block' : 'none';
+    if (btns[k]) btns[k].className = 'btn btn-sm ' + (k === tab ? 'btn-p' : 'btn-g');
+  });
+  if (copyScript) copyScript.style.display = tab === 'script' ? 'inline-block' : 'none';
+  if (copyCloud) copyCloud.style.display = tab === 'cloud' ? 'inline-block' : 'none';
+}
 
-  if (tab === 'auto') {
-    autoTab.style.display = 'block';
-    scriptTab.style.display = 'none';
-    autoBtn.className = 'btn btn-sm btn-p';
-    scriptBtn.className = 'btn btn-sm btn-g';
-    if (copyBtn) copyBtn.style.display = 'none';
-  } else {
-    autoTab.style.display = 'none';
-    scriptTab.style.display = 'block';
-    autoBtn.className = 'btn btn-sm btn-g';
-    scriptBtn.className = 'btn btn-sm btn-p';
-    if (copyBtn) copyBtn.style.display = 'inline-block';
+async function loadIsolirCloudScript(btn) {
+  const hostEl = document.getElementById('ic-host');
+  const portEl = document.getElementById('ic-port');
+  const profEl = document.getElementById('ic-profile');
+  const body = document.getElementById('isolir-cloud-body');
+  const meta = document.getElementById('isolir-cloud-meta');
+  const old = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Membuat...'; }
+  if (body) body.value = '';
+  if (meta) meta.textContent = 'Membuat script...';
+  try {
+    const url = '/admin/api/isolir-cloud-script?host=' + encodeURIComponent(hostEl ? hostEl.value : '') +
+      '&port=' + encodeURIComponent(portEl ? portEl.value : '') +
+      '&profile=' + encodeURIComponent(profEl ? profEl.value : '');
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Gagal membuat script.');
+    if (body) body.value = data.script || '';
+    if (meta) meta.textContent = 'Billing: ' + (data.billingHost || '-') + ' → ' + ((data.billingIps || [data.billingIp]).join(', ')) + ' | redirect port ' + data.redirectPort + ' | ' + (data.isolirUrl || '') + (data.warning ? ' — ' + data.warning : '');
+  } catch (e) {
+    if (meta) meta.textContent = 'Error: ' + e.message;
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = old; }
   }
+}
+
+function copyIsolirCloudScript() {
+  const ta = document.getElementById('isolir-cloud-body');
+  if (!ta || !ta.value) return;
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  alert('Script cloud disalin ke clipboard.');
 }
 
 async function setupFirewall(routerId) {

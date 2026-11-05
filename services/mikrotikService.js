@@ -1632,6 +1632,112 @@ async function generateIsolirPortalScript() {
   };
 }
 
+/**
+ * Script isolir sederhana untuk billing yang berjalan di CLOUD.
+ * Asumsi: redirector billing (port isolir_redirect_port) terbuka dari publik.
+ */
+async function generateIsolirCloudScript(opts = {}) {
+  const settings = getSettingsWithCache() || {};
+  const rawHost = String(opts.host || settings.public_base_url || settings.app_url || '').trim();
+  if (!rawHost) throw new Error('Isi domain/IP publik billing terlebih dahulu.');
+
+  let url = null;
+  try {
+    url = new URL(/^https?:\/\//i.test(rawHost) ? rawHost : ('https://' + rawHost));
+  } catch (e) {
+    throw new Error('Domain/IP billing tidak valid.');
+  }
+  const hostname = url.hostname;
+  const baseUrl = url.origin;
+  let billingIps = [];
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)) {
+    billingIps = [hostname];
+  } else {
+    try {
+      const list = await dns.promises.resolve4(hostname);
+      billingIps = (list || []).filter(Boolean);
+    } catch (e) {}
+    if (!billingIps.length) {
+      try { billingIps = [await resolveIpv4(hostname)]; } catch (e) { billingIps = []; }
+    }
+  }
+  if (!billingIps.length) throw new Error('IP publik billing tidak bisa di-resolve. Masukkan IP origin langsung.');
+  const billingIp = billingIps[0];
+  const cfRanges = ['104.16.', '104.17.', '104.18.', '104.19.', '104.20.', '104.21.', '104.22.', '104.23.', '104.24.', '104.25.', '104.26.', '104.27.', '172.64.', '172.65.', '172.66.', '172.67.', '162.158.', '173.245.', '103.21.', '103.22.', '103.31.', '141.101.', '108.162.', '190.93.', '188.114.', '197.234.', '198.41.', '131.0.72.'];
+  const isCdn = billingIps.some(ip => cfRanges.some(p => ip.startsWith(p)));
+  const redirectPort = Math.max(1, Math.min(65535, parseInt(opts.port, 10) || parseInt(settings.isolir_redirect_port, 10) || 8099));
+  const profile = String(opts.profile || 'isolir').trim() || 'isolir';
+  const isolirUrl = String(settings.isolir_portal_url || (baseUrl + '/isolated')).trim();
+
+  const onUp = `/ip firewall address-list remove [find list=LIST_ISOLIR address=$\\"remote-address\\"]; /ip firewall address-list add list=LIST_ISOLIR address=$\\"remote-address\\" comment=$user timeout=23h`;
+  const onDown = `/ip firewall address-list remove [find list=LIST_ISOLIR address=$\\"remote-address\\"]`;
+
+  const lines = [
+    '# ============================================================',
+    '# ISOLIR PAGE — BILLING CLOUD (script sederhana)',
+    '# Tempel di Terminal RouterOS. Ubah variabel di bawah bila perlu.',
+    '# ============================================================',
+    ...(isCdn ? [
+      '# PERINGATAN: ' + hostname + ' memakai Cloudflare/CDN.',
+      '# Port ' + redirectPort + ' biasanya TIDAK ikut diproxy Cloudflare.',
+      '# Untuk NAT redirector, gunakan IP ORIGIN (DNS-only) atau pastikan',
+      '# port ' + redirectPort + ' terbuka langsung di server origin.',
+      '# ============================================================',
+      ''
+    ] : []),
+    ':local billingIp "' + billingIp + '"',
+    ':local isolirPort ' + redirectPort,
+    ':local isolirProfile "' + profile + '"',
+    '',
+    '# --- Bersihkan rule lama buatan script ini ---',
+    '/ip firewall nat remove [find comment~"ISOLIR_CLOUD_"]',
+    '/ip firewall filter remove [find comment~"ISOLIR_CLOUD_"]',
+    '/ip firewall address-list remove [find list=BILLING comment="BILLING_ISOLIR"]',
+    '',
+    '# --- Izinkan billing (semua IP hasil resolve) ---',
+    ...billingIps.map(function (ip) { return '/ip firewall address-list add list=BILLING address=' + ip + ' comment="BILLING_ISOLIR"'; }),
+    '',
+    '# --- Hook profil PPPoE isolir ---',
+    '/ppp profile set [find name=$isolirProfile] on-up="' + onUp + '" on-down="' + onDown + '"',
+    '',
+    '# --- DNS isolir diarahkan ke router ---',
+    '/ip firewall nat add chain=dstnat protocol=udp dst-port=53 src-address-list=LIST_ISOLIR action=redirect to-ports=53 comment="ISOLIR_CLOUD_DNS_UDP"',
+    '/ip firewall nat add chain=dstnat protocol=tcp dst-port=53 src-address-list=LIST_ISOLIR action=redirect to-ports=53 comment="ISOLIR_CLOUD_DNS_TCP"',
+    '',
+    '# --- HTTP pelanggan isolir -> redirector cloud ---',
+    '/ip firewall nat add chain=dstnat protocol=tcp dst-port=80 src-address-list=LIST_ISOLIR dst-address-list=!BILLING action=dst-nat to-addresses=$billingIp to-ports=$isolirPort comment="ISOLIR_CLOUD_HTTP"',
+    '',
+    '# --- Filter ---',
+    '/ip firewall filter add chain=forward src-address-list=LIST_ISOLIR protocol=udp dst-port=53 action=accept comment="ISOLIR_CLOUD_DNS"',
+    '/ip firewall filter add chain=forward src-address-list=LIST_ISOLIR protocol=tcp dst-port=53 action=accept comment="ISOLIR_CLOUD_DNS_TCP"',
+    '/ip firewall filter add chain=forward src-address-list=LIST_ISOLIR dst-address-list=BILLING action=accept comment="ISOLIR_CLOUD_ALLOW_BILLING"',
+    '/ip firewall filter add chain=forward src-address-list=LIST_ISOLIR protocol=tcp dst-port=443 action=reject comment="ISOLIR_CLOUD_REJECT_HTTPS"',
+    '/ip firewall filter add chain=forward src-address-list=LIST_ISOLIR action=drop comment="ISOLIR_CLOUD_DROP"',
+    '',
+    '# ============================================================',
+    '# CATATAN BILLING CLOUD',
+    '# 1. Redirector billing harus bisa diakses: http://' + billingIp + ':' + redirectPort,
+    '#    (buka port ' + redirectPort + ' di firewall/security group cloud).',
+    '# 2. Di billing set ISOLIR_REDIRECT_URL=' + isolirUrl,
+    '#    atau setting isolir_portal_url.',
+    '# 3. Halaman isolir: ' + isolirUrl,
+    '# 4. Jika pakai Cloudflare/CDN, pastikan IP edge yang dipakai ada di',
+    '#    address-list BILLING, atau gunakan IP origin langsung.',
+    '# ============================================================',
+  ];
+  return {
+    script: lines.join('\n'),
+    billingHost: hostname,
+    billingIp,
+    billingIps,
+    isCdn,
+    redirectPort,
+    profile,
+    isolirUrl,
+    warning: isCdn ? ('Domain memakai Cloudflare/CDN. NAT redirector ke ' + billingIp + ':' + redirectPort + ' biasanya gagal — gunakan IP origin (DNS-only) atau buka port redirector di origin.') : ''
+  };
+}
+
 const ISOLIR_ADDR_LIST = 'LIST_ISOLIR';
 
 /** Nama profil PPPoE isolir yang dipakai pelanggan di router ini (distinct dari DB). */
@@ -2220,6 +2326,7 @@ module.exports = {
   setupIsolirFirewall,
   ensurePppProfileIsolirAddressListHook,
   generateIsolirPortalScript,
+  generateIsolirCloudScript,
   manageStaticIp,
   removeStaticIp
 };

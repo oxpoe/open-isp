@@ -2,6 +2,15 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.7] — 2026-11-06 — "isolir-cloud"
+
+### Ditambahkan
+- Tab **Cloud (Sederhana)** pada modal Script Isolir (Manajemen Router): generate script RouterOS siap tempel untuk billing yang berjalan di cloud.
+  - Input domain/IP publik billing, port redirector, dan profil PPPoE isolir.
+  - Berisi: address-list BILLING (semua hasil resolve A), hook profil PPPoE, redirect DNS, NAT HTTP ke redirector, serta filter allow/reject/drop.
+  - Deteksi Cloudflare/CDN + peringatan bila port redirector tidak ikut diproxy.
+- Endpoint `GET /admin/api/isolir-cloud-script`.
+
 ## [0.6.6] — 2026-11-06 — "qr-custom-bulk"
 
 ### Ditambahkan

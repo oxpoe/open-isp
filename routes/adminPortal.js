@@ -7673,9 +7673,12 @@ router.post('/whatsapp/repair-keys', requireAdminSession, async (req, res) => {
 
 // ─── ROUTERS (MULTI-ROUTER) ──────────────────────────────────────────────────
 router.get('/routers', requireAdminSession, requireSidebarMenuAccess('mikrotik'), (req, res) => {
+  const _settings = getSettings();
+  const defaultPublicBase = String(_settings.public_base_url || _settings.app_url || ((req.headers['x-forwarded-proto'] || req.protocol) + '://' + req.get('host'))).replace(/\/+$/, '');
   res.render('admin/routers', {
     title: 'Manajemen Router', company: company(), activePage: 'mikrotik',
-    routers: mikrotikService.getAllRouters(), msg: flashMsg(req)
+    routers: mikrotikService.getAllRouters(), msg: flashMsg(req),
+    defaultPublicBase
   });
 });
 
@@ -7982,6 +7985,19 @@ router.post('/api/routers/:id/setup-firewall', requireAdmin, async (req, res) =>
   try {
     const result = await mikrotikService.setupIsolirFirewall(req.params.id);
     res.json(result);
+  } catch (e) {
+    res.json({ success: false, error: e.message });
+  }
+});
+
+router.get('/api/isolir-cloud-script', requireAdmin, async (req, res) => {
+  try {
+    const data = await mikrotikService.generateIsolirCloudScript({
+      host: req.query.host,
+      port: req.query.port,
+      profile: req.query.profile
+    });
+    res.json({ success: true, ...data });
   } catch (e) {
     res.json({ success: false, error: e.message });
   }
