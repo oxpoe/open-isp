@@ -2,6 +2,13 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.8] — 2026-11-06 — "isolir-url-setting"
+
+### Ditambahkan
+- Pengaturan **URL Halaman Isolir** (`isolir_portal_url`) dan **Port Redirector Isolir** (`isolir_redirect_port`) di Info Aplikasi.
+- Redirector isolir membaca URL dari pengaturan **setiap request**, jadi perubahan URL langsung berlaku tanpa restart.
+- Generator script cloud memakai URL halaman isolir dari pengaturan tersebut.
+
 ## [0.6.7] — 2026-11-06 — "isolir-cloud"
 
 ### Ditambahkan

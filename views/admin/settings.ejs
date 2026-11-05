@@ -284,6 +284,16 @@
             <div style="font-size:10px; color:var(--muted); margin-top:4px"><%= t('admin.set.link_hint','Digunakan untuk menyusun tautan login pelanggan yang dikirim via WhatsApp. Contoh: ') %><span class="mono">https://portal.domain-anda.com</span></div>
           </div>
           <div class="fg">
+            <label class="fl">URL Halaman Isolir</label>
+            <input class="fc" name="isolir_portal_url" value="<%= settings.isolir_portal_url || '' %>" placeholder="https://domain-anda/isolated">
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Tujuan redirect pelanggan terisolir (dipakai redirector &amp; generator script cloud).</div>
+          </div>
+          <div class="fg">
+            <label class="fl">Port Redirector Isolir</label>
+            <input class="fc" type="number" min="1" max="65535" name="isolir_redirect_port" value="<%= settings.isolir_redirect_port || 8099 %>">
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Port server redirector di billing (default 8099). Ubah NAT MikroTik bila port diganti.</div>
+          </div>
+          <div class="fg">
             <label class="fl"><%= t('admin.set.id_prefix','Prefix ID Pelanggan') %></label>
             <input class="fc" name="customer_id_prefix" value="<%= settings.customer_id_prefix || 'SKY' %>" placeholder="SKY" style="text-transform:uppercase" maxlength="12">
             <div style="font-size:10px; color:var(--muted); margin-top:4px">Format ID Pelanggan: <span class="mono">PREFIX-angka</span> (contoh: <span class="mono"><%= (settings.customer_id_prefix || 'SKY') %>-48213</span>). Hanya angka setelah tanda hubung. ID <b>permanen</b> &amp; otomatis untuk pelanggan baru.</div>

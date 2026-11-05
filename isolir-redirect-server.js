@@ -10,18 +10,19 @@
 const http = require('http');
 
 const PORT = parseInt(process.env.ISOLIR_REDIRECT_PORT || '8099', 10);
-let TARGET = process.env.ISOLIR_REDIRECT_URL || '';
 
-// Coba ambil target dari settings.json bila tersedia
-try {
-  const { getSetting } = require('./config/settingsManager');
-  const s = getSetting('isolir_portal_url', '') || '';
-  if (s) TARGET = s;
-} catch (_) { /* abaikan */ }
-
-if (!TARGET) TARGET = 'http://localhost:3001/isolated';
+// Target dibaca ulang dari settings (bisa diubah dari dashboard tanpa restart).
+function currentTarget() {
+  try {
+    const { getSetting } = require('./config/settingsManager');
+    const s = String(getSetting('isolir_portal_url', '') || '').trim();
+    if (s) return s;
+  } catch (_) {}
+  return String(process.env.ISOLIR_REDIRECT_URL || '').trim() || 'http://localhost:3001/isolated';
+}
 
 const server = http.createServer((req, res) => {
+  const TARGET = currentTarget();
   // Jangan cache supaya pelanggan selalu diarahkan ke portal terbaru
   res.writeHead(302, {
     Location: TARGET,
@@ -40,7 +41,7 @@ const server = http.createServer((req, res) => {
 server.on('error', (e) => console.error('[isolir-redirect] listen error:', e.message));
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`[isolir-redirect] listening on 0.0.0.0:${PORT} -> ${TARGET}`);
+  console.log(`[isolir-redirect] listening on 0.0.0.0:${PORT} -> ${currentTarget()}`);
 });
 
 process.on('SIGTERM', () => { server.close(() => process.exit(0)); });
