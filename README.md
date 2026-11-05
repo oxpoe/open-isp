@@ -119,6 +119,12 @@ Buka dashboard di **http://<ip-host>:3000** (login Basic Auth), lalu scan QR.
 Di OPEN-ISP → **Admin → WhatsApp**: pilih gateway **GOWA**, isi base URL `http://127.0.0.1:3000`
 (app di host yang sama), username/password, dan **webhook secret** yang sama dengan `.env.gowa`.
 
+> **UI hanya loading saat diakses lewat `http://IP:3000`?** gowa-ui memakai `crypto.randomUUID`
+> yang hanya tersedia di secure context (HTTPS atau `localhost`). Pilih salah satu:
+> pakai HTTPS/reverse proxy, buka lewat SSH tunnel (`ssh -L 3000:127.0.0.1:3000 user@server`
+> lalu `http://localhost:3000`), atau tambahkan polyfill `crypto.randomUUID` ke
+> `storages/ui/index.html` dan set `GOWA_UI_AUTO_UPDATE=false`.
+
 ### Manual (Node.js ≥ 20, disarankan 22 LTS)
 
 ```bash
