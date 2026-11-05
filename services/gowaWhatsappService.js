@@ -168,12 +168,29 @@ async function ensureDevice() {
 async function getLoginQr(deviceId) {
   const dev = deviceId || deviceHeader();
   const url = baseUrl() + '/app/login' + (dev ? ('?device_id=' + encodeURIComponent(dev)) : '');
-  const res = await fetch(url, { headers: commonHeaders() });
-  const json = await res.json().catch(function () { return null; });
-  const r = (json && json.results) || {};
-  const link = r.qr_link || r.image_path || null;
-  if (link) _lastQr = { link: link, at: Date.now() };
-  return { ok: !!link, qr_link: link, duration: r.qr_duration || null, device_id: r.device_id || dev || null, code: (json && json.code) || null };
+  try {
+    const res = await fetch(url, { headers: commonHeaders() });
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch (e) {}
+    if (!res.ok) {
+      const detail = String(
+        (json && (json.message || json.error || json.code)) || text || ''
+      ).replace(/\s+/g, ' ').trim().slice(0, 160);
+      return {
+        ok: false,
+        status: res.status,
+        code: (json && json.code) || null,
+        message: detail || ('HTTP ' + res.status)
+      };
+    }
+    const r = (json && json.results) || {};
+    const link = r.qr_link || r.image_path || null;
+    if (link) _lastQr = { link: link, at: Date.now() };
+    return { ok: !!link, qr_link: link, duration: r.qr_duration || null, device_id: r.device_id || dev || null, code: (json && json.code) || null };
+  } catch (e) {
+    return { ok: false, status: 0, code: null, message: e.message };
+  }
 }
 async function getLastQrImage() {
   if (!_lastQr.link) return null;

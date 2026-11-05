@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.8] — 2026-11-05 — "gowa-qr-error"
+
+### Diperbaiki
+- QR GOWA: pesan gagal kini menampilkan status HTTP dan respons GOWA (mis. `HTTP 401 — Unauthorized`) sehingga penyebabnya langsung terlihat, bukan lagi "pastikan GOWA berjalan".
+
 ## [0.5.7] — 2026-11-05 — "gowa-podman"
 
 ### Ditambahkan

@@ -6650,7 +6650,10 @@ router.get('/whatsapp/gowa/qr', requireAdminSession, async (req, res) => {
     const dev = await gowa.ensureDevice();
     if (dev && dev !== getSetting('gowa_device_id', '')) saveSettings({ gowa_device_id: dev });
     const r = await gowa.getLoginQr(dev);
-    if (!r.ok) return res.json({ ok: false, message: 'Gagal membuat QR (' + (r.code || 'pastikan GOWA berjalan') + ').' });
+    if (!r.ok) {
+      const detail = r.message || r.code || 'pastikan GOWA berjalan & username/password Basic Auth benar';
+      return res.json({ ok: false, status: r.status || 0, message: 'Gagal membuat QR: ' + (r.status ? 'HTTP ' + r.status + ' — ' : '') + detail + '.' });
+    }
     return res.json({ ok: true, image: '/admin/whatsapp/gowa/qr.png?v=' + Date.now(), device_id: r.device_id, duration: r.duration });
   } catch (e) { return res.json({ ok: false, message: e.message }); }
 });
