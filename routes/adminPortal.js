@@ -340,9 +340,9 @@ function readTextFileSafe(filePath) {
   }
 }
 
-function runCmd(cmd, args, cwd) {
+function runCmd(cmd, args, cwd, timeoutMs = 0) {
   try {
-    const r = spawnSync(cmd, args, { cwd, encoding: 'utf8' });
+    const r = spawnSync(cmd, args, { cwd, encoding: 'utf8', timeout: timeoutMs });
     return { ok: r.status === 0, code: r.status, stdout: r.stdout || '', stderr: r.stderr || '' };
   } catch (e) {
     return { ok: false, code: -1, stdout: '', stderr: String(e?.message || e) };
@@ -400,7 +400,7 @@ function getUpdateInfo(repoRoot) {
   info.repo = _repo || 'origin';
   info.baseUrl = _base;
   const fetch = _repo
-    ? runCmd('git', ['fetch', '--prune', _base + '/' + _repo + '.git', branch], repoRoot)
+    ? runCmd('git', ['fetch', '--prune', _base + '/' + _repo + '.git', branch], repoRoot, 120000)
     : runCmd('git', ['fetch', '--prune'], repoRoot);
   if (!fetch.ok) {
     info.error = 'Gagal git fetch: ' + (fetch.stderr || fetch.stdout || '').trim();
@@ -4667,7 +4667,7 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
   info.repo = _repo || 'origin';
   info.baseUrl = _base;
   const fetch = _repo
-    ? runCmd('git', ['fetch', '--prune', _base + '/' + _repo + '.git', branch], repoRoot)
+    ? runCmd('git', ['fetch', '--prune', _base + '/' + _repo + '.git', branch], repoRoot, 120000)
     : runCmd('git', ['fetch', '--prune'], repoRoot);
     pushCmd('git fetch --prune', fetch);
     if (!fetch.ok) throw new Error('Gagal git fetch.');
@@ -4745,6 +4745,7 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
         log.push(`$ restore preserved files failed: ${String(restoreErr?.message || restoreErr)}`);
       }
     }
+    log.push(`$ ERROR: ${e?.message || e}`);
     req.session._msg = { type: 'error', text: 'Gagal update: ' + (e?.message || e) };
     req.session._updateLog = log.join('\n');
   } finally {
