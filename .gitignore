@@ -3,6 +3,7 @@ node_modules/
 
 # Environment and Secrets
 .env
+.env.gowa
 *.env
 *.jks
 *.keystore

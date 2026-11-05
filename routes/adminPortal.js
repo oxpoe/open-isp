@@ -4629,6 +4629,7 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
   const preservedEntries = [
     { label: 'settings.json', relativePath: 'settings.json', cleanExclude: 'settings.json' },
     { label: '.env', relativePath: '.env', cleanExclude: '.env' },
+    { label: '.env.gowa', relativePath: '.env.gowa', cleanExclude: '.env.gowa' },
     { label: 'database', relativePath: 'database', cleanExclude: 'database' },
     { label: 'public/uploads', relativePath: 'public/uploads', cleanExclude: 'public/uploads' },
     { label: 'public/img', relativePath: 'public/img', cleanExclude: 'public/img' },
@@ -4709,11 +4710,7 @@ router.post('/update/run', requireAdminSession, restrictToAdmin, (req, res) => {
     fs.mkdirSync(backupRoot, { recursive: true });
     backupPreservedEntries();
 
-    const resetSettings = runCmd('git', ['checkout', '--', 'settings.json'], repoRoot);
-    pushCmd('git checkout -- settings.json', resetSettings);
-    const resetDb = runCmd('git', ['checkout', '--', 'database'], repoRoot);
-    pushCmd('git checkout -- database', resetDb);
-
+    // settings.json / database tidak dilacak git; jangan checkout (menghasilkan error pathspec).
     const resetHard = runCmd('git', ['reset', '--hard', _repo ? 'FETCH_HEAD' : `origin/${branch}`], repoRoot);
     pushCmd(`git reset --hard origin/${branch}`, resetHard);
     if (!resetHard.ok) throw new Error('Gagal reset ke origin/' + branch);

@@ -2,6 +2,13 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.15] — 2026-11-05 — "update-keep-env"
+
+### Diperbaiki
+- Update aplikasi tidak lagi menghapus `.env.gowa` (kredensial/webhook GOWA) saat `git clean`.
+- Log update tidak lagi menampilkan error `pathspec 'settings.json'/'database'` — file yang tidak dilacak git tidak di-checkout.
+- `.env.gowa` ditambahkan ke `.gitignore`.
+
 ## [0.5.14] — 2026-11-05 — "ai-test"
 
 ### Ditambahkan
