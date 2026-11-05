@@ -54,12 +54,15 @@
     </div>
 
     <% if (detail) { %>
+    <% const cqExpired = detail.status === 'expired' || (detail.status === 'pending' && detail.expires_at && new Date(detail.expires_at).getTime() < Date.now()); %>
     <div class="card mb16">
-      <div class="card-hd"><h6><i class="bi bi-qr-code"></i> <%= detail.title %> — Rp <%= Number(detail.amount_unique||0).toLocaleString('id-ID') %></h6></div>
+      <div class="card-hd"><h6><i class="bi bi-qr-code"></i> <%= detail.title %><% if (!cqExpired) { %> — Rp <%= Number(detail.amount_unique||0).toLocaleString('id-ID') %><% } %></h6></div>
       <div class="card-bd" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px">
         <div style="text-align:center">
-          <% if (detail.status === 'paid' || detail.status === 'rejected') { %>
-            <div style="padding:24px;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">QR tidak aktif — status: <b><%= detail.status %></b></div>
+          <% if (detail.status === 'paid' || detail.status === 'rejected' || cqExpired) { %>
+            <div style="padding:24px;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">
+              <% if (cqExpired) { %>QR kedaluwarsa — nominal &amp; QR disembunyikan.<% } else { %>QR tidak aktif — status: <b><%= detail.status %></b><% } %>
+            </div>
           <% } else { %>
             <img src="/custom-qr/<%= detail.share_token %>/qr.png" alt="QRIS" style="max-width:240px;background:#fff;padding:10px;border-radius:12px">
             <div id="cqTimer" data-expires="<%= detail.expires_at || '' %>" style="margin-top:8px;font-size:13px;color:#fbbf24"></div>
@@ -67,9 +70,11 @@
         </div>
         <div style="font-size:13px;line-height:1.8">
           <div><b>Status:</b> <%= detail.status %></div>
+          <% if (!cqExpired) { %>
           <div><b>Nominal dasar:</b> Rp <%= Number(detail.amount||0).toLocaleString('id-ID') %></div>
           <div><b>Kode unik:</b> <%= detail.unique_code %></div>
           <div><b>Nominal bayar:</b> Rp <%= Number(detail.amount_unique||0).toLocaleString('id-ID') %></div>
+          <% } %>
           <div><b>Kategori:</b> <%= detail.category || '-' %></div>
           <div><b>Dibuat:</b> <%= detail.created_at %></div>
           <div><b>Kedaluwarsa:</b> <%= detail.expires_at || '-' %></div>
@@ -93,10 +98,15 @@
                 <button class="btn btn-p btn-sm"><i class="bi bi-check2"></i> Selesaikan</button>
               </form>
             <% } %>
-            <% if (detail.status !== 'paid' && detail.status !== 'rejected') { %>
+            <% if (detail.status !== 'rejected') { %>
               <form method="POST" action="/admin/custom-qr/<%= detail.id %>/reject" onsubmit="return confirm('Tolak / refund pembayaran ini?')">
                 <input type="hidden" name="note" value="Refund dari panel admin">
                 <button class="btn btn-g btn-sm"><i class="bi bi-x-circle"></i> Reject / Refund</button>
+              </form>
+            <% } %>
+            <% if (cqExpired) { %>
+              <form method="POST" action="/admin/custom-qr/<%= detail.id %>/regenerate" onsubmit="return confirm('Buat QR baru dengan kode unik baru?')">
+                <button class="btn btn-p btn-sm"><i class="bi bi-arrow-repeat"></i> Regenerate QR</button>
               </form>
             <% } %>
           </div>
@@ -129,6 +139,11 @@
                 <% if (r.status !== 'paid' && r.status !== 'rejected') { %>
                 <form method="POST" action="/admin/custom-qr/<%= r.id %>/manual-paid" style="display:inline" onsubmit="return confirm('Tandai LUNAS manual?')">
                   <button class="btn btn-g btn-sm" title="Manual pay"><i class="bi bi-check2-circle"></i></button>
+                </form>
+                <% } %>
+                <% if (r.status === 'expired') { %>
+                <form method="POST" action="/admin/custom-qr/<%= r.id %>/regenerate" style="display:inline" onsubmit="return confirm('Buat QR baru dengan kode unik baru?')">
+                  <button class="btn btn-g btn-sm" title="Regenerate"><i class="bi bi-arrow-repeat"></i></button>
                 </form>
                 <% } %>
               </td>

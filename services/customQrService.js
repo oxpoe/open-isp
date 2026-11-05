@@ -118,6 +118,20 @@ function acceptWarning(id, actor, note) {
   return getById(id);
 }
 
+function regenerate(id, actor) {
+  const old = getById(id);
+  if (!old) throw new Error('Data tidak ditemukan.');
+  if (old.status === 'pending' && !isExpired(old)) throw new Error('QR masih aktif. Tunggu kedaluwarsa atau gunakan QR yang ada.');
+  const row = create({
+    title: old.title,
+    category: old.category,
+    amount: old.amount,
+    note: old.note,
+    createdBy: actor
+  });
+  return row;
+}
+
 function reject(id, actor, note) {
   const row = getById(id);
   if (!row) throw new Error('Data tidak ditemukan.');
@@ -181,6 +195,7 @@ module.exports = {
   candidatesByAmount,
   markManualPaid,
   acceptWarning,
+  regenerate,
   reject,
   markPaidFromWebhook,
   markWarningFromWebhook,

@@ -4062,6 +4062,17 @@ router.post('/custom-qr/:id/manual-paid', requireAdminSession, requireSidebarMen
   res.redirect('/admin/custom-qr?id=' + Number(req.params.id));
 });
 
+router.post('/custom-qr/:id/regenerate', requireAdminSession, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    const row = require('../services/customQrService').regenerate(req.params.id, resolvePaidByName(req, 'Admin'));
+    req.session._msg = { type: 'success', text: `QR baru dibuat: Rp ${Number(row.amount_unique).toLocaleString('id-ID')} (kode ${row.unique_code}).` };
+    return res.redirect('/admin/custom-qr?id=' + row.id);
+  } catch (e) {
+    req.session._msg = { type: 'error', text: e.message };
+    return res.redirect('/admin/custom-qr?id=' + Number(req.params.id));
+  }
+});
+
 router.post('/custom-qr/:id/accept', requireAdminSession, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
   try {
     require('../services/customQrService').acceptWarning(req.params.id, resolvePaidByName(req, 'Admin'), req.body.note);

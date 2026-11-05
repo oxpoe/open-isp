@@ -2116,7 +2116,11 @@ app.get('/custom-qr/:token', (req, res) => {
   const company = settings.company_header || 'OPEN-ISP';
   const statusLabels = { pending: 'Menunggu Pembayaran', paid: 'LUNAS', expired: 'Kedaluwarsa', warning: 'Perlu Verifikasi Admin', rejected: 'Ditolak / Refund' };
   const status = String(row.status || 'pending');
-  const showQr = status !== 'paid' && status !== 'rejected';
+  const expiresMs = row.expires_at ? new Date(row.expires_at).getTime() : 0;
+  const expiredNow = status === 'expired' || (status === 'pending' && expiresMs && expiresMs < Date.now());
+  const showAmount = !expiredNow;
+  const showQr = !expiredNow && status !== 'paid' && status !== 'rejected';
+  const showTimer = status === 'pending' && !expiredNow;
   const amountText = 'Rp ' + Number(row.amount_unique || 0).toLocaleString('id-ID');
   const baseAmountText = 'Rp ' + Number(row.amount || 0).toLocaleString('id-ID');
   const html = `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2126,7 +2130,7 @@ body{margin:0;background:#0b1220;color:#e5e7eb;font-family:system-ui,Segoe UI,Ar
 .card{max-width:460px;width:100%;background:#0f172a;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:22px;text-align:center}
 h1{font-size:19px;margin:0 0 4px}p{margin:6px 0;color:#94a3b8;font-size:13px}
 .amt{font-size:26px;font-weight:800;color:#ADFF2F;margin:12px 0 2px}.base{font-size:12px;color:#64748b}
-.qr{background:#fff;padding:12px;border-radius:14px;display:inline-block;margin:14px 0}.qr img{display:block;width:240px;height:240px}
+.qr{background:#fff;padding:12px;border-radius:14px;display:block;width:max-content;margin:14px auto}.qr img{display:block;width:240px;height:240px}
 .badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-top:6px}
 .pending{background:rgba(245,158,11,.15);color:#fbbf24}.paid{background:rgba(34,197,94,.15);color:#4ade80}
 .expired{background:rgba(239,68,68,.15);color:#f87171}.warning{background:rgba(249,115,22,.15);color:#fb923c}.rejected{background:rgba(148,163,184,.15);color:#cbd5e1}
@@ -2134,20 +2138,22 @@ h1{font-size:19px;margin:0 0 4px}p{margin:6px 0;color:#94a3b8;font-size:13px}
 </style></head><body><div class="card">
 <div style="font-size:12px;letter-spacing:1px;color:#64748b;text-transform:uppercase">${cqEscape(row.category || 'Pembayaran')}</div>
 <h1>${cqEscape(row.title)}</h1>
-<div class="amt">${amountText}</div>
-<div class="base">Nominal dasar ${baseAmountText} + kode unik ${Number(row.unique_code || 0)}</div>
-<div class="badge ${cqEscape(status)}" id="statusBadge">${cqEscape(statusLabels[status] || status)}</div>
+${showAmount
+  ? `<div class="amt">${amountText}</div><div class="base">Nominal dasar ${baseAmountText} + kode unik ${Number(row.unique_code || 0)}</div>`
+  : `<div class="amt" style="font-size:18px;color:#f87171">QR Kedaluwarsa</div><div class="base">Nominal dan QR disembunyikan. Minta admin membuat QR baru.</div>`}
+<div class="badge ${cqEscape(expiredNow ? 'expired' : status)}" id="statusBadge">${cqEscape(expiredNow ? 'Kedaluwarsa' : (statusLabels[status] || status))}</div>
 ${showQr ? `<div class="qr"><img src="/custom-qr/${cqEscape(row.share_token)}/qr.png?amount=${Number(row.amount_unique || 0)}" alt="QRIS"></div>` : ''}
-<div class="timer" id="timer" data-expires="${cqEscape(row.expires_at || '')}"></div>
+${showTimer ? `<div class="timer" id="timer" data-expires="${cqEscape(row.expires_at || '')}"></div>` : ''}
 ${row.note ? `<div class="note">${cqEscape(row.note)}</div>` : ''}
-<div class="note">Bayar dengan nominal <b>persis</b> seperti di atas agar pembayaran otomatis tercocokkan. QR berlaku ${require('./services/customQrService').DURATION_MINUTES} menit.</div>
+${showAmount ? `<div class="note">Bayar dengan nominal <b>persis</b> seperti di atas agar pembayaran otomatis tercocokkan. QR berlaku ${require('./services/customQrService').DURATION_MINUTES} menit.</div>` : ''}
 <div class="note">${cqEscape(company)}</div>
 </div>
 <script>
 (function(){
   var el=document.getElementById('timer'), exp=el&&el.getAttribute('data-expires');
   function tick(){
-    if(!el||!exp) return;
+    if(!el) return;
+    if(!exp) return;
     var d=new Date(exp).getTime()-Date.now();
     if(d<=0){ el.textContent='Batas 20 menit telah lewat — pembayaran tetap dicek admin.'; return; }
     var m=Math.floor(d/60000), s=Math.floor((d%60000)/1000);

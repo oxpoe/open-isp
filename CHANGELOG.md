@@ -2,6 +2,15 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.4] — 2026-11-06 — "qr-custom-ux"
+
+### Diperbaiki
+- QR pada link publik kini **center**.
+- Timer hanya tampil saat QR masih aktif; berhenti/disembunyikan ketika LUNAS, ditolak, atau kedaluwarsa.
+- **Reject / Refund** kini tersedia juga untuk pembayaran yang sudah LUNAS.
+- QR kedaluwarsa: **nominal dan gambar QR disembunyikan** di link publik maupun detail dashboard.
+- Tombol **Regenerate** untuk membuat QR baru + kode unik baru dari QR yang kedaluwarsa (juga tersedia di tabel histori).
+
 ## [0.6.3] — 2026-11-06 — "webhook-secret-auto"
 
 ### Diperbaiki
