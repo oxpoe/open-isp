@@ -127,7 +127,7 @@
                   <option value="true" <%= (settings.auto_delete_overdue_enabled === undefined ? true : settings.auto_delete_overdue_enabled) ? 'selected' : '' %>><%= t('common.active', 'Aktif') %></option>
                   <option value="false" <%= (settings.auto_delete_overdue_enabled === undefined ? true : settings.auto_delete_overdue_enabled) ? '' : 'selected' %>><%= t('common.inactive', 'Nonaktif') %></option>
                 </select>
-                <div class="hint"><%= t('admin.automation.auto_delete_hint', 'Jika Aktif: pelanggan menunggak lebih dari batas (mis. bulan ke-4) dihapus otomatis — harus daftar ulang.') %></div>
+                <div class="hint"><%= t('admin.automation.auto_delete_hint', 'Jika Aktif: pelanggan menunggak satu bulan setelah batas dihapus otomatis — harus daftar ulang.') %></div>
               </div>
               <div class="fg">
                 <label class="fl"><i class="bi bi-exclamation-triangle"></i> <%= t('admin.automation.arrears_notice', 'Auto-Peringatan Tunggakan') %></label>

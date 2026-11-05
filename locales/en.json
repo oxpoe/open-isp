@@ -1178,7 +1178,7 @@
       "deactivate_months": "Arrears Limit (months)",
       "deactivate_months_hint": "Customer is deactivated (isolated) after this many unpaid months (3 = 3 unpaid new invoices).",
       "auto_delete": "Auto-Delete Customer (over limit)",
-      "auto_delete_hint": "If Active: customers overdue beyond the limit (e.g. 4th month) are deleted automatically — must re-register.",
+      "auto_delete_hint": "If Active: customers overdue one month past the limit are deleted automatically — must re-register.",
       "arrears_notice": "Auto Arrears Warning",
       "arrears_notice_hint": "Send a WhatsApp warning when arrears approach the limit. Template in the Templates & Preview tab.",
       "manual_action": "Manual Action",

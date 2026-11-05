@@ -1178,7 +1178,7 @@
       "deactivate_months": "Batas Tunggakan (bulan)",
       "deactivate_months_hint": "Pelanggan dinonaktif (isolir) bila menunggak sebanyak ini (3 = 3x tagihan baru belum lunas).",
       "auto_delete": "Auto-Hapus Pelanggan (lewat batas)",
-      "auto_delete_hint": "Jika Aktif: pelanggan menunggak lebih dari batas (mis. bulan ke-4) dihapus otomatis — harus daftar ulang.",
+      "auto_delete_hint": "Jika Aktif: pelanggan menunggak satu bulan setelah batas dihapus otomatis — harus daftar ulang.",
       "arrears_notice": "Auto-Peringatan Tunggakan",
       "arrears_notice_hint": "Kirim WA peringatan saat menunggak mendekati batas. Template di tab Template & Preview.",
       "manual_action": "Aksi Manual",
