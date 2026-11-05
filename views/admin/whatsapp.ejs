@@ -155,6 +155,25 @@
         <div id="gowa_fields_container" style="<%= waGatewayType === 'gowa' ? '' : 'display:none;' %> background: rgba(173,255,47,0.05); padding: 16px; border-radius: 10px; border: 1px solid var(--primary-glow); margin-bottom: 16px;">
           <div class="fw6 mb12" style="color: var(--primary); font-size: 13px;"><i class="bi bi-lightning-charge-fill"></i> Konfigurasi GOWA (go-whatsapp-web-multidevice) — Ringan / Self-Hosted</div>
           <div class="form-row mb12">
+            <div class="fg" style="flex:1;">
+              <label class="fl">Mode Akses GOWA</label>
+              <select class="fs" name="gowa_mode" id="gowa_mode" onchange="toggleGowaMode()">
+                <option value="cloud" <%= gowaSettings.gowa_mode === 'local' ? '' : 'selected' %>>Cloud (HTTPS) — disarankan</option>
+                <option value="local" <%= gowaSettings.gowa_mode === 'local' ? 'selected' : '' %>>Local (HTTP) — wajib polyfill</option>
+              </select>
+            </div>
+            <div class="fg" style="flex:2;">
+              <label class="fl">Keterangan</label>
+              <div id="gowa_mode_hint" style="font-size:11.5px;color:var(--muted);line-height:1.5">
+                <% if (gowaSettings.gowa_mode === 'local') { %>
+                  Base URL <code>http://IP:3000</code>. UI GOWA wajib diberi polyfill <code>crypto.randomUUID</code> (atau akses lewat SSH tunnel). Panduan: <a href="https://gitea.oxpoe.xyz/oxpoe/open-isp/wiki/Konfigurasi" target="_blank" rel="noopener" style="color:var(--primary)">Wiki → Konfigurasi → GOWA Local</a>.
+                <% } else { %>
+                  Base URL <code>https://domain-gowa</code> dengan TLS. UI GOWA langsung normal, tanpa polyfill.
+                <% } %>
+              </div>
+            </div>
+          </div>
+          <div class="form-row mb12">
             <div class="fg" style="flex:2;">
               <label class="fl">Base URL GOWA *</label>
               <input class="fc" name="gowa_base_url" value="<%= gowaSettings.gowa_base_url %>" placeholder="http://127.0.0.1:3000">
@@ -218,6 +237,19 @@
     </div>
 
     <script>
+      function toggleGowaMode() {
+        var mode = (document.getElementById('gowa_mode') || {}).value || 'cloud';
+        var hint = document.getElementById('gowa_mode_hint');
+        var base = document.querySelector('input[name="gowa_base_url"]');
+        if (mode === 'local') {
+          if (hint) hint.innerHTML = 'Base URL <code>http://IP:3000</code>. UI GOWA wajib diberi polyfill <code>crypto.randomUUID</code> (atau akses lewat SSH tunnel). Panduan: <a href="https://gitea.oxpoe.xyz/oxpoe/open-isp/wiki/Konfigurasi" target="_blank" rel="noopener" style="color:var(--primary)">Wiki &rarr; Konfigurasi &rarr; GOWA Local</a>.';
+          if (base) base.placeholder = 'http://IP:3000';
+        } else {
+          if (hint) hint.innerHTML = 'Base URL <code>https://domain-gowa</code> dengan TLS. UI GOWA langsung normal, tanpa polyfill.';
+          if (base) base.placeholder = 'https://gowa.domainmu.com';
+        }
+      }
+
       function toggleGatewayFields() {
         const val = document.getElementById('wa_gateway_type').value;
         document.getElementById('fonnte_fields_container').style.display = val === 'fonnte' ? 'block' : 'none';

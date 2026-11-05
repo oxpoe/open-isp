@@ -2,6 +2,12 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.10] — 2026-11-05 — "gowa-mode"
+
+### Ditambahkan
+- Pilihan **Mode Akses GOWA** di Admin → WhatsApp: **Cloud (HTTPS)** atau **Local (HTTP)**. Mode Local menampilkan peringatan wajib polyfill `crypto.randomUUID` beserta tautan panduan wiki.
+- Halaman wiki **GOWA**: setup Compose, perbedaan Cloud/Local, perintah polyfill, setting OPEN-ISP, dan troubleshooting QR/webhook.
+
 ## [0.5.9] — 2026-11-05 — "gowa-qr-image"
 
 ### Diperbaiki

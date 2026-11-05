@@ -6691,8 +6691,10 @@ router.get('/whatsapp', requireAdminSession, requireSidebarMenuAccess('whatsapp'
     fonnte_api_url: getSetting('fonnte_api_url', 'https://api.fonnte.com/send'),
     fonnte_country_code: getSetting('fonnte_country_code', '62')
   };
+  const gowaBaseUrl = getSetting('gowa_base_url', 'http://127.0.0.1:3000');
   const gowaSettings = {
-    gowa_base_url: getSetting('gowa_base_url', 'http://127.0.0.1:3000'),
+    gowa_mode: getSetting('gowa_mode', /^https:/i.test(String(gowaBaseUrl)) ? 'cloud' : 'local'),
+    gowa_base_url: gowaBaseUrl,
     gowa_username: getSetting('gowa_username', ''),
     gowa_password: getSetting('gowa_password', ''),
     gowa_device_id: getSetting('gowa_device_id', ''),
@@ -6729,6 +6731,7 @@ router.post('/whatsapp/gateway-settings', requireAdminSession, express.urlencode
       fonnte_token,
       fonnte_api_url,
       fonnte_country_code,
+      gowa_mode,
       gowa_base_url,
       gowa_username,
       gowa_password,
@@ -6746,6 +6749,7 @@ router.post('/whatsapp/gateway-settings', requireAdminSession, express.urlencode
       fonnte_token: String(fonnte_token || '').trim(),
       fonnte_api_url: String(fonnte_api_url || 'https://api.fonnte.com/send').trim(),
       fonnte_country_code: String(fonnte_country_code || '62').trim(),
+      gowa_mode: String(gowa_mode || 'cloud').trim() === 'local' ? 'local' : 'cloud',
       gowa_base_url: String(gowa_base_url || 'http://127.0.0.1:3000').trim(),
       gowa_username: String(gowa_username || '').trim(),
       gowa_password: String(gowa_password || '').trim(),
