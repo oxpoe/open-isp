@@ -2,6 +2,15 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] — 2026-11-06 — "qr-custom-gate"
+
+### Diperbaiki
+- Ikon menu **QR-Custom Payment** memakai ikon yang tersedia (`bi-qr-code`).
+- Fitur QR-Custom **dinonaktifkan otomatis** bila QRIS Statis (Semi-Otomatis) belum aktif atau `qris_static_payload` kosong:
+  - menu disembunyikan,
+  - form pembuatan dinonaktifkan,
+  - request pembuatan ditolak (tidak ada data/list dibuat tanpa QR).
+
 ## [0.6.0] — 2026-11-06 — "qr-custom"
 
 ### Ditambahkan

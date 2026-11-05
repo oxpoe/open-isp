@@ -4031,7 +4031,8 @@ router.get('/custom-qr', requireAdminSession, requireSidebarMenuAccess('custom_q
     detail,
     baseUrl,
     durationMinutes: svc.DURATION_MINUTES,
-    hasQrisPayload: !!String(settings.qris_static_payload || '').trim()
+    hasQrisPayload: !!String(settings.qris_static_payload || '').trim(),
+    ready: svc.isReady()
   });
 });
 

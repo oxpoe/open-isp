@@ -7,8 +7,18 @@ const crypto = require('crypto');
 const db = require('../config/database');
 const { isQrisAmountTaken } = require('./invoiceQrisService');
 const { logger } = require('../config/logger');
+const { getSetting } = require('../config/settingsManager');
 
 const DURATION_MINUTES = 20;
+
+function isReady() {
+  try {
+    const enabled = getSetting('qris_static_enabled', true);
+    const off = enabled === false || enabled === 'false' || enabled === 0 || enabled === '0';
+    const payload = String(getSetting('qris_static_payload', '') || '').trim();
+    return !off && payload.length > 0;
+  } catch (e) { return false; }
+}
 
 function nowIso() { return new Date().toISOString(); }
 
@@ -27,6 +37,7 @@ function isTaken(amount, excludeId) {
 }
 
 function create({ title, category, amount, note, createdBy }) {
+  if (!isReady()) throw new Error('QRIS Statis (Semi-Otomatis) belum aktif/berisi payload. Atur dulu di Pengaturan → QRIS.');
   const base = Math.max(1, Math.floor(Number(amount) || 0));
   if (!title || !String(title).trim()) throw new Error('Judul wajib diisi.');
   if (!base) throw new Error('Nominal wajib diisi.');
@@ -161,6 +172,7 @@ function isExpired(row) {
 
 module.exports = {
   DURATION_MINUTES,
+  isReady,
   create,
   list,
   stats,

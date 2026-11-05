@@ -23,10 +23,11 @@
       </div>
     <% } %>
 
-    <% if (typeof hasQrisPayload !== 'undefined' && !hasQrisPayload) { %>
-      <div class="alert alert-d"><i class="bi bi-exclamation-triangle"></i> QRIS statis belum diatur. Isi <b>QRIS static payload</b> di Pengaturan agar QR bisa dibuat.</div>
+    <% if (typeof ready !== 'undefined' && !ready) { %>
+      <div class="alert alert-d"><i class="bi bi-exclamation-triangle"></i> <b>QR-Custom Payment dinonaktifkan.</b> Aktifkan <b>QRIS Statis (Semi-Otomatis)</b> dan isi <b>QRIS static payload</b> di <a href="/admin/settings" style="color:inherit;text-decoration:underline">Pengaturan</a> terlebih dahulu.</div>
     <% } %>
 
+    <% if (typeof ready === 'undefined' || ready) { %>
     <div class="card mb16">
       <div class="card-hd"><h6><i class="bi bi-plus-circle"></i> Buat QR Nominal Custom</h6></div>
       <div class="card-bd">
@@ -43,6 +44,7 @@
         </form>
       </div>
     </div>
+    <% } %>
 
     <div class="form-row mb16">
       <div class="fg"><div class="card"><div class="card-bd"><div class="muted" style="font-size:12px">Pembayaran masuk</div><div style="font-size:22px;font-weight:800"><%= stats.paidCount %></div><div class="muted" style="font-size:11px">Rp <%= Number(stats.paidTotal||0).toLocaleString('id-ID') %></div></div></div></div>
