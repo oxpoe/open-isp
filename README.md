@@ -11,9 +11,11 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/lisensi-ISC-ADFF2F" alt="Lisensi: ISC">
-  <img src="https://img.shields.io/badge/versi-0.5.3_forge--lime-ADFF2F" alt="Versi 0.5.3 (forge-lime)">
+  <img src="https://img.shields.io/badge/versi-0.5.4_wa--notice-ADFF2F" alt="Versi 0.5.4 (wa-notice)">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-339933" alt="Node.js >= 20">
   <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
+  <a href="https://demo-openisp.oxpoe.xyz"><img src="https://img.shields.io/badge/demo-live-ADFF2F?logo=googlechrome&logoColor=black" alt="Demo"></a>
+  <a href="https://oxpoe.xyz"><img src="https://img.shields.io/badge/donasi-oxpoe.xyz-e5484d?logo=buymeacoffee&logoColor=white" alt="Donasi"></a>
   <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.xyz%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.stars_count&label=stars&style=flat&color=blue&logo=gitea" alt="Stars">
   <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.xyz%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.forks_count&label=forks&style=flat&color=lightgrey&logo=gitea" alt="Forks">
   <img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitea.oxpoe.xyz%2Fapi%2Fv1%2Frepos%2Foxpoe%2Fopen-isp&query=%24.open_issues_count&label=issues&style=flat&color=orange&logo=gitea" alt="Issues">
@@ -79,6 +81,10 @@ Selengkapnya (10 gambar, desktop + mobile): [`docs/screenshots/`](docs/screensho
 Selengkapnya: **[Wiki OPEN-ISP](https://gitea.oxpoe.xyz/oxpoe/open-isp/wiki)**.
 
 ## Mulai Cepat
+
+### Demo online
+
+Coba tanpa instal: **[demo-openisp.oxpoe.xyz](https://demo-openisp.oxpoe.xyz)** — login `admin` / `demo-isp123`.
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/oxpoe/open-isp)
 
@@ -146,14 +152,18 @@ Dirilis dengan lisensi **ISC** — bebas digunakan, dimodifikasi, dan didistribu
 OPEN-ISP tumbuh dari karya **Alijaya Net** — ayo dukung juga pengembang aslinya:
 
 - **Donasi Alijaya Net**: [app.alijaya.com/donasi](https://app.alijaya.com/donasi) · WhatsApp [0819-4721-5703](https://wa.me/6281947215703)
+- **Demo online**: [demo-openisp.oxpoe.xyz](https://demo-openisp.oxpoe.xyz)
+- **Donasi OPEN-ISP**: [oxpoe.xyz](https://oxpoe.xyz) — sukarela, untuk pengembangan fitur.
 
-Dukungan untuk **pengembangan OPEN-ISP** (agar makin canggih): link donasi **menyusul** — sementara ini bisa lewat menu **Dukung OPEN-ISP** di aplikasi.
+Dukungan juga bisa lewat menu **Dukung OPEN-ISP** di aplikasi.
 
 ---
 
 ## English (quick)
 
 **OPEN-ISP** is an open-source ISP billing & management system: customer PWA, admin/technician/collector portals, MikroTik PPPoE & hotspot, multi-vendor OLT (SNMP/CLI), GenieACS TR-069, RADIUS, WhatsApp & Telegram notifications, QRIS payments, and a bilingual (ID/EN) UI.
+
+Live demo: **https://demo-openisp.oxpoe.xyz** (`admin` / `demo-isp123`). Donate: **https://oxpoe.xyz**.
 
 Quick start: `docker compose up -d` → http://localhost:3001 (default login `admin` / `demo-isp123`).
 Advanced menus are unlocked with a free activation code — not published in this repository (set via `activation_code` in `settings.json`). License: **ISC**. Based on the base code & repo by **Alijaya Net** ([alijayanet/billing-rtrw](https://github.com/alijayanet/billing-rtrw)). Code by DeepSeek V4.1 Flash — max, on opencode.
