@@ -333,6 +333,17 @@ const updateWebhookPaymentNotifMatchDonation = db.prepare(`
   SET matched_donation_order_id=?
   WHERE id=?
 `);
+const selectCustomQrByUniqueAmount = db.prepare(`
+  SELECT id, status, title, amount_unique, expires_at
+  FROM custom_qr_payments
+  WHERE status IN ('pending','expired') AND amount_unique = ?
+  ORDER BY id DESC LIMIT 2
+`);
+const updateWebhookPaymentNotifMatchCustomQr = db.prepare(`
+  UPDATE webhook_payment_notifs
+  SET matched_custom_qr_id=?
+  WHERE id=?
+`);
 
 const markInvoicePaidAppendNote = db.prepare(`
   UPDATE invoices
@@ -998,14 +1009,17 @@ app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
     let matchedInvoiceId = null;
     let matchedVoucherOrderId = null;
     let matchedDonationOrderId = null;
+    let matchedCustomQrId = null;
     if (amount != null) {
       try {
         const invCandidates = selectInvoiceByUniqueAmount.all(amount);
         const vCandidates = selectVoucherOrderByUniqueAmount.all(amount);
         const dCandidates = selectDonationOrderByUniqueAmount.all(amount);
+        const cqCandidates = selectCustomQrByUniqueAmount.all(amount);
         const totalCandidates = (Array.isArray(invCandidates) ? invCandidates.length : 0) + 
                                 (Array.isArray(vCandidates) ? vCandidates.length : 0) +
-                                (Array.isArray(dCandidates) ? dCandidates.length : 0);
+                                (Array.isArray(dCandidates) ? dCandidates.length : 0) +
+                                (Array.isArray(cqCandidates) ? cqCandidates.length : 0);
 
         if (totalCandidates === 1) {
           if (Array.isArray(invCandidates) && invCandidates.length === 1) {
@@ -1069,17 +1083,36 @@ app.post('/api/webhook/v1/payment-notif', multer().any(), async (req, res) => {
                 logger.error(`[WEBHOOK][payment-notif] Donation fulfill error: ${e?.message || e}`);
               }
             }
+          } else if (Array.isArray(cqCandidates) && cqCandidates.length === 1) {
+            const cq = cqCandidates[0];
+            const cqId = Number(cq.id || 0);
+            if (cqId > 0) {
+              const svc = require('./services/customQrService');
+              const expired = svc.isExpired(cq);
+              if (String(cq.status) === 'pending' && !expired) {
+                svc.markPaidFromWebhook(cqId, notifId || null);
+                logger.info(`[WEBHOOK][payment-notif] MATCH custom_qr=${cqId} amount=${amount}`);
+              } else {
+                svc.markWarningFromWebhook(cqId, notifId || null);
+                logger.warn(`[WEBHOOK][payment-notif] MATCH custom_qr=${cqId} amount=${amount} SETELAH 20 MENIT (warning)`);
+              }
+              matchedCustomQrId = cqId;
+              if (notifId) {
+                try { updateWebhookPaymentNotifMatchCustomQr.run(cqId, notifId); } catch {}
+              }
+            }
           }
         } else if (totalCandidates > 1) {
           const invIds = Array.isArray(invCandidates) ? invCandidates.map(x => x.id).join(',') : '';
           const vIds = Array.isArray(vCandidates) ? vCandidates.map(x => x.id).join(',') : '';
           const dIds = Array.isArray(dCandidates) ? dCandidates.map(x => x.id).join(',') : '';
-          logger.error(`[WEBHOOK][payment-notif] MATCH ambiguous: amount=${amount} invoices=[${invIds}] vouchers=[${vIds}] donations=[${dIds}]`);
+          const cqIds = Array.isArray(cqCandidates) ? cqCandidates.map(x => x.id).join(',') : '';
+          logger.error(`[WEBHOOK][payment-notif] MATCH ambiguous: amount=${amount} invoices=[${invIds}] vouchers=[${vIds}] donations=[${dIds}] custom_qr=[${cqIds}]`);
         }
 
         // Tidak ada tagihan UNPAID dgn nominal itu → kemungkinan notifikasi ke-2 dari app lain
         // (mis. GoPay & GoPay Merchant) untuk pembayaran yang SUDAH LUNAS. Hubungkan ke invoice lunas.
-        if (!matchedInvoiceId && !matchedVoucherOrderId && !matchedDonationOrderId) {
+        if (!matchedInvoiceId && !matchedVoucherOrderId && !matchedDonationOrderId && !matchedCustomQrId) {
           const paidInv = selectPaidInvoiceByUniqueAmount.all(amount);
           if (Array.isArray(paidInv) && paidInv.length === 1) {
             matchedInvoiceId = Number(paidInv[0].id || 0) || null;
@@ -2065,6 +2098,96 @@ app.post(['/donasi/confirm', '/api/donasi/confirm'], async (req, res) => {
     logger.error(`[Donasi] Error processing donation confirmation: ${e.message}`);
     return res.status(500).json({ success: false, message: e.message });
   }
+});
+
+// ─── QR CUSTOM PAYMENT (publik) ─────────────────────────────────────────────
+function cqEscape(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+
+app.get('/custom-qr/:token', (req, res) => {
+  let row = null;
+  try { row = require('./services/customQrService').getByToken(req.params.token); } catch (e) {}
+  if (!row) return res.status(404).send('QR tidak ditemukan atau sudah dihapus.');
+  const settings = getSettingsWithCache();
+  const company = settings.company_header || 'OPEN-ISP';
+  const statusLabels = { pending: 'Menunggu Pembayaran', paid: 'LUNAS', expired: 'Kedaluwarsa', warning: 'Perlu Verifikasi Admin', rejected: 'Ditolak / Refund' };
+  const status = String(row.status || 'pending');
+  const showQr = status !== 'paid' && status !== 'rejected';
+  const amountText = 'Rp ' + Number(row.amount_unique || 0).toLocaleString('id-ID');
+  const baseAmountText = 'Rp ' + Number(row.amount || 0).toLocaleString('id-ID');
+  const html = `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${cqEscape(row.title)} — ${cqEscape(company)}</title>
+<style>
+body{margin:0;background:#0b1220;color:#e5e7eb;font-family:system-ui,Segoe UI,Arial;display:grid;place-items:center;min-height:100vh;padding:20px}
+.card{max-width:460px;width:100%;background:#0f172a;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:22px;text-align:center}
+h1{font-size:19px;margin:0 0 4px}p{margin:6px 0;color:#94a3b8;font-size:13px}
+.amt{font-size:26px;font-weight:800;color:#ADFF2F;margin:12px 0 2px}.base{font-size:12px;color:#64748b}
+.qr{background:#fff;padding:12px;border-radius:14px;display:inline-block;margin:14px 0}.qr img{display:block;width:240px;height:240px}
+.badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-top:6px}
+.pending{background:rgba(245,158,11,.15);color:#fbbf24}.paid{background:rgba(34,197,94,.15);color:#4ade80}
+.expired{background:rgba(239,68,68,.15);color:#f87171}.warning{background:rgba(249,115,22,.15);color:#fb923c}.rejected{background:rgba(148,163,184,.15);color:#cbd5e1}
+.timer{font-size:14px;color:#fbbf24;margin-top:8px}.note{font-size:12px;color:#64748b;margin-top:12px}
+</style></head><body><div class="card">
+<div style="font-size:12px;letter-spacing:1px;color:#64748b;text-transform:uppercase">${cqEscape(row.category || 'Pembayaran')}</div>
+<h1>${cqEscape(row.title)}</h1>
+<div class="amt">${amountText}</div>
+<div class="base">Nominal dasar ${baseAmountText} + kode unik ${Number(row.unique_code || 0)}</div>
+<div class="badge ${cqEscape(status)}" id="statusBadge">${cqEscape(statusLabels[status] || status)}</div>
+${showQr ? `<div class="qr"><img src="/custom-qr/${cqEscape(row.share_token)}/qr.png?amount=${Number(row.amount_unique || 0)}" alt="QRIS"></div>` : ''}
+<div class="timer" id="timer" data-expires="${cqEscape(row.expires_at || '')}"></div>
+${row.note ? `<div class="note">${cqEscape(row.note)}</div>` : ''}
+<div class="note">Bayar dengan nominal <b>persis</b> seperti di atas agar pembayaran otomatis tercocokkan. QR berlaku ${require('./services/customQrService').DURATION_MINUTES} menit.</div>
+<div class="note">${cqEscape(company)}</div>
+</div>
+<script>
+(function(){
+  var el=document.getElementById('timer'), exp=el&&el.getAttribute('data-expires');
+  function tick(){
+    if(!el||!exp) return;
+    var d=new Date(exp).getTime()-Date.now();
+    if(d<=0){ el.textContent='Batas 20 menit telah lewat — pembayaran tetap dicek admin.'; return; }
+    var m=Math.floor(d/60000), s=Math.floor((d%60000)/1000);
+    el.textContent='Sisa waktu: '+m+' menit '+s+' detik';
+  }
+  tick(); setInterval(tick,1000);
+  var last=${JSON.stringify(status)};
+  setInterval(function(){
+    fetch('/custom-qr/${cqEscape(row.share_token)}/status',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
+      if(d && d.status && d.status!==last){ location.reload(); }
+    }).catch(function(){});
+  },5000);
+})();
+</script></body></html>`;
+  res.set('Cache-Control', 'no-store');
+  return res.send(html);
+});
+
+app.get('/custom-qr/:token/qr.png', async (req, res) => {
+  let row = null;
+  try { row = require('./services/customQrService').getByToken(req.params.token); } catch (e) {}
+  if (!row) return res.status(404).send('QR tidak ditemukan');
+  const settings = getSettingsWithCache();
+  const payload = String(settings.qris_static_payload || '').trim();
+  if (!payload) return res.status(404).send('QRIS statis belum diatur admin.');
+  try {
+    const jpg = await qrisUtil.buildDynamicQrisJpgBuffer(payload, Number(row.amount_unique || row.amount || 0));
+    res.set('Content-Type', 'image/jpeg');
+    res.set('Cache-Control', 'no-store');
+    return res.send(jpg);
+  } catch (e) {
+    logger.error('[CustomQR] Gagal membuat QR: ' + e.message);
+    return res.status(500).send('Gagal membuat QR');
+  }
+});
+
+app.get('/custom-qr/:token/status', (req, res) => {
+  let row = null;
+  try { row = require('./services/customQrService').getByToken(req.params.token); } catch (e) {}
+  if (!row) return res.status(404).json({ status: 'not_found' });
+  return res.json({ status: row.status, paid_at: row.paid_at || null });
 });
 
 // Mount built-in ACS server endpoint (TR-069)

@@ -4013,6 +4013,70 @@ router.post('/sidebar-settings', requireAdminSession, restrictToAdmin, express.u
   res.redirect('/admin/sidebar-settings');
 });
 
+// ─── QR CUSTOM PAYMENT (nominal bebas, kode unik 20 menit) ─────────────────
+router.get('/custom-qr', requireAdminSession, requireSidebarMenuAccess('custom_qr'), (req, res) => {
+  const svc = require('../services/customQrService');
+  let detail = null;
+  const detailId = Number(req.query.id) || 0;
+  if (detailId > 0) { try { detail = svc.getById(detailId); } catch (e) {} }
+  const settings = getSettings();
+  const baseUrl = String(settings.public_base_url || ((req.headers['x-forwarded-proto'] || req.protocol) + '://' + req.get('host'))).replace(/\/+$/, '');
+  res.render('admin/custom_qr', {
+    title: 'QR-Custom Payment',
+    company: company(),
+    activePage: 'custom_qr',
+    msg: flashMsg(req),
+    rows: svc.list(150),
+    stats: svc.stats(),
+    detail,
+    baseUrl,
+    durationMinutes: svc.DURATION_MINUTES,
+    hasQrisPayload: !!String(settings.qris_static_payload || '').trim()
+  });
+});
+
+router.post('/custom-qr', requireAdminSession, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    const svc = require('../services/customQrService');
+    const row = svc.create({
+      title: req.body.title,
+      category: req.body.category,
+      amount: req.body.amount,
+      note: req.body.note,
+      createdBy: resolvePaidByName(req, 'Admin')
+    });
+    req.session._msg = { type: 'success', text: `QR custom dibuat: Rp ${Number(row.amount_unique).toLocaleString('id-ID')} — berlaku ${svc.DURATION_MINUTES} menit.` };
+    return res.redirect('/admin/custom-qr?id=' + row.id);
+  } catch (e) {
+    req.session._msg = { type: 'error', text: 'Gagal membuat QR custom: ' + e.message };
+    return res.redirect('/admin/custom-qr');
+  }
+});
+
+router.post('/custom-qr/:id/manual-paid', requireAdminSession, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    require('../services/customQrService').markManualPaid(req.params.id, resolvePaidByName(req, 'Admin'), req.body.note);
+    req.session._msg = { type: 'success', text: 'Pembayaran custom ditandai LUNAS (manual).' };
+  } catch (e) { req.session._msg = { type: 'error', text: e.message }; }
+  res.redirect('/admin/custom-qr?id=' + Number(req.params.id));
+});
+
+router.post('/custom-qr/:id/accept', requireAdminSession, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    require('../services/customQrService').acceptWarning(req.params.id, resolvePaidByName(req, 'Admin'), req.body.note);
+    req.session._msg = { type: 'success', text: 'Pembayaran setelah 20 menit diterima.' };
+  } catch (e) { req.session._msg = { type: 'error', text: e.message }; }
+  res.redirect('/admin/custom-qr?id=' + Number(req.params.id));
+});
+
+router.post('/custom-qr/:id/reject', requireAdminSession, requireSidebarMenuAccess('custom_qr'), express.urlencoded({ extended: true }), (req, res) => {
+  try {
+    require('../services/customQrService').reject(req.params.id, resolvePaidByName(req, 'Admin'), req.body.note);
+    req.session._msg = { type: 'success', text: 'Pembayaran ditolak / refund dicatat.' };
+  } catch (e) { req.session._msg = { type: 'error', text: e.message }; }
+  res.redirect('/admin/custom-qr?id=' + Number(req.params.id));
+});
+
 router.get('/service-notice', requireAdminSession, requireSidebarMenuAccess('service_notice'), (req, res) => {
   let routers = [];
   try { routers = db.prepare('SELECT id, name FROM routers WHERE is_active = 1 ORDER BY name ASC').all(); } catch (_) {}
@@ -6814,6 +6878,7 @@ router.get('/whatsapp', requireAdminSession, requireSidebarMenuAccess('whatsapp'
   try { gowaWebhookSecret = require('../config/settingsManager').ensureGowaWebhookSecret(); } catch (e) {}
   const gowaSettings = {
     gowa_mode: getSetting('gowa_mode', /^https:/i.test(String(gowaBaseUrl)) ? 'cloud' : 'local'),
+    gowa_secret_mode: getSetting('gowa_secret_mode', 'auto') === 'manual' ? 'manual' : 'auto',
     gowa_base_url: gowaBaseUrl,
     gowa_username: getSetting('gowa_username', ''),
     gowa_password: getSetting('gowa_password', ''),
@@ -6905,6 +6970,31 @@ router.post('/whatsapp/test-gowa-connection', requireAdminSession, express.json(
     return res.json(Object.assign({ ok: r.reachable, success: r.reachable }, r));
   } catch (e) {
     return res.status(500).json({ ok: false, success: false, message: e.message });
+  }
+});
+
+router.post('/whatsapp/gowa-secret', requireAdminSession, express.json(), async (req, res) => {
+  try {
+    const sm = require('../config/settingsManager');
+    const b = req.body || {};
+    const mode = String(b.mode || '').toLowerCase() === 'manual' ? 'manual' : 'auto';
+    if (mode === 'auto') {
+      const secret = sm.ensureGowaWebhookSecret(true);
+      saveSettings({ gowa_secret_mode: 'auto' });
+      return res.json({ ok: true, mode: 'auto', secret });
+    }
+    const secret = String(b.secret || '').trim();
+    if (secret) {
+      if (secret === 'secret' || secret.length < 16) {
+        return res.status(400).json({ ok: false, message: 'Secret minimal 16 karakter dan tidak boleh "secret".' });
+      }
+      saveSettings({ gowa_webhook_secret: secret, gowa_secret_mode: 'manual' });
+      return res.json({ ok: true, mode: 'manual', saved: true, secret });
+    }
+    saveSettings({ gowa_secret_mode: 'manual' });
+    return res.json({ ok: true, mode: 'manual', saved: false, secret: getSetting('gowa_webhook_secret', '') });
+  } catch (e) {
+    return res.status(500).json({ ok: false, message: e.message });
   }
 });
 

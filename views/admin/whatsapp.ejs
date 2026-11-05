@@ -219,12 +219,22 @@
                 </div>
               </div>
               <div class="fg" style="flex:1;">
+                <label class="fl">Mode Webhook Secret</label>
+                <div style="display:flex;gap:6px;margin-bottom:8px">
+                  <button type="button" class="btn btn-sm <%= gowaSettings.gowa_secret_mode === 'auto' ? 'btn-p' : 'btn-g' %>" id="gsm-btn-auto" onclick="gowaSecretMode('auto')"><i class="bi bi-magic"></i> Auto Generate</button>
+                  <button type="button" class="btn btn-sm <%= gowaSettings.gowa_secret_mode === 'manual' ? 'btn-p' : 'btn-g' %>" id="gsm-btn-manual" onclick="gowaSecretMode('manual')"><i class="bi bi-pencil-square"></i> Manual</button>
+                </div>
                 <label class="fl">Webhook Secret (HMAC)</label>
                 <div style="display:flex;gap:8px;">
-                  <input class="fc" id="gowa_webhook_secret" name="gowa_webhook_secret" value="<%= gowaSettings.gowa_webhook_secret %>" placeholder="otomatis dibuat">
+                  <input class="fc" id="gowa_webhook_secret" name="gowa_webhook_secret" data-mode="<%= gowaSettings.gowa_secret_mode %>" data-locked="1" value="<%= gowaSettings.gowa_webhook_secret %>" placeholder="otomatis dibuat">
                   <button type="button" class="btn btn-g" onclick="copyGowaSecret(this)" title="Salin webhook secret"><i class="bi bi-copy"></i></button>
                 </div>
-                <div style="font-size:11px;color:var(--muted);margin-top:4px">Dibuat otomatis (32 byte). Samakan dengan <code>WHATSAPP_WEBHOOK_SECRET</code> di GOWA.</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                  <button type="button" class="btn btn-p btn-sm" id="gsm-btn-save" onclick="gowaSecretSave(this)"><i class="bi bi-save"></i> Simpan Secret</button>
+                  <button type="button" class="btn btn-g btn-sm" id="gsm-btn-edit" onclick="gowaSecretEdit()"><i class="bi bi-unlock"></i> Ubah</button>
+                </div>
+                <div id="gowa_secret_status" style="font-size:11px;color:var(--muted);margin-top:6px"></div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">Auto Generate: secret dibuat &amp; dikunci otomatis. Manual: isi sendiri lalu klik Simpan Secret. Samakan dengan <code>WHATSAPP_WEBHOOK_SECRET</code> di GOWA.</div>
               </div>
             </div>
           </div>
@@ -350,6 +360,73 @@
         render();
         _gowaQrTick = setInterval(function () { remaining--; if (remaining < 0) remaining = 0; render(); }, 1000);
       }
+function gowaSecretRender() {
+  var input = document.getElementById('gowa_webhook_secret');
+  if (!input) return;
+  var mode = input.getAttribute('data-mode') || 'auto';
+  var locked = (mode === 'auto') ? true : (input.getAttribute('data-locked') === '1');
+  var save = document.getElementById('gsm-btn-save');
+  var edit = document.getElementById('gsm-btn-edit');
+  var auto = document.getElementById('gsm-btn-auto');
+  var manual = document.getElementById('gsm-btn-manual');
+  var st = document.getElementById('gowa_secret_status');
+  input.readOnly = locked;
+  if (save) save.disabled = (mode === 'auto') || locked;
+  if (edit) edit.style.display = (mode === 'manual' && locked) ? 'inline-block' : 'none';
+  if (auto) auto.className = 'btn btn-sm ' + (mode === 'auto' ? 'btn-p' : 'btn-g');
+  if (manual) manual.className = 'btn btn-sm ' + (mode === 'manual' ? 'btn-p' : 'btn-g');
+  if (st) {
+    if (mode === 'auto') st.textContent = 'Mode otomatis: secret dibuat dan dikunci. Salin ke GOWA.';
+    else if (locked) st.textContent = 'Mode manual: secret tersimpan dan dikunci. Klik Ubah untuk mengganti.';
+    else st.textContent = 'Mode manual: masukkan secret (min. 16 karakter), lalu Simpan Secret.';
+  }
+}
+async function gowaSecretMode(mode) {
+  var input = document.getElementById('gowa_webhook_secret');
+  if (!input) return;
+  try {
+    var r = await fetch('/admin/whatsapp/gowa-secret', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: mode })
+    });
+    var d = await r.json();
+    if (!d.ok) { alert(d.message || 'Gagal mengubah mode secret.'); return; }
+    if (d.secret) input.value = d.secret;
+    input.setAttribute('data-mode', d.mode);
+    input.setAttribute('data-locked', d.mode === 'manual' ? '0' : '1');
+    gowaSecretRender();
+  } catch (e) { alert('Gagal: ' + e.message); }
+}
+async function gowaSecretSave(btn) {
+  var input = document.getElementById('gowa_webhook_secret');
+  if (!input) return;
+  var secret = String(input.value || '').trim();
+  if (secret.length < 16) { alert('Secret minimal 16 karakter.'); return; }
+  var old = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...'; }
+  try {
+    var r = await fetch('/admin/whatsapp/gowa-secret', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'manual', secret: secret })
+    });
+    var d = await r.json();
+    if (!d.ok) { alert(d.message || 'Gagal menyimpan secret.'); return; }
+    input.value = d.secret || secret;
+    input.setAttribute('data-mode', 'manual');
+    input.setAttribute('data-locked', '1');
+    gowaSecretRender();
+  } catch (e) { alert('Gagal: ' + e.message); }
+  finally { if (btn) { btn.disabled = false; btn.innerHTML = old; } gowaSecretRender(); }
+}
+function gowaSecretEdit() {
+  var input = document.getElementById('gowa_webhook_secret');
+  if (!input || input.getAttribute('data-mode') !== 'manual') return;
+  input.setAttribute('data-locked', '0');
+  gowaSecretRender();
+  input.focus();
+}
+document.addEventListener('DOMContentLoaded', gowaSecretRender);
+
 function copyGowaSecret(btn) {
   var el = document.getElementById('gowa_webhook_secret');
   if (!el) return;

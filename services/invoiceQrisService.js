@@ -19,6 +19,7 @@ function isQrisAmountTaken(amount, opts = {}) {
   const exInv = Number(opts.excludeInvoiceId || 0);
   const exVoucher = Number(opts.excludeVoucherOrderId || 0);
   const exDonation = Number(opts.excludeDonationOrderId || 0);
+  const exCustomQr = Number(opts.excludeCustomQrId || 0);
   try {
     const inv = db.prepare('SELECT id FROM invoices WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1').get('unpaid', amt, exInv);
     if (inv && inv.id) return true;
@@ -26,6 +27,8 @@ function isQrisAmountTaken(amount, opts = {}) {
     if (voc && voc.id) return true;
     const don = db.prepare('SELECT id FROM public_donation_orders WHERE status=? AND qris_amount_unique=? AND id!=? LIMIT 1').get('pending', amt, exDonation);
     if (don && don.id) return true;
+    const cq = db.prepare("SELECT id FROM custom_qr_payments WHERE status IN ('pending','expired') AND amount_unique=? AND id!=? LIMIT 1").get(amt, exCustomQr);
+    if (cq && cq.id) return true;
   } catch (e) { /* tabel opsional belum ada */ }
   return false;
 }

@@ -2,6 +2,16 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-11-06 — "qr-custom"
+
+### Ditambahkan
+- **QR-Custom Payment** (menu baru di sidebar UTAMA): membuat QRIS nominal bebas dengan kode unik untuk kebutuhan di luar billing (sewa, donasi perusahaan, dll).
+  - Durasi 20 menit per QR, link share publik, QR dinamis, timer, dan halaman status.
+  - Webhook pembayaran mencocokkan nominal unik; pembayaran dalam 20 menit → LUNAS + notifikasi admin.
+  - Pembayaran dengan nominal sama **setelah 20 menit** → status `warning` + notifikasi admin, dapat diselesaikan atau ditolak/refund.
+  - Panel histori, statistik masuk/pending/warning/rejected, manual pay bila sinkron webhook gagal.
+- **Mode Webhook Secret GOWA**: pilihan **Auto Generate** (kolom terkunci, tombol simpan nonaktif) atau **Manual** (isi secret → Simpan → terkunci, tombol Ubah untuk mengganti), plus tombol salin.
+
 ## [0.5.20] — 2026-11-06 — "copy-secret"
 
 ### Ditambahkan

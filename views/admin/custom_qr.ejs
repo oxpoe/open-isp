@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="<%= lang || 'id' %>">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= title %> | <%= company %></title>
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<%- include('partials/sidebar', { activePage: activePage || 'custom_qr', company }) %>
+<div class="mw">
+  <div class="topbar">
+    <div class="tb-title"><button class="hb-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><i class="bi bi-qr-code-simple"></i> QR-Custom Payment</div>
+    <div class="tb-right">
+      <span class="adm-badge"><i class="bi bi-person-fill"></i> Admin</span>
+      <a href="/admin/logout" class="btn btn-g btn-sm"><i class="bi bi-box-arrow-left"></i> Logout</a>
+    </div>
+  </div>
+  <div class="page">
+    <% if (msg) { %>
+      <div class="alert alert-<%= msg.type==='success'?'s':'d' %>" data-flash="1">
+        <i class="bi bi-<%= msg.type==='success'?'check-circle':'exclamation-circle' %>"></i> <%= msg.text %>
+      </div>
+    <% } %>
+
+    <% if (typeof hasQrisPayload !== 'undefined' && !hasQrisPayload) { %>
+      <div class="alert alert-d"><i class="bi bi-exclamation-triangle"></i> QRIS statis belum diatur. Isi <b>QRIS static payload</b> di Pengaturan agar QR bisa dibuat.</div>
+    <% } %>
+
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-plus-circle"></i> Buat QR Nominal Custom</h6></div>
+      <div class="card-bd">
+        <form method="POST" action="/admin/custom-qr">
+          <div class="form-row">
+            <div class="fg" style="flex:2"><label class="fl">Judul *</label><input class="fc" name="title" required placeholder="mis. Pembayaran sewa tower / donasi perusahaan"></div>
+            <div class="fg"><label class="fl">Kategori</label><input class="fc" name="category" placeholder="mis. Sewa, Donasi, Lain-lain"></div>
+            <div class="fg"><label class="fl">Nominal (Rp) *</label><input class="fc" type="number" min="1" name="amount" required placeholder="100000"></div>
+          </div>
+          <div class="form-row">
+            <div class="fg" style="flex:2"><label class="fl">Catatan (opsional)</label><input class="fc" name="note" placeholder="Keterangan untuk penerima link"></div>
+            <div class="fg" style="display:flex;align-items:flex-end"><button class="btn btn-p" type="submit"><i class="bi bi-qr-code"></i> Generate QR (20 menit)</button></div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="form-row mb16">
+      <div class="fg"><div class="card"><div class="card-bd"><div class="muted" style="font-size:12px">Pembayaran masuk</div><div style="font-size:22px;font-weight:800"><%= stats.paidCount %></div><div class="muted" style="font-size:11px">Rp <%= Number(stats.paidTotal||0).toLocaleString('id-ID') %></div></div></div></div>
+      <div class="fg"><div class="card"><div class="card-bd"><div class="muted" style="font-size:12px">Menunggu (pending)</div><div style="font-size:22px;font-weight:800;color:#fbbf24"><%= stats.pendingCount %></div></div></div></div>
+      <div class="fg"><div class="card"><div class="card-bd"><div class="muted" style="font-size:12px">Warning (lewat 20 menit)</div><div style="font-size:22px;font-weight:800;color:#fb923c"><%= stats.warningCount %></div></div></div></div>
+      <div class="fg"><div class="card"><div class="card-bd"><div class="muted" style="font-size:12px">Ditolak / refund</div><div style="font-size:22px;font-weight:800"><%= stats.rejectedCount %></div></div></div></div>
+    </div>
+
+    <% if (detail) { %>
+    <div class="card mb16">
+      <div class="card-hd"><h6><i class="bi bi-qr-code"></i> <%= detail.title %> — Rp <%= Number(detail.amount_unique||0).toLocaleString('id-ID') %></h6></div>
+      <div class="card-bd" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px">
+        <div style="text-align:center">
+          <% if (detail.status === 'paid' || detail.status === 'rejected') { %>
+            <div style="padding:24px;border:1px dashed var(--border);border-radius:12px;color:var(--muted)">QR tidak aktif — status: <b><%= detail.status %></b></div>
+          <% } else { %>
+            <img src="/custom-qr/<%= detail.share_token %>/qr.png" alt="QRIS" style="max-width:240px;background:#fff;padding:10px;border-radius:12px">
+            <div id="cqTimer" data-expires="<%= detail.expires_at || '' %>" style="margin-top:8px;font-size:13px;color:#fbbf24"></div>
+          <% } %>
+        </div>
+        <div style="font-size:13px;line-height:1.8">
+          <div><b>Status:</b> <%= detail.status %></div>
+          <div><b>Nominal dasar:</b> Rp <%= Number(detail.amount||0).toLocaleString('id-ID') %></div>
+          <div><b>Kode unik:</b> <%= detail.unique_code %></div>
+          <div><b>Nominal bayar:</b> Rp <%= Number(detail.amount_unique||0).toLocaleString('id-ID') %></div>
+          <div><b>Kategori:</b> <%= detail.category || '-' %></div>
+          <div><b>Dibuat:</b> <%= detail.created_at %></div>
+          <div><b>Kedaluwarsa:</b> <%= detail.expires_at || '-' %></div>
+          <% if (detail.note) { %><div><b>Catatan:</b> <%= detail.note %></div><% } %>
+          <div style="margin-top:8px"><b>Link share:</b><br>
+            <input class="fc" readonly id="cqLink" value="<%= baseUrl %>/custom-qr/<%= detail.share_token %>" style="font-size:12px">
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+            <button class="btn btn-g btn-sm" onclick="copyCqLink()"><i class="bi bi-copy"></i> Salin Link</button>
+            <a class="btn btn-g btn-sm" href="<%= baseUrl %>/custom-qr/<%= detail.share_token %>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Buka</a>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+            <% if (detail.status !== 'paid') { %>
+              <form method="POST" action="/admin/custom-qr/<%= detail.id %>/manual-paid" onsubmit="return confirm('Tandai pembayaran ini LUNAS secara manual?')">
+                <input type="hidden" name="note" value="Manual pay dari panel admin">
+                <button class="btn btn-p btn-sm"><i class="bi bi-check2-circle"></i> Manual Pay</button>
+              </form>
+            <% } %>
+            <% if (detail.status === 'warning') { %>
+              <form method="POST" action="/admin/custom-qr/<%= detail.id %>/accept" onsubmit="return confirm('Terima pembayaran setelah 20 menit?')">
+                <button class="btn btn-p btn-sm"><i class="bi bi-check2"></i> Selesaikan</button>
+              </form>
+            <% } %>
+            <% if (detail.status !== 'paid' && detail.status !== 'rejected') { %>
+              <form method="POST" action="/admin/custom-qr/<%= detail.id %>/reject" onsubmit="return confirm('Tolak / refund pembayaran ini?')">
+                <input type="hidden" name="note" value="Refund dari panel admin">
+                <button class="btn btn-g btn-sm"><i class="bi bi-x-circle"></i> Reject / Refund</button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-hd"><h6><i class="bi bi-clock-history"></i> Histori QR Custom</h6></div>
+      <div class="card-bd" style="overflow:auto">
+        <table class="table" style="width:100%;font-size:12.5px">
+          <thead><tr><th>Judul</th><th>Kategori</th><th>Nominal</th><th>Status</th><th>Dibuat</th><th>Kedaluwarsa</th><th>Aksi</th></tr></thead>
+          <tbody>
+          <% if (!rows || rows.length === 0) { %>
+            <tr><td colspan="7" class="muted" style="text-align:center;padding:20px">Belum ada QR custom.</td></tr>
+          <% } %>
+          <% rows.forEach(function(r) { %>
+            <tr>
+              <td><b><%= r.title %></b><% if (r.note) { %><div class="muted" style="font-size:11px"><%= r.note %></div><% } %></td>
+              <td><%= r.category || '-' %></td>
+              <td>Rp <%= Number(r.amount_unique||0).toLocaleString('id-ID') %></td>
+              <td>
+                <span style="font-weight:700;color:<%= r.status==='paid'?'#4ade80':(r.status==='warning'?'#fb923c':(r.status==='rejected'?'#94a3b8':(r.status==='expired'?'#f87171':'#fbbf24'))) %>"><%= r.status %></span>
+              </td>
+              <td><%= r.created_at %></td>
+              <td><%= r.expires_at || '-' %></td>
+              <td style="white-space:nowrap">
+                <a class="btn btn-g btn-sm" href="/admin/custom-qr?id=<%= r.id %>"><i class="bi bi-eye"></i></a>
+                <% if (r.status !== 'paid' && r.status !== 'rejected') { %>
+                <form method="POST" action="/admin/custom-qr/<%= r.id %>/manual-paid" style="display:inline" onsubmit="return confirm('Tandai LUNAS manual?')">
+                  <button class="btn btn-g btn-sm" title="Manual pay"><i class="bi bi-check2-circle"></i></button>
+                </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function copyCqLink() {
+    var el = document.getElementById('cqLink');
+    if (!el) return;
+    try { el.select(); document.execCommand('copy'); } catch (e) {}
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(el.value).catch(function () {});
+  }
+  (function () {
+    var el = document.getElementById('cqTimer');
+    if (!el) return;
+    var exp = el.getAttribute('data-expires');
+    function tick() {
+      if (!exp) { el.textContent = ''; return; }
+      var d = new Date(exp).getTime() - Date.now();
+      if (d <= 0) { el.textContent = 'Lewat 20 menit — pembayaran tetap dicek.'; return; }
+      var m = Math.floor(d / 60000), s = Math.floor((d % 60000) / 1000);
+      el.textContent = 'Sisa waktu: ' + m + ' menit ' + s + ' detik';
+    }
+    tick(); setInterval(tick, 1000);
+  })();
+</script>
+</body>
+</html>

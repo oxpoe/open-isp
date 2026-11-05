@@ -32,6 +32,7 @@ const MENU_DEFINITIONS = [
   { key: 'map', section: 'main', href: '/admin/map', icon: 'bi bi-map', labelKey: 'admin.nav.network_map', labelDefault: 'Peta Jaringan', roles: ['admin', 'cashier'], bottomNav: true, bottomNavOrder: 4, activePages: ['map'] },
   { key: 'whatsapp', section: 'main', href: '/admin/whatsapp', icon: 'bi bi-whatsapp', labelKey: 'admin.nav.whatsapp', labelDefault: 'WhatsApp', roles: ['admin', 'cashier'], activePages: ['whatsapp','broadcast','whatsapp_live_chat','whatsapp_templates'] },
   { key: 'automation', section: 'main', href: '/admin/automation', icon: 'bi bi-robot', labelKey: 'admin.nav.automation', labelDefault: 'Automation', roles: ['admin'], activePages: ['automation'] },
+  { key: 'custom_qr', section: 'main', href: '/admin/custom-qr', icon: 'bi bi-qr-code-simple', labelKey: 'admin.nav.custom_qr', labelDefault: 'QR-Custom Payment', roles: ['admin'], activePages: ['custom_qr'] },
 
   { key: 'grp_customers', section: 'billing', href: '/admin/customers', icon: 'bi bi-people', labelKey: 'admin.nav.customers', labelDefault: 'Pelanggan', roles: ['admin', 'cashier'], bottomNav: true, bottomNavOrder: 2, activePages: ['customers', 'onu_stickers'], children: [
     { key: 'customers', section: 'billing', href: '/admin/customers', icon: 'bi bi-people', labelKey: 'admin.nav.customers_data', labelDefault: 'Data Pelanggan', roles: ['admin', 'cashier'], activePages: ['customers'] },
@@ -103,6 +104,7 @@ const DEFAULT_MENU_STATES = {
   olts: STATE_HIDDEN,
   whatsapp: STATE_VISIBLE,
   automation: STATE_VISIBLE,
+  custom_qr: STATE_VISIBLE,
   broadcast: STATE_VISIBLE,
   whatsapp_live_chat: STATE_VISIBLE,
   promo_slides: STATE_VISIBLE,

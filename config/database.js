@@ -1069,6 +1069,42 @@ try {
   console.error('Failed to migrate public_donation_orders:', e);
 }
 
+// Safe migration: QR Custom Payment (nominal bebas di luar billing)
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS custom_qr_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      category TEXT DEFAULT '',
+      amount INTEGER NOT NULL DEFAULT 0,
+      unique_code INTEGER,
+      amount_unique INTEGER,
+      status TEXT DEFAULT 'pending',
+      share_token TEXT NOT NULL,
+      note TEXT DEFAULT '',
+      created_by TEXT DEFAULT '',
+      created_at DATETIME DEFAULT (NOW_LOCAL()),
+      expires_at TEXT,
+      paid_at DATETIME,
+      paid_by TEXT DEFAULT '',
+      notif_id INTEGER,
+      warning_at DATETIME,
+      resolved_by TEXT DEFAULT '',
+      resolved_at DATETIME,
+      resolution_note TEXT DEFAULT ''
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_custom_qr_token ON custom_qr_payments(share_token);
+    CREATE INDEX IF NOT EXISTS idx_custom_qr_status ON custom_qr_payments(status);
+    CREATE INDEX IF NOT EXISTS idx_custom_qr_amount ON custom_qr_payments(amount_unique, status);
+  `);
+  const cols = db.prepare("PRAGMA table_info(webhook_payment_notifs)").all();
+  if (cols.length > 0 && !cols.some(c => c.name === 'matched_custom_qr_id')) {
+    db.exec("ALTER TABLE webhook_payment_notifs ADD COLUMN matched_custom_qr_id INTEGER");
+  }
+} catch(e) {
+  console.error('Failed to migrate custom_qr_payments:', e);
+}
+
 // Safe migration: automation_runs (riwayat otomatisasi pengiriman tagihan)
 try {
   db.exec(`
