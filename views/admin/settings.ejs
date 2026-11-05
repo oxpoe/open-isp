@@ -238,6 +238,10 @@
               <div class="fg"><label class="fl">Custom Base URL</label><input class="fc" name="custom_ai_base_url" value="<%= settings.custom_ai_base_url || '' %>" placeholder="http://localhost:11434/v1"></div>
               <div class="fg"><label class="fl">Custom API Key</label><input class="fc" type="password" autocomplete="new-password" name="custom_ai_api_key" value="<%= settings.custom_ai_api_key || '' %>" placeholder="opsional untuk Ollama"></div>
               <div class="fg"><label class="fl">Custom Model</label><input class="fc" name="custom_ai_model" value="<%= settings.custom_ai_model || 'llama3' %>"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px">
+                <button type="button" class="btn btn-g" onclick="testAiApi(this)"><i class="bi bi-plug"></i> Test API</button>
+                <span id="ai-test-status" style="font-size:12px;color:var(--muted)">Menguji API key &amp; model yang sedang diisi (tanpa simpan).</span>
+              </div>
             </div>
             <div>
               <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-activity"></i> Auto Repair</h6>
@@ -1250,6 +1254,46 @@ function setSearch(q) {
   if (clr) clr.addEventListener('click', function () { var el = document.getElementById('setSearch'); if (el) el.value = ''; setSearch(''); });
   document.querySelectorAll('.set-tab').forEach(function (b) { b.addEventListener('click', function () { setSetTab(this.getAttribute('data-cat')); }); });
 })();
+</script>
+
+<script>
+async function testAiApi(btn) {
+  var st = document.getElementById('ai-test-status');
+  var provider = (document.querySelector('select[name="ai_provider"]') || {}).value || 'deepseek';
+  var map = {
+    deepseek: { key: 'deepseek_api_key', model: 'deepseek_model', base: '' },
+    openai: { key: 'openai_api_key', model: 'openai_model', base: '' },
+    groq: { key: 'groq_api_key', model: 'groq_model', base: '' },
+    openrouter: { key: 'openrouter_api_key', model: 'openrouter_model', base: '' },
+    custom: { key: 'custom_ai_api_key', model: 'custom_ai_model', base: 'custom_ai_base_url' }
+  };
+  var m = map[provider] || map.deepseek;
+  function val(name) { var el = document.querySelector('[name="' + name + '"]'); return el ? el.value : ''; }
+  var old = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menguji...'; }
+  if (st) { st.style.color = 'var(--muted)'; st.textContent = 'Menguji ' + provider + '...'; }
+  try {
+    var r = await fetch('/admin/settings/test-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: provider,
+        apiKey: val(m.key),
+        model: val(m.model),
+        baseUrl: m.base ? val(m.base) : ''
+      })
+    });
+    var d = await r.json();
+    if (st) {
+      st.style.color = d.ok ? 'var(--success)' : 'var(--danger)';
+      st.textContent = (d.ok ? '✅ ' : '❌ ') + (d.message || (d.ok ? 'API valid.' : 'API tidak valid.'));
+    }
+  } catch (e) {
+    if (st) { st.style.color = 'var(--danger)'; st.textContent = '❌ Gagal menguji: ' + e.message; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = old; }
+  }
+}
 </script>
 
 <script>

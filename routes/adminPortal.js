@@ -4788,6 +4788,76 @@ router.post('/api/telegram/sync', requireAdminSession, async (req, res) => {
   }
 });
 
+router.post('/settings/test-ai', requireAdminSession, express.json(), async (req, res) => {
+  const presets = {
+    deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-chat' },
+    openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+    groq: { baseUrl: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile' },
+    openrouter: { baseUrl: 'https://openrouter.ai/api/v1', model: 'meta-llama/llama-3.3-70b-instruct' },
+    custom: { baseUrl: '', model: '' }
+  };
+  try {
+    const b = req.body || {};
+    const provider = String(b.provider || 'deepseek').trim().toLowerCase();
+    const p = presets[provider] || presets.deepseek;
+    const apiKey = String(b.apiKey || '').trim();
+    const baseUrl = String(b.baseUrl || p.baseUrl || '').trim().replace(/\/+$/, '');
+    const model = String(b.model || p.model || '').trim();
+
+    if (!baseUrl) return res.status(400).json({ ok: false, message: 'Base URL AI kosong.' });
+    if (!model) return res.status(400).json({ ok: false, message: 'Model AI kosong.' });
+    if (!apiKey && provider !== 'custom') return res.status(400).json({ ok: false, message: 'API key kosong.' });
+
+    const started = Date.now();
+    const controller = new AbortController();
+    const timer = setTimeout(function () { controller.abort(); }, 15000);
+    let r;
+    let text = '';
+    try {
+      r = await fetch(baseUrl + '/chat/completions', {
+        method: 'POST',
+        headers: Object.assign(
+          { 'Content-Type': 'application/json' },
+          apiKey ? { Authorization: 'Bearer ' + apiKey } : {}
+        ),
+        body: JSON.stringify({
+          model: model,
+          messages: [{ role: 'user', content: 'ping' }],
+          max_tokens: 5,
+          stream: false
+        }),
+        signal: controller.signal
+      });
+      text = await r.text();
+    } finally {
+      clearTimeout(timer);
+    }
+    const latencyMs = Date.now() - started;
+    let json = null;
+    try { json = JSON.parse(text); } catch (e) {}
+
+    if (!r.ok) {
+      const detail = (json && json.error && (json.error.message || json.error.code)) || text || ('HTTP ' + r.status);
+      const message = (r.status === 401 || r.status === 403)
+        ? 'API key tidak valid / tidak punya akses (HTTP ' + r.status + ').'
+        : 'Gagal (HTTP ' + r.status + '): ' + String(detail).replace(/\s+/g, ' ').slice(0, 200);
+      return res.json({ ok: false, provider, model, baseUrl, status: r.status, latencyMs, message });
+    }
+
+    const reply = (json && json.choices && json.choices[0] &&
+      ((json.choices[0].message && json.choices[0].message.content) || json.choices[0].text)) || '';
+    return res.json({
+      ok: true, provider, model, baseUrl, status: r.status, latencyMs,
+      message: 'API valid — ' + (reply ? ('balasan: ' + String(reply).trim().slice(0, 80)) : 'respon OK') + ' (' + latencyMs + ' ms)'
+    });
+  } catch (e) {
+    const message = e && e.name === 'AbortError'
+      ? 'Timeout 15 detik — server AI tidak merespons.'
+      : ('Tidak bisa menghubungi API: ' + (e && e.message ? e.message : String(e)));
+    return res.status(500).json({ ok: false, message });
+  }
+});
+
 router.post('/settings', requireAdminSession, express.urlencoded({ extended: true }), (req, res) => {
   try {
     const newSettings = { ...req.body };

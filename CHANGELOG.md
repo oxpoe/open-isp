@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.14] — 2026-11-05 — "ai-test"
+
+### Ditambahkan
+- Tombol **Test API** di Pengaturan → AI: memvalidasi provider, API key, base URL, dan model yang sedang diisi **tanpa harus menyimpan**. Menampilkan status valid/tidak, HTTP status, dan latensi.
+
 ## [0.5.13] — 2026-11-05 — "lunas-notify"
 
 ### Diperbaiki
