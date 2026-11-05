@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/lisensi-ISC-ADFF2F" alt="Lisensi: ISC">
-  <img src="https://img.shields.io/badge/versi-0.5.6_qris--hangus-ADFF2F" alt="Versi 0.5.6 (qris-hangus)">
+  <img src="https://img.shields.io/badge/versi-0.5.7_gowa--podman-ADFF2F" alt="Versi 0.5.7 (gowa-podman)">
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-339933" alt="Node.js >= 20">
   <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white" alt="Docker">
   <a href="https://demo-openisp.oxpoe.xyz"><img src="https://img.shields.io/badge/demo-live-ADFF2F?logo=googlechrome&logoColor=black" alt="Demo"></a>
@@ -105,6 +105,19 @@ docker compose up -d
 
 Buka **http://localhost:3001** — login awal `admin` / `demo-isp123` (**segera ganti password**).
 Data tersimpan di volume `docker-data/` (settings, database, logs, uploads, sesi WhatsApp).
+
+### WhatsApp gateway GOWA + UI (Podman / Docker Compose)
+
+GOWA dijalankan sebagai container terpisah, lengkap dengan dashboard/scan QR bawaan:
+
+```bash
+cp .env.gowa.example .env.gowa   # isi GOWA_BASIC_AUTH + GOWA_WEBHOOK_SECRET
+podman compose --env-file .env.gowa -f docker-compose.gowa.yml up -d
+```
+
+Buka dashboard di **http://<ip-host>:3000** (login Basic Auth), lalu scan QR.
+Di OPEN-ISP → **Admin → WhatsApp**: pilih gateway **GOWA**, isi base URL `http://127.0.0.1:3000`
+(app di host yang sama), username/password, dan **webhook secret** yang sama dengan `.env.gowa`.
 
 ### Manual (Node.js ≥ 20, disarankan 22 LTS)
 

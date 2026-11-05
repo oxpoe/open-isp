@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GOWA — WhatsApp gateway + dashboard (UI) untuk OPEN-ISP
+#
+# Kompatibel dengan docker compose maupun podman compose.
+#
+# 1. Siapkan kredensial:
+#      cp .env.gowa.example .env.gowa
+#      # isi GOWA_BASIC_AUTH dan GOWA_WEBHOOK_SECRET (openssl rand -hex 32)
+#
+# 2. Jalankan:
+#      podman compose --env-file .env.gowa -f docker-compose.gowa.yml up -d
+#      # atau: docker compose --env-file .env.gowa -f docker-compose.gowa.yml up -d
+#
+# 3. Buka dashboard: http://<ip-host>:3000  (login Basic Auth di atas)
+#    Scan QR di sana, atau dari OPEN-ISP → WhatsApp.
+#
+# 4. Di OPEN-ISP (Admin → WhatsApp → GOWA):
+#      base URL      : http://127.0.0.1:3000     (app di host yang sama)
+#      username/pass : sesuai GOWA_BASIC_AUTH
+#      webhook secret: sama dengan GOWA_WEBHOOK_SECRET
+#      gateway       : GOWA
+#
+# Catatan:
+# - UI (gowa-ui) diunduh otomatis oleh GOWA saat start; butuh internet.
+#   Server tanpa internet: set APP_UI_AUTO_UPDATE=false lalu taruh
+#   gowa-ui.html di volume gowa_storages (folder /app/storages/ui).
+# - host.containers.internal = IP host dari dalam container (Podman/Docker).
+#   Bila tidak resolve, ganti GOWA_WEBHOOK_URL dengan IP LAN host,
+#   mis. http://10.44.33.51:3001/api/webhook/gowa
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  gowa:
+    image: aldinokemal2104/go-whatsapp-web-multidevice:v9.8.0
+    container_name: gowa
+    restart: unless-stopped
+    ports:
+      - "${GOWA_BIND:-0.0.0.0}:${GOWA_PORT:-3000}:3000"
+    volumes:
+      - gowa_storages:/app/storages
+      - gowa_statics:/app/statics
+    environment:
+      APP_PORT: "3000"
+      APP_OS: "OPEN-ISP"
+      APP_BASIC_AUTH: "${GOWA_BASIC_AUTH:?isi GOWA_BASIC_AUTH=user:password}"
+      APP_UI_ENABLED: "${GOWA_UI_ENABLED:-true}"
+      APP_UI_AUTO_UPDATE: "${GOWA_UI_AUTO_UPDATE:-true}"
+      WHATSAPP_ACCOUNT_VALIDATION: "false"
+      WHATSAPP_WEBHOOK: "${GOWA_WEBHOOK_URL:?isi GOWA_WEBHOOK_URL}"
+      WHATSAPP_WEBHOOK_SECRET: "${GOWA_WEBHOOK_SECRET:?isi GOWA_WEBHOOK_SECRET}"
+      WHATSAPP_WEBHOOK_EVENTS: "message"
+
+volumes:
+  gowa_storages:
+  gowa_statics:

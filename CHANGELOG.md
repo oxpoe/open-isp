@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.5.7] — 2026-11-05 — "gowa-podman"
+
+### Ditambahkan
+- `docker-compose.gowa.yml` + `.env.gowa.example`: menjalankan **GOWA** (WhatsApp gateway + dashboard/UI) dengan Docker atau Podman Compose, termasuk webhook ke OPEN-ISP dan Basic Auth.
+
 ## [0.5.6] — 2026-11-05 — "qris-hangus"
 
 ### Diperbaiki
