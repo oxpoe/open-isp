@@ -2,6 +2,14 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.9] — 2026-11-06 — "acs-wifi-rx"
+
+### Diperbaiki
+- **ACS/GenieACS WiFi**: SSID hanya mengubah SSID1 (2.4G) dan SSID5 (5G bila tersedia); tidak lagi menyentuh SSID2/Guest.
+- `setParameterValues` dipecah per parameter agar tidak kena TR-069 fault 9007.
+- Sinkronisasi nama WiFi baru ke data pelanggan setelah update.
+- **RX Power**: dukung nilai negatif, konversi raw CTC EPON/GPON, dan tampilkan **LOS** saat sinyal putus.
+
 ## [0.6.8] — 2026-11-06 — "isolir-url-setting"
 
 ### Ditambahkan

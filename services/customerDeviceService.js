@@ -696,11 +696,19 @@ function mapDeviceData(device, tag, isPppoeActive = false) {
   } catch {}
 
   let rxPower = getParameterWithPaths(device, parameterPaths.rxPower);
-  if (rxPower !== 'N/A' && rxPower !== '-' && rxPower !== '') {
-    const num = parseFloat(rxPower);
-    if (!isNaN(num) && num > 0) {
-      const dbVal = 30 + (Math.log10(num * Math.pow(10, -7)) * 10);
-      rxPower = (Math.ceil(dbVal * 100) / 100).toFixed(2);
+  if (rxPower !== 'N/A' && rxPower !== '-' && rxPower !== '' && rxPower !== null && rxPower !== undefined) {
+    const raw = parseFloat(rxPower);
+    if (!isNaN(raw)) {
+      if (raw === 0 || raw >= 65535) {
+        rxPower = 'LOS';
+      } else if (raw < 0 && raw > -50) {
+        rxPower = raw.toFixed(2);
+      } else if (raw <= -50) {
+        rxPower = (raw / 100).toFixed(2);
+      } else if (raw > 0) {
+        const dbm = 30 + (Math.log10(raw * 1e-7) * 10);
+        rxPower = (Math.round(dbm * 100) / 100).toFixed(2);
+      }
     }
   }
   const pppoeIP = extractPppoeIp(device);
@@ -851,6 +859,7 @@ async function updateSSID(tag, newSSID, actor = null) {
   try {
     const ssidClean = String(newSSID ?? '').replace(/[\r\n\t]+/g, '').trim();
     if (!ssidClean) { logger.warn('[updateSSID] SSID kosong, dibatalkan.'); return false; }
+    newSSID = ssidClean;
     const device = await resolveDeviceToken(tag);
     if (!device) return false;
     const deviceId = encodeURIComponent(device._id);
@@ -863,62 +872,96 @@ async function updateSSID(tag, newSSID, actor = null) {
     const tasksUrl = `/devices/${deviceId}/tasks`;
 
     const parameterValues = [];
+    const igd = device.InternetGatewayDevice;
+    const dev181 = device.Device;
     
-    // Check supported paths in DB
-    const db = require('../config/database');
-    const row = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(device._id);
-    const flatParams = row && row.params ? JSON.parse(row.params) : null;
-    
-    if (flatParams) {
-      // SSID 2.4G paths
-      const paths24G = [
-        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID',
-        'Device.WiFi.SSID.1.SSID'
-      ];
-      paths24G.forEach(p => {
-        if (flatParams[p] !== undefined) {
-          parameterValues.push([p, ssidClean, 'xsd:string']);
-        }
-      });
+    // Check supported paths directly from loaded device object
+    if (igd && igd.LANDevice && igd.LANDevice['1'] && igd.LANDevice['1'].WLANConfiguration) {
+      const wlan = igd.LANDevice['1'].WLANConfiguration;
+      // Selalu ubah SSID 1 (2.4GHz Utama)
+      parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID', newSSID, 'xsd:string']);
       
-      // SSID 5G paths
-      const paths5G = [
-        'Device.WiFi.SSID.2.SSID'
-      ];
-      for (const idx of [5, 6, 7, 8]) {
-        paths5G.push(`InternetGatewayDevice.LANDevice.1.WLANConfiguration.${idx}.SSID`);
-      }
-      paths5G.forEach(p => {
-        if (flatParams[p] !== undefined) {
-          parameterValues.push([p, `${ssidClean}-5G`, 'xsd:string']);
-        }
-      });
-    }
-    
-    // Fallback if no parameters match or device not bootstrapped yet
-    if (parameterValues.length === 0) {
-      parameterValues.push(
-        ['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID', ssidClean, 'xsd:string'],
-        ['Device.WiFi.SSID.1.SSID', ssidClean, 'xsd:string']
+      // HANYA jika parameter SSID 5G (WLANConfiguration.5) benar-benar ada di perangkat.
+      // JANGAN PERNAH mengubah WLANConfiguration.2 (SSID 2) karena itu adalah SSID2/Guest pada perangkat single-band!
+      const hasFiveG = Boolean(
+        wlan['5'] && (
+          wlan['5'].SSID !== undefined ||
+          wlan['5']._object === true ||
+          wlan['5'].Enable !== undefined ||
+          wlan['5'].KeyPassphrase !== undefined
+        )
       );
+      if (hasFiveG) {
+        parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID', `${newSSID}-5G`, 'xsd:string']);
+      }
+    } else if (dev181 && dev181.WiFi) {
+      parameterValues.push(['Device.WiFi.SSID.1.SSID', newSSID, 'xsd:string']);
+    } else {
+      // Fallback check in local DB
+      const db = require('../config/database');
+      const row = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(device._id);
+      const flatParams = row && row.params ? JSON.parse(row.params) : null;
+      if (flatParams) {
+        if (flatParams['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID'] !== undefined) {
+          parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID', newSSID, 'xsd:string']);
+        } else if (flatParams['Device.WiFi.SSID.1.SSID'] !== undefined) {
+          parameterValues.push(['Device.WiFi.SSID.1.SSID', newSSID, 'xsd:string']);
+        }
+        if (flatParams['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID'] !== undefined) {
+          parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID', `${newSSID}-5G`, 'xsd:string']);
+        }
+      }
+      if (parameterValues.length === 0) {
+        parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID', newSSID, 'xsd:string']);
+      }
     }
 
     let ok = false;
-    try {
-      await instance.post(tasksUrl, {
-        name: 'setParameterValues',
-        parameterValues: parameterValues
-      }, { timeout: 20000 });
-      ok = true;
-    } catch (e) {
-      logger.error(`[updateSSID] Failed to set SSID: ${e.message}`);
+    for (const pv of parameterValues) {
+      try {
+        await instance.post(tasksUrl, {
+          name: 'setParameterValues',
+          parameterValues: [pv]
+        }, { timeout: 15000 });
+        ok = true;
+      } catch (e) {
+        logger.error(`[updateSSID] Failed to set parameter ${pv[0]}: ${e.message}`);
+      }
     }
 
-    // Refresh + inform dijalankan di latar belakang agar respons cepat (tidak menahan UI)
+    // Refresh objects untuk trigger update parameter dari ONU
+    try {
+      await instance.post(tasksUrl, { name: 'refreshObject', objectName: 'InternetGatewayDevice.LANDevice.1.WLANConfiguration' }, { timeout: 15000 });
+    } catch (e) {}
+
+    // Tunggu sesaat agar task dieksekusi oleh ONU
     if (ok) {
-      instance.post(tasksUrl, { name: 'refreshObject', objectName: 'InternetGatewayDevice.LANDevice.1.WLANConfiguration' }, { timeout: 12000 }).catch(() => {});
-      instance.post(tasksUrl, { name: 'inform' }, { timeout: 12000 }).catch(() => {});
-      logger.info(`[updateSSID] Set SSID dikirim untuk ${tag}; refresh & inform berjalan di latar belakang`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Sinkronkan nama WiFi (SSID) baru ke database pelanggan
+      try {
+        const db = require('../config/database');
+        const pppoeUser = extractPppoeUser(device);
+        const tagCandidate = (device._tags && device._tags[0]) || null;
+        const snCandidate = device._deviceId?._SerialNumber || null;
+        const idCandidate = device._id || null;
+
+        const cust = db.prepare(`
+          SELECT id FROM customers 
+          WHERE id = ? 
+             OR (pppoe_username IS NOT NULL AND pppoe_username != '' AND (pppoe_username = ? OR pppoe_username = ?))
+             OR (genieacs_tag IS NOT NULL AND genieacs_tag != '' AND (genieacs_tag = ? OR genieacs_tag = ?))
+             OR (mac_address IS NOT NULL AND mac_address != '' AND (mac_address = ? OR mac_address = ? OR mac_address = ?))
+             OR phone = ?
+          LIMIT 1
+        `).get(tag, tag, pppoeUser, tag, tagCandidate, tag, snCandidate, idCandidate, tag);
+
+        if (cust && cust.id) {
+          db.prepare('UPDATE customers SET wifi_ssid = ? WHERE id = ?').run(newSSID, cust.id);
+        }
+      } catch (err) {
+        logger.debug(`[updateSSID] Failed to sync customer wifi_ssid: ${err.message}`);
+      }
     }
 
     // Catat audit trail jika berhasil
@@ -970,70 +1013,77 @@ async function updatePassword(tag, newPassword, actor = null) {
     logger.info(`[updatePassword] Setting password for device ${deviceId}, tag ${tag}`);
 
     const parameterValues = [];
-    
-    // Check supported paths in DB
-    const db = require('../config/database');
-    const row = db.prepare('SELECT params FROM acs_devices WHERE id = ?').get(device._id);
-    const flatParams = row && row.params ? JSON.parse(row.params) : null;
-    
-    if (flatParams) {
-      // 2.4G password paths
-      const paths24G = [
-        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase',
-        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase',
-        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey',
-        'Device.WiFi.AccessPoint.1.Security.KeyPassphrase',
-        'Device.WiFi.AccessPoint.1.Security.PreSharedKey'
-      ];
-      paths24G.forEach(p => {
-        if (flatParams[p] !== undefined) {
-          parameterValues.push([p, pw, 'xsd:string']);
-        }
-      });
-      
-      // 5G password paths
-      const paths5G = [
-        'Device.WiFi.AccessPoint.2.Security.KeyPassphrase',
-        'Device.WiFi.AccessPoint.2.Security.PreSharedKey'
-      ];
-      for (const idx of [5, 6, 7, 8]) {
-        paths5G.push(
-          `InternetGatewayDevice.LANDevice.1.WLANConfiguration.${idx}.KeyPassphrase`,
-          `InternetGatewayDevice.LANDevice.1.WLANConfiguration.${idx}.PreSharedKey.1.KeyPassphrase`,
-          `InternetGatewayDevice.LANDevice.1.WLANConfiguration.${idx}.PreSharedKey.1.PreSharedKey`
-        );
+    const igd = device.InternetGatewayDevice;
+    const dev181 = device.Device;
+
+    if (igd && igd.LANDevice && igd.LANDevice['1'] && igd.LANDevice['1'].WLANConfiguration) {
+      const wlan = igd.LANDevice['1'].WLANConfiguration;
+      const wlan1 = wlan['1'] || {};
+
+      if (wlan1.KeyPassphrase !== undefined) {
+        parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase', pw, 'xsd:string']);
       }
-      paths5G.forEach(p => {
-        if (flatParams[p] !== undefined) {
-          parameterValues.push([p, pw, 'xsd:string']);
-        }
-      });
-    }
-    
-    // Fallback if no parameters match or device not bootstrapped yet
-    if (parameterValues.length === 0) {
-      parameterValues.push(
-        ['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase', pw, 'xsd:string'],
-        ['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase', pw, 'xsd:string'],
-        ['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey', pw, 'xsd:string'],
-        ['Device.WiFi.AccessPoint.1.Security.KeyPassphrase', pw, 'xsd:string']
+      if (wlan1.PreSharedKey && typeof wlan1.PreSharedKey === 'object') {
+        parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey', pw, 'xsd:string']);
+      }
+      if (parameterValues.length === 0) {
+        parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase', pw, 'xsd:string']);
+        parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey', pw, 'xsd:string']);
+      }
+
+      // 5G if available - HANYA jika WLANConfiguration.5 ada di perangkat. JANGAN PERNAH mengubah WLANConfiguration.2!
+      const hasFiveG = Boolean(
+        wlan['5'] && (
+          wlan['5'].SSID !== undefined ||
+          wlan['5'].KeyPassphrase !== undefined ||
+          wlan['5'].PreSharedKey !== undefined ||
+          wlan['5']._object === true ||
+          wlan['5'].Enable !== undefined
+        )
       );
+      if (hasFiveG) {
+        const wlan5 = wlan['5'] || {};
+        if (wlan5.KeyPassphrase !== undefined) {
+          parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.KeyPassphrase', pw, 'xsd:string']);
+        }
+        if (wlan5.PreSharedKey && typeof wlan5.PreSharedKey === 'object') {
+          parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.PreSharedKey', pw, 'xsd:string']);
+        }
+        if (!wlan5.KeyPassphrase && (!wlan5.PreSharedKey || typeof wlan5.PreSharedKey !== 'object')) {
+          parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.KeyPassphrase', pw, 'xsd:string']);
+          parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.PreSharedKey', pw, 'xsd:string']);
+        }
+      }
+    } else if (dev181 && dev181.WiFi) {
+      parameterValues.push(['Device.WiFi.AccessPoint.1.Security.KeyPassphrase', pw, 'xsd:string']);
+    } else {
+      parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase', pw, 'xsd:string']);
+      parameterValues.push(['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey', pw, 'xsd:string']);
     }
 
     let ok = false;
-    try {
-      await instance.post(tasksUrl, {
-        name: 'setParameterValues',
-        parameterValues: parameterValues
-      }, { timeout: 20000 });
-      ok = true;
-    } catch (e) {
-      logger.error(`[updatePassword] Failed to set password: ${e.message}`);
+    for (const pv of parameterValues) {
+      try {
+        await instance.post(tasksUrl, {
+          name: 'setParameterValues',
+          parameterValues: [pv]
+        }, { timeout: 15000 });
+        ok = true;
+      } catch (e) {
+        logger.debug(`[updatePassword] Param ${pv[0]} failed: ${e.message}`);
+      }
     }
 
-    // Refresh di latar belakang agar respons cepat
-    instance.post(tasksUrl, { name: 'refreshObject', objectName: 'InternetGatewayDevice.LANDevice.1.WLANConfiguration' }, { timeout: 12000 }).catch(() => {});
+    // Refresh object - only refresh InternetGatewayDevice path yang lebih universal
+    try {
+      await instance.post(tasksUrl, { name: 'refreshObject', objectName: 'InternetGatewayDevice.LANDevice.1.WLANConfiguration' }, { timeout: 15000 });
+    } catch (e) {}
     // Skip Device.WiFi.AccessPoint refresh karena tidak semua ONU support (CIOT tidak support)
+
+    // Tunggu sesaat agar task dieksekusi oleh ONU
+    if (ok) {
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
 
     // Catat audit trail jika berhasil
     if (ok && actor) {
