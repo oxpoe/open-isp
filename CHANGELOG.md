@@ -2,6 +2,12 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.16] — 2026-11-06 — "wifi-sync"
+
+### Diperbaiki
+- Perubahan SSID dari **Portal Pelanggan, Teknisi, Admin, dan ACS** memakai service yang sama dan menyinkronkan `wifi_ssid` ke data pelanggan.
+- URL aksi WiFi/reboot di portal teknisi memakai `encodeURIComponent`, aman untuk tag/ID yang mengandung karakter khusus.
+
 ## [0.6.15] — 2026-11-06 — "telegram-safe"
 
 ### Diperbaiki

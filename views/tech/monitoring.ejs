@@ -412,15 +412,15 @@ document.getElementById('btn-submit-action').addEventListener('click', async fun
   if (type === 'ssid') {
     const ssid = document.getElementById('new-ssid').value.trim();
     if (!ssid) return alert('SSID tidak boleh kosong');
-    url = `/tech/api/device/${tag}/ssid`;
+    url = `/tech/api/device/${encodeURIComponent(tag)}/ssid`;
     body = { ssid };
   } else if (type === 'pass') {
     const password = document.getElementById('new-password').value.trim();
     if (password.length < 8) return alert('Password minimal 8 karakter');
-    url = `/tech/api/device/${tag}/password`;
+    url = `/tech/api/device/${encodeURIComponent(tag)}/password`;
     body = { password };
   } else if (type === 'reboot') {
-    url = `/tech/api/device/${tag}/reboot`;
+    url = `/tech/api/device/${encodeURIComponent(tag)}/reboot`;
     body = {};
   }
   
