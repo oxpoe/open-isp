@@ -2,6 +2,13 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.15] — 2026-11-06 — "telegram-safe"
+
+### Diperbaiki
+- Telegram admin mendukung **beberapa chat ID** (pisah koma/titik-koma/spasi).
+- Notifikasi admin dipecah otomatis bila pesan terlalu panjang (batas 4000 karakter).
+- DNS Telegram diarahkan ke **IPv4** untuk menghindari aggregate error IPv6.
+
 ## [0.6.14] — 2026-11-06 — "portal-custom"
 
 ### Ditambahkan

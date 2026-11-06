@@ -1,3 +1,5 @@
+const dns = require('dns');
+try { dns.setDefaultResultOrder('ipv4first'); } catch (e) {}
 const { CompatBot } = require('./telegramCompat');
 const { getSetting, getNowLocal } = require('../config/settingsManager');
 const { logger } = require('../config/logger');
@@ -76,10 +78,14 @@ function initTelegram() {
     }).catch(e => logger.error('Telegram Bot Error (getMe):', e.message));
   }).catch(e => logger.error('Telegram Bot Error (deleteWebHook):', e.message));
 
-  // Middleware Admin Check (Fetch latest ID every time)
+  // Admin Check — dukung beberapa ID (pisahkan koma/titik-koma/spasi)
+  const getAdminIds = () => {
+    const raw = String(getSetting('telegram_admin_id', '') || getSetting('telegram_admin_chat_id', '') || '');
+    return raw.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+  };
   const isAdmin = (msg) => {
-    const currentAdminId = getSetting('telegram_admin_id', '').toString();
-    return msg.from.id.toString() === currentAdminId;
+    const id = String(msg?.from?.id || '');
+    return !!id && getAdminIds().includes(id);
   };
 
   // Helper Mikhmon Parser
@@ -1178,13 +1184,24 @@ function initTelegram() {
 // Export for manual re-init from settings
 async function notifyAdmin(text) {
   try {
-    const adminId = String(getSetting('telegram_admin_id', '') || '').trim();
-    if (!bot || !adminId || !text) return false;
-    const ids = adminId.split(/[,s]+/).filter(Boolean);
+    const raw = String(getSetting('telegram_admin_id', '') || getSetting('telegram_admin_chat_id', '') || '');
+    const ids = raw.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+    if (!bot || !ids.length || !text) return false;
+
+    // Telegram membatasi panjang pesan; pecah dengan aman.
+    const str = String(text);
+    const maxLen = 4000;
+    const chunks = [];
+    for (let i = 0; i < str.length; i += maxLen) chunks.push(str.slice(i, i + maxLen));
+
     let ok = false;
     for (const id of ids) {
-      try { await bot.sendMessage(id, text, { parse_mode: 'Markdown' }); ok = true; }
-      catch (e) { try { await bot.sendMessage(id, String(text)); ok = true; } catch (e2) {} }
+      for (const chunk of chunks) {
+        try { await bot.sendMessage(id, chunk, { parse_mode: 'Markdown' }); ok = true; }
+        catch (e) {
+          try { await bot.sendMessage(id, chunk); ok = true; } catch (e2) {}
+        }
+      }
     }
     return ok;
   } catch (e) { return false; }
