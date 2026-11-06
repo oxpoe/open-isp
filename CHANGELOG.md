@@ -2,6 +2,15 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.14] — 2026-11-06 — "portal-custom"
+
+### Ditambahkan
+- **Kustomisasi Beranda & Portal Pelanggan** dari Pengaturan:
+  - banner pengumuman (info/warning/danger/success),
+  - status jaringan + keterangan,
+  - badge, judul, dan deskripsi hero,
+  - link Google Maps, Instagram, Facebook, TikTok di footer.
+
 ## [0.6.13] — 2026-11-06 — "webhook-shopeepay"
 
 ### Diperbaiki

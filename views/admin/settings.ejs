@@ -392,6 +392,71 @@
         </div>
 
         <!-- GenieACS & MikroTik -->
+        <div class="card mb16" data-setcat="umum">
+          <div class="card-hd"><h6><i class="bi bi-window-desktop"></i> Kustomisasi Beranda &amp; Portal Pelanggan</h6></div>
+          <div class="card-bd settings-grid">
+            <div>
+              <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-megaphone"></i> Banner &amp; Status</h6>
+              <div class="fg">
+                <label class="fl">Banner Pengumuman Portal</label>
+                <select class="fs" name="portal_banner_enabled">
+                  <option value="false" <%= !settings.portal_banner_enabled ? 'selected' : '' %>>Nonaktif</option>
+                  <option value="true" <%= settings.portal_banner_enabled ? 'selected' : '' %>>Aktif</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Tipe Banner</label>
+                <select class="fs" name="portal_banner_type">
+                  <option value="info" <%= (settings.portal_banner_type === 'info' || !settings.portal_banner_type) ? 'selected' : '' %>>Info (Biru)</option>
+                  <option value="warning" <%= settings.portal_banner_type === 'warning' ? 'selected' : '' %>>Peringatan (Kuning)</option>
+                  <option value="danger" <%= settings.portal_banner_type === 'danger' ? 'selected' : '' %>>Gangguan (Merah)</option>
+                  <option value="success" <%= settings.portal_banner_type === 'success' ? 'selected' : '' %>>Promo (Hijau)</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Teks Banner</label>
+                <textarea class="fc" name="portal_banner_text" rows="2" placeholder="Contoh: Maintenance jaringan Kamis 01.00-04.00 WIB."><%= settings.portal_banner_text || '' %></textarea>
+              </div>
+              <div class="fg">
+                <label class="fl">Status Jaringan</label>
+                <select class="fs" name="portal_network_status">
+                  <option value="normal" <%= (settings.portal_network_status === 'normal' || !settings.portal_network_status) ? 'selected' : '' %>>🟢 Normal</option>
+                  <option value="maintenance" <%= settings.portal_network_status === 'maintenance' ? 'selected' : '' %>>🟠 Pemeliharaan</option>
+                  <option value="issue" <%= settings.portal_network_status === 'issue' ? 'selected' : '' %>>🔴 Ada Kendala</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label class="fl">Keterangan Status (opsional)</label>
+                <input class="fc" name="portal_network_status_text" value="<%= settings.portal_network_status_text || '' %>" placeholder="Kosongkan untuk teks bawaan">
+              </div>
+            </div>
+            <div>
+              <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-card-heading"></i> Hero &amp; Media Sosial</h6>
+              <div class="fg">
+                <label class="fl">Badge Kecil</label>
+                <input class="fc" name="portal_hero_badge" value="<%= settings.portal_hero_badge || '' %>" placeholder="Portal Pelanggan">
+              </div>
+              <div class="fg">
+                <label class="fl">Judul Utama</label>
+                <input class="fc" name="portal_hero_title" value="<%= settings.portal_hero_title || '' %>" placeholder="Kosongkan untuk teks bawaan">
+              </div>
+              <div class="fg">
+                <label class="fl">Deskripsi</label>
+                <textarea class="fc" name="portal_hero_subtitle" rows="2" placeholder="Kosongkan untuk teks bawaan"><%= settings.portal_hero_subtitle || '' %></textarea>
+              </div>
+              <div class="fg">
+                <label class="fl">Link Google Maps Kantor</label>
+                <input class="fc" name="social_maps_url" value="<%= settings.social_maps_url || '' %>" placeholder="https://maps.google.com/...">
+              </div>
+              <div class="form-row">
+                <div class="fg"><label class="fl">Instagram</label><input class="fc" name="social_instagram" value="<%= settings.social_instagram || '' %>" placeholder="https://instagram.com/..."></div>
+                <div class="fg"><label class="fl">Facebook</label><input class="fc" name="social_facebook" value="<%= settings.social_facebook || '' %>" placeholder="https://facebook.com/..."></div>
+              </div>
+              <div class="fg"><label class="fl">TikTok</label><input class="fc" name="social_tiktok" value="<%= settings.social_tiktok || '' %>" placeholder="https://tiktok.com/@..."></div>
+            </div>
+          </div>
+        </div>
+
         <div data-setcat="jaringan">
           <h6 style="font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px"><i class="bi bi-router"></i> <%= t('admin.settings.external_api', 'API Eksternal') %></h6>
           

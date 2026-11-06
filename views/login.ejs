@@ -31,6 +31,21 @@
   </script>
 </head>
 <body>
+<%
+  const _portal = (typeof settings !== 'undefined' && settings) ? settings : {};
+  const _pbColors = {
+    info:    { bg: 'rgba(59,130,246,.16)',  border: '#3b82f6', fg: '#bfdbfe' },
+    warning: { bg: 'rgba(245,158,11,.16)', border: '#f59e0b', fg: '#fde68a' },
+    danger:  { bg: 'rgba(239,68,68,.16)',  border: '#ef4444', fg: '#fecaca' },
+    success: { bg: 'rgba(34,197,94,.16)',  border: '#22c55e', fg: '#bbf7d0' }
+  };
+  const _pb = _pbColors[_portal.portal_banner_type] || _pbColors.info;
+%>
+<% if (_portal.portal_banner_enabled && _portal.portal_banner_text) { %>
+<div style="background:<%= _pb.bg %>;border-bottom:1px solid <%= _pb.border %>;color:<%= _pb.fg %>;padding:9px 16px;text-align:center;font-size:13px;line-height:1.45">
+  <i class="bi bi-megaphone-fill"></i> <strong><%= _portal.portal_banner_text %></strong>
+</div>
+<% } %>
 
 <!-- ═══ HEADER ═══ -->
 <header class="site-header">
@@ -69,9 +84,21 @@
 <section class="auth-hero">
   <div class="container auth-grid">
     <div class="auth-copy reveal">
-      <span class="eyebrow"><i class="bi bi-shield-lock-fill"></i> <%= t('landing.footer.portal','Portal Pelanggan') %></span>
-      <h1><%= t('login.manage','Kelola layanan internet Anda') %> <span class="hl"><%= t('login.manage_hl','dalam satu tempat') %></span></h1>
-      <p class="lead"><%= t('login.manage_desc','Masuk untuk melihat tagihan, melakukan pembayaran, memantau koneksi, dan mengatur WiFi perangkat Anda.') %></p>
+      <span class="eyebrow"><i class="bi bi-shield-lock-fill"></i> <%= _portal.portal_hero_badge || t('landing.footer.portal','Portal Pelanggan') %></span>
+      <% if (_portal.portal_hero_title) { %>
+        <h1><%= _portal.portal_hero_title %></h1>
+      <% } else { %>
+        <h1><%= t('login.manage','Kelola layanan internet Anda') %> <span class="hl"><%= t('login.manage_hl','dalam satu tempat') %></span></h1>
+      <% } %>
+      <p class="lead"><%= _portal.portal_hero_subtitle || t('login.manage_desc','Masuk untuk melihat tagihan, melakukan pembayaran, memantau koneksi, dan mengatur WiFi perangkat Anda.') %></p>
+      <% if (_portal.portal_network_status) {
+           const _ns = { normal: ['#22c55e', 'Jaringan Normal'], maintenance: ['#f59e0b', 'Pemeliharaan Terjadwal'], issue: ['#ef4444', 'Sedang Ada Kendala Teknis'] }[_portal.portal_network_status] || ['#22c55e', 'Jaringan Normal'];
+      %>
+        <div style="display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);font-size:12px;color:var(--muted)">
+          <span style="width:8px;height:8px;border-radius:50%;background:<%= _ns[0] %>;display:inline-block"></span>
+          <%= _portal.portal_network_status_text || _ns[1] %>
+        </div>
+      <% } %>
       <ul class="auth-points">
         <li><i class="bi bi-check-circle-fill"></i> <%= t('login.chk_desc','Cek & bayar tagihan kapan saja') %></li>
         <li><i class="bi bi-check-circle-fill"></i> <%= t('login.mon_desc','Pantau trafik dan status koneksi') %></li>
@@ -206,6 +233,14 @@
         <p class="muted" style="font-size:14px;max-width:40ch">Micro Internet Provider dan Server Platform.</p>
         <p class="muted" style="font-size:13px;margin-top:8px">Internet Freedom — We Are Open-Source.</p>
         <p class="muted" style="font-size:12.5px;margin-top:12px"><% if (typeof settings !== 'undefined' && settings && settings.company_subheader) { %><%= settings.company_subheader %><% } else { %>Made with <i class="bi bi-heart-fill" style="color:#e5484d"></i> from Oxpoe in INA.<% } %></p>
+        <% if (_portal.social_maps_url || _portal.social_instagram || _portal.social_facebook || _portal.social_tiktok) { %>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;font-size:16px">
+          <% if (_portal.social_maps_url) { %><a href="<%= _portal.social_maps_url %>" target="_blank" rel="noopener" title="Maps"><i class="bi bi-geo-alt-fill"></i></a><% } %>
+          <% if (_portal.social_instagram) { %><a href="<%= _portal.social_instagram %>" target="_blank" rel="noopener" title="Instagram"><i class="bi bi-instagram"></i></a><% } %>
+          <% if (_portal.social_facebook) { %><a href="<%= _portal.social_facebook %>" target="_blank" rel="noopener" title="Facebook"><i class="bi bi-facebook"></i></a><% } %>
+          <% if (_portal.social_tiktok) { %><a href="<%= _portal.social_tiktok %>" target="_blank" rel="noopener" title="TikTok"><i class="bi bi-tiktok"></i></a><% } %>
+        </div>
+        <% } %>
       </div>
       <div>
         <h4>Portal</h4>

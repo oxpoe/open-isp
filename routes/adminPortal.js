@@ -5069,6 +5069,7 @@ router.post('/settings', requireAdminSession, express.urlencoded({ extended: tru
     if (newSettings.auto_deactivate_enabled !== undefined) newSettings.auto_deactivate_enabled = (newSettings.auto_deactivate_enabled === 'true');
     if (newSettings.auto_deactivate_months !== undefined) newSettings.auto_deactivate_months = parseInt(newSettings.auto_deactivate_months) || 3;
     newSettings.use_builtin_acs = (newSettings.use_builtin_acs === 'true' || newSettings.use_builtin_acs === true);
+    newSettings.portal_banner_enabled = (newSettings.portal_banner_enabled === 'true' || newSettings.portal_banner_enabled === true);
 
     // Multi-Router Mode settings
     if (!newSettings.multi_router_mode) newSettings.multi_router_mode = 'disabled';
