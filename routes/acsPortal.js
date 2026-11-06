@@ -492,6 +492,11 @@ function getDeviceParameterValue(device, keys, filterFn) {
 }
 
 function extractPppoeIp(d) {
+    // Virtual parameters GenieACS (lebih cepat & akurat bila tersedia)
+    for (const k of ['VirtualParameters.pppoeIP', 'VirtualParameters.pppIP', 'VirtualParameters.WanIP', 'VirtualParameters.IPTR069', 'VirtualParameters.pppoe_ip']) {
+        const val = getNestedValue(d, k);
+        if (val && typeof val === 'string' && val.trim() && val !== '-' && val !== '0.0.0.0' && val !== 'N/A') return val.trim();
+    }
     const ip = getDeviceParameterValue(d, PPPOE_IP_KEYS, (matchedPath, value, device) => {
         if (!value || value === '0.0.0.0' || value === '-') return false;
         
@@ -511,6 +516,10 @@ function extractPppoeIp(d) {
 }
 
 function extractPppoeUser(d) {
+    for (const k of ['VirtualParameters.pppoeUsername2', 'VirtualParameters.pppoeUsername', 'VirtualParameters.pppUsername', 'VirtualParameters.PPPoEUser', 'VirtualParameters.pppoe_username', 'VirtualParameters.username']) {
+        const val = getNestedValue(d, k);
+        if (val && typeof val === 'string' && val.trim() && val !== '-' && val !== 'N/A') return val.trim();
+    }
     const user = getDeviceParameterValue(d, PPPOE_USER_KEYS, (matchedPath, value, device) => {
         if (!value || value === '-') return false;
         // Abaikan nilai generik yang bukan user PPPoE pelanggan

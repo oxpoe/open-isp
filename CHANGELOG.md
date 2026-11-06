@@ -2,6 +2,12 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.12] — 2026-11-06 — "acs-virtual"
+
+### Diperbaiki
+- Ekstraksi **GenieACS Pro** memakai virtual parameters: `pppoeIP`, `pppIP`, `WanIP`, `IPTR069`, `pppoeUsername2`, `PPPoEUser`, `WlanSSID`.
+- Lookup perangkat via PPPoE mencakup variabel virtual tersebut, sehingga IP/username lebih cepat dan akurat tampil di tabel ACS.
+
 ## [0.6.11] — 2026-11-06 — "acs-wifi-modal"
 
 ### Ditambahkan
