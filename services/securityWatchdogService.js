@@ -180,7 +180,8 @@ class SecurityWatchdogService {
             processedSet.add(logId);
 
             const msg = String(l.message || '');
-            if (msg.toLowerCase().includes('login failure') || msg.toLowerCase().includes('failure')) {
+            const low = msg.toLowerCase();
+            if (low.includes('login failure') || low.includes('failure') || low.includes('login failed')) {
               failures.push(l);
             }
           }
@@ -200,19 +201,31 @@ class SecurityWatchdogService {
             const match = msg.match(/login failure for user\s+(\S+)\s+from\s+([0-9a-fA-F.:]+)(?:\s+via\s+(\S+))?/i) ||
                           msg.match(/failure.*user\s+(\S+).*from\s+([0-9a-fA-F.:]+)/i);
 
-            if (match) {
-              const targetUser = match[1] || 'unknown';
-              const attackerIp = String(match[2] || '').replace(/^::ffff:/, '').trim();
-              const service = match[3] || 'router-service';
+            // Format hotspot: "10.5.50.2 (26:BD:26:2A:C3:47): login failed: invalid username or password"
+            const hotspotMatch = msg.match(/(?:->:\s*)?([0-9a-fA-F.:]+)\s*\(([0-9a-fA-F:]+)\):\s*login failed/i);
 
-              if (!attackerIp || attackerIp === '127.0.0.1' || attackerIp === 'localhost') continue;
+            let targetUser, attackerIp, service, mac;
+            if (hotspotMatch) {
+              attackerIp = String(hotspotMatch[1] || '').replace(/^::ffff:/, '').trim();
+              mac = String(hotspotMatch[2] || '').toUpperCase();
+              targetUser = 'voucher-hotspot';
+              service = 'hotspot';
+            } else if (match) {
+              targetUser = match[1] || 'unknown';
+              attackerIp = String(match[2] || '').replace(/^::ffff:/, '').trim();
+              service = match[3] || 'router-service';
+            }
+
+            if (attackerIp) {
+              if (attackerIp === '127.0.0.1' || attackerIp === 'localhost') continue;
 
               if (!failuresByIp.has(attackerIp)) {
-                failuresByIp.set(attackerIp, { count: 1, targets: new Set([targetUser]), service });
+                failuresByIp.set(attackerIp, { count: 1, targets: new Set([targetUser]), service, macs: new Set(mac ? [mac] : []) });
               } else {
                 const item = failuresByIp.get(attackerIp);
                 item.count++;
                 item.targets.add(targetUser);
+                if (mac) item.macs.add(mac);
               }
             }
           }
@@ -257,6 +270,16 @@ class SecurityWatchdogService {
 
                 await this._notifyAdmin(waMsg);
 
+                // 2b. AUTO-BLOCK (opsional, default nonaktif)
+                if (String(getSetting('security_auto_block_enabled', 'false')) === 'true' && data.count >= (parseInt(getSetting('security_mikrotik_threshold', 5), 10) || 5)) {
+                  try {
+                    const actions = await this._blockMikrotikIp(conn, attackerIp, r.name, data);
+                    if (actions.length) logger.warn('[SecurityWatchdog] Auto-block ' + attackerIp + ': ' + actions.join('; '));
+                  } catch (blockErr) {
+                    logger.error('[SecurityWatchdog] Auto-block gagal: ' + blockErr.message);
+                  }
+                }
+
                 // 3. CATAT KE AUDIT TRAIL
                 this._recordAudit({
                   action: 'ROUTER_BRUTE_FORCE',
@@ -282,6 +305,59 @@ class SecurityWatchdogService {
     } catch (e) {
       logger.error(`[SecurityWatchdog] Scan MikroTik failures fatal: ${e.message}`);
     }
+  }
+
+  /**
+   * Blokir IP penyerang di MikroTik (firewall address-list + drop rule).
+   * Hanya dipanggil bila security_auto_block_enabled=true.
+   */
+  async _blockMikrotikIp(conn, ip, routerName, data) {
+    const actions = [];
+    const safeIp = String(ip || '').trim();
+    if (!safeIp || safeIp === '127.0.0.1' || safeIp === 'localhost') return actions;
+    // Hotspot brute force: blokir juga MAC di IP-Binding
+    if (data.macs && data.macs.size) {
+      const bindMenu = conn.client.menu('/ip/hotspot/ip-binding');
+      const bindings = await bindMenu.get();
+      for (const mac of data.macs) {
+        const found = bindings.find(b => String(b['mac-address'] || b.macAddress || '').toUpperCase() === mac);
+        if (!found) {
+          await bindMenu.add({ macAddress: mac, type: 'blocked', comment: 'AI_BLOCKED: hotspot brute force (' + data.count + 'x)' }).catch(function () {});
+          actions.push('MAC ' + mac + ' diblokir di Hotspot IP-Binding');
+        }
+      }
+    }
+
+    const listMenu = conn.client.menu('/ip/firewall/address-list');
+    const rows = await listMenu.get();
+    const exists = rows.find(a => a.address === safeIp && (a.list === 'BLACKLIST_BRUTEFORCE' || a.list === 'BLACKLIST_ANOMALY'));
+    if (!exists) {
+      await listMenu.add({
+        list: 'BLACKLIST_BRUTEFORCE',
+        address: safeIp,
+        timeout: '1d',
+        comment: 'AI_BLOCKED: ' + String(data.service || 'router').toUpperCase() + ' (' + data.count + 'x gagal)'
+      });
+      actions.push('IP ' + safeIp + ' masuk BLACKLIST_BRUTEFORCE (1 hari)');
+    }
+
+    // Pastikan rule drop pada chain input & forward
+    const filterMenu = conn.client.menu('/ip/firewall/filter');
+    const filters = await filterMenu.get();
+    const hasDrop = (chain) => filters.some(f => f.chain === chain && f.action === 'drop' &&
+      (f['src-address-list'] === 'BLACKLIST_BRUTEFORCE' || f.srcAddressList === 'BLACKLIST_BRUTEFORCE'));
+    for (const chain of ['input', 'forward']) {
+      if (!hasDrop(chain)) {
+        await filterMenu.add({
+          chain,
+          action: 'drop',
+          srcAddressList: 'BLACKLIST_BRUTEFORCE',
+          comment: 'AI_AUTO_DROP_BLACKLIST_BRUTEFORCE'
+        }).catch(function () {});
+        actions.push('rule drop ' + chain + ' ditambahkan');
+      }
+    }
+    return actions;
   }
 
   /**

@@ -564,6 +564,20 @@
             <label class="fl"><%= t('admin.set.admin_key','Admin API Key (Untuk akses luar)') %></label>
             <input class="fc" name="admin_api_key" value="<%= settings.admin_api_key || '' %>">
           </div>
+          <div class="form-row">
+            <div class="fg">
+              <label class="fl">Auto-Block Brute Force MikroTik</label>
+              <select class="fs" name="security_auto_block_enabled">
+                <option value="false" <%= String(settings.security_auto_block_enabled) !== 'true' ? 'selected' : '' %>>Nonaktif</option>
+                <option value="true" <%= String(settings.security_auto_block_enabled) === 'true' ? 'selected' : '' %>>Aktif (blokir IP otomatis)</option>
+              </select>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px">Jika aktif, IP dengan percobaan login gagal berulang dimasukkan ke firewall blacklist 1 hari.</div>
+            </div>
+            <div class="fg">
+              <label class="fl">Ambang Percobaan</label>
+              <input class="fc" type="number" min="2" max="50" name="security_mikrotik_threshold" value="<%= settings.security_mikrotik_threshold || 5 %>">
+            </div>
+          </div>
         </div>
 
         <!-- Fitur Opsional -->

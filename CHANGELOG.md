@@ -2,6 +2,15 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.17] — 2026-11-06 — "security-block"
+
+### Ditambahkan
+- **Auto-block brute force MikroTik** (opsional, default nonaktif):
+  - percobaan login gagal berulang dimasukkan ke firewall `BLACKLIST_BRUTEFORCE` selama 1 hari,
+  - rule `drop` untuk chain `input` dan `forward` ditambahkan otomatis,
+  - hotspot brute force juga memblokir MAC penyerang via Hotspot IP-Binding (`type: blocked`).
+- Ambang percobaan dapat diatur di **Pengaturan → Keamanan**.
+
 ## [0.6.16] — 2026-11-06 — "wifi-sync"
 
 ### Diperbaiki
