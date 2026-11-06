@@ -387,7 +387,7 @@ function parseRupiahAmountFromNotification(content) {
     'dana masuk', 'saldo masuk', 'saldo bertambah', 'berhasil top up',
     'top up berhasil', 'topup berhasil', 'terima uang', 'telah diterima dari',
     'diterima dari', 'qris berhasil', 'qris sukses', 'qr berhasil', 'qr sukses',
-    'payment received', 'kamu menerima', 'berhasil menerima', 'menambahkan',
+    'payment received', 'kamu menerima', 'berhasil menerima', 'menambahkan', 'ditambahkan', 'telah ditambahkan', 'berhasil ditambahkan',
     'telah diterima sebesar', 'uang diterima', 'menerima dana', 'dana diterima', 'menerima sebesar', 'baru saja menerima', 'telah menerima',
     'just received', 'you received', 'you have received', 'funds received', 'has been received', 'incoming transfer', 'credited'
   ];
@@ -410,7 +410,8 @@ function parseRupiahAmountFromNotification(content) {
     'uang masuk', 'telah diterima', 'top up berhasil', 'topup berhasil', 'berhasil top up',
     'menerima pembayaran', 'qris statis diterima', 'qris diterima', 'pembayaran qris',
     'menerima dana', 'dana diterima', 'menerima sebesar', 'telah menerima',
-    'just received', 'you received', 'you have received', 'funds received', 'has been received'
+    'just received', 'you received', 'you have received', 'funds received', 'has been received',
+    'ditambahkan', 'telah ditambahkan', 'berhasil ditambahkan'
   ];
   const hasStrongIncoming = strongIncoming.some((hint) => lower.includes(hint));
 
@@ -427,7 +428,7 @@ function parseRupiahAmountFromNotification(content) {
 
   const candidates = [
     /(?:\bRp\.?\s*|IDR\s*)([0-9][0-9\.\,\s]*)/i,
-    /(?:sebesar|senilai|nominal|masuk|transfer|top\s*up|topup|saldo\s+masuk)\s*(?:saldo\s*)?(?:\bRp\.?\s*)?([0-9][0-9\.\,\s]*)/i,
+    /(?:sebesar|senilai|nominal|masuk|transfer|top\s*up|topup|saldo\s+masuk|ditambahkan)\s*(?:saldo\s*)?(?:\bRp\.?\s*)?([0-9][0-9\.\,\s]*)/i,
   ];
 
   let raw = null;

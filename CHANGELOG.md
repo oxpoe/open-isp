@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.13] — 2026-11-06 — "webhook-shopeepay"
+
+### Diperbaiki
+- Parser notifikasi pembayaran mendukung variasi **ShopeePay / Mitra Shopee** yang memakai kata “ditambahkan” / “telah ditambahkan”, tanpa mengubah aplikasi Android.
+
 ## [0.6.12] — 2026-11-06 — "acs-virtual"
 
 ### Diperbaiki
