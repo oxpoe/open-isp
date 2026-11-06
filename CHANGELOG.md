@@ -2,6 +2,13 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.11] — 2026-11-06 — "acs-wifi-modal"
+
+### Ditambahkan
+- Tombol **Atur WiFi (SSID / Sandi)** di daftar perangkat ACS.
+- Modal menampilkan SSID 2.4G/5G saat ini, simpan SSID dan sandi terpisah.
+- Endpoint `POST /admin/acs/api/device/:id/ssid` dan `/password`.
+
 ## [0.6.10] — 2026-11-06 — "acs-lookup"
 
 ### Diperbaiki

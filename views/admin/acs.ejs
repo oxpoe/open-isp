@@ -189,6 +189,7 @@
                                         <div class="act-menu">
                                             <button type="button" class="act-item primary" onclick="refreshDevice('<%= d.id %>')"><i class="bi bi-arrow-repeat"></i> Refresh Device</button>
                                             <button type="button" class="act-item" onclick="openAddWanModal('<%= d.id %>', '<%= d.acs_server_id || selectedAcsId %>', '<%= d.sn %>', '<%= d.manufacturer || "" %>', '<%= d.model || "" %>')"><i class="bi bi-diagram-3"></i> Add WAN (All-in-One)</button>
+                                            <button type="button" class="act-item" onclick="openWifiModal('<%= d.id %>', '<%= d.acs_server_id || selectedAcsId %>', '<%= d.sn %>')"><i class="bi bi-wifi"></i> Atur WiFi (SSID / Sandi)</button>
                                             <div class="act-sep"></div>
                                             <button type="button" class="act-item danger" onclick="deleteDevice('<%= d.id %>', '<%= d.acs_server_id || selectedAcsId %>')"><i class="bi bi-trash"></i> <%= t('admin.acs.del_device','Hapus Perangkat') %></button>
                                         </div>
@@ -276,6 +277,37 @@
 </div>
 
 <!-- Unified Add WAN All-in-One Modal -->
+<div class="mo" id="wifiModal">
+  <div class="mb" style="max-width:520px">
+    <div class="mh">
+      <span class="mt"><i class="bi bi-wifi"></i> Atur WiFi ONU</span>
+      <button class="mc" onclick="closeModal('wifiModal')">&times;</button>
+    </div>
+    <div class="mbody">
+      <input type="hidden" id="wifiDeviceId">
+      <input type="hidden" id="wifiAcsId">
+      <div style="background:var(--sub-bg);border:1px dashed var(--border);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px">
+        <div><b>SN:</b> <span id="wifiSn" class="text-primary" style="font-weight:700">-</span></div>
+        <div style="margin-top:4px"><b>SSID saat ini:</b> <span id="wifiCurrentSsid" style="color:var(--muted)">Memuat…</span></div>
+      </div>
+      <div class="fg">
+        <label class="fl">SSID Baru (2.4G)</label>
+        <input class="fc" id="wifiSsidInput" placeholder="Nama WiFi baru">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">SSID 5G otomatis menjadi <code>&lt;nama&gt;-5G</code> jika didukung perangkat. SSID2/Guest tidak diubah.</div>
+      </div>
+      <button type="button" class="btn btn-p btn-sm" onclick="saveWifiSsid(this)"><i class="bi bi-save"></i> Simpan SSID</button>
+      <hr style="border-color:var(--border);margin:18px 0">
+      <div class="fg">
+        <label class="fl">Sandi WiFi Baru</label>
+        <input class="fc" type="password" id="wifiPassInput" placeholder="Minimal 8 karakter">
+      </div>
+      <button type="button" class="btn btn-p btn-sm" onclick="saveWifiPassword(this)"><i class="bi bi-shield-lock"></i> Simpan Sandi</button>
+      <div id="wifiMsg" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
+    </div>
+    <div class="mf"><button type="button" class="btn btn-g" onclick="closeModal('wifiModal')">Tutup</button></div>
+  </div>
+</div>
+
 <div class="mo" id="addWanModal">
   <div class="mb" style="max-width:650px">
     <div class="mh">
@@ -1069,6 +1101,73 @@ async function bulkDelete() {
     } catch (err) {
         alert('Gagal memproses bulk delete: ' + err.message);
     }
+}
+
+function openWifiModal(deviceId, acsId, sn) {
+    document.getElementById('wifiDeviceId').value = deviceId;
+    document.getElementById('wifiAcsId').value = acsId || '';
+    document.getElementById('wifiSn').textContent = sn || deviceId;
+    document.getElementById('wifiSsidInput').value = '';
+    document.getElementById('wifiPassInput').value = '';
+    document.getElementById('wifiCurrentSsid').textContent = 'Memuat…';
+    document.getElementById('wifiMsg').textContent = '';
+    openModal('wifiModal');
+    fetch('/admin/acs/api/wifi-settings/' + encodeURIComponent(deviceId) + '?acsId=' + encodeURIComponent(acsId || ''))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            if (!d || !d.success) {
+                document.getElementById('wifiCurrentSsid').textContent = (d && (d.message || d.error)) || 'Gagal memuat WiFi';
+                return;
+            }
+            var bands = d.bands || [];
+            var b1 = bands.find(function (b) { return String(b.index) === '1'; }) || bands[0] || null;
+            var b5 = bands.find(function (b) { return String(b.index) === '5'; });
+            var parts = [];
+            if (b1) parts.push('2.4G: ' + String(b1.ssid || '-'));
+            if (b5) parts.push('5G: ' + String(b5.ssid || '-'));
+            document.getElementById('wifiCurrentSsid').textContent = parts.join('  •  ') || '-';
+            if (b1) document.getElementById('wifiSsidInput').value = String(b1.ssid || '').replace(/-5G$/, '');
+        })
+        .catch(function (e) { document.getElementById('wifiCurrentSsid').textContent = 'Error: ' + e.message; });
+}
+
+async function saveWifiSsid(btn) {
+    var id = document.getElementById('wifiDeviceId').value;
+    var ssid = String(document.getElementById('wifiSsidInput').value || '').trim();
+    var msg = document.getElementById('wifiMsg');
+    if (ssid.length < 2) { msg.textContent = 'SSID minimal 2 karakter.'; return; }
+    if (!confirm('Ubah SSID perangkat ini?')) return;
+    var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan…';
+    msg.textContent = '';
+    try {
+        var r = await fetch('/admin/acs/api/device/' + encodeURIComponent(id) + '/ssid', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ssid: ssid })
+        });
+        var d = await r.json();
+        msg.style.color = d.success ? 'var(--success)' : 'var(--danger)';
+        msg.textContent = d.success ? d.message : ('Gagal: ' + (d.message || 'unknown'));
+    } catch (e) { msg.style.color = 'var(--danger)'; msg.textContent = 'Error: ' + e.message; }
+    finally { btn.disabled = false; btn.innerHTML = old; }
+}
+
+async function saveWifiPassword(btn) {
+    var id = document.getElementById('wifiDeviceId').value;
+    var pass = String(document.getElementById('wifiPassInput').value || '').trim();
+    var msg = document.getElementById('wifiMsg');
+    if (pass.length < 8) { msg.textContent = 'Sandi minimal 8 karakter.'; return; }
+    if (!confirm('Ubah sandi WiFi perangkat ini?')) return;
+    var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan…';
+    msg.textContent = '';
+    try {
+        var r = await fetch('/admin/acs/api/device/' + encodeURIComponent(id) + '/password', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pass })
+        });
+        var d = await r.json();
+        msg.style.color = d.success ? 'var(--success)' : 'var(--danger)';
+        msg.textContent = d.success ? d.message : ('Gagal: ' + (d.message || 'unknown'));
+        if (d.success) document.getElementById('wifiPassInput').value = '';
+    } catch (e) { msg.style.color = 'var(--danger)'; msg.textContent = 'Error: ' + e.message; }
+    finally { btn.disabled = false; btn.innerHTML = old; }
 }
 
 async function deleteDevice(deviceId, acsId) {

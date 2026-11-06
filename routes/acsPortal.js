@@ -1601,6 +1601,36 @@ router.get('/api/wifi-settings/:deviceId', requireAdmin, async (req, res) => {
     }
 });
 
+router.post('/api/device/:deviceId/ssid', requireAdmin, express.json(), async (req, res) => {
+    try {
+        const deviceId = req.params.deviceId;
+        const ssid = String(req.body.ssid || '').trim();
+        if (!ssid || ssid.length < 2) {
+            return res.status(400).json({ success: false, message: 'Nama WiFi (SSID) minimal 2 karakter' });
+        }
+        const ok = await customerDevice.updateSSID(deviceId, ssid);
+        if (!ok) return res.status(500).json({ success: false, message: 'Gagal mengubah SSID. Pastikan perangkat aktif.' });
+        return res.json({ success: true, message: `SSID diubah menjadi "${ssid}"` });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+router.post('/api/device/:deviceId/password', requireAdmin, express.json(), async (req, res) => {
+    try {
+        const deviceId = req.params.deviceId;
+        const password = String(req.body.password || '').trim();
+        if (!password || password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Sandi WiFi minimal 8 karakter' });
+        }
+        const ok = await customerDevice.updatePassword(deviceId, password);
+        if (!ok) return res.status(500).json({ success: false, message: 'Gagal mengubah sandi WiFi. Pastikan perangkat aktif.' });
+        return res.json({ success: true, message: 'Sandi WiFi berhasil diperbarui' });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 router.get('/api/add-wan-status/:deviceId', requireAdmin, async (req, res) => {
     try {
         const { deviceId } = req.params;
