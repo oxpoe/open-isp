@@ -112,6 +112,34 @@ async function resolveDeviceToken(input) {
   const found = await findDeviceWithTagVariants(token);
   if (found && found.device && found.device._id) return found.device;
 
+  // Fallback: cari lewat data pelanggan (ID, HP, PPPoE, tag ACS, atau MAC).
+  try {
+    const db = require('../config/database');
+    const cust = db.prepare(`
+      SELECT pppoe_username, genieacs_tag, mac_address, phone
+      FROM customers
+      WHERE phone = ? OR id = ? OR pppoe_username = ? OR genieacs_tag = ? OR mac_address = ?
+      LIMIT 1
+    `).get(token, token, token, token, token);
+
+    if (cust) {
+      const candidates = Array.from(new Set([
+        cust.pppoe_username, cust.genieacs_tag, cust.mac_address, cust.phone
+      ].map(v => String(v || '').trim()).filter(v => v && v !== token)));
+
+      for (const cand of candidates) {
+        const byPppoe = await findDeviceByPppoe(cand);
+        if (byPppoe && byPppoe._id) return byPppoe;
+        const byTag = await findDeviceByTag(cand);
+        if (byTag && byTag._id) return byTag;
+        const variant = await findDeviceWithTagVariants(cand);
+        if (variant && variant.device && variant.device._id) return variant.device;
+      }
+    }
+  } catch (e) {
+    logger.debug(`[resolveDeviceToken] Customer DB fallback error: ${e.message}`);
+  }
+
   return null;
 }
 

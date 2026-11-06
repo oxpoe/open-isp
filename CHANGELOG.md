@@ -2,6 +2,11 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/) dan [Semantic Versioning](https://semver.org/).
 
+## [0.6.10] — 2026-11-06 — "acs-lookup"
+
+### Diperbaiki
+- Lookup perangkat GenieACS kini punya fallback lewat data pelanggan (ID, nomor HP, PPPoE, tag ACS, MAC), sehingga perangkat lebih cepat ditemukan dan dashboard tidak menggantung saat tag/ID tidak cocok.
+
 ## [0.6.9] — 2026-11-06 — "acs-wifi-rx"
 
 ### Diperbaiki
