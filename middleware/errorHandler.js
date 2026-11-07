@@ -153,12 +153,7 @@ function notFoundHandler(req, res, next) {
       }
     });
   } else {
-    if (req.session) {
-      req.session._msg = {
-        type: 'error',
-        text: 'Halaman tidak ditemukan'
-      };
-    }
+    // 404 tidak boleh menulis flash ke session; pesan akan muncul lagi di halaman berikutnya.
     res.status(404).render('error', {
       title: '404 - Not Found',
       error: 'Halaman yang Anda cari tidak ditemukan',
