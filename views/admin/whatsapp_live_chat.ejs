@@ -23,6 +23,7 @@
     .chat-main { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
     .chat-main-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); }
     .chat-main-title { font-weight: 700; font-size: 15px; }
+    .chat-cs-bar { padding: 8px 18px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
     .chat-messages { flex: 1; padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.02); }
     
     .msg-bubble { max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.4; position: relative; word-wrap: break-word; }
@@ -113,6 +114,17 @@
           <div id="chatHeaderSub" style="font-size:11px;" class="text-muted"></div>
         </div>
 
+        <div class="chat-cs-bar" id="csBar">
+          <div id="csStatusText" style="font-size:12px;color:var(--muted);">
+            <i class="bi bi-robot"></i> Status CS: -
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-p btn-sm" onclick="csAction('takeover')"><i class="bi bi-person-check"></i> Ambil Alih</button>
+            <button type="button" class="btn btn-g btn-sm" onclick="csAction('release')"><i class="bi bi-arrow-repeat"></i> Kembalikan ke Bot</button>
+            <button type="button" class="btn btn-d btn-sm" onclick="csAction('close')"><i class="bi bi-x-circle"></i> Tutup Percakapan</button>
+          </div>
+        </div>
+
         <div class="chat-messages" id="chatMessages">
           <div style="margin:auto;text-align:center;color:var(--muted)">
             <i class="bi bi-chat-text" style="font-size:48px;display:block;margin-bottom:10px;"></i>
@@ -201,13 +213,14 @@ function renderUserList(list) {
     const initial = name.charAt(0).toUpperCase();
     const isActive = c.phone === activePhone ? 'active' : '';
     const dateStr = c.created_at ? new Date(c.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+    const csTag = c.cs_status ? `[${CS_LABELS[c.cs_status] || c.cs_status}] ` : '';
     
     return `
       <div class="chat-user-item ${isActive}" onclick="openChat('${c.phone}', '${escapeHtml(name)}')">
         <div class="chat-user-avatar">${initial}</div>
         <div class="chat-user-info">
           <div class="chat-user-name">${escapeHtml(name)}</div>
-          <div class="chat-user-last">${escapeHtml(c.message_text || '')}</div>
+          <div class="chat-user-last">${escapeHtml(csTag + (c.message_text || ''))}</div>
         </div>
         <div class="chat-user-time">${dateStr}</div>
       </div>
@@ -264,6 +277,54 @@ async function openChat(phone, name) {
 
   // Load chat messages
   loadChatMessages(phone, true);
+  loadCsStatus(phone);
+}
+
+const CS_LABELS = {
+  segment: 'Menunggu pilihan pelanggan',
+  menu: 'Menu otomatis',
+  ai: 'AI menjawab',
+  waiting_admin: 'Menunggu admin',
+  human: 'Dipegang admin',
+  closed: 'Ditutup'
+};
+
+async function loadCsStatus(phone) {
+  if (!phone) return;
+  try {
+    const res = await fetch('/admin/api/whatsapp/cs-status?phone=' + encodeURIComponent(phone));
+    const data = await res.json();
+    const c = data.ok ? data.conversation : null;
+    const el = document.getElementById('csStatusText');
+    if (!el) return;
+    if (!c) {
+      el.innerHTML = '<i class="bi bi-robot"></i> Status CS: belum ada percakapan';
+      return;
+    }
+    const label = CS_LABELS[c.status] || c.status || '-';
+    const segment = c.segment ? ' · ' + (c.segment === 'existing' ? 'pelanggan' : 'calon pelanggan') : '';
+    el.innerHTML = '<i class="bi bi-robot"></i> Status CS: <b>' + escapeHtml(label) + segment + '</b>';
+  } catch (e) { /* diamkan, status opsional */ }
+}
+
+async function csAction(action) {
+  const phone = activePhone;
+  if (!phone) return;
+  if (action === 'close' && !confirm('Tutup percakapan ini? Bot akan berhenti sampai pelanggan mengirim pesan lagi.')) return;
+  try {
+    const res = await fetch('/admin/api/whatsapp/cs-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, action })
+    });
+    const data = await res.json();
+    if (!data.ok) return alert(data.error || 'Gagal mengubah status percakapan');
+    await loadChatMessages(phone, false);
+    await loadCsStatus(phone);
+    await loadConversations();
+  } catch (e) {
+    alert('Gagal: ' + e.message);
+  }
 }
 
 async function loadChatMessages(phone, showSpinner = false) {
@@ -345,6 +406,7 @@ async function sendChatMessage(e) {
     if (data.success) {
       inputEl.value = '';
       await loadChatMessages(phone, false);
+      await loadCsStatus(phone);
       await loadConversations();
       inputEl.focus();
     } else {
@@ -366,7 +428,10 @@ document.addEventListener('DOMContentLoaded', () => {
   loadConversations();
   setInterval(() => {
     loadConversations();
-    if (activePhone) loadChatMessages(activePhone, false);
+    if (activePhone) {
+      loadChatMessages(activePhone, false);
+      loadCsStatus(activePhone);
+    }
   }, 8000);
 });
 </script>

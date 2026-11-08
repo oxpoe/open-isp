@@ -476,6 +476,23 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_wa_chat_messages_phone ON wa_chat_messages(sender_phone, recipient_phone);
   CREATE INDEX IF NOT EXISTS idx_wa_chat_messages_created ON wa_chat_messages(created_at);
+
+  CREATE TABLE IF NOT EXISTS wa_cs_conversations (
+    phone TEXT PRIMARY KEY,
+    customer_id INTEGER,
+    customer_name TEXT DEFAULT '',
+    segment TEXT DEFAULT '',
+    state TEXT DEFAULT 'segment',
+    status TEXT DEFAULT 'segment',
+    ticket_id INTEGER,
+    ai_attempts INTEGER DEFAULT 0,
+    last_message TEXT DEFAULT '',
+    last_customer_at INTEGER DEFAULT 0,
+    closed_reason TEXT DEFAULT '',
+    created_at DATETIME DEFAULT (NOW_LOCAL()),
+    updated_at DATETIME DEFAULT (NOW_LOCAL())
+  );
+  CREATE INDEX IF NOT EXISTS idx_wa_cs_conversations_status ON wa_cs_conversations(status, last_customer_at);
 `);
 
 // Inisialisasi tabel voucher_packages (Paket Voucher Hotspot Real-time)

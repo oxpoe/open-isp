@@ -7111,11 +7111,40 @@ router.get('/api/whatsapp/messages', requireAdminSession, (req, res) => {
   }
 });
 
+// Status CS (segmentasi / menu / AI / admin / tertutup) untuk Live Chat
+router.get('/api/whatsapp/cs-status', requireAdminSession, (req, res) => {
+  try {
+    const chatSvc = require('../services/customerChatService');
+    res.json({ ok: true, conversation: chatSvc.getConversation(req.query.phone || '') });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+router.post('/api/whatsapp/cs-action', requireAdminSession, express.json(), async (req, res) => {
+  try {
+    const { phone, action } = req.body || {};
+    if (!phone || !['takeover', 'release', 'close'].includes(action)) {
+      return res.status(400).json({ ok: false, error: 'Nomor atau aksi tidak valid' });
+    }
+    const chatSvc = require('../services/customerChatService');
+    if (action === 'takeover') await chatSvc.takeover(phone);
+    else if (action === 'release') await chatSvc.release(phone);
+    else await chatSvc.close(phone, 'Ditutup admin');
+    res.json({ ok: true, conversation: chatSvc.getConversation(phone) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 router.post('/api/whatsapp/send-direct', requireAdminSession, express.json(), async (req, res) => {
   try {
     const { phone, message } = req.body;
     if (!phone || !message) return res.status(400).json({ success: false, error: 'Nomor dan pesan tidak boleh kosong' });
 
+    // Balasan manual admin menghentikan bot untuk nomor ini.
+    const chatSvc = require('../services/customerChatService');
+    await chatSvc.takeover(phone, { silent: true });
     await waSvc.sendWhatsAppMessage(phone, message);
     res.json({ success: true, message: 'Pesan WhatsApp terkirim' });
   } catch (e) {

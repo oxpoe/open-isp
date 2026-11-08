@@ -238,6 +238,8 @@ function getRecentConversations(limit = 30) {
       m.customer_name,
       m.message_text,
       m.status,
+      cc.status AS cs_status,
+      cc.segment AS cs_segment,
       m.created_at
     FROM wa_chat_messages m
     INNER JOIN (
@@ -245,6 +247,8 @@ function getRecentConversations(limit = 30) {
       FROM wa_chat_messages
       GROUP BY CASE WHEN direction = 'inbound' THEN sender_phone ELSE recipient_phone END
     ) latest ON m.id = latest.max_id
+    LEFT JOIN wa_cs_conversations cc
+      ON cc.phone = CASE WHEN m.direction = 'inbound' THEN m.sender_phone ELSE m.recipient_phone END
     ORDER BY m.id DESC
     LIMIT ?
   `).all(Number(limit) || 30);

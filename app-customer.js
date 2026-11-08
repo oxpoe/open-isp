@@ -1773,20 +1773,25 @@ app.post('/api/webhook/gowa', async (req, res) => {
     res.status(200).send('OK');
     setTimeout(async () => {
       try {
-        try {
-          const db = require('./config/database');
-          let custId = null, custName = null;
-          const cust = db.prepare('SELECT id, name FROM customers WHERE phone LIKE ? OR phone LIKE ?').get('%' + senderPhone.slice(-8) + '%', '%' + senderPhone + '%');
-          if (cust) { custId = cust.id; custName = cust.name; }
-          db.prepare("INSERT INTO wa_chat_messages (direction, gateway, sender_phone, recipient_phone, customer_id, customer_name, message_text, status, meta_message_id) VALUES ('inbound','gowa',?,?,?,?,?,?,?)")
-            .run(senderPhone, 'gowa_bot', custId, custName, text, 'received', String(p.id || ''));
-        } catch (e) {}
+        const db = require('./config/database');
+        let custId = null, custName = null;
+        const cust = db.prepare('SELECT id, name FROM customers WHERE phone LIKE ? OR phone LIKE ?').get('%' + senderPhone.slice(-8) + '%', '%' + senderPhone + '%');
+        if (cust) { custId = cust.id; custName = cust.name; }
 
-        // ── WA = HANYA NOTIFIKASI (keluar) ─────────────────────────────────
-        // Interaksi/balasan bot DIPINDAH ke Telegram. Pesan masuk tetap dicatat
-        // (di atas) agar terlihat di Live Chat, TANPA balasan otomatis.
-        return;
-      } catch (e) { logger.error('[GOWA webhook] proses error: ' + e.message); }
+        // GOWA bisa mengirim ulang event yang sama; jangan balas dua kali.
+        const msgId = String(p.id || '');
+        if (msgId && db.prepare('SELECT 1 FROM wa_chat_messages WHERE meta_message_id = ? LIMIT 1').get(msgId)) return;
+
+        db.prepare("INSERT INTO wa_chat_messages (direction, gateway, sender_phone, recipient_phone, customer_id, customer_name, message_text, status, meta_message_id) VALUES ('inbound','gowa',?,?,?,?,?,?,?)")
+          .run(senderPhone, 'gowa_bot', custId, custName, text, 'received', msgId);
+
+        const chatSvc = require('./services/customerChatService');
+        await chatSvc.handleIncoming({
+          phone: senderPhone,
+          text,
+          pushName: String(p.push_name || p.sender_name || p.notify_name || '')
+        });
+      } catch (e) { logger.error('[GOWA webhook] proses CS error: ' + e.message); }
     }, 0);
     return;
   } catch (e) {
